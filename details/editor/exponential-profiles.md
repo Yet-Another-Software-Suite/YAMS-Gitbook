@@ -329,12 +329,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     );
 
     private final Elevator elevator = new Elevator(
-        new ElevatorConfig(motor)
+        new ElevatorConfig()
             .withSoftLimits(Meters.of(0), Meters.of(1.2))
-            .withHardLimit(Meters.of(-0.05), Meters.of(1.3))
+            .withHardLimits(Meters.of(-0.05), Meters.of(1.3))
             .withStartingPosition(Meters.of(0))
-            .withMass(carriageMass)
-            .withTelemetry("Elevator", TelemetryVerbosity.HIGH)
+            .withCarriageWeight(carriageMass)
+            .withTelemetry("Elevator", TelemetryVerbosity.HIGH),
+        motor
     );
 
     public Command goToHeight(Distance height) {
