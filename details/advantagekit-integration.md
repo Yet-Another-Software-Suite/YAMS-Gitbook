@@ -340,7 +340,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     // Step 1: Create SmartMotorControllerConfig
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
         .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
-        .withMechanismCircumference(Inches.of(1.5 * Math.PI))  // Pulley circumference
+        .withDrumRadius(Inches.of(0.75))  // Drum radius
         .withClosedLoopController(10, 0, 0.5)
         .withSoftLimits(Meters.of(0.02), Meters.of(1.2))
         .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))

@@ -71,7 +71,7 @@ public final class Constants {
     public static final SmartMotorControllerConfig SMC_CONFIG = 
         new SmartMotorControllerConfig()
             .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
-            .withMechanismCircumference(Inches.of(1.5 * Math.PI))
+            .withDrumRadius(Inches.of(0.75))
             .withClosedLoopController(10, 0, 0.5)
             .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))
             .withTrapezoidalProfile(MetersPerSecond.of(1.0), MetersPerSecondPerSecond.of(2.0));
@@ -190,7 +190,7 @@ public final class Constants {
     public static final SmartMotorControllerConfig SMC_CONFIG = 
         new SmartMotorControllerConfig()
             .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
-            .withMechanismCircumference(Inches.of(1.5 * Math.PI))
+            .withDrumRadius(Inches.of(0.75))
             .withClosedLoopController(10, 0, 0.5)
             .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))
             .withTrapezoidalProfile(MetersPerSecond.of(1.0), MetersPerSecondPerSecond.of(2.0))

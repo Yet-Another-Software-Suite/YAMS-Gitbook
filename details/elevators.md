@@ -11,8 +11,8 @@ Given the [tutorial](../tutorials/elevator.md#create-a-smartmotorcontrollerconfi
 ```java
 SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+  // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+  .withDrumRadius(Inches.of(0.25), 22)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(4, 0, 0)
   .withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))

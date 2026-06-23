@@ -11,6 +11,7 @@ Our `Arm` will easily configure the `SmartMotorController` and create a simple a
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
@@ -41,8 +42,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+  // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+  .withDrumRadius(Inches.of(0.25), 22)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(4, 0, 0)
   .withSimClosedLoopController(4, 0, 0)
@@ -127,6 +128,7 @@ We use the `Elevator` class as a interface to create commands!
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
@@ -160,8 +162,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+  // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+  .withDrumRadius(Inches.of(0.25), 22)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(4, 0, 0, MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
   .withSimClosedLoopController(4, 0, 0, MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))

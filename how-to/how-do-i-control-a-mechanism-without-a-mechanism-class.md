@@ -47,8 +47,8 @@ An example of this for an Elevator would be as follows
   
   private SmartMotorControllerConfig leftSmcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(drumCircumference)
+  // Elevator drum radius: derived from chain pitch and tooth count.
+  .withDrumRadius(drumRadius)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(kP, kI, kD)
   .withTrapezoidalProfile(maxVel, maxAccel)
@@ -71,8 +71,8 @@ An example of this for an Elevator would be as follows
   
   private SmartMotorControllerConfig rightSmcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(drumCircumference)
+  // Elevator drum radius: derived from chain pitch and tooth count.
+  .withDrumRadius(drumRadius)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(kP, kI, kD)
   .withTrapezoidalProfile(maxVel, maxAccel)
