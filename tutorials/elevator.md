@@ -97,6 +97,7 @@ We are going to start by configuring out motor controller.
 package frc.robot.subsystems;
 
 <strong>import static edu.wpi.first.units.Units.Amps;
+</strong><strong>import static edu.wpi.first.units.Units.Inches;
 </strong><strong>import static edu.wpi.first.units.Units.MetersPerSecond;
 </strong><strong>import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 </strong><strong>import static edu.wpi.first.units.Units.Seconds;
@@ -114,8 +115,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
 <strong>  private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 </strong><strong>  .withControlMode(ControlMode.CLOSED_LOOP)
-</strong><strong>  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-</strong><strong>  .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+</strong><strong>  // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+</strong><strong>  .withDrumRadius(Inches.of(0.25), 22)
 </strong><strong>  // Feedback Constants (PID Constants)
 </strong><strong>  .withClosedLoopController(4, 0, 0)
 </strong><strong>  .withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
@@ -175,6 +176,34 @@ public class ExampleSubsystem extends SubsystemBase {
 }
 
 </code></pre>
+
+{% hint style="info" %}
+**`withDrumRadius` is required for all elevators** — it tells YAMS how far the mechanism travels per motor revolution.
+
+**Chain-driven elevator (sprocket + chain):** pass the chain pitch and tooth count.
+
+* `#25 chain` has a pitch of **0.25 in**
+* `#35 chain` has a pitch of **0.375 in**
+
+```java
+.withDrumRadius(Inches.of(0.25), 22)   // #25 chain, 22-tooth sprocket
+.withDrumRadius(Inches.of(0.375), 16)  // #35 chain, 16-tooth sprocket
+```
+
+**Spool or direct-drive drum:** pass the physical radius of the drum.
+
+```java
+.withDrumRadius(Inches.of(0.875))  // drum with 0.875" radius
+```
+
+**Cascading elevators:** call `.withCascadingElevatorStages(n)` in addition to `withDrumRadius`. This divides the gearing by the number of stages so position tracking remains correct.
+
+```java
+.withDrumRadius(Inches.of(0.25), 22)
+.withCascadingElevatorStages(2)  // 2-stage cascade; divides gearing by 2
+```
+{% endhint %}
+
 {% endstep %}
 
 {% step %}
@@ -195,6 +224,7 @@ Now we add it to the `ExampleSubsystem.java`
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
@@ -216,8 +246,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+  // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+  .withDrumRadius(Inches.of(0.25), 22)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(4, 0, 0)
   .withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
@@ -294,6 +324,7 @@ Our `SmartMotorController` will easily configure and interface with the vendor m
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
@@ -318,8 +349,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+  // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+  .withDrumRadius(Inches.of(0.25), 22)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(4, 0, 0)
   .withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
@@ -399,6 +430,7 @@ Our `Elevator` will easily configure the `SmartMotorController` and create a sim
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
@@ -427,8 +459,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
-  // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-  .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+  // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+  .withDrumRadius(Inches.of(0.25), 22)
   // Feedback Constants (PID Constants)
   .withClosedLoopController(4, 0, 0)
   .withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
@@ -517,6 +549,7 @@ We use the `Elevator` class as a interface to create commands!
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
@@ -548,8 +581,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
-    // Mechanism Circumference is the distance traveled by each mechanism rotation converting rotations to meters.
-    .withMechanismCircumference(Meters.of(Inches.of(0.25).in(Meters) * 22))
+    // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
+    .withDrumRadius(Inches.of(0.25), 22)
     // Feedback Constants (PID Constants)
     .withClosedLoopController(4, 0, 0)
     .withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
