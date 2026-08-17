@@ -28,7 +28,7 @@ On the real robot, `.wpilog` files are written to a USB drive if one is plugged 
 
 This walkthrough builds on the `SwerveSubsystem` from the [Swerve Drive tutorial](../tutorials/swerve-drive.md), with `withDataLogName(...)` added at three levels: the drive, each module, and (for field-level control) the azimuth motor inside each module.
 
-<figure><video src="../.gitbook/assets/datalog-walkthrough-1-configure.mp4" controls></video><figcaption><p>Walking through <code>SwerveSubsystem</code>'s <code>createModule()</code> and constructor, showing where each <code>withDataLogName(...)</code> call goes.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-1-configure.gif" alt=""><figcaption><p>Walking through <code>SwerveSubsystem</code>'s <code>createModule()</code> and constructor, showing where each <code>withDataLogName(...)</code> call goes.</p></figcaption></figure>
 
 `createModule()` builds one module's drive/azimuth motors and the `SwerveModuleConfig`:
 
@@ -142,14 +142,14 @@ Want the deeper rationale for choosing LOW vs. MID vs. HIGH, and why to prune be
 
 Deploy or simulate the robot, enable it, and drive around for a bit — every enabled loop writes to both NetworkTables and the DataLog for every field configured above.
 
-<figure><video src="../.gitbook/assets/datalog-walkthrough-2-run-in-sim.mp4" controls></video><figcaption><p>Running the swerve example in WPILib simulation and driving it around in Teleoperated to generate telemetry.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-2-run-in-sim.gif" alt=""><figcaption><p>Running the swerve example in WPILib simulation and driving it around in Teleoperated to generate telemetry.</p></figcaption></figure>
 
 ## Step 4: Pull the file and open it in AdvantageScope
 
 1. Grab the `.wpilog` off the RIO (USB drive, or `scp lvuser@10.TE.AM.2:/home/lvuser/logs/*.wpilog .`) — or straight from your sim project's `logs/` folder.
 2. Open **AdvantageScope**, then **File → Open File...** (or drag the `.wpilog` onto the window). Do **not** use "Connect to Robot/Simulator" — that connects live over NetworkTables, which shows *current* values, not the recorded run.
 
-<figure><video src="../.gitbook/assets/datalog-walkthrough-3-open-in-advantagescope.mp4" controls></video><figcaption><p>Opening the recorded <code>.wpilog</code> via AdvantageScope's file picker — note the other logs from earlier runs sitting alongside it in the same <code>logs/</code> folder.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-3-open-in-advantagescope.gif" alt=""><figcaption><p>Opening the recorded <code>.wpilog</code> via AdvantageScope's file picker — note the other logs from earlier runs sitting alongside it in the same <code>logs/</code> folder.</p></figcaption></figure>
 
 3. AdvantageScope reads every logged entry into a field tree in the sidebar, grouped by the DataLog name prefixes you set in Steps 2–2b — with the `"Swerve"` prefix from this example, that's a single `Swerve` group containing `chassis/current`, `chassis/desired`, `pose`, `gyro`, and a `frontleft`/`frontright`/`backleft`/`backright` entry per module (plus that module's `angleMotor` DataLog entries from Step 2b).
 
@@ -161,7 +161,7 @@ Add a tab to visualize the data:
 * **2D Field** tab — drag `Swerve/pose` in to see the robot's recorded path.
 * **Line Graph** tab — drag any numeric field (gyro angle, a motor's stator current, mechanism position) to plot it over time, and use **right-click → Convert Units...** to change the displayed unit without touching robot code (see [Telemetry](../details/interactive-blocks.md#using-advantagescope-for-unit-conversion)).
 
-<figure><video src="../.gitbook/assets/datalog-walkthrough-4-explore-swerve-tab.mp4" controls></video><figcaption><p>Expanding the field tree and dragging <code>Swerve/states/current</code> into the <strong>Swerve</strong> tab's Sources to visualize the recorded module states — the wheel angles/speeds shown here match exactly what the modules reported during the run.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-4-explore-swerve-tab.gif" alt=""><figcaption><p>Expanding the field tree and dragging <code>Swerve/states/current</code> into the <strong>Swerve</strong> tab's Sources to visualize the recorded module states — the wheel angles/speeds shown here match exactly what the modules reported during the run.</p></figcaption></figure>
 
 Scrub the timeline at the top of the window to step through the run, or hit play to watch it back at normal speed.
 
