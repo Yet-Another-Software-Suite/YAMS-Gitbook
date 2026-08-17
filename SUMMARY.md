@@ -43,7 +43,7 @@
 * [Shooters](details/shooters.md)
 * [run() vs runTo() Commands](details/run-vs-runto.md)
 * [Setpoint Methods vs Command Helpers](details/setpoint-methods.md)
-* [Telemetry](details/interactive-blocks.md)
+* [Telemetry](understanding/telemetry.md)
 * [DataLog Best Practices](details/datalog-best-practices.md)
 * [Live Tuning](details/integrations.md)
 * [EasyCRT](details/easycrt.md)
