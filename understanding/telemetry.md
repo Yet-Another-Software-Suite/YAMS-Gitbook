@@ -19,7 +19,7 @@ You should set a DataLogName for competition matches to ensure you have enough d
 {% endhint %}
 
 {% hint style="info" %}
-Looking for a deeper dive on enabling/disabling NetworkTables, choosing what to log, and how this all works (or doesn't) for `SwerveDrive`? See [DataLog Best Practices](datalog-best-practices.md). For a step-by-step walkthrough of configuring a `SwerveDrive` to log and then opening the resulting file in AdvantageScope, see [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md).
+Looking for a deeper dive on enabling/disabling NetworkTables, choosing what to log, and how this all works (or doesn't) for `SwerveDrive`? See [DataLog Best Practices](../details/datalog-best-practices.md). For a step-by-step walkthrough of configuring a `SwerveDrive` to log and then opening the resulting file in AdvantageScope, see [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md).
 {% endhint %}
 
 `MechanismTelemetry` is the class that actually coordinates all of this under the hood — every Mechanism (and every `SwerveModule`) owns one, and it is what wires a Mechanism's NT4 publishers to a WPILib `DataLog` entry whenever a DataLogName is configured, so both destinations always see the same values.
@@ -76,7 +76,7 @@ You can still log to DataLog:
 * `SwerveDriveConfig.withDataLogName(name)` logs the drive's pose, gyro, and chassis speeds/module states.
 * `SwerveModuleConfig.withDataLogName(name)` logs that module's absolute encoder reading.
 
-Neither of these cascades down to the drive/azimuth motors of a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController` — see [DataLog Best Practices](datalog-best-practices.md) for a full walkthrough.
+Neither of these cascades down to the drive/azimuth motors of a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController` — see [DataLog Best Practices](../details/datalog-best-practices.md) for a full walkthrough.
 
 ## Colors
 

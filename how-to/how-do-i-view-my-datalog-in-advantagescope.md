@@ -4,7 +4,7 @@
 **This is not "Log Replay."** [AdvantageKit's Log Replay](https://docs.advantagekit.org/getting-started/what-is-advantagekit) re-runs your robot code against a recorded log to deterministically reproduce a match in simulation — it requires the AdvantageKit IO-interface pattern described in [AdvantageKit Integration](../details/advantagekit-integration.md). What this page covers is simpler and works with **every** YAMS project, AdvantageKit or not: opening the `.wpilog` file your robot already wrote and looking at the recorded values in AdvantageScope. Nothing re-executes — you're just viewing a file.
 {% endhint %}
 
-Every YAMS telemetry field can be routed to a WPILib `DataLog` in addition to (or instead of) NetworkTables — see [Telemetry](../details/interactive-blocks.md) and [DataLog Best Practices](../details/datalog-best-practices.md) for the full API. This page is the practical walkthrough, recorded end-to-end on the [Swerve Drive tutorial](../tutorials/swerve-drive.md)'s example subsystem: configuring it to log, running it, and opening the resulting file in [AdvantageScope](https://docs.advantagekit.org/tools/advantagescope/).
+Every YAMS telemetry field can be routed to a WPILib `DataLog` in addition to (or instead of) NetworkTables — see [Telemetry](../understanding/telemetry.md) and [DataLog Best Practices](../details/datalog-best-practices.md) for the full API. This page is the practical walkthrough, recorded end-to-end on the [Swerve Drive tutorial](../tutorials/swerve-drive.md)'s example subsystem: configuring it to log, running it, and opening the resulting file in [AdvantageScope](https://docs.advantagekit.org/tools/advantagescope/).
 
 ## Step 1: Make sure a DataLog is actually being written
 
@@ -120,7 +120,7 @@ See the C++ API reference's `SwerveDriveConfig` and `SwerveModuleConfig` pages f
 
 The drive and azimuth motors underneath each module are ordinary `SmartMotorController`s, so — as shown on `azimuthCfg` above — you get the same field-level control you'd get on any standalone mechanism's motor by building a `SmartMotorControllerTelemetryConfig` and handing it to `withTelemetry(name, ...)` instead of the `withTelemetry(name, verbosity)` shorthand.
 
-This is the *only* granular knob in the whole swerve stack: `SwerveDriveConfig`/`SwerveModuleConfig` only expose a verbosity preset for the drive-level and per-module fields (pose, gyro, chassis speeds, module states, absolute encoder) — there's no field-by-field opt-in and no way to disable NetworkTables for those. `SmartMotorControllerTelemetryConfig` controls both axes independently:
+This is the _only_ granular knob in the whole swerve stack: `SwerveDriveConfig`/`SwerveModuleConfig` only expose a verbosity preset for the drive-level and per-module fields (pose, gyro, chassis speeds, module states, absolute encoder) — there's no field-by-field opt-in and no way to disable NetworkTables for those. `SmartMotorControllerTelemetryConfig` controls both axes independently:
 
 * **Which fields** — every field is disabled by default. `withTelemetryVerbosity(LOW/MID/HIGH)` turns on a cumulative preset; individual `with*()` methods (`withStatorCurrent()`, `withTemperature()`, `withMechanismPosition()`, ...) add or supplement it. See the full field list on the `SmartMotorControllerTelemetryConfig` API reference page.
 * **Where they go** — `withDataLogName(name)` turns on DataLog for every enabled field under that prefix. `withoutNetworkTables()` (or `withNetworkTables(false)`) stops those same fields from reaching NT4. The two are independent: log-only, NT-only, both, or neither are all valid combinations.
@@ -147,7 +147,7 @@ Deploy or simulate the robot, enable it, and drive around for a bit — every en
 ## Step 4: Pull the file and open it in AdvantageScope
 
 1. Grab the `.wpilog` off the RIO (USB drive, or `scp lvuser@10.TE.AM.2:/home/lvuser/logs/*.wpilog .`) — or straight from your sim project's `logs/` folder.
-2. Open **AdvantageScope**, then **File → Open File...** (or drag the `.wpilog` onto the window). Do **not** use "Connect to Robot/Simulator" — that connects live over NetworkTables, which shows *current* values, not the recorded run.
+2. Open **AdvantageScope**, then **File → Open File...** (or drag the `.wpilog` onto the window). Do **not** use "Connect to Robot/Simulator" — that connects live over NetworkTables, which shows _current_ values, not the recorded run.
 
 <figure><img src="../.gitbook/assets/datalog-walkthrough-3-open-in-advantagescope.gif" alt=""><figcaption><p>Opening the recorded <code>.wpilog</code> via AdvantageScope's file picker — note the other logs from earlier runs sitting alongside it in the same <code>logs/</code> folder.</p></figcaption></figure>
 
@@ -159,7 +159,7 @@ Add a tab to visualize the data:
 
 * **Swerve** tab — AdvantageScope's built-in module visualizer. Drag a `SwerveModuleState[]` field (e.g. `Swerve/states/current`) into the **Sources** list at the bottom to see wheel vectors animate over the timeline.
 * **2D Field** tab — drag `Swerve/pose` in to see the robot's recorded path.
-* **Line Graph** tab — drag any numeric field (gyro angle, a motor's stator current, mechanism position) to plot it over time, and use **right-click → Convert Units...** to change the displayed unit without touching robot code (see [Telemetry](../details/interactive-blocks.md#using-advantagescope-for-unit-conversion)).
+* **Line Graph** tab — drag any numeric field (gyro angle, a motor's stator current, mechanism position) to plot it over time, and use **right-click → Convert Units...** to change the displayed unit without touching robot code (see [Telemetry](../understanding/telemetry.md#using-advantagescope-for-unit-conversion)).
 
 <figure><img src="../.gitbook/assets/datalog-walkthrough-4-explore-swerve-tab.gif" alt=""><figcaption><p>Expanding the field tree and dragging <code>Swerve/states/current</code> into the <strong>Swerve</strong> tab's Sources to visualize the recorded module states — the wheel angles/speeds shown here match exactly what the modules reported during the run.</p></figcaption></figure>
 
@@ -171,7 +171,7 @@ Because this is just a file, you can open the same `.wpilog` in as many tabs/win
 
 ## Related pages
 
-* [Telemetry](../details/interactive-blocks.md)
+* [Telemetry](../understanding/telemetry.md)
 * [DataLog Best Practices](../details/datalog-best-practices.md)
 * [Swerve Drive](../tutorials/swerve-drive.md)
 * [AdvantageKit Integration](../details/advantagekit-integration.md) — for the separate, unrelated concept of deterministic Log Replay

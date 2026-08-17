@@ -30,7 +30,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 
 * `withDataLogName(name)` turns on DataLog for every field enabled on that config, under the given prefix.
 * `withoutNetworkTables()` (or `withNetworkTables(false)`) stops those fields from being published to NT4 at all. You can freely enable DataLog, NetworkTables, both, or neither — they're independent toggles.
-* Which fields get logged is controlled the same way for both destinations — there's only one set of enabled fields, per `withTelemetryVerbosity()` and the individual `with*()` methods described in [Telemetry](interactive-blocks.md).
+* Which fields get logged is controlled the same way for both destinations — there's only one set of enabled fields, per `withTelemetryVerbosity()` and the individual `with*()` methods described in [Telemetry](../understanding/telemetry.md).
 
 {% hint style="success" %}
 Set a DataLogName for competition matches. It costs almost nothing to add and gives you a full record to review between matches — often the difference between guessing why a mechanism stalled and knowing exactly why.
@@ -108,6 +108,6 @@ This gives you the same fine-grained control (and independent DataLog name) on t
 
 ## Related pages
 
-* [Telemetry](interactive-blocks.md)
+* [Telemetry](../understanding/telemetry.md)
 * [Swerve Drive](../tutorials/swerve-drive.md)
 * [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md)
