@@ -110,3 +110,4 @@ This gives you the same fine-grained control (and independent DataLog name) on t
 
 * [Telemetry](interactive-blocks.md)
 * [Swerve Drive](../tutorials/swerve-drive.md)
+* [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md)

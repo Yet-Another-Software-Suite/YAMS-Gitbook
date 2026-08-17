@@ -24,6 +24,7 @@
 * [How do I use Exponential Profiles?](how-to/how-do-i-use-exponential-profiles.md)
 * [How do I use absolute encoders on my Arm?](how-to/how-do-i-use-absolute-encoders-on-my-arm.md)
 * [How to disable linear closed loop control?](how-to/how-to-disable-linear-closed-loop-control.md)
+* [How do I view my DataLog in AdvantageScope?](how-to/how-do-i-view-my-datalog-in-advantagescope.md)
 
 ## Understanding
 

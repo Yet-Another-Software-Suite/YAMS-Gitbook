@@ -353,3 +353,4 @@ The following files show a complete swerve drive implementation matching the har
 
 * Learn about [AdvantageKit Integration](../details/advantagekit-integration.md) for swerve
 * See [Organizing Configs in Constants](../details/config-organization.md) for cleaner code
+* Record this drive's telemetry to a file and review it after a match — see [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md)
