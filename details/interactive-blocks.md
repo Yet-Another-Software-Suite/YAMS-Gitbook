@@ -12,11 +12,17 @@ Using DataLog will increase your storage on the RIO and could have negative cons
 
 By default telemetry is sent to NetworkTables via NT4 entries. This is not the only way telemetry can be logged! If you set a DataLogName inside of `SmartMotorControllerTelemetryConfig` with `SmartMotorControllerTelemetryConfig.withDataLogName(entry)` it will log everything that is sent to NT4 in that log. However this can pollute your telemetry quite alot! We recommend pruning your telemetry so that only things you absolutely want in the file will appear.
 
-You can disable NetworkTables logging with `SmartMotorControllerTelemetryConfig.withoutNetworkTable()` !
+You can disable NetworkTables logging with `SmartMotorControllerTelemetryConfig.withoutNetworkTables()` !
 
 {% hint style="success" %}
 You should set a DataLogName for competition matches to ensure you have enough data to see what happened on the field and make real time adjustments. This will dramatically improve your season and is very easy to do!
 {% endhint %}
+
+{% hint style="info" %}
+Looking for a deeper dive on enabling/disabling NetworkTables, choosing what to log, and how this all works (or doesn't) for `SwerveDrive`? See [DataLog Best Practices](datalog-best-practices.md).
+{% endhint %}
+
+`MechanismTelemetry` is the class that actually coordinates all of this under the hood — every Mechanism (and every `SwerveModule`) owns one, and it is what wires a Mechanism's NT4 publishers to a WPILib `DataLog` entry whenever a DataLogName is configured, so both destinations always see the same values.
 
 ## NetworkTables
 
@@ -60,6 +66,17 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 ```
 
 <figure><img src="../.gitbook/assets/127.0.0.1 — AdvantageScope 9_2_2025 1_03_52 PM.png" alt=""><figcaption></figcaption></figure>
+
+## Swerve Drive Telemetry
+
+`SwerveDrive` and `SwerveModule` do **not** use `SmartMotorControllerTelemetryConfig` to pick individual fields, and there is no `withoutNetworkTables()` equivalent for a swerve drive — NetworkTables publishing for the drive-level fields (pose, gyro, chassis speeds, module states) and each module's fields (drive/azimuth motor telemetry, absolute encoder) always happens. Instead you choose a `TelemetryVerbosity` (`LOW`/`MID`/`HIGH`) with `SwerveDriveConfig.withTelemetry(...)` and `SwerveModuleConfig.withTelemetry(name, ...)`, and YAMS logs everything useful for that verbosity level automatically.
+
+You can still log to DataLog:
+
+* `SwerveDriveConfig.withDataLogName(name)` logs the drive's pose, gyro, and chassis speeds/module states.
+* `SwerveModuleConfig.withDataLogName(name)` logs that module's absolute encoder reading.
+
+Neither of these cascades down to the drive/azimuth motors of a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController` — see [DataLog Best Practices](datalog-best-practices.md) for a full walkthrough.
 
 ## Colors
 
