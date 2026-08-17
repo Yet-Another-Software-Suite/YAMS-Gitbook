@@ -46,6 +46,17 @@ A few guidelines:
 * **Prune before you log, not after.** DataLog files only grow — there's no way to selectively remove a field after the fact without re-recording. Decide what you need before the match, not while reviewing the log afterward.
 * **DataLog is not a substitute for NetworkTables during development.** Live tools (Elastic, Shuffleboard, AdvantageScope in live mode) read NT4, not DataLog. Keep NetworkTables on while you're actively tuning, and consider disabling it only for fields you truly don't need live, once you're locking in a competition build.
 
+Need to flip a field that doesn't have its own `with*()` method, or toggle several fields at once? `withCustom(field, value)` takes any `BooleanTelemetryField`/`DoubleTelemetryField` (or an array of either) plus a boolean, and enables or disables them accordingly:
+
+```java
+SmartMotorControllerTelemetryConfig telemetryConfig = new SmartMotorControllerTelemetryConfig()
+    .withTelemetryVerbosity(TelemetryVerbosity.LOW)
+    .withCustom(new SmartMotorControllerTelemetry.DoubleTelemetryField[]{
+        SmartMotorControllerTelemetry.DoubleTelemetryField.SupplyCurrent,
+        SmartMotorControllerTelemetry.DoubleTelemetryField.StatorCurrentLimit
+    }, true);
+```
+
 ## Enabling/disabling NetworkTables conditionally
 
 Because `withNetworkTables(boolean)` just takes a boolean, you can drive it from anything — including whether you're at an event:

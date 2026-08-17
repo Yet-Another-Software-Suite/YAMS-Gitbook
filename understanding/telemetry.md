@@ -67,6 +67,20 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 
 <figure><img src="../.gitbook/assets/127.0.0.1 — AdvantageScope 9_2_2025 1_03_52 PM.png" alt=""><figcaption></figcaption></figure>
 
+If a field you want doesn't have its own `with*()` method, or you want to enable/disable a whole set of fields in one call, use the `withCustom(...)` escape hatch. It takes a `BooleanTelemetryField`/`DoubleTelemetryField` (or an array of either) plus a boolean to enable or disable them:
+
+```java
+SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControllerTelemetryConfig()
+          .withTelemetryVerbosity(TelemetryVerbosity.LOW)
+          .withCustom(SmartMotorControllerTelemetry.DoubleTelemetryField.SupplyCurrent, true)
+          .withCustom(new SmartMotorControllerTelemetry.BooleanTelemetryField[]{
+              SmartMotorControllerTelemetry.BooleanTelemetryField.MotorInversion,
+              SmartMotorControllerTelemetry.BooleanTelemetryField.EncoderInversion
+          }, false);
+```
+
+See the `SmartMotorControllerTelemetryConfig` API reference page for the full method list. `withCustom(...)` is currently Java-only.
+
 ## Swerve Drive Telemetry
 
 `SwerveDrive` and `SwerveModule` do **not** use `SmartMotorControllerTelemetryConfig` to pick individual fields, and there is no `withoutNetworkTables()` equivalent for a swerve drive — NetworkTables publishing for the drive-level fields (pose, gyro, chassis speeds, module states) and each module's fields (drive/azimuth motor telemetry, absolute encoder) always happens. Instead you choose a `TelemetryVerbosity` (`LOW`/`MID`/`HIGH`) with `SwerveDriveConfig.withTelemetry(...)` and `SwerveModuleConfig.withTelemetry(name, ...)`, and YAMS logs everything useful for that verbosity level automatically.
