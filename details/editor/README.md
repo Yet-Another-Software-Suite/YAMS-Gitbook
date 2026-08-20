@@ -145,7 +145,7 @@ YAMS is not the only way to configure your SmartMotorController! You can always 
 
 ## Some Mechanism config options modify SMC configs
 
-Mechanism options like `.withSoftLimit` often will call the `SmartMotorControllerConfig.withSoftLimit` and do nothing else. This is to provide a seamless configuration for relevant areas in different configs.
+Mechanism options like `.withSoftLimits` often will call the `SmartMotorControllerConfig.withSoftLimits` and do nothing else. This is to provide a seamless configuration for relevant areas in different configs.
 
 ## Simulation without a mechanism
 

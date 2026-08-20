@@ -59,7 +59,7 @@ SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControl
           
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withClosedLoopController(4, 0, 0, DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
-      .withSoftLimit(Degrees.of(-30), Degrees.of(100))
+      .withSoftLimits(Degrees.of(-30), Degrees.of(100))
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withIdleMode(MotorMode.BRAKE)
       .withTelemetry("ElevatorMotor", motorTelemetryConfig)
@@ -126,7 +126,7 @@ All telemetry values in YAMS are logged with specific units. Understanding these
 
 ### Linear Mechanism Units
 
-When you configure a mechanism with a circumference (using `.withCircumference()`), linear telemetry fields become available:
+When you configure a mechanism with a circumference (using `.withMechanismCircumference()`, or one of the `.withWheelDiameter()`/`.withWheelRadius()`/`.withDrumRadius()` helpers that set it internally), linear telemetry fields become available:
 
 | Telemetry Field  | Unit                    | Description                      |
 | ---------------- | ----------------------- | -------------------------------- |

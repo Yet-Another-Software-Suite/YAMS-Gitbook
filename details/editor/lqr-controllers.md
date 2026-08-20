@@ -303,7 +303,7 @@ public class LQRArmSubsystem extends SubsystemBase {
             .withMomentOfInertia(Inches.of(24), Pounds.of(12))
             .withClosedLoopController(lqrController)
             .withFeedforward(new ArmFeedforward(0.1, 0.45, 1.2, 0.05))
-            .withAngleSoftLimits(Degrees.of(-10), Degrees.of(110))
+            .withSoftLimits(Degrees.of(-10), Degrees.of(110))
             .withClosedLoopTolerance(Degrees.of(1))
             .withIdleMode(MotorMode.BRAKE)
             .withStatorCurrentLimit(Amps.of(40))

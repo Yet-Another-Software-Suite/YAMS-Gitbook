@@ -72,7 +72,7 @@ This means:
 * **Physics are automatic** - based on your DCMotor, gearing, and mass/MOI configuration
 
 {% hint style="success" %}
-**Key Insight**: When you create a `TalonFXWrapper`, `SparkWrapper`, `NovaWrapper`, or any YAMS Mechanism, the simulation physics run automatically in sim mode. You write your IO class once using real hardware objects, and YAMS handles the rest.
+**Key Insight**: When you create a `TalonFXWrapper`, `TalonFXSWrapper`, `SparkWrapper`, or any YAMS Mechanism, the simulation physics run automatically in sim mode. You write your IO class once using real hardware objects, and YAMS handles the rest.
 {% endhint %}
 
 ## Step 1: Define the IO Interface
@@ -341,6 +341,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
         .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
         .withDrumRadius(Inches.of(0.75))  // Drum radius
+        .withStartingPosition(Meters.of(0.5))  // Starting height, used for simulation
         .withClosedLoopController(10, 0, 0.5)
         .withSoftLimits(Meters.of(0.02), Meters.of(1.2))
         .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))
@@ -353,7 +354,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     ElevatorConfig elevatorConfig = new ElevatorConfig()
         .withCarriageWeight(Pounds.of(10))                 // Carriage mass - used for simulation physics
         .withHardLimits(Meters.of(0), Meters.of(1.5))  // Physical hard stops for sim
-        .withStartingHeight(Meters.of(0.5))
         .withTelemetry("Elevator", TelemetryVerbosity.HIGH);
     
     // Step 4: Create Elevator mechanism - handles simulation automatically!
@@ -439,7 +439,7 @@ public class ShooterIOTalonFX implements ShooterIO {
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
         .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))  // Direct drive
         .withClosedLoopController(0.5, 0, 0)
-        .withSoftLimit(RPM.of(0), RPM.of(6000))  // Velocity soft limits
+        .withSoftLimits(RPM.of(0), RPM.of(6000))  // Velocity soft limits
         .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0.01));
     
     // Step 2: Create SmartMotorController (TalonFXWrapper)

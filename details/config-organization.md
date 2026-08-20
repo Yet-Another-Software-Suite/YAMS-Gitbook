@@ -24,12 +24,11 @@ public class ArmSubsystem extends SubsystemBase {
     
     SmartMotorController smc = new TalonFXWrapper(new TalonFX(1), DCMotor.getKrakenX60(1), smcConfig);
     
-    ArmConfig armConfig = new ArmConfig(smc)
+    ArmConfig armConfig = new ArmConfig()
         .withLength(Inches.of(18))
-        .withMass(Pounds.of(5))
         // ... more config
     
-    this.arm = new Arm(armConfig);
+    this.arm = new Arm(armConfig, smc);
   }
 }
 ```

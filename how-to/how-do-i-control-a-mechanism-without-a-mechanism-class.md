@@ -16,7 +16,7 @@ Mechanism classes are meant to be used with "tightly coupled" mechanisms where t
 
 ## Subsystems with `SmartMotorController`'s
 
-Subsystems given when you create the `SmartMotorControllerConfig` are only used for YAMS generated commands. This means that if you're using a YAMS generated command like `SmartMotorController.sysId()` or `Arm.run` or `Elevator.run` that command will be the **ONLY** command allowed to run on that subsystems.&#x20;
+Subsystems given when you create the `SmartMotorControllerConfig` are only used for YAMS generated commands. This means that if you're using a YAMS generated command like `Arm.run`, `Arm.setVoltage`, or `Elevator.run` that command will be the **ONLY** command allowed to run on that subsystems.&#x20;
 
 ## Controlling an Elevator without Elevator.run()
 
@@ -57,6 +57,8 @@ An example of this for an Elevator would be as follows
   .withControlMode(ControlMode.CLOSED_LOOP)
   // Elevator drum radius: derived from chain pitch and tooth count.
   .withDrumRadius(drumRadius)
+  // Starting height of the elevator, used for simulation.
+  .withStartingPosition(Meters.of(0.5))
   // Feedback Constants (PID Constants)
   .withClosedLoopController(kP, kI, kD)
   .withTrapezoidalProfile(maxVel, maxAccel)
@@ -81,6 +83,8 @@ An example of this for an Elevator would be as follows
   .withControlMode(ControlMode.CLOSED_LOOP)
   // Elevator drum radius: derived from chain pitch and tooth count.
   .withDrumRadius(drumRadius)
+  // Starting height of the elevator, used for simulation.
+  .withStartingPosition(Meters.of(0.5))
   // Feedback Constants (PID Constants)
   .withClosedLoopController(kP, kI, kD)
   .withTrapezoidalProfile(maxVel, maxAccel)
@@ -112,7 +116,6 @@ An example of this for an Elevator would be as follows
   // Include this only if you want a pretty sim
   /*
   private ElevatorConfig elevconfig = new ElevatorConfig()
-      .withStartingHeight(Meters.of(0.5))
       .withHardLimits(Meters.of(0), Meters.of(3))
       .withTelemetry("Elevator", TelemetryVerbosity.HIGH)
       .withCarriageWeight(Pounds.of(16));

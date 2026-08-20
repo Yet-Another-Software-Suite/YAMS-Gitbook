@@ -1,6 +1,6 @@
 # How to shoot with a Shooter?
 
-A flywheel shooter's effectiveness depends on reaching a stable velocity setpoint before the game piece enters the shooter. `FlyWheel` exposes velocity triggers (`isNear`, `atTarget`) so you can gate game piece injection on whether the wheel has spun up, rather than using a fixed time delay.
+A flywheel shooter's effectiveness depends on reaching a stable velocity setpoint before the game piece enters the shooter. `FlyWheel` exposes a velocity trigger (`isNear`) so you can gate game piece injection on whether the wheel has spun up, rather than using a fixed time delay.
 
 ## Create `Command`s with our `Shooter`
 

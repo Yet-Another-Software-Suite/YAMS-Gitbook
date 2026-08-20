@@ -252,7 +252,6 @@ When using exponential profiles, the profile itself handles the velocity and acc
 | TalonFX (Kraken, Falcon) | On-device (Motion Magic) | On-device (Motion Magic Expo) | Best performance            |
 | TalonFXS                 | On-device (Motion Magic) | On-device (Motion Magic Expo) | Best performance            |
 | SparkMax/SparkFlex       | On-device (MAXMotion)    | RoboRIO                       | Exponential runs on RoboRIO |
-| Nova                     | RoboRIO                  | RoboRIO                       | All profiles run on RoboRIO |
 
 {% hint style="info" %}
 When exponential profiles run on the RoboRIO, there's slightly more latency compared to on-device execution. However, the profile calculation is still very fast and suitable for most mechanisms.

@@ -18,9 +18,7 @@ import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Pounds;
-<strong>import static edu.wpi.first.units.Units.Second;
-</strong><strong>import static edu.wpi.first.units.Units.Seconds;
-</strong><strong>import static edu.wpi.first.units.Units.Volts;
+<strong>import static edu.wpi.first.units.Units.Seconds;
 </strong>
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
@@ -28,6 +26,7 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 <strong>import edu.wpi.first.units.measure.Angle;
+</strong><strong>import edu.wpi.first.units.measure.Voltage;
 </strong>import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import yams.mechanisms.SmartMechanism;
@@ -111,9 +110,10 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>  public Command set(double dutycycle) { return arm.set(dutycycle);}
 </strong>
 <strong>  /**
-</strong><strong>   * Run sysId on the {@link Arm}
+</strong><strong>   * Set the voltage of the arm, useful for feeding a WPILib {@link edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine}.
+</strong><strong>   * @param volts Voltage to apply.
 </strong><strong>   */
-</strong><strong>  public Command sysId() { return arm.sysId(Volts.of(7), Volts.of(2).per(Second), Seconds.of(4));}
+</strong><strong>  public Command setVoltage(Voltage volts) { return arm.setVoltage(volts);}
 </strong>
   /** Creates a new ExampleSubsystem. */
   public ExampleSubsystem() {}

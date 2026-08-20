@@ -18,7 +18,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withClosedLoopController(4, 0, 0)
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
       .withFeedforward(new ArmFeedforward(0, 0, 0, 0))
-      .withSoftLimit(Degrees.of(-30), Degrees.of(100))
+      .withSoftLimits(Degrees.of(-30), Degrees.of(100))
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withIdleMode(MotorMode.BRAKE)
       .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
@@ -43,7 +43,7 @@ Remember that it is always a good idea to have an absolute encoder attached to t
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withExternalEncoder(armMotor.getAbsoluteEncoder())
       .withExternalEncoderInverted(true)
-      .withExternalGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+      .withExternalEncoderGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withUseExternalFeedbackEncoder(true);
 ```
 
@@ -89,7 +89,7 @@ ArmConfig armCfg = new ArmConfig()
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withExternalEncoder(armMotor.getAbsoluteEncoder())
       .withExternalEncoderInverted(true)
-      .withExternalGearing(gearing(gearbox(3, 4)))
+      .withExternalEncoderGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withUseExternalFeedbackEncoder(true)
       .withStartingPosition(Degrees.of(0))
       .withSimStartingPosition(Degrees.of(0)); // Parallel to the ground
@@ -97,13 +97,13 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 
 ### Horizontal Zero
 
-`Arm.withHorizantalZero` allows you to set the offset of the Arm encoder or Absolute encoder which will make it read 0 when horizantal AKA parallel to the ground.
+`SmartMotorControllerConfig.withExternalEncoderZeroOffset` allows you to set the offset of the Arm encoder or Absolute encoder which will make it read 0 when horizontal AKA parallel to the ground.
 
 ```java
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withExternalEncoder(armMotor.getAbsoluteEncoder())
       .withExternalEncoderInverted(true)
-      .withExternalGearing(gearing(gearbox(3, 4)))
+      .withExternalEncoderGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withUseExternalFeedbackEncoder(true)
       .withExternalEncoderZeroOffset(Degrees.of(0));
 ```

@@ -8,24 +8,22 @@ This page provides a comprehensive comparison of supported `SmartMotorController
 
 ## Supported Motor Controllers
 
-| Wrapper           | Vendor     | Hardware                                         | Package Location               |
-| ----------------- | ---------- | ------------------------------------------------ | ------------------------------ |
-| `TalonFXWrapper`  | CTRE       | TalonFX (Kraken X60, Falcon 500)                 | `yams.motorcontrollers.remote` |
-| `TalonFXSWrapper` | CTRE       | TalonFXS (controls NEO, NEO 550, Vortex, Minion) | `yams.motorcontrollers.remote` |
-| `SparkWrapper`    | REV        | SparkMax, SparkFlex                              | `yams.motorcontrollers.local`  |
-| `NovaWrapper`     | ThriftyBot | ThriftyNova                                      | `yams.motorcontrollers.local`  |
+| Wrapper           | Vendor | Hardware                                         | Package Location               |
+| ----------------- | ------ | ------------------------------------------------ | ------------------------------ |
+| `TalonFXWrapper`  | CTRE   | TalonFX (Kraken X60, Falcon 500)                 | `yams.motorcontrollers.remote` |
+| `TalonFXSWrapper` | CTRE   | TalonFXS (controls NEO, NEO 550, Vortex, Minion) | `yams.motorcontrollers.remote` |
+| `SparkWrapper`    | REV    | SparkMax, SparkFlex                              | `yams.motorcontrollers.local`  |
 
 ## Vendor Configuration Classes
 
 Each wrapper accepts a specific vendor configuration class via `SmartMotorControllerConfig.withVendorConfig()`. This allows you to pass through vendor-specific settings that YAMS doesn't directly expose.
 
-| Wrapper                    | Accepted Vendor Config Class | Package                                 |
-| -------------------------- | ---------------------------- | --------------------------------------- |
-| `TalonFXWrapper`           | `TalonFXConfiguration`       | `com.ctre.phoenix6.configs`             |
-| `TalonFXSWrapper`          | `TalonFXSConfiguration`      | `com.ctre.phoenix6.configs`             |
-| `SparkWrapper` (SparkMax)  | `SparkMaxConfig`             | `com.revrobotics.spark.config`          |
-| `SparkWrapper` (SparkFlex) | `SparkFlexConfig`            | `com.revrobotics.spark.config`          |
-| `NovaWrapper`              | `ThriftyNovaConfig`          | `com.thethriftybot.devices.ThriftyNova` |
+| Wrapper                    | Accepted Vendor Config Class | Package                         |
+| -------------------------- | ---------------------------- | -------------------------------- |
+| `TalonFXWrapper`           | `TalonFXConfiguration`       | `com.ctre.phoenix6.configs`     |
+| `TalonFXSWrapper`          | `TalonFXSConfiguration`      | `com.ctre.phoenix6.configs`     |
+| `SparkWrapper` (SparkMax)  | `SparkMaxConfig`             | `com.revrobotics.spark.config`  |
+| `SparkWrapper` (SparkFlex) | `SparkFlexConfig`            | `com.revrobotics.spark.config`  |
 
 {% hint style="warning" %}
 **SparkWrapper Note**: The vendor config class must match the actual hardware. Use `SparkMaxConfig` for `SparkMax` controllers and `SparkFlexConfig` for `SparkFlex` controllers. Using the wrong config type will throw a `SmartMotorControllerConfigurationException`.
@@ -118,26 +116,6 @@ SparkFlex sparkFlex = new SparkFlex(1, MotorType.kBrushless);
 SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), config);
 ```
 
-#### ThriftyNova with ThriftyNovaConfig
-
-```java
-import com.thethriftybot.devices.ThriftyNova;
-import com.thethriftybot.devices.ThriftyNova.ThriftyNovaConfig;
-
-ThriftyNovaConfig vendorConfig = new ThriftyNovaConfig();
-// Configure vendor-specific settings not exposed by YAMS
-
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
-    .withVendorConfig(vendorConfig)  // Must be ThriftyNovaConfig
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(0.5, 0, 0)
-    // ... other YAMS config
-    ;
-
-ThriftyNova nova = new ThriftyNova(1);
-SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
-```
-
 {% hint style="info" %}
 **Configuration Priority**: Settings in `SmartMotorControllerConfig` always take precedence over vendor config settings. The vendor config is applied first as a base, then YAMS overwrites any settings it manages directly.
 {% endhint %}
@@ -151,62 +129,61 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 | ✅      | Fully Supported                 |
 | ⚠️     | Partially Supported (see notes) |
 | ❌      | Not Supported                   |
-| 🔧     | Requires Vendor Config          |
 
 ***
 
 ### Basic Configuration
 
-| Feature                   | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ------------------------- | ------- | -------- | ------------- | ---- |
-| Motor Inversion           | ✅       | ✅        | ✅             | ✅    |
-| Encoder Inversion         | ✅       | ✅        | ✅             | ❌    |
-| Idle Mode (Brake/Coast)   | ✅       | ✅        | ✅             | ✅    |
-| Reset Previous Config     | ✅       | ✅        | ✅             | ✅    |
-| Vendor Config Passthrough | ✅       | ✅        | ✅             | ✅    |
-| Starting Position         | ✅       | ✅        | ✅             | ✅    |
+| Feature                   | TalonFX | TalonFXS | SparkMax/Flex |
+| ------------------------- | ------- | -------- | ------------- |
+| Motor Inversion           | ✅       | ✅        | ✅             |
+| Encoder Inversion         | ✅       | ✅        | ✅             |
+| Idle Mode (Brake/Coast)   | ✅       | ✅        | ✅             |
+| Reset Previous Config     | ✅       | ✅        | ✅             |
+| Vendor Config Passthrough | ✅       | ✅        | ✅             |
+| Starting Position         | ✅       | ✅        | ✅             |
 
 ### Current Limits
 
-| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| -------------------- | ------- | -------- | ------------- | ---- |
-| Stator Current Limit | ✅       | ✅        | ✅             | ✅    |
-| Supply Current Limit | ✅       | ✅        | :red\_circle: | ✅    |
+| Feature              | TalonFX | TalonFXS | SparkMax/Flex |
+| --------------------- | ------- | -------- | -------------- |
+| Stator Current Limit | ✅       | ✅        | ✅              |
+| Supply Current Limit | ✅       | ✅        | ❌              |
 
 ### Voltage Configuration
 
-| Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ----------------------- | ------- | -------- | ------------- | ---- |
-| Voltage Compensation    | ✅       | ✅        | ✅             | ✅    |
-| Closed Loop Max Voltage | ✅       | ✅        | ✅             | ✅    |
+| Feature                 | TalonFX | TalonFXS | SparkMax/Flex |
+| ------------------------ | ------- | -------- | -------------- |
+| Voltage Compensation    | ❌       | ❌        | ✅              |
+| Closed Loop Max Voltage | ✅       | ✅        | ✅              |
+
+{% hint style="warning" %}
+**Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an exception if voltage compensation is configured, it's only supported on `SparkWrapper`.
+{% endhint %}
 
 ### Ramp Rates
 
-| Feature               | TalonFX | TalonFXS | SparkMax/Flex | Nova                        |
-| --------------------- | ------- | -------- | ------------- | --------------------------- |
-| Open Loop Ramp Rate   | ✅       | ✅        | ✅             | ⚠️ (uses closed loop value) |
-| Closed Loop Ramp Rate | ✅       | ✅        | ✅             | ✅                           |
-
-{% hint style="warning" %}
-**Nova Note**: ThriftyNova does not support separate open loop and closed loop ramp rates. The closed loop ramp rate value is used for both.
-{% endhint %}
+| Feature               | TalonFX | TalonFXS | SparkMax/Flex |
+| ---------------------- | ------- | -------- | -------------- |
+| Open Loop Ramp Rate   | ✅       | ✅        | ✅              |
+| Closed Loop Ramp Rate | ✅       | ✅        | ✅              |
 
 ### Gearing
 
-| Feature                          | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| -------------------------------- | ------- | -------- | ------------- | ---- |
-| Mechanism Gearing                | ✅       | ✅        | ✅             | ✅    |
-| External Encoder Gearing         | ✅       | ✅        | ✅             | ✅    |
-| Mechanism Circumference (Linear) | ✅       | ✅        | ✅             | ✅    |
+| Feature                          | TalonFX | TalonFXS | SparkMax/Flex |
+| ---------------------------------- | ------- | -------- | -------------- |
+| Mechanism Gearing                | ✅       | ✅        | ✅              |
+| External Encoder Gearing         | ✅       | ✅        | ✅              |
+| Mechanism Circumference (Linear) | ✅       | ✅        | ✅              |
 
 ### Closed Loop Control
 
-| Feature                 | TalonFX      | TalonFXS     | SparkMax/Flex | Nova         |
-| ----------------------- | ------------ | ------------ | ------------- | ------------ |
-| PID Controller          | ✅            | ✅            | ✅             | ✅            |
-| LQR Controller          | ⚠️ (RoboRIO) | ⚠️ (RoboRIO) | ⚠️ (RoboRIO)  | ⚠️ (RoboRIO) |
-| Closed Loop Tolerance   | ✅            | ✅            | ✅             | ✅            |
-| Control Period Override | ✅            | ✅            | ✅             | ✅            |
+| Feature                 | TalonFX      | TalonFXS     | SparkMax/Flex                        |
+| ------------------------ | ------------ | ------------ | ------------------------------------- |
+| PID Controller          | ✅            | ✅            | ✅                                     |
+| LQR Controller          | ⚠️ (RoboRIO) | ⚠️ (RoboRIO) | ⚠️ (RoboRIO)                          |
+| Closed Loop Tolerance   | ✅            | ✅            | ✅                                     |
+| Control Period Override | ❌            | ❌            | ⚠️ (requires an Exponential Profile) |
 
 {% hint style="warning" %}
 **LQR Controller Execution**: LQR is **not natively supported** by any motor controller hardware. When configured, the closed loop control runs on the **RoboRIO** via `SmartMotorController.iterateClosedLoop()`. This means you must call `iterateClosedLoop()` in your periodic method (mechanism classes handle this automatically). See [LQR Controllers](lqr-controllers.md) for details.
@@ -214,62 +191,60 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 
 ### Motion Profiles
 
-| Feature             | TalonFX               | TalonFXS              | SparkMax/Flex | Nova         |
-| ------------------- | --------------------- | --------------------- | ------------- | ------------ |
-| Trapezoidal Profile | ✅ (Motion Magic)      | ✅ (Motion Magic)      | ✅ (MAXMotion) | ⚠️(RoboRIO)  |
-| Exponential Profile | ✅ (Motion Magic Expo) | ✅ (Motion Magic Expo) | ⚠️ (RoboRIO)  | ⚠️ (RoboRIO) |
+| Feature             | TalonFX               | TalonFXS              | SparkMax/Flex |
+| -------------------- | --------------------- | --------------------- | -------------- |
+| Trapezoidal Profile | ✅ (Motion Magic)      | ✅ (Motion Magic)      | ✅ (MAXMotion) |
+| Exponential Profile | ✅ (Motion Magic Expo) | ✅ (Motion Magic Expo) | ⚠️ (RoboRIO)   |
 
 {% hint style="info" %}
 **Profile Execution Location**:
 
 * **TalonFX/TalonFXS**: Profiles run on the motor controller (Motion Magic)
 * **SparkMax/SparkFlex**: Trapezoidal profiles run on motor controller (MAXMotion), exponential profiles run on RoboRIO
-* **Nova**: All profiles run on RoboRIO
 {% endhint %}
 
 ### Feedforward
 
-| Feature                | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ---------------------- | ------- | -------- | ------------- | ---- |
-| SimpleMotorFeedforward | ✅       | ✅        | ✅             | ✅    |
-| ArmFeedforward         | ✅       | ✅        | ✅             | ✅    |
-| ElevatorFeedforward    | ✅       | ✅        | ✅             | ✅    |
-| Simulation Feedforward | ✅       | ✅        | ✅             | ✅    |
+| Feature                | TalonFX | TalonFXS | SparkMax/Flex |
+| ----------------------- | ------- | -------- | -------------- |
+| SimpleMotorFeedforward | ✅       | ✅        | ✅              |
+| ArmFeedforward         | ✅       | ✅        | ✅              |
+| ElevatorFeedforward    | ✅       | ✅        | ✅              |
+| Simulation Feedforward | ✅       | ✅        | ✅              |
 
 ### Soft Limits
 
-| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova                  |
-| -------------------- | ------- | -------- | ------------- | --------------------- |
-| Angle Soft Limits    | ✅       | ✅        | ✅             | ✅                     |
-| Distance Soft Limits | ✅       | ✅        | ✅             | ✅                     |
-| Continuous Wrapping  | ✅       | ✅        | ✅             | ⚠️ (RoboRIO PID only) |
+| Feature              | TalonFX | TalonFXS | SparkMax/Flex |
+| --------------------- | ------- | -------- | -------------- |
+| Angle Soft Limits    | ✅       | ✅        | ✅              |
+| Distance Soft Limits | ✅       | ✅        | ✅              |
+| Continuous Wrapping  | ✅       | ✅        | ✅              |
 
 ### External Encoders
 
-| Feature                      | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ---------------------------- | ------- | -------- | ------------- | ---- |
-| External Encoder Support     | ✅       | ✅        | ✅             | ✅    |
-| External Encoder Inversion   | ✅       | ✅        | ✅             | ❌    |
-| External Encoder Zero Offset | ✅       | ✅        | ✅             | ❌    |
-| Use External for Feedback    | ✅       | ✅        | ✅             | ✅    |
-| Feedback Synchronization     | ✅       | ✅        | ✅             | ❌    |
+| Feature                      | TalonFX | TalonFXS | SparkMax/Flex                        |
+| ----------------------------- | ------- | -------- | -------------------------------------- |
+| External Encoder Support     | ✅       | ✅        | ✅                                      |
+| External Encoder Inversion   | ✅       | ✅        | ✅                                      |
+| External Encoder Zero Offset | ✅       | ✅        | ✅                                      |
+| Use External for Feedback    | ✅       | ✅        | ✅                                      |
+| Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an Exponential Profile or LQR controller) |
 
 **Supported External Encoder Types:**
 
 | Wrapper       | Supported Encoders                             |
-| ------------- | ---------------------------------------------- |
+| ------------- | ----------------------------------------------- |
 | TalonFX       | `CANcoder`, `CANdi` (PWM1/PWM2)                |
 | TalonFXS      | `CANcoder`, `CANdi` (PWM1/PWM2)                |
 | SparkMax/Flex | `SparkAbsoluteEncoder` (Through Bore, REV Hex) |
-| Nova          | ThriftyNova `ExternalEncoder` (ABS type)       |
 
 ### Follower Motors
 
-| Feature                   | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ------------------------- | ------- | -------- | ------------- | ---- |
-| Hardware Followers        | ✅       | ✅        | ✅             | ✅    |
-| Follower Inversion        | ✅       | ✅        | ✅             | ✅    |
-| Loosely Coupled Followers | ✅       | ✅        | ✅             | ✅    |
+| Feature                   | TalonFX | TalonFXS | SparkMax/Flex |
+| --------------------------- | ------- | -------- | -------------- |
+| Hardware Followers        | ✅       | ✅        | ✅              |
+| Follower Inversion        | ✅       | ✅        | ✅              |
+| Loosely Coupled Followers | ✅       | ✅        | ✅              |
 
 {% hint style="warning" %}
 **Follower Compatibility**: Followers must be the same brand as the leader motor controller. You cannot mix vendors for hardware followers.
@@ -277,33 +252,30 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 
 ### Telemetry
 
-| Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ----------------------- | ------- | -------- | ------------- | ---- |
-| Telemetry Name          | ✅       | ✅        | ✅             | ✅    |
-| Telemetry Verbosity     | ✅       | ✅        | ✅             | ✅    |
-| Custom Telemetry Config | ✅       | ✅        | ✅             | ✅    |
+| Feature                 | TalonFX | TalonFXS | SparkMax/Flex |
+| ------------------------- | ------- | -------- | -------------- |
+| Telemetry Name          | ✅       | ✅        | ✅              |
+| Telemetry Verbosity     | ✅       | ✅        | ✅              |
+| Custom Telemetry Config | ✅       | ✅        | ✅              |
 
 ### Simulation
 
-| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| -------------------- | ------- | -------- | ------------- | ---- |
-| DCMotorSim           | ✅       | ✅        | ✅             | ✅    |
-| Moment of Inertia    | ✅       | ✅        | ✅             | ✅    |
-| Custom Sim Supplier  | ✅       | ✅        | ✅             | ✅    |
-| External Encoder Sim | ✅       | ✅        | ✅             | ⚠️   |
+| Feature              | TalonFX | TalonFXS | SparkMax/Flex |
+| --------------------- | ------- | -------- | -------------- |
+| DCMotorSim           | ✅       | ✅        | ✅              |
+| Moment of Inertia    | ✅       | ✅        | ✅              |
+| Custom Sim Supplier  | ✅       | ✅        | ✅              |
+| External Encoder Sim | ✅       | ✅        | ✅              |
 
 ### Safety Features
 
-| Feature            | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ------------------ | ------- | -------- | ------------- | ---- |
-| Temperature Cutoff | ❌       | ❌        | ❌             | ✅    |
+| Feature            | TalonFX | TalonFXS | SparkMax/Flex                        |
+| -------------------- | ------- | -------- | -------------------------------------- |
+| Temperature Cutoff | ❌       | ❌        | ⚠️ (requires no motion profile configured) |
 
-### SysId Integration
-
-| Feature               | TalonFX          | TalonFXS         | SparkMax/Flex | Nova |
-| --------------------- | ---------------- | ---------------- | ------------- | ---- |
-| SysId Routine Support | ✅ (SignalLogger) | ✅ (SignalLogger) | ✅             | ✅    |
-| Custom SysId Config   | ✅                | ✅                | ✅             | ✅    |
+{% hint style="info" %}
+YAMS doesn't provide a built-in SysId routine. Use `SmartMechanism.setVoltage(Voltage)` (available on every mechanism) as the voltage-consumer function for WPILib's own `SysIdRoutine`.
+{% endhint %}
 
 ***
 
@@ -327,13 +299,6 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 * NEO 550 (SparkMax with brushless mode)
 * NEO Vortex (SparkFlex)
 * Any brushless motor (SparkMax/SparkFlex)
-
-### NovaWrapper
-
-* NEO
-* NEO 550
-* NEO Vortex
-* Any motor compatible with ThriftyNova
 
 ***
 
@@ -395,35 +360,9 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNEO(1), config);
 ```
 
-### ThriftyNova Basic Setup
-
-```java
-ThriftyNova nova = new ThriftyNova(1);
-
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(0.5, 0, 0)
-    .withGearing(new MechanismGearing(GearBox.fromReductionStages(5)))
-    .withFeedforward(new SimpleMotorFeedforward(0, 0.12, 0))
-    .withIdleMode(MotorMode.COAST)
-    .withStatorCurrentLimit(Amps.of(30))
-    .withTelemetry("IntakeMotor", TelemetryVerbosity.MEDIUM);
-
-SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
-```
-
 ***
 
 ## Known Limitations
-
-### ThriftyNova (NovaWrapper)
-
-* No separate open/closed loop ramp rates
-* No encoder inversion support
-* No external encoder inversion
-* No zero offset for external encoders
-* No feedback synchronization threshold
-* Continuous wrapping only works with RoboRIO-side PID
 
 ### SparkMax/SparkFlex (SparkWrapper)
 
