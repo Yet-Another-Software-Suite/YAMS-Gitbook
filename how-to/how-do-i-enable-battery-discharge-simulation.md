@@ -2,9 +2,7 @@
 
 By default, `BatterySim` only models instantaneous voltage sag from combined current draw, and the simulated battery itself never changes, so it sags from the same fully-charged 12V/20mΩ baseline whether it's the first cycle of the match or the last. Enabling discharge simulation layers state-of-charge modeling on top: as your simulated robot draws amp-hours, the battery's open-circuit voltage droops and its internal resistance rises, so a long autonomous-plus-teleop simulation run actually sags harder near the end, the way a real battery does late in a match. This page is the practical walkthrough; for the full explanation of why YAMS models one shared battery at all, see [Battery Simulation](../details/editor/battery-simulation.md).
 
-{% stepper %}
-{% step %}
-#### Turn on discharge modeling
+## Turn on discharge modeling
 
 Call `BatterySim.enableDischarge(...)` once, early on, with the capacity, nominal voltage, and nominal resistance of the battery you're modeling. `robotInit()` is a good place for it. A fresh 18 Ah competition battery is a reasonable default if you don't have measured numbers for your own.
 
@@ -23,16 +21,11 @@ public void robotInit() {
 Discharge modeling only affects simulation. On a real robot `BatterySim` is never consulted, the RIO reports the actual battery voltage from hardware, so this call is a no-op there.
 {% endhint %}
 
-{% endstep %}
-
-{% step %}
-#### Make sure your mechanisms report accurate current draw
+## Make sure your mechanisms report accurate current draw
 
 Discharge modeling can only drain the simulated battery as realistically as the current draw it's fed, and that comes straight out of each mechanism's physics simulation. If a mechanism's moment of inertia is a default/guessed value rather than a real one, its simulated current draw, and therefore how fast it drains the modeled battery, will be too low. Set a real MOI on each `SmartMotorControllerConfig` with `.withMomentOfInertia(...)` before relying on discharge numbers; see [MOI](../details/turrets-wrists.md#moi) for how.
-{% endstep %}
 
-{% step %}
-#### Reset between runs (optional)
+## Reset between runs (optional)
 
 `BatterySim` carries discharge state across simulation runs the same way a real battery carries charge across matches. If you want every simulated match or unit test to start from a full charge instead of inheriting drain from the previous run, call `BatterySim.resetDischarge()` at the start of it, in `testInit()` for unit tests, or wherever you reset robot state between simulated matches.
 
@@ -45,10 +38,7 @@ public void testInit() {
 
 Call `BatterySim.disableDischarge()` instead if you want to turn discharge modeling back off entirely and revert to a constant nominal voltage/resistance.
 
-{% endstep %}
-
-{% step %}
-#### Read the state of charge for telemetry (optional)
+## Read the state of charge for telemetry (optional)
 
 `BatterySim.getStateOfCharge()` returns the modeled charge from `0` (empty) to `1` (full), so you can publish it to a dashboard or log it alongside your other telemetry to watch the battery drain over a simulated match.
 
@@ -56,10 +46,7 @@ Call `BatterySim.disableDischarge()` instead if you want to turn discharge model
 SmartDashboard.putNumber("Battery/StateOfCharge", BatterySim.getStateOfCharge());
 ```
 
-{% endstep %}
-
-{% step %}
-#### Replace the state-of-charge interpolation curve (optional)
+## Replace the state-of-charge interpolation curve (optional)
 
 `enableDischarge(...)` sags voltage along a curve tuned for a typical FRC sealed lead-acid battery, flat through most of the charge, then dropping off quickly near depletion. If that doesn't match the specific battery you're trying to model, call `BatterySim.replaceSOCInterpolation(...)` with your own curve **before** calling `enableDischarge(...)`.
 
@@ -93,17 +80,17 @@ BatterySim.enableDischarge(15.0, Volts.of(12.6), Milliohms.of(28));
 #include <map>
 #include <yams/motorcontrollers/simulation/BatterySim.hpp>
 
-// Step 1: Turn on discharge modeling.
+// Turn on discharge modeling.
 yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
     18.0, units::volt_t{12.9}, units::ohm_t{0.020});
 
-// Step 3 (optional): Reset between runs, e.g. in TestInit().
+// Reset between runs (optional), e.g. in TestInit().
 yams::motorcontrollers::simulation::BatterySim::ResetDischarge();
 
-// Step 4 (optional): Read the state of charge for telemetry.
+// Read the state of charge for telemetry (optional).
 double soc = yams::motorcontrollers::simulation::BatterySim::GetStateOfCharge();
 
-// Optional: Replace the state-of-charge interpolation curve, before EnableDischarge(...).
+// Replace the state-of-charge interpolation curve (optional), before EnableDischarge(...).
 std::map<double, double> wornBatteryCurve{
     {0.00, 8.0},  {0.05, 9.5},  {0.10, 10.5}, {0.20, 11.2}, {0.40, 11.6},
     {0.60, 11.9}, {0.80, 12.2}, {0.90, 12.4}, {1.00, 12.6},
@@ -116,8 +103,6 @@ yams::motorcontrollers::simulation::BatterySim::ReplaceSOCInterpolation(wornBatt
 {% hint style="info" %}
 Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end won't sag realistically there. See [Battery Simulation → Custom discharge curves](../details/editor/battery-simulation.md#custom-discharge-curves) for more on choosing curve points.
 {% endhint %}
-{% endstep %}
-{% endstepper %}
 
 ## Related pages
 

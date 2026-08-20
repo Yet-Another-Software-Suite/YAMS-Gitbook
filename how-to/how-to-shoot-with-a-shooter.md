@@ -2,9 +2,7 @@
 
 A flywheel shooter's effectiveness depends on reaching a stable velocity setpoint before the game piece enters the shooter. `FlyWheel` exposes velocity triggers (`isNear`, `atTarget`) so you can gate game piece injection on whether the wheel has spun up, rather than using a fixed time delay.
 
-{% stepper %}
-{% step %}
-#### Create `Command`s with our `Shooter`
+## Create `Command`s with our `Shooter`
 
 We use the `Shooter` class as a interface to create commands!
 
@@ -122,10 +120,7 @@ public class ExampleSubsystem extends SubsystemBase {
 
 </code></pre>
 
-{% endstep %}
-
-{% step %}
-#### Bind buttons to our `Shooter`
+## Bind buttons to our `Shooter`
 
 We bind buttons to use the `Commands` from our `Arm`
 
@@ -203,5 +198,3 @@ public class RobotContainer {
 }
 
 </code></pre>
-{% endstep %}
-{% endstepper %}

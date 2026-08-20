@@ -2,9 +2,7 @@
 
 An `Arm`'s position setpoint is an `Angle` expressed in WPILib's typed unit system (`Angle`, `edu.wpi.first.units.measure.Angle`). Understanding the difference between `run()`, which tracks the setpoint continuously, and `runTo()`, which ends the command once the setpoint is reached within tolerance, shapes how you bind controls in `RobotContainer`.
 
-{% stepper %}
-{% step %}
-#### Create `Command`s with our `Arm`
+## Create `Command`s with our `Arm`
 
 We use the `Arm` class as a interface to create commands!
 
@@ -135,10 +133,7 @@ public class ExampleSubsystem extends SubsystemBase {
 
 </code></pre>
 
-{% endstep %}
-
-{% step %}
-#### Bind buttons to our `Arm`
+## Bind buttons to our `Arm`
 
 We bind buttons to use the `Commands` from our `Arm`
 
@@ -216,5 +211,3 @@ public class RobotContainer {
 }
 
 </code></pre>
-{% endstep %}
-{% endstepper %}

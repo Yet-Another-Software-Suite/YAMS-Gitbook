@@ -6,9 +6,7 @@
 
 Every YAMS telemetry field can be routed to a WPILib `DataLog` in addition to (or instead of) NetworkTables, see [Telemetry](../understanding/telemetry.md) and [DataLog Best Practices](../details/datalog-best-practices.md) for the full API. This page is the practical walkthrough, recorded end-to-end on the [Swerve Drive tutorial](../tutorials/swerve-drive.md)'s example subsystem: configuring it to log, running it, and opening the resulting file in [AdvantageScope](https://docs.advantagekit.org/tools/advantagescope/).
 
-{% stepper %}
-{% step %}
-#### Make sure a DataLog is actually being written
+## Make sure a DataLog is actually being written
 
 `DataLogManager` owns the actual file on disk; YAMS just writes into it. Start it once, early, in `Robot.java`:
 
@@ -26,10 +24,7 @@ If you never call `DataLogManager.start()` yourself, YAMS still starts it lazily
 
 On the real robot, `.wpilog` files are written to a USB drive if one is plugged in, otherwise to `/home/lvuser/logs` on the roboRIO's internal storage. In simulation, they land in your project's `logs/` folder next to `build.gradle`. WPILib initially names the file `FRC_TBD_<random>.wpilog` and renames it to a timestamp (e.g. `FRC_20260817_010558.wpilog`) once it has a real time source, you'll see a `DataLog: Renamed log file from '...' to '...'` line in the console when that happens.
 
-{% endstep %}
-
-{% step %}
-#### Configure the SwerveDrive to log
+## Configure the SwerveDrive to log
 
 This walkthrough builds on the `SwerveSubsystem` from the [Swerve Drive tutorial](../tutorials/swerve-drive.md), with `withDataLogName(...)` added at three levels: the drive, each module, and (for field-level control) the azimuth motor inside each module.
 
@@ -123,7 +118,7 @@ See the C++ API reference's `SwerveDriveConfig` and `SwerveModuleConfig` pages f
 `SwerveDriveConfig.withDataLogName(...)` and `SwerveModuleConfig.withDataLogName(...)` are independent calls, setting one does not cascade to the other, and neither cascades to the drive/azimuth motors. That's why `createModule()` above sets a third, separate DataLog name directly on the azimuth motor's own `SmartMotorControllerTelemetryConfig`.
 {% endhint %}
 
-##### Granular control: which fields, and where they go
+### Granular control: which fields, and where they go
 
 The drive and azimuth motors underneath each module are ordinary `SmartMotorController`s, so, as shown on `azimuthCfg` above, you get the same field-level control you'd get on any standalone mechanism's motor by building a `SmartMotorControllerTelemetryConfig` and handing it to `withTelemetry(name, ...)` instead of the `withTelemetry(name, verbosity)` shorthand.
 
@@ -145,19 +140,13 @@ A common competition pattern is to keep NT4 for practice/pit testing and drop it
 Want the deeper rationale for choosing LOW vs. MID vs. HIGH, and why to prune before a competition rather than after? See [DataLog Best Practices](../details/datalog-best-practices.md).
 {% endhint %}
 
-{% endstep %}
-
-{% step %}
-#### Run it and record
+## Run it and record
 
 Deploy or simulate the robot, enable it, and drive around for a bit, every enabled loop writes to both NetworkTables and the DataLog for every field configured above.
 
 <figure><img src="../.gitbook/assets/datalog-walkthrough-2-run-in-sim.gif" alt=""><figcaption><p>Running the swerve example in WPILib simulation and driving it around in Teleoperated to generate telemetry.</p></figcaption></figure>
 
-{% endstep %}
-
-{% step %}
-#### Pull the file and open it in AdvantageScope
+## Pull the file and open it in AdvantageScope
 
 1. Grab the `.wpilog` off the RIO (USB drive, or `scp lvuser@10.TE.AM.2:/home/lvuser/logs/*.wpilog .`), or straight from your sim project's `logs/` folder.
 2. Open **AdvantageScope**, then **File → Open File...** (or drag the `.wpilog` onto the window). Do **not** use "Connect to Robot/Simulator", that connects live over NetworkTables, which shows _current_ values, not the recorded run.
@@ -166,10 +155,7 @@ Deploy or simulate the robot, enable it, and drive around for a bit, every enabl
 
 3. AdvantageScope reads every logged entry into a field tree in the sidebar, grouped by the DataLog name prefixes you set when configuring the SwerveDrive, with the `"Swerve"` prefix from this example, that's a single `Swerve` group containing `chassis/current`, `chassis/desired`, `pose`, `gyro`, and a `frontleft`/`frontright`/`backleft`/`backright` entry per module (plus that module's `angleMotor` DataLog entries from the granular control config).
 
-{% endstep %}
-
-{% step %}
-#### Explore the data
+## Explore the data
 
 Add a tab to visualize the data:
 
@@ -184,8 +170,6 @@ Scrub the timeline at the top of the window to step through the run, or hit play
 {% hint style="success" %}
 Because this is just a file, you can open the same `.wpilog` in as many tabs/windows as you want, compare two different matches side by side, or hand the file to a teammate to look at independently, none of that requires the robot, the simulator, or AdvantageKit replay to be running.
 {% endhint %}
-{% endstep %}
-{% endstepper %}
 
 ## Related pages
 
