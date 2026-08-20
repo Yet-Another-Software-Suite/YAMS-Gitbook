@@ -52,6 +52,8 @@ SmartDashboard.putNumber("Battery/StateOfCharge", BatterySim.getStateOfCharge())
 
 Reach for this when you're modeling a well-used competition battery that sags earlier than a fresh one, or when you have real measured voltage-vs-state-of-charge data from a load tester.
 
+{% tabs %}
+{% tab title="Java" %}
 ```java
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import yams.motorcontrollers.simulation.BatterySim;
@@ -71,15 +73,9 @@ BatterySim.replaceSOCInterpolation(wornBatteryCurve);
 // Call enableDischarge(...) AFTER replaceSOCInterpolation(...), or it uses the default curve.
 BatterySim.enableDischarge(15.0, Volts.of(12.6), Milliohms.of(28));
 ```
+{% endtab %}
 
-{% hint style="info" %}
-Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end won't sag realistically there. See [Battery Simulation → Custom discharge curves](../details/editor/battery-simulation.md#custom-discharge-curves) for more on choosing curve points.
-{% endhint %}
-
-### C++
-
-The same steps apply to `yams::motorcontrollers::simulation::BatterySim`:
-
+{% tab title="C++" %}
 ```cpp
 #include <map>
 #include <yams/motorcontrollers/simulation/BatterySim.hpp>
@@ -101,6 +97,12 @@ std::map<double, double> wornBatteryCurve{
 };
 yams::motorcontrollers::simulation::BatterySim::ReplaceSOCInterpolation(wornBatteryCurve);
 ```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end won't sag realistically there. See [Battery Simulation → Custom discharge curves](../details/editor/battery-simulation.md#custom-discharge-curves) for more on choosing curve points.
+{% endhint %}
 
 ## Related pages
 
