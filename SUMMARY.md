@@ -34,6 +34,7 @@
   * [Motor Controller Feature Matrix](details/editor/feature-matrix.md)
   * [Simulation Only PID + FeedForward](details/editor/simulation-only-pid-+-feedforward.md)
   * [Limiting Power Consumption](details/editor/limiting-power-consumption.md)
+  * [Battery Simulation](details/editor/battery-simulation.md)
   * [Exponential Profiles](details/editor/exponential-profiles.md)
   * [LQR Controllers](details/editor/lqr-controllers.md)
 * [Sensors](details/sensors.md)
