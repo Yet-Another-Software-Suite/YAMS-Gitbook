@@ -2,7 +2,9 @@
 
 `Elevator` setpoints are expressed as `Distance` values (meters, inches, etc.). The motion profile limits how fast the elevator accelerates to the target, so commanding a large height change won't slam the carriage into the top hard stop if your profile parameters are tuned correctly.
 
-### Create and Configure our `Elevator`
+{% stepper %}
+{% step %}
+#### Create and Configure our `Elevator`
 
 Our `Arm` will easily configure the `SmartMotorController` and create a simple and intuitive interface.
 
@@ -119,7 +121,10 @@ public class ExampleSubsystem extends SubsystemBase {
 }
 </code></pre>
 
-### Create `Command`s with our `Elevator`
+{% endstep %}
+
+{% step %}
+#### Create `Command`s with our `Elevator`
 
 We use the `Elevator` class as a interface to create commands!
 
@@ -229,7 +234,10 @@ public class ExampleSubsystem extends SubsystemBase {
 
 </code></pre>
 
-### Bind buttons to our `Elevator`
+{% endstep %}
+
+{% step %}
+#### Bind buttons to our `Elevator`
 
 We bind buttons to use the `Commands` from our `Elevator`
 
@@ -308,7 +316,10 @@ public class RobotContainer {
 
 </code></pre>
 
-### Simulate our Elevator!
+{% endstep %}
+
+{% step %}
+#### Simulate our Elevator!
 
 We can use our `Elevator` in simulation, with the exact same code that will control the real robot!
 
@@ -327,3 +338,5 @@ Press **Teleoperated** in **Robot State** then you can use your controller like 
 <figure><img src="../.gitbook/assets/Robot Simulation 2025-08-30 18-37-59.gif" alt=""><figcaption></figcaption></figure>
 
 Congratulations on successfully programming your Elevator!! :tada::tada:
+{% endstep %}
+{% endstepper %}

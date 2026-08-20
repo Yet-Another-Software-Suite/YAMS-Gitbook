@@ -28,6 +28,8 @@ This is the same MOI used for PID/feedforward tuning in simulation, so getting i
 
 By default the simulated battery holds a constant nominal voltage and resistance (12V / 20 mΩ), enough to model voltage sag under instantaneous load, but not a battery getting weaker over the course of a match. Call `BatterySim.enableDischarge(...)` to layer state-of-charge modeling on top: as amp-hours are drawn from the battery, its open-circuit voltage droops along a discharge curve and its internal resistance rises, both becoming more pronounced as the battery empties, the same way a real lead-acid FRC battery behaves late in a match.
 
+{% tabs %}
+{% tab title="Java" %}
 ```java
 import yams.motorcontrollers.simulation.BatterySim;
 
@@ -41,6 +43,27 @@ BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
 | `disableDischarge()`                                         | Reverts to a constant nominal voltage/resistance.                                                    |
 | `resetDischarge()`                                            | Resets the simulated battery back to a full charge, e.g. between test runs.                          |
 | `getStateOfCharge()`                                          | Returns the current state of charge from `0` (empty) to `1` (full), for telemetry or dashboards.     |
+{% endtab %}
+
+{% tab title="C++" %}
+The same model is available as `yams::motorcontrollers::simulation::BatterySim`:
+
+```cpp
+#include <yams/motorcontrollers/simulation/BatterySim.hpp>
+
+// Somewhere during robot setup:
+yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
+    18.0, units::volt_t{12.9}, units::ohm_t{0.020});
+```
+
+| Method                                                                              | Description                                                             |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `EnableDischarge(double capacityAh, units::volt_t, units::ohm_t)`                  | Turns on discharge modeling with the given capacity and nominal voltage/resistance. |
+| `DisableDischarge()`                                                                | Reverts to a constant nominal voltage/resistance.                            |
+| `ResetDischarge()`                                                                  | Resets the simulated battery back to a full charge.                          |
+| `GetStateOfCharge()`                                                                | Returns the current state of charge from `0` (empty) to `1` (full).          |
+{% endtab %}
+{% endtabs %}
 
 {% hint style="warning" %}
 Discharge only affects simulation. On a real robot `BatterySim` is never consulted, the RIO reports the actual battery voltage from hardware.
@@ -59,6 +82,8 @@ Reach for this when:
 * **You're simulating a well-used competition battery**, which sags earlier and harder than a fresh one, a flatter, lower curve reproduces "that one tired battery" instead of assuming every match starts fresh.
 * **You have measured data**, e.g. from putting a real battery on a load tester, feeding in the actual voltage-vs-state-of-charge points gives the most accurate brownout predictions for that specific battery.
 
+{% tabs %}
+{% tab title="Java" %}
 ```java
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import yams.motorcontrollers.simulation.BatterySim;
@@ -79,31 +104,9 @@ BatterySim.replaceSOCInterpolation(wornBatteryCurve);
 // Pair with a reduced usable capacity and higher resistance to match a worn battery.
 BatterySim.enableDischarge(15.0, Volts.of(12.6), Milliohms.of(28));
 ```
+{% endtab %}
 
-{% hint style="info" %}
-Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end will not sag realistically there.
-{% endhint %}
-
-### C++
-
-The same model is available as `yams::motorcontrollers::simulation::BatterySim`:
-
-```cpp
-#include <yams/motorcontrollers/simulation/BatterySim.hpp>
-
-// Somewhere during robot setup:
-yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
-    18.0, units::volt_t{12.9}, units::ohm_t{0.020});
-```
-
-| Method                                                                              | Description                                                             |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `EnableDischarge(double capacityAh, units::volt_t, units::ohm_t)`                  | Turns on discharge modeling with the given capacity and nominal voltage/resistance. |
-| `DisableDischarge()`                                                                | Reverts to a constant nominal voltage/resistance.                            |
-| `ResetDischarge()`                                                                  | Resets the simulated battery back to a full charge.                          |
-| `GetStateOfCharge()`                                                                | Returns the current state of charge from `0` (empty) to `1` (full).          |
-| `ReplaceSOCInterpolation(const std::map<double, double>&)`                         | Swaps in a custom state-of-charge → voltage discharge curve.                |
-
+{% tab title="C++" %}
 ```cpp
 #include <map>
 #include <yams/motorcontrollers/simulation/BatterySim.hpp>
@@ -119,6 +122,12 @@ yams::motorcontrollers::simulation::BatterySim::ReplaceSOCInterpolation(wornBatt
 yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
     15.0, units::volt_t{12.6}, units::ohm_t{0.028});
 ```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end will not sag realistically there.
+{% endhint %}
 
 ## Related pages
 
