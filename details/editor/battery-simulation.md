@@ -4,21 +4,21 @@ icon: car-battery
 
 # Battery Simulation
 
-YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController` — whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`) — reports its current draw into [`BatterySim`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and writes it to `RoboRioSim`.
+YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`), reports its current draw into [`BatterySim`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and writes it to `RoboRioSim`.
 
 {% hint style="info" %}
-This is automatic. You do not need to call anything for basic voltage sag under combined load — it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](README.md#simulation-without-a-mechanism).
+This is automatic. You do not need to call anything for basic voltage sag under combined load, it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](README.md#simulation-without-a-mechanism).
 {% endhint %}
 
 ## Why this matters
 
-Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from only their own current draw, whichever mechanism updated last would overwrite the other's contribution — the simulated battery would never actually see the *combined* draw of the whole robot. With a shared `BatterySim`, a flywheel spinning up while an elevator is climbing will sag the simulated bus voltage the same way a real battery would under both loads at once, which is exactly the scenario that trips brownouts on a real robot. See [Limiting Power Consumption](limiting-power-consumption.md) for how to guard against that on top of realistic simulation.
+Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from only their own current draw, whichever mechanism updated last would overwrite the other's contribution, so the simulated battery would never actually see the *combined* draw of the whole robot. With a shared `BatterySim`, a flywheel spinning up while an elevator is climbing will sag the simulated bus voltage the same way a real battery would under both loads at once, which is exactly the scenario that trips brownouts on a real robot. See [Limiting Power Consumption](limiting-power-consumption.md) for how to guard against that on top of realistic simulation.
 
 ## Accurate current draw starts with an accurate MOI
 
-`BatterySim` can only sag voltage as realistically as the current draw it's fed, and that current draw comes straight out of each mechanism's physics simulation (`SingleJointedArmSim`/`DCMotorSim`/`ElevatorSim`). Those models derive current from the torque needed to produce a given acceleration, so if the moment of inertia doesn't match your real mechanism, the simulated current — and therefore the simulated voltage sag — won't either. A default/guessed MOI tends to make mechanisms look artificially light, understating both acceleration current spikes and how much they actually sag the bus.
+`BatterySim` can only sag voltage as realistically as the current draw it's fed, and that current draw comes straight out of each mechanism's physics simulation (`SingleJointedArmSim`/`DCMotorSim`/`ElevatorSim`). Those models derive current from the torque needed to produce a given acceleration, so if the moment of inertia doesn't match your real mechanism, the simulated current, and therefore the simulated voltage sag, won't either. A default/guessed MOI tends to make mechanisms look artificially light, understating both acceleration current spikes and how much they actually sag the bus.
 
-Set a real MOI on the `SmartMotorControllerConfig` with `.withMomentOfInertia(Distance, Mass)` (estimated from a simple rod/arm model) or `.withMomentOfInertia(MomentOfInertia)` (a known/measured value) — see [MOI](../turrets-wrists.md#moi) for the full explanation and an example.
+Set a real MOI on the `SmartMotorControllerConfig` with `.withMomentOfInertia(Distance, Mass)` (estimated from a simple rod/arm model) or `.withMomentOfInertia(MomentOfInertia)` (a known/measured value), see [MOI](../turrets-wrists.md#moi) for the full explanation and an example.
 
 {% hint style="info" %}
 This is the same MOI used for PID/feedforward tuning in simulation, so getting it right pays off twice: more realistic control-loop behavior *and* more realistic battery sag under load.
@@ -26,7 +26,7 @@ This is the same MOI used for PID/feedforward tuning in simulation, so getting i
 
 ## Realistic discharge over a match
 
-By default the simulated battery holds a constant nominal voltage and resistance (12V / 20 mΩ) — enough to model voltage sag under instantaneous load, but not a battery getting weaker over the course of a match. Call `BatterySim.enableDischarge(...)` to layer state-of-charge modeling on top: as amp-hours are drawn from the battery, its open-circuit voltage droops along a discharge curve and its internal resistance rises, both becoming more pronounced as the battery empties — the same way a real lead-acid FRC battery behaves late in a match.
+By default the simulated battery holds a constant nominal voltage and resistance (12V / 20 mΩ), enough to model voltage sag under instantaneous load, but not a battery getting weaker over the course of a match. Call `BatterySim.enableDischarge(...)` to layer state-of-charge modeling on top: as amp-hours are drawn from the battery, its open-circuit voltage droops along a discharge curve and its internal resistance rises, both becoming more pronounced as the battery empties, the same way a real lead-acid FRC battery behaves late in a match.
 
 ```java
 import yams.motorcontrollers.simulation.BatterySim;
@@ -43,7 +43,7 @@ BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
 | `getStateOfCharge()`                                          | Returns the current state of charge from `0` (empty) to `1` (full), for telemetry or dashboards.     |
 
 {% hint style="warning" %}
-Discharge only affects simulation. On a real robot `BatterySim` is never consulted — the RIO reports the actual battery voltage from hardware.
+Discharge only affects simulation. On a real robot `BatterySim` is never consulted, the RIO reports the actual battery voltage from hardware.
 {% endhint %}
 
 {% hint style="info" %}
@@ -52,13 +52,12 @@ Call `BatterySim.resetDischarge()` in `testInit()` or at the start of a unit tes
 
 ## Custom discharge curves
 
-`enableDischarge(...)` sags voltage along a curve tuned for a typical FRC sealed lead-acid battery — flat through most of the charge, then dropping off quickly near depletion. Not every battery you want to model behaves that way, so call `BatterySim.replaceSOCInterpolation(...)` **before** `enableDischarge(...)` to swap in your own curve.
+`enableDischarge(...)` sags voltage along a curve tuned for a typical FRC sealed lead-acid battery, flat through most of the charge, then dropping off quickly near depletion. Not every sealed lead-acid battery you want to model behaves exactly that way, so call `BatterySim.replaceSOCInterpolation(...)` **before** `enableDischarge(...)` to swap in your own curve.
 
 Reach for this when:
 
-* **You're simulating a well-used competition battery**, which sags earlier and harder than a fresh one — a flatter, lower curve reproduces "that one tired battery" instead of assuming every match starts fresh.
-* **You're modeling a different chemistry**, like LiFePO4, which holds a much flatter voltage curve than lead-acid until it's nearly empty, then falls off a cliff — a shape the default curve doesn't capture.
-* **You have measured data**, e.g. from putting a real battery on a load tester — feeding in the actual voltage-vs-state-of-charge points gives the most accurate brownout predictions for that specific battery.
+* **You're simulating a well-used competition battery**, which sags earlier and harder than a fresh one, a flatter, lower curve reproduces "that one tired battery" instead of assuming every match starts fresh.
+* **You have measured data**, e.g. from putting a real battery on a load tester, feeding in the actual voltage-vs-state-of-charge points gives the most accurate brownout predictions for that specific battery.
 
 ```java
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;

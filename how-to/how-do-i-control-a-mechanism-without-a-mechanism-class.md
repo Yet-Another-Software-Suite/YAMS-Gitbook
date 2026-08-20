@@ -6,7 +6,7 @@ description: >-
 
 # How do I control a Mechanism without a Mechanism Class?
 
-YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel`, etc.) assume a tightly coupled system where all motors share a single gearbox or linkage. Loosely coupled mechanisms — where multiple motors operate on different axes but you still want YAMS's telemetry, current limiting, and profiling — are best controlled through `SmartMotorController` directly. This page explains when to take that path and how to do it.
+YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel`, etc.) assume a tightly coupled system where all motors share a single gearbox or linkage. Loosely coupled mechanisms, where multiple motors operate on different axes but you still want YAMS's telemetry, current limiting, and profiling, are best controlled through `SmartMotorController` directly. This page explains when to take that path and how to do it.
 
 {% hint style="danger" %}
 Mechanism classes are meant to be used with "tightly coupled" mechanisms where the Mechanism has 1 or more motor controlling it on a connected shaft, gearbox, or other linkage.

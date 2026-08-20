@@ -178,7 +178,7 @@ public class ExampleSubsystem extends SubsystemBase {
 </code></pre>
 
 {% hint style="info" %}
-**`withDrumRadius` is required for all elevators** — it tells YAMS how far the mechanism travels per motor revolution.
+**`withDrumRadius` is required for all elevators**, it tells YAMS how far the mechanism travels per motor revolution.
 
 **Chain-driven elevator (sprocket + chain):** pass the chain pitch and tooth count.
 

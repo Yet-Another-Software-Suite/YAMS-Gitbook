@@ -62,7 +62,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 ```
 
 {% hint style="info" %}
-MOI also drives the current draw reported to [Battery Simulation](editor/battery-simulation.md) — a mechanism with an unrealistic MOI will sag the simulated battery unrealistically too, on top of throwing off PID/FF tuning.
+MOI also drives the current draw reported to [Battery Simulation](editor/battery-simulation.md), a mechanism with an unrealistic MOI will sag the simulated battery unrealistically too, on top of throwing off PID/FF tuning.
 {% endhint %}
 
 ## Code Reference

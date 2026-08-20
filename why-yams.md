@@ -21,7 +21,7 @@ Teams routinely spend days getting a single mechanism working in simulation, onl
 
 ## What YAMS replaces
 
-A typical hand-rolled Arm subsystem is 150-300 lines of code: config, sim state, periodic updates, command factories, limit enforcement, and telemetry. The YAMS equivalent is roughly 15 lines — one `SmartMotorControllerConfig`, one `ArmConfig`, one `Arm`, and a couple of command wrappers.
+A typical hand-rolled Arm subsystem is 150-300 lines of code: config, sim state, periodic updates, command factories, limit enforcement, and telemetry. The YAMS equivalent is roughly 15 lines, one `SmartMotorControllerConfig`, one `ArmConfig`, one `Arm`, and a couple of command wrappers.
 
 ```java
 // Everything below replaces ~200 lines of boilerplate
@@ -50,11 +50,11 @@ That's it. Simulation, telemetry, hard limits, and a physics-backed `Mechanism2d
 
 Every YAMS mechanism type ships with a physics model:
 
-* **Arm / Pivot** — `SingleJointedArmSim`, gravity compensation included
-* **Elevator** — `ElevatorSim` with configurable carriage weight and angle
-* **FlyWheel** — `FlywheelSim` with configurable moment of inertia
+* **Arm / Pivot**, `SingleJointedArmSim`, gravity compensation included
+* **Elevator**, `ElevatorSim` with configurable carriage weight and angle
+* **FlyWheel**, `FlywheelSim` with configurable moment of inertia
 
-YAMS runs the simulation automatically when `RobotBase.isSimulation()` is true. Call `arm.simIterate()` in `simulationPeriodic()` and you're done — no additional sim wiring needed.
+YAMS runs the simulation automatically when `RobotBase.isSimulation()` is true. Call `arm.simIterate()` in `simulationPeriodic()` and you're done, no additional sim wiring needed.
 
 Because the simulation uses accurate physics, the PID and feedforward gains you tune in sim are a reliable starting point for real hardware. You may still need minor adjustments, but you won't be starting from zero on the field.
 
@@ -64,7 +64,7 @@ For CTRE TalonFX and TalonFXS motors, YAMS feeds its physics results directly ba
 
 1. Run your robot code in simulation as normal
 2. Open Phoenix Tuner X and connect to the simulation
-3. Every TalonFX signal — position, velocity, voltage, current — reads exactly as it would from real hardware
+3. Every TalonFX signal, position, velocity, voltage, current, reads exactly as it would from real hardware
 
 You can watch closed-loop error, plot signal graphs, and verify your gains in TunerX's familiar interface without touching a physical robot. The same workflow you use to diagnose real hardware works identically in simulation.
 
@@ -78,7 +78,7 @@ Changing `kP` from 4 to 6 and seeing the mechanism respond takes seconds, not th
 
 ### roboRIO
 
-The roboRIO 1 and roboRIO 2 are both CPU-constrained. Heavy subsystems with hand-rolled telemetry, simulation, and visualization code frequently push the 20 ms robot loop toward or past its budget, especially when multiple mechanisms run simultaneously. YAMS's telemetry and simulation paths are tightly optimized and only run the work that verbosity level requires — `LOW` publishes only the fields you actually need for competition, keeping loop time predictable.
+The roboRIO 1 and roboRIO 2 are both CPU-constrained. Heavy subsystems with hand-rolled telemetry, simulation, and visualization code frequently push the 20 ms robot loop toward or past its budget, especially when multiple mechanisms run simultaneously. YAMS's telemetry and simulation paths are tightly optimized and only run the work that verbosity level requires, `LOW` publishes only the fields you actually need for competition, keeping loop time predictable.
 
 ### SystemCore
 
@@ -88,7 +88,7 @@ The SystemCore's baseline processing speed is significantly higher than either r
 
 YAMS enforces mechanism safety automatically:
 
-* **Hard limits** are enforced in simulation as physical stops — the mechanism cannot travel past them
+* **Hard limits** are enforced in simulation as physical stops, the mechanism cannot travel past them
 * **Soft limits** are pushed to the motor controller so the closed-loop controller respects them independent of your command logic
 * **Temperature cutoff** stops the motor if the controller overheats
 * Custom exceptions are thrown at construction time if limits are misconfigured (e.g., lower limit greater than upper limit), so misconfigurations surface immediately in testing rather than during a match

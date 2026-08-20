@@ -16,10 +16,10 @@ At the end of this tutorial you will have a full swerve drive subsystem that wor
 
 This swerve drive will be using the following hardware and control details:
 
-* 4x `SparkMax` (NEO) drive motors — CAN IDs 1, 4, 7, 10
-* 4x `SparkMax` (NEO) azimuth motors — CAN IDs 2, 5, 8, 11
-* 4x `CANcoder` absolute encoders — CAN IDs 3, 6, 9, 12
-* `Pigeon2` gyro — CAN ID 14
+* 4x `SparkMax` (NEO) drive motors, CAN IDs 1, 4, 7, 10
+* 4x `SparkMax` (NEO) azimuth motors, CAN IDs 2, 5, 8, 11
+* 4x `CANcoder` absolute encoders, CAN IDs 3, 6, 9, 12
+* `Pigeon2` gyro, CAN ID 14
 * SDS MK4i modules: drive gear ratio `12.75:1`, steer gear ratio `6.75:1`, 4-inch wheels
 * Left stick controls translation, right stick X controls rotation
 
@@ -102,7 +102,7 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
 <strong>  // kP=1 with a 6.75:1 reduction gives a stiff, responsive steer.
-</strong><strong>  // 20 A is enough — the steer motor almost never stalls during normal driving.
+</strong><strong>  // 20 A is enough, the steer motor almost never stalls during normal driving.
 </strong><strong>  private SmartMotorControllerConfig buildAzimuthCfg() {
 </strong><strong>    return new SmartMotorControllerConfig(this)
 </strong><strong>        .withClosedLoopController(1, 0, 0)
@@ -218,11 +218,11 @@ public class SwerveSubsystem extends SubsystemBase {
   // ... buildDriveCfg(), buildAzimuthCfg(), createModule() from previous steps ...
 
   public SwerveSubsystem() {
-<strong>    // CAN ID 14 — update to match your robot's Pigeon2 CAN ID.
+<strong>    // CAN ID 14, update to match your robot's Pigeon2 CAN ID.
 </strong><strong>    Pigeon2 gyro = new Pigeon2(14);
 </strong>
 <strong>    // Module locations: +X forward, +Y left. 24-inch offsets assume module
-</strong><strong>    // centers are 24 in from the robot center — update to match your chassis.
+</strong><strong>    // centers are 24 in from the robot center, update to match your chassis.
 </strong><strong>    // CAN IDs are grouped as (drive, steer, CANcoder) per module.
 </strong><strong>    var fl = createModule(new SparkMax(1, MotorType.kBrushless),
 </strong><strong>                          new SparkMax(2, MotorType.kBrushless),
@@ -353,4 +353,4 @@ The following files show a complete swerve drive implementation matching the har
 
 * Learn about [AdvantageKit Integration](../details/advantagekit-integration.md) for swerve
 * See [Organizing Configs in Constants](../details/config-organization.md) for cleaner code
-* Record this drive's telemetry to a file and review it after a match — see [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md)
+* Record this drive's telemetry to a file and review it after a match, see [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md)

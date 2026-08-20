@@ -22,6 +22,7 @@
 * [How do I sense activity based off of the current?](how-to/how-do-i-sense-activity-based-off-of-the-current.md)
 * [How do I use a DCMotor that isn't in WPILib?](how-to/how-do-i-use-a-dcmotor-that-isnt-in-wpilib.md)
 * [How do I use Exponential Profiles?](how-to/how-do-i-use-exponential-profiles.md)
+* [How do I enable battery discharge simulation?](how-to/how-do-i-enable-battery-discharge-simulation.md)
 * [How do I use absolute encoders on my Arm?](how-to/how-do-i-use-absolute-encoders-on-my-arm.md)
 * [How to disable linear closed loop control?](how-to/how-to-disable-linear-closed-loop-control.md)
 * [How do I view my DataLog in AdvantageScope?](how-to/how-do-i-view-my-datalog-in-advantagescope.md)

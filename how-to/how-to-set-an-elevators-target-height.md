@@ -1,6 +1,6 @@
 # How to set an Elevator's target Height?
 
-`Elevator` setpoints are expressed as `Distance` values (meters, inches, etc.). The motion profile limits how fast the elevator accelerates to the target — so commanding a large height change won't slam the carriage into the top hard stop if your profile parameters are tuned correctly.
+`Elevator` setpoints are expressed as `Distance` values (meters, inches, etc.). The motion profile limits how fast the elevator accelerates to the target, so commanding a large height change won't slam the carriage into the top hard stop if your profile parameters are tuned correctly.
 
 ### Create and Configure our `Elevator`
 

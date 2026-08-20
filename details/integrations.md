@@ -12,14 +12,14 @@ Live Tuning is enabled when any tunable setpoint is enabled with `TelemetryVerbo
 
 ## TunerX in Simulation (CTRE Hardware)
 
-For TalonFX and TalonFXS motors, YAMS feeds its physics simulation results back through CTRE's vendorsim layer via Phoenix's `getSimState()` API. This means Phoenix Tuner X can connect to your simulation and display every motor signal — position, velocity, closed-loop error, applied voltage, current draw — exactly as it would on real hardware.
+For TalonFX and TalonFXS motors, YAMS feeds its physics simulation results back through CTRE's vendorsim layer via Phoenix's `getSimState()` API. This means Phoenix Tuner X can connect to your simulation and display every motor signal, position, velocity, closed-loop error, applied voltage, current draw, exactly as it would on real hardware.
 
 **To use TunerX in sim:**
 
 1. Run your robot code in simulation (e.g., `./gradlew simulateJava`)
 2. Open Phoenix Tuner X
 3. Connect to the simulation instance (it appears as a local device)
-4. Navigate to your motor's **Signal** tab — all signals update in real time from the physics sim
+4. Navigate to your motor's **Signal** tab, all signals update in real time from the physics sim
 
 This is the same workflow as diagnosing real hardware. You can verify gain behavior, confirm soft/hard limit triggering, and plot signal graphs without ever touching a physical robot.
 
@@ -70,7 +70,7 @@ When live tuning, it's important to understand what units each parameter expects
 
 ### Units and AdvantageScope
 
-YAMS publishes every field — both tunable and read-only — in **base SI-adjacent units**:
+YAMS publishes every field, both tunable and read-only, in **base SI-adjacent units**:
 
 * Angular position and velocity → **Rotations** and **Rotations per Second**
 * Linear position and velocity (elevators, linear slides) → **Meters** and **Meters per Second**
@@ -78,13 +78,13 @@ YAMS publishes every field — both tunable and read-only — in **base SI-adjac
 
 This means the value you type into a tunable field must be in those same units. For example, a soft limit of 30° must be entered as `0.0833` (30 ÷ 360) rotations, and a flywheel target of 3000 RPM must be entered as `50` rot/s (3000 ÷ 60).
 
-**AdvantageScope solves this.** Its built-in unit conversion lets you display any read-only field in whatever units feel natural for your mechanism — degrees for arms, RPM for flywheels, inches for elevators — without changing the underlying data or your robot code. To set it up:
+**AdvantageScope solves this.** Its built-in unit conversion lets you display any read-only field in whatever units feel natural for your mechanism, degrees for arms, RPM for flywheels, inches for elevators, without changing the underlying data or your robot code. To set it up:
 
 1. Drag the telemetry field (e.g. `NT:/Mechanisms/Arm/ArmMotor/MechanismPosition`) into a Line Graph
 2. Right-click the field in the graph legend → **Convert Units…**
 3. Pick your target unit (Rotations → Degrees, rot/s → RPM, Meters → Inches, etc.)
 
-Once conversion is applied, you can read the mechanism position in degrees while the tunable soft limit field still expects rotations — so you know to type `0.5` when the graph shows 180°. This approach lets you monitor the mechanism in intuitive units and calculate the correct tunable values without guessing.
+Once conversion is applied, you can read the mechanism position in degrees while the tunable soft limit field still expects rotations, so you know to type `0.5` when the graph shows 180°. This approach lets you monitor the mechanism in intuitive units and calculate the correct tunable values without guessing.
 
 {% hint style="success" %}
 **Recommended setup for a tuning session:** Open AdvantageScope and configure unit conversions for `MechanismPosition` (→ degrees or inches), `MechanismVelocity` (→ deg/s, RPM, or in/s), and `ClosedLoopError` (same as position). Keep these graphs visible alongside the tunable fields in your NT dashboard. The converted read-only fields give you a real-unit view of what the mechanism is actually doing while you enter raw-unit values into the tunable fields.
@@ -197,7 +197,7 @@ Every tunable field has a corresponding read-only field you should monitor while
 | Tunable Field | Unit | What to Watch (Read-Only) | Why |
 |---|---|---|---|
 | `kP` | V/rot (or V/m for linear) | `MechanismPosition` vs `SetpointPosition`, `ClosedLoopError` | Error should shrink faster as kP rises. Oscillation means kP is too high. |
-| `kI` | V/(rot·s) | `ClosedLoopError` over time | Persistent steady-state error that won't converge — kI eliminates it. Watch for windup causing overshoot. |
+| `kI` | V/(rot·s) | `ClosedLoopError` over time | Persistent steady-state error that won't converge, kI eliminates it. Watch for windup causing overshoot. |
 | `kD` | V/(rot/s) | `MechanismVelocity`, `OutputVoltage` | Dampens oscillation. If voltage spikes on direction changes, kD is too high. |
 
 ### Feedforward Gains
@@ -247,9 +247,9 @@ Every tunable field has a corresponding read-only field you should monitor while
 
 {% hint style="info" %}
 **Useful read-only fields at all times during tuning:**
-- `Temperature` — watch for thermal throttling masking gain problems
-- `OutputVoltage` — the raw command the motor is receiving; confirms your feedforward math
-- `RotorPosition` / `RotorVelocity` — pre-gearing values; useful for verifying gearing configuration is correct
+- `Temperature`, watch for thermal throttling masking gain problems
+- `OutputVoltage`, the raw command the motor is receiving; confirms your feedforward math
+- `RotorPosition` / `RotorVelocity`, pre-gearing values; useful for verifying gearing configuration is correct
 {% endhint %}
 
 ## Example: Tuning a Flywheel

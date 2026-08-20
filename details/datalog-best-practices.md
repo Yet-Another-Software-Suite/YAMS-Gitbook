@@ -8,7 +8,7 @@ icon: database
 Using DataLog will increase your storage usage on the RIO and could have negative consequences if left unmanaged. Please review [WPILib's DataLog documentation](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog) for more information.
 {% endhint %}
 
-Every YAMS telemetry field is published to NetworkTables by default. Separately, you can opt any field into a WPILib `DataLog` — the same file format read by AdvantageScope offline, and the one WPILib's `DataLogManager` automatically saves to a USB drive or the RIO's local storage during a match. This page covers how to control both destinations independently, and calls out the one place — `SwerveDrive` — where the rules are different.
+Every YAMS telemetry field is published to NetworkTables by default. Separately, you can opt any field into a WPILib `DataLog`, the same file format read by AdvantageScope offline, and the one WPILib's `DataLogManager` automatically saves to a USB drive or the RIO's local storage during a match. This page covers how to control both destinations independently, and calls out the one place, `SwerveDrive`, where the rules are different.
 
 ## The two knobs: NetworkTables and DataLog
 
@@ -29,21 +29,21 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 ```
 
 * `withDataLogName(name)` turns on DataLog for every field enabled on that config, under the given prefix.
-* `withoutNetworkTables()` (or `withNetworkTables(false)`) stops those fields from being published to NT4 at all. You can freely enable DataLog, NetworkTables, both, or neither — they're independent toggles.
-* Which fields get logged is controlled the same way for both destinations — there's only one set of enabled fields, per `withTelemetryVerbosity()` and the individual `with*()` methods described in [Telemetry](../understanding/telemetry.md).
+* `withoutNetworkTables()` (or `withNetworkTables(false)`) stops those fields from being published to NT4 at all. You can freely enable DataLog, NetworkTables, both, or neither, they're independent toggles.
+* Which fields get logged is controlled the same way for both destinations, there's only one set of enabled fields, per `withTelemetryVerbosity()` and the individual `with*()` methods described in [Telemetry](../understanding/telemetry.md).
 
 {% hint style="success" %}
-Set a DataLogName for competition matches. It costs almost nothing to add and gives you a full record to review between matches — often the difference between guessing why a mechanism stalled and knowing exactly why.
+Set a DataLogName for competition matches. It costs almost nothing to add and gives you a full record to review between matches, often the difference between guessing why a mechanism stalled and knowing exactly why.
 {% endhint %}
 
 ## Choosing what to log
 
-Every field is disabled by default. `withTelemetryVerbosity()` gives you a cumulative preset (`LOW` → `MID` → `HIGH`, each including everything below it) so you don't have to enable dozens of fields by hand — then layer on or remove individual fields as needed.
+Every field is disabled by default. `withTelemetryVerbosity()` gives you a cumulative preset (`LOW` → `MID` → `HIGH`, each including everything below it) so you don't have to enable dozens of fields by hand, then layer on or remove individual fields as needed.
 
 A few guidelines:
 
-* **Don't just reach for `HIGH` everywhere.** `HIGH` includes PID gains, feedforward gains, current limits, and every boolean status flag — useful while tuning, but mostly redundant once a mechanism is dialed in. Prefer `LOW` or `MID` plus the handful of fields you actually watch (current, temperature, setpoint error) for a competition build.
-* **Prune before you log, not after.** DataLog files only grow — there's no way to selectively remove a field after the fact without re-recording. Decide what you need before the match, not while reviewing the log afterward.
+* **Don't just reach for `HIGH` everywhere.** `HIGH` includes PID gains, feedforward gains, current limits, and every boolean status flag, useful while tuning, but mostly redundant once a mechanism is dialed in. Prefer `LOW` or `MID` plus the handful of fields you actually watch (current, temperature, setpoint error) for a competition build.
+* **Prune before you log, not after.** DataLog files only grow, there's no way to selectively remove a field after the fact without re-recording. Decide what you need before the match, not while reviewing the log afterward.
 * **DataLog is not a substitute for NetworkTables during development.** Live tools (Elastic, Shuffleboard, AdvantageScope in live mode) read NT4, not DataLog. Keep NetworkTables on while you're actively tuning, and consider disabling it only for fields you truly don't need live, once you're locking in a competition build.
 
 Need to flip a field that doesn't have its own `with*()` method, or toggle several fields at once? `withCustom(field, value)` takes any `BooleanTelemetryField`/`DoubleTelemetryField` (or an array of either) plus a boolean, and enables or disables them accordingly:
@@ -59,7 +59,7 @@ SmartMotorControllerTelemetryConfig telemetryConfig = new SmartMotorControllerTe
 
 ## Enabling/disabling NetworkTables conditionally
 
-Because `withNetworkTables(boolean)` just takes a boolean, you can drive it from anything — including whether you're at an event:
+Because `withNetworkTables(boolean)` just takes a boolean, you can drive it from anything, including whether you're at an event:
 
 ```java
 SmartMotorControllerTelemetryConfig telemetryConfig = new SmartMotorControllerTelemetryConfig()
@@ -73,7 +73,7 @@ This keeps full NT4 telemetry for pit testing and practice, then automatically d
 ## Swerve Drive is different
 
 {% hint style="warning" %}
-`SwerveDriveConfig`/`SwerveModuleConfig` do **not** use `SmartMotorControllerTelemetryConfig`, and there is no way to disable NetworkTables for swerve telemetry. YAMS always publishes everything useful for the `TelemetryVerbosity` you choose — there's no granular field-by-field opt-in/opt-out at the swerve level.
+`SwerveDriveConfig`/`SwerveModuleConfig` do **not** use `SmartMotorControllerTelemetryConfig`, and there is no way to disable NetworkTables for swerve telemetry. YAMS always publishes everything useful for the `TelemetryVerbosity` you choose, there's no granular field-by-field opt-in/opt-out at the swerve level.
 {% endhint %}
 
 `SwerveDriveConfig.withTelemetry(TelemetryVerbosity)` and `SwerveModuleConfig.withTelemetry(name, TelemetryVerbosity)` pick a verbosity preset the same way a single-motor mechanism does, but that's the only lever you get for the drive-level fields (pose, gyro, chassis speeds, module states) and each module's own fields (drive/azimuth motor telemetry, absolute encoder angle).
@@ -94,12 +94,12 @@ SwerveModuleConfig frontLeftConfig = new SwerveModuleConfig(driveMotorFL, azimut
 ```
 
 {% hint style="info" %}
-`SwerveDriveConfig.withDataLogName(...)` and `SwerveModuleConfig.withDataLogName(...)` are independent — neither cascades to the drive/azimuth motors that make up a module. Setting one does not log the other, and neither logs the motors.
+`SwerveDriveConfig.withDataLogName(...)` and `SwerveModuleConfig.withDataLogName(...)` are independent, neither cascades to the drive/azimuth motors that make up a module. Setting one does not log the other, and neither logs the motors.
 {% endhint %}
 
 ### Getting granular fields out of a swerve module's motors
 
-The drive and azimuth motors of a `SwerveModule` are still ordinary `SmartMotorController`s under the hood. If you want field-level control (or a DataLog name) on just the drive motor or just the azimuth motor, set it on that motor's own `SmartMotorControllerConfig` — before you build the `SwerveModule` — exactly as you would for a standalone motor:
+The drive and azimuth motors of a `SwerveModule` are still ordinary `SmartMotorController`s under the hood. If you want field-level control (or a DataLog name) on just the drive motor or just the azimuth motor, set it on that motor's own `SmartMotorControllerConfig`, before you build the `SwerveModule`, exactly as you would for a standalone motor:
 
 ```java
 SmartMotorControllerTelemetryConfig driveTelemetry = new SmartMotorControllerTelemetryConfig()
@@ -115,7 +115,7 @@ SmartMotorControllerConfig driveMotorConfig = new SmartMotorControllerConfig(thi
 SmartMotorController driveMotorFL = new TalonFXWrapper(new TalonFX(10), DCMotor.getKrakenX60(1), driveMotorConfig);
 ```
 
-This gives you the same fine-grained control (and independent DataLog name) on that one motor that you'd get on any other mechanism's motor — it's only the swerve-level pose/gyro/chassis-speed/encoder fields that are all-or-nothing per verbosity level.
+This gives you the same fine-grained control (and independent DataLog name) on that one motor that you'd get on any other mechanism's motor, it's only the swerve-level pose/gyro/chassis-speed/encoder fields that are all-or-nothing per verbosity level.
 
 ## Related pages
 

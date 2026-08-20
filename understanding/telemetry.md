@@ -22,7 +22,7 @@ You should set a DataLogName for competition matches to ensure you have enough d
 Looking for a deeper dive on enabling/disabling NetworkTables, choosing what to log, and how this all works (or doesn't) for `SwerveDrive`? See [DataLog Best Practices](../details/datalog-best-practices.md). For a step-by-step walkthrough of configuring a `SwerveDrive` to log and then opening the resulting file in AdvantageScope, see [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md).
 {% endhint %}
 
-`MechanismTelemetry` is the class that actually coordinates all of this under the hood — every Mechanism (and every `SwerveModule`) owns one, and it is what wires a Mechanism's NT4 publishers to a WPILib `DataLog` entry whenever a DataLogName is configured, so both destinations always see the same values.
+`MechanismTelemetry` is the class that actually coordinates all of this under the hood, every Mechanism (and every `SwerveModule`) owns one, and it is what wires a Mechanism's NT4 publishers to a WPILib `DataLog` entry whenever a DataLogName is configured, so both destinations always see the same values.
 
 ## NetworkTables
 
@@ -32,7 +32,7 @@ All Mechanism tables are stored under `NT:/Mechanisms` NOT `NT:/SmartDashboard` 
 
 The image below has the Telemetry output of an Elevator with the Telemetry name of `Elevator` and the SmartMotorController TelemetryName of `ElevatorMotor`
 
-<figure><img src="../.gitbook/assets/127.0.0.1 — AdvantageScope 9_2_2025 1_06_09 PM.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/127.0.0.1, AdvantageScope 9_2_2025 1_06_09 PM.png" alt=""><figcaption></figcaption></figure>
 
 ## Simulation vs Reality
 
@@ -65,7 +65,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withTelemetry("ElevatorMotor", motorTelemetryConfig)
 ```
 
-<figure><img src="../.gitbook/assets/127.0.0.1 — AdvantageScope 9_2_2025 1_03_52 PM.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/127.0.0.1, AdvantageScope 9_2_2025 1_03_52 PM.png" alt=""><figcaption></figcaption></figure>
 
 If a field you want doesn't have its own `with*()` method, or you want to enable/disable a whole set of fields in one call, use the `withCustom(...)` escape hatch. It takes a `BooleanTelemetryField`/`DoubleTelemetryField` (or an array of either) plus a boolean to enable or disable them:
 
@@ -83,14 +83,14 @@ See the `SmartMotorControllerTelemetryConfig` API reference page for the full me
 
 ## Swerve Drive Telemetry
 
-`SwerveDrive` and `SwerveModule` do **not** use `SmartMotorControllerTelemetryConfig` to pick individual fields, and there is no `withoutNetworkTables()` equivalent for a swerve drive — NetworkTables publishing for the drive-level fields (pose, gyro, chassis speeds, module states) and each module's fields (drive/azimuth motor telemetry, absolute encoder) always happens. Instead you choose a `TelemetryVerbosity` (`LOW`/`MID`/`HIGH`) with `SwerveDriveConfig.withTelemetry(...)` and `SwerveModuleConfig.withTelemetry(name, ...)`, and YAMS logs everything useful for that verbosity level automatically.
+`SwerveDrive` and `SwerveModule` do **not** use `SmartMotorControllerTelemetryConfig` to pick individual fields, and there is no `withoutNetworkTables()` equivalent for a swerve drive, NetworkTables publishing for the drive-level fields (pose, gyro, chassis speeds, module states) and each module's fields (drive/azimuth motor telemetry, absolute encoder) always happens. Instead you choose a `TelemetryVerbosity` (`LOW`/`MID`/`HIGH`) with `SwerveDriveConfig.withTelemetry(...)` and `SwerveModuleConfig.withTelemetry(name, ...)`, and YAMS logs everything useful for that verbosity level automatically.
 
 You can still log to DataLog:
 
 * `SwerveDriveConfig.withDataLogName(name)` logs the drive's pose, gyro, and chassis speeds/module states.
 * `SwerveModuleConfig.withDataLogName(name)` logs that module's absolute encoder reading.
 
-Neither of these cascades down to the drive/azimuth motors of a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController` — see [DataLog Best Practices](../details/datalog-best-practices.md) for a full walkthrough.
+Neither of these cascades down to the drive/azimuth motors of a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController`, see [DataLog Best Practices](../details/datalog-best-practices.md) for a full walkthrough.
 
 ## Colors
 
@@ -141,7 +141,7 @@ YAMS logs rotational units by default. Linear units are calculated from rotation
 
 ## Using AdvantageScope for Unit Conversion
 
-AdvantageScope provides powerful unit conversion capabilities that let you view telemetry data in whatever units make sense for your analysis—without changing your robot code.
+AdvantageScope provides powerful unit conversion capabilities that let you view telemetry data in whatever units make sense for your analysis, without changing your robot code.
 
 ### Changing Display Units
 

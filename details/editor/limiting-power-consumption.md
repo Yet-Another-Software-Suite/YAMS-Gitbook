@@ -56,4 +56,4 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 
 ## Testing brownout scenarios in simulation
 
-YAMS combines the current draw of every simulated mechanism into one shared battery model, so simulated voltage sag reflects the *whole* robot pulling power at once — not just one mechanism in isolation. See [Battery Simulation](battery-simulation.md) for how to enable realistic discharge over a match and reproduce brownout-prone scenarios before they happen on the field.
+YAMS combines the current draw of every simulated mechanism into one shared battery model, so simulated voltage sag reflects the *whole* robot pulling power at once, not just one mechanism in isolation. See [Battery Simulation](battery-simulation.md) for how to enable realistic discharge over a match and reproduce brownout-prone scenarios before they happen on the field.

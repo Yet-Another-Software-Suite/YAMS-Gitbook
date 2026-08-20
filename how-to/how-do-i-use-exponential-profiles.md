@@ -1,6 +1,6 @@
 # How do I use Exponential Profiles?
 
-Trapezoidal motion profiles assume constant maximum acceleration throughout a move, which can cause jerky starts on high-inertia mechanisms like heavy elevators or long arms. Exponential profiles let the acceleration vary continuously so the motor builds speed smoothly, following the physics of what the motor can actually deliver at each moment — this reduces overshoot and makes tuning more forgiving. Reach for exponential profiles when your trapezoidal profile produces oscillation, mechanical banging at the start of a move, or is difficult to tune around mechanical disturbances.
+Trapezoidal motion profiles assume constant maximum acceleration throughout a move, which can cause jerky starts on high-inertia mechanisms like heavy elevators or long arms. Exponential profiles let the acceleration vary continuously so the motor builds speed smoothly, following the physics of what the motor can actually deliver at each moment, this reduces overshoot and makes tuning more forgiving. Reach for exponential profiles when your trapezoidal profile produces oscillation, mechanical banging at the start of a move, or is difficult to tune around mechanical disturbances.
 
 ## What are exponential profiles?
 
