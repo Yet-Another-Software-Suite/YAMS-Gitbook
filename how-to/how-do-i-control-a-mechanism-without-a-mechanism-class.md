@@ -8,6 +8,12 @@ description: >-
 
 YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel`, etc.) assume a tightly coupled system where all motors share a single gearbox or linkage. Loosely coupled mechanisms — where multiple motors operate on different axes but you still want YAMS's telemetry, current limiting, and profiling — are best controlled through `SmartMotorController` directly. This page explains when to take that path and how to do it.
 
+{% hint style="danger" %}
+Mechanism classes are meant to be used with "tightly coupled" mechanisms where the Mechanism has 1 or more motor controlling it on a connected shaft, gearbox, or other linkage.
+
+**IF** your mechanism is "loosely coupled", you **CAN** still use YAMS. **HOWEVER** you have to create and control the `SmartMotorController` directly as shown below.
+{% endhint %}
+
 ## Subsystems with `SmartMotorController`'s
 
 Subsystems given when you create the `SmartMotorControllerConfig` are only used for YAMS generated commands. This means that if you're using a YAMS generated command like `SmartMotorController.sysId()` or `Arm.run` or `Elevator.run` that command will be the **ONLY** command allowed to run on that subsystems.&#x20;

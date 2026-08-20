@@ -28,12 +28,6 @@ Welcome to the Yet Another Mechanism System (YAMS) documentation!&#x20;
 
 YAMS is a very easy and seamless library that fuses simulation and real control as closely as possible to real life so you can debug and program your robot without the actual robot! This can enable you to program your robot before its even built too!
 
-{% hint style="danger" %}
-Mechanism classes are meant to be used with "tightly coupled" mechanisms where the Mechanism has 1 or more motor controlling it on a connected shaft, gearbox, or other linkage.&#x20;
-
-**IF** your mechanism is "loosely coupled", you **CAN** still use YAMS. **HOWEVER** you have to create and control the `SmartMotorController` directly as shown in [how-do-i-control-a-mechanism-without-a-mechanism-class.md](how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md "mention")
-{% endhint %}
-
 ### Jump right in
 
 <table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th><th data-hidden data-card-cover data-type="files"></th><th data-hidden></th></tr></thead><tbody><tr><td><h4><i class="fa-bolt">:bolt:</i></h4></td><td><strong>Create an  Arm!</strong></td><td>Create your first Arm!</td><td><a href="tutorials/arm.md">arm.md</a></td><td></td><td></td></tr><tr><td><h4><i class="fa-leaf">:leaf:</i></h4></td><td><strong>Create an Elevator!</strong></td><td>Create your first elevator!</td><td><a href="tutorials/elevator.md">elevator.md</a></td><td></td><td></td></tr><tr><td><i class="fa-crosshairs">:crosshairs:</i></td><td><strong>Create a shooter!</strong></td><td>Create your first shooter!</td><td><a href="tutorials/shooter-flywheels.md">shooter-flywheels.md</a></td><td></td><td></td></tr></tbody></table>

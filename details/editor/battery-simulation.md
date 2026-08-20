@@ -14,6 +14,16 @@ This is automatic. You do not need to call anything for basic voltage sag under 
 
 Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from only their own current draw, whichever mechanism updated last would overwrite the other's contribution — the simulated battery would never actually see the *combined* draw of the whole robot. With a shared `BatterySim`, a flywheel spinning up while an elevator is climbing will sag the simulated bus voltage the same way a real battery would under both loads at once, which is exactly the scenario that trips brownouts on a real robot. See [Limiting Power Consumption](limiting-power-consumption.md) for how to guard against that on top of realistic simulation.
 
+## Accurate current draw starts with an accurate MOI
+
+`BatterySim` can only sag voltage as realistically as the current draw it's fed, and that current draw comes straight out of each mechanism's physics simulation (`SingleJointedArmSim`/`DCMotorSim`/`ElevatorSim`). Those models derive current from the torque needed to produce a given acceleration, so if the moment of inertia doesn't match your real mechanism, the simulated current — and therefore the simulated voltage sag — won't either. A default/guessed MOI tends to make mechanisms look artificially light, understating both acceleration current spikes and how much they actually sag the bus.
+
+Set a real MOI on the `SmartMotorControllerConfig` with `.withMomentOfInertia(Distance, Mass)` (estimated from a simple rod/arm model) or `.withMomentOfInertia(MomentOfInertia)` (a known/measured value) — see [MOI](../turrets-wrists.md#moi) for the full explanation and an example.
+
+{% hint style="info" %}
+This is the same MOI used for PID/feedforward tuning in simulation, so getting it right pays off twice: more realistic control-loop behavior *and* more realistic battery sag under load.
+{% endhint %}
+
 ## Realistic discharge over a match
 
 By default the simulated battery holds a constant nominal voltage and resistance (12V / 20 mΩ) — enough to model voltage sag under instantaneous load, but not a battery getting weaker over the course of a match. Call `BatterySim.enableDischarge(...)` to layer state-of-charge modeling on top: as amp-hours are drawn from the battery, its open-circuit voltage droops along a discharge curve and its internal resistance rises, both becoming more pronounced as the battery empties — the same way a real lead-acid FRC battery behaves late in a match.
@@ -116,3 +126,4 @@ yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
 * [Limiting Power Consumption](limiting-power-consumption.md)
 * [Simulation without a mechanism](README.md#simulation-without-a-mechanism)
 * [Simulation Only PID + FeedForward](simulation-only-pid-+-feedforward.md)
+* [MOI](../turrets-wrists.md#moi)

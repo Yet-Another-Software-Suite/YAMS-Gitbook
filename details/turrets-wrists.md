@@ -61,6 +61,10 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withMomentOfInertia(Meters.of(0.25), Pounds.of(4)); // MOI Calculation
 ```
 
+{% hint style="info" %}
+MOI also drives the current draw reported to [Battery Simulation](editor/battery-simulation.md) — a mechanism with an unrealistic MOI will sag the simulated battery unrealistically too, on top of throwing off PID/FF tuning.
+{% endhint %}
+
 ## Code Reference
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/simple_robot/src/main/java/frc/robot/subsystems/TurretSubsystem.java" %}
