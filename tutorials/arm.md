@@ -559,7 +559,11 @@ public class ExampleSubsystem extends SubsystemBase {
   .withIdleMode(MotorMode.BRAKE)
   .withStatorCurrentLimit(Amps.of(40))
   .withClosedLoopRampRate(Seconds.of(0.25))
-  .withOpenLoopRampRate(Seconds.of(0.25));
+  .withOpenLoopRampRate(Seconds.of(0.25))
+  // Starting position is where your arm starts
+  .withStartingPosition(Degrees.of(-5))
+  // Soft limit is applied to the SmartMotorControllers PID
+  .withSoftLimits(Degrees.of(-20), Degrees.of(10));
 
   // Vendor motor controller object
   private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
@@ -568,12 +572,8 @@ public class ExampleSubsystem extends SubsystemBase {
   private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
 
   private ArmConfig armCfg = new ArmConfig()
-  // Soft limit is applied to the SmartMotorControllers PID
-  .withSoftLimits(Degrees.of(-20), Degrees.of(10))
   // Hard limit is applied to the simulation.
   .withHardLimits(Degrees.of(-30), Degrees.of(40))
-  // Starting position is where your arm starts
-  .withStartingPosition(Degrees.of(-5))
   // Length and mass of your arm for sim.
   .withLength(Feet.of(3))
   // Telemetry name and verbosity for the arm.
