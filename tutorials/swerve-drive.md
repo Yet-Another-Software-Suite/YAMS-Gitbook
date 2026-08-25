@@ -292,6 +292,10 @@ public class SwerveSubsystem extends SubsystemBase {
 </code></pre>
 
 You can also expose `getPose()`, `resetOdometry()`, and `addVisionMeasurement()` as needed for autonomous and vision integration.
+
+{% hint style="info" %}
+`SwerveDrive` already builds and publishes its own `Field2d` internally (to `Mechanisms/<name>/field`), so the `Field2d field` instance above is actually redundant. Call `drive.getField2d()` instead of keeping a separate widget — this also lets vision or autonomous code plot extra objects (e.g. detected AprilTags, path previews) onto the same widget the drive already publishes, rather than creating and registering yet another one.
+{% endhint %}
 {% endstep %}
 
 {% step %}
