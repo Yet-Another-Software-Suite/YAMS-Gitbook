@@ -296,6 +296,10 @@ You can also expose `getPose()`, `resetOdometry()`, and `addVisionMeasurement()`
 {% hint style="info" %}
 `SwerveDrive` already builds and publishes its own `Field2d` internally (to `Mechanisms/<name>/field`), so the `Field2d field` instance above is actually redundant. Call `drive.getField2d()` instead of keeping a separate widget — this also lets vision or autonomous code plot extra objects (e.g. detected AprilTags, path previews) onto the same widget the drive already publishes, rather than creating and registering yet another one.
 {% endhint %}
+
+{% hint style="info" %}
+In simulation, `drive.getSimPose()` returns a ground-truth `Pose2d` computed by assuming every module hit its last-commanded `SwerveModuleState` perfectly — separate from `getPose()`'s noisy, fused odometry estimate. It's a convenient "known truth" source for a simulated vision subsystem to generate synthetic target detections from, letting you test vision-dependent code without physical hardware. It only advances during `simIterate()` and stays at the configured starting pose on a real robot.
+{% endhint %}
 {% endstep %}
 
 {% step %}
