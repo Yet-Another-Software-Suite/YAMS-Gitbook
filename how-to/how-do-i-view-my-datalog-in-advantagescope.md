@@ -67,12 +67,12 @@ public SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder abso
 
   SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withAbsoluteEncoder(absoluteEncoder.getAbsolutePosition().asSupplier())
-      .withTelemetry(moduleName, SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
-      .withLocation(location)
-      .withOptimization(true)
       // Nested under the same "Swerve" DataLog prefix as SwerveDriveConfig below, so the module's
       // absolute encoder shows up alongside the rest of the drive's DataLog entries.
-      .withDataLogName("Swerve/" + moduleName);
+      .withTelemetry(moduleName, new SwerveModuleTelemetryConfig(SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
+          .withDataLogName("Swerve/" + moduleName))
+      .withLocation(location)
+      .withOptimization(true);
   return new SwerveModule(moduleConfig);
 }
 ```
@@ -83,9 +83,10 @@ SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
     .withStartingPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)))
     .withTranslationController(new PIDController(1, 0, 0))
     .withRotationController(new PIDController(1, 0, 0))
-    // Logs pose/gyro/chassis speeds/module states to a WPILib DataLog (readable with AdvantageScope
-    // or DataLogTool) in addition to NetworkTables. Each module above nests under "Swerve/<name>".
-    .withDataLogName("Swerve");
+    .withTelemetry("swerve", new SwerveDriveTelemetryConfig(SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
+        // Logs pose/gyro/chassis speeds/module states to a WPILib DataLog (readable with AdvantageScope
+        // or DataLogTool) in addition to NetworkTables. Each module above nests under "Swerve/<name>".
+        .withDataLogName("Swerve"));
 drive = new SwerveDrive(config);
 ```
 {% endtab %}
@@ -99,30 +100,30 @@ m_driveConfig.WithSubsystem(this)
     .WithGyro([gyroPtr = &m_gyro]() -> units::degree_t {
       return units::degree_t{units::turn_t{gyroPtr->GetYaw().GetValue()}};
     })
-    .WithTelemetry(SwerveDriveConfig::TelemetryVerbosity::HIGH)
-    .WithDataLogName("Swerve");
+    .WithTelemetry("swerve", yams::telemetry::SwerveDriveTelemetryConfig(SwerveDriveConfig::TelemetryVerbosity::HIGH)
+        .WithDataLogName("Swerve"));
 
 moduleCfgMember
     .WithAbsoluteEncoder(/* ... */)
-    .WithTelemetry(moduleName, Cfg::TelemetryVerbosity::HIGH)
+    .WithTelemetry(moduleName, yams::telemetry::SwerveModuleTelemetryConfig(Cfg::TelemetryVerbosity::HIGH)
+        .WithDataLogName("Swerve/" + moduleName))
     .WithLocation(location)
-    .WithOptimization(true)
-    .WithDataLogName("Swerve/" + moduleName);
+    .WithOptimization(true);
 ```
 
-See the C++ API reference's `SwerveDriveConfig` and `SwerveModuleConfig` pages for the full builder reference.
+Neither `SwerveDriveConfig::WithTelemetry(...)` nor `SwerveModuleConfig::WithTelemetry(...)` has a name-less overload, the telemetry name is always the first argument. See the C++ API reference's `SwerveDriveConfig` and `SwerveModuleConfig` pages for the full builder reference.
 {% endtab %}
 {% endtabs %}
 
 {% hint style="warning" %}
-`SwerveDriveConfig.withDataLogName(...)` and `SwerveModuleConfig.withDataLogName(...)` are independent calls, setting one does not cascade to the other, and neither cascades to the drive/azimuth motors. That's why `createModule()` above sets a third, separate DataLog name directly on the azimuth motor's own `SmartMotorControllerTelemetryConfig`.
+The drive's `SwerveDriveTelemetryConfig.withDataLogName(...)` and a module's `SwerveModuleTelemetryConfig.withDataLogName(...)` are independent calls, setting one does not cascade to the other, and neither cascades to the drive/azimuth motors. That's why `createModule()` above sets a third, separate DataLog name directly on the azimuth motor's own `SmartMotorControllerTelemetryConfig`. Neither `SwerveDriveConfig` nor `SwerveModuleConfig` has a `withDataLogName(...)` of its own, DataLog naming only lives on the `*TelemetryConfig` classes.
 {% endhint %}
 
 ### Granular control: which fields, and where they go
 
 The drive and azimuth motors underneath each module are ordinary `SmartMotorController`s, so, as shown on `azimuthCfg` above, you get the same field-level control you'd get on any standalone mechanism's motor by building a `SmartMotorControllerTelemetryConfig` and handing it to `withTelemetry(name, ...)` instead of the `withTelemetry(name, verbosity)` shorthand.
 
-This is the _only_ granular knob in the whole swerve stack: `SwerveDriveConfig`/`SwerveModuleConfig` only expose a verbosity preset for the drive-level and per-module fields (pose, gyro, chassis speeds, module states, absolute encoder), there's no field-by-field opt-in and no way to disable NetworkTables for those. `SmartMotorControllerTelemetryConfig` controls both axes independently:
+The drive-level and per-module fields (pose, gyro, chassis speeds, module states, absolute encoder) work the same way, but through their own config classes, `SwerveDriveTelemetryConfig` and `SwerveModuleTelemetryConfig`, passed to `withTelemetry(name, ...)` instead of a bare `TelemetryVerbosity`. Both also have a `TelemetryVerbosity`-taking constructor (`new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)`) as shorthand for `new SwerveDriveTelemetryConfig().withTelemetryVerbosity(TelemetryVerbosity.HIGH)`. `SmartMotorControllerTelemetryConfig`, `SwerveDriveTelemetryConfig`, and `SwerveModuleTelemetryConfig` all control both axes independently:
 
 * **Which fields**, every field is disabled by default. `withTelemetryVerbosity(LOW/MID/HIGH)` turns on a cumulative preset; individual `with*()` methods (`withStatorCurrent()`, `withTemperature()`, `withMechanismPosition()`, ...) add or supplement it. See the full field list on the `SmartMotorControllerTelemetryConfig` API reference page.
 * **Where they go**, `withDataLogName(name)` turns on DataLog for every enabled field under that prefix. `withoutNetworkTables()` (or `withNetworkTables(false)`) stops those same fields from reaching NT4. The two are independent: log-only, NT-only, both, or neither are all valid combinations.

@@ -294,11 +294,15 @@ public class SwerveSubsystem extends SubsystemBase {
 You can also expose `getPose()`, `resetOdometry()`, and `addVisionMeasurement()` as needed for autonomous and vision integration.
 
 {% hint style="info" %}
-`SwerveDrive` already builds and publishes its own `Field2d` internally (to `Mechanisms/<name>/field`), so the `Field2d field` instance above is actually redundant. Call `drive.getField2d()` instead of keeping a separate widget — this also lets vision or autonomous code plot extra objects (e.g. detected AprilTags, path previews) onto the same widget the drive already publishes, rather than creating and registering yet another one.
+`SwerveDrive` already builds and publishes its own `Field2d` internally (to `Mechanisms/<name>/field`), so the `Field2d field` instance above is actually redundant. Call `drive.getField2d()` instead of keeping a separate widget; this also lets vision or autonomous code plot extra objects (e.g. detected AprilTags, path previews) onto the same widget the drive already publishes, rather than creating and registering yet another one.
 {% endhint %}
 
 {% hint style="info" %}
-In simulation, `drive.getSimPose()` returns a ground-truth `Pose2d` computed by assuming every module hit its last-commanded `SwerveModuleState` perfectly — separate from `getPose()`'s noisy, fused odometry estimate. It's a convenient "known truth" source for a simulated vision subsystem to generate synthetic target detections from, letting you test vision-dependent code without physical hardware. It only advances during `simIterate()` and stays at the configured starting pose on a real robot.
+In simulation, `drive.getSimPose()` returns a ground-truth `Pose2d` computed by assuming every module hit its last-commanded `SwerveModuleState` perfectly, separate from `getPose()`'s noisy, fused odometry estimate. It's a convenient "known truth" source for a simulated vision subsystem to generate synthetic target detections from, letting you test vision-dependent code without physical hardware. It only advances during `simIterate()` and stays at the configured starting pose on a real robot.
+{% endhint %}
+
+{% hint style="success" %}
+**Tuning the `driveToPose()` PID gains live**: with `TelemetryVerbosity.HIGH` (the default), YAMS publishes a "Live Tuning"-style command to SmartDashboard at `Mechanisms/<name>/tuning/driveToPose`, along with a tunable target `Pose2d` and tunable translation/rotation P/I/D gains under the `Tuning` NetworkTables table. Schedule that command from your dashboard and it repeatedly drives toward the tunable target pose using whatever gains you edit live in NetworkTables, so you can dial in `withTranslationController(...)`/`withRotationController(...)` without redeploying code. `setRotationPID(...)`/`setTranslationPID(...)` only reset a PID controller when a gain actually changes, so tuning doesn't wipe out the integrator every loop.
 {% endhint %}
 {% endstep %}
 

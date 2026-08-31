@@ -81,16 +81,47 @@ SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControl
 
 See the `SmartMotorControllerTelemetryConfig` API reference page for the full method list. `withCustom(...)` is currently Java-only.
 
+## StructTelemetry and StructArrayTelemetry
+
+`SmartMotorControllerTelemetry` publishes plain numbers and booleans with `DoubleTelemetry`/`BooleanTelemetry`. Swerve telemetry needs to publish NT4 struct-encoded types instead, a single `Pose2d` or `ChassisSpeeds`, or an array of `SwerveModuleState`, so it's built on two generic counterparts:
+
+* `StructTelemetry<T>` publishes a single struct-serializable value (anything WPILib can encode as an NT4 struct: `Pose2d`, `ChassisSpeeds`, `SwerveModuleState`, etc.).
+* `StructArrayTelemetry<T>` publishes an array of that same kind of value, used for the four-module `SwerveModuleState[]` fields.
+
+Both work exactly like `DoubleTelemetry`, they can be enabled/disabled per field, wired to NetworkTables and/or a DataLog entry, and (for fields marked tunable) read back a live-edited value from NetworkTables. You won't normally construct these directly, `SwerveDriveTelemetryConfig` and `SwerveModuleTelemetryConfig` (below) create and manage them for you.
+
 ## Swerve Drive Telemetry
 
-`SwerveDrive` and `SwerveModule` do **not** use `SmartMotorControllerTelemetryConfig` to pick individual fields, and there is no `withoutNetworkTables()` equivalent for a swerve drive, NetworkTables publishing for the drive-level fields (pose, gyro, chassis speeds, module states) and each module's fields (drive/azimuth motor telemetry, absolute encoder) always happens. Instead you choose a `TelemetryVerbosity` (`LOW`/`MID`/`HIGH`) with `SwerveDriveConfig.withTelemetry(...)` and `SwerveModuleConfig.withTelemetry(name, ...)`, and YAMS logs everything useful for that verbosity level automatically.
+`SwerveDrive` and `SwerveModule` don't use `SmartMotorControllerTelemetryConfig`, they have their own dedicated config classes, `SwerveDriveTelemetryConfig` and `SwerveModuleTelemetryConfig`, but the shape is the same: every field is disabled by default, `withTelemetryVerbosity(TelemetryVerbosity)` turns on a cumulative preset (`LOW` → `MID` → `HIGH`), and individual `with*()` methods let you enable/disable fields one at a time on top of (or instead of) a preset. `withoutNetworkTables()`/`withNetworkTables(boolean)` and `withDataLogName(name)` work exactly like they do on `SmartMotorControllerTelemetryConfig`.
 
-You can still log to DataLog:
+```java
+SwerveDriveTelemetryConfig driveTelemetryConfig = new SwerveDriveTelemetryConfig()
+    .withTelemetryVerbosity(TelemetryVerbosity.HIGH)
+    .withPose()
+    .withGyro()
+    .withCurrentRobotRelativeChassisSpeeds()
+    .withFieldRelativeChassisSpeeds()
+    .withDesiredRobotRelativeChassisSpeeds()
+    .withDesiredModuleStates()
+    .withCurrentModuleStates()
+    .withDataLogName("swerve");
 
-* `SwerveDriveConfig.withDataLogName(name)` logs the drive's pose, gyro, and chassis speeds/module states.
-* `SwerveModuleConfig.withDataLogName(name)` logs that module's absolute encoder reading.
+SwerveDriveConfig driveConfig = new SwerveDriveConfig(this, frontLeft, frontRight, backLeft, backRight)
+    .withGyro(gyro.getYaw().asSupplier())
+    .withTelemetry("swerve", driveTelemetryConfig);
+```
 
-Neither of these cascades down to the drive/azimuth motors of a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController`, see [DataLog Best Practices](../details/datalog-best-practices.md) for a full walkthrough.
+Unlike a single-motor mechanism's `withTelemetry(...)`, `SwerveDriveConfig.withTelemetry(...)` always takes the telemetry name as its first argument: `withTelemetry(String name, TelemetryVerbosity)` or `withTelemetry(String name, SwerveDriveTelemetryConfig)`, there's no name-less overload and no separate `withTelemetryName(...)` setter. There is no `SwerveDriveConfig.withDataLogName(...)` either, DataLog configuration lives entirely on `SwerveDriveTelemetryConfig`, passed in via `withTelemetry(name, SwerveDriveTelemetryConfig)`. If you already have a `TelemetryVerbosity` in hand and don't need to customize anything else, `new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)` is shorthand for `new SwerveDriveTelemetryConfig().withTelemetryVerbosity(TelemetryVerbosity.HIGH)` (same shorthand constructor exists on `SwerveModuleTelemetryConfig`).
+
+`SwerveModuleTelemetryConfig` follows the same pattern for a single module (`withAbsoluteEncoder()`, `withState()` for the module's `SwerveModuleState`), fed to `SwerveModuleConfig.withTelemetry(name, SwerveModuleTelemetryConfig)`. Note that `withTelemetryVerbosity(...)` only enables `withState()` at `HIGH`, at `MID`/`LOW` only the absolute encoder angle is published. `SwerveModuleConfig` does not have its own `withDataLogName(...)` shorthand, DataLog configuration for a module goes through `SwerveModuleTelemetryConfig.withDataLogName(...)` the same way it does for the drive.
+
+Neither `SwerveDriveTelemetryConfig` nor `SwerveModuleTelemetryConfig` cascades down to the drive/azimuth motors inside a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController`, see [DataLog Best Practices](../details/datalog-best-practices.md) for a full walkthrough.
+
+If a field doesn't have its own `with*()` method, `withCustom(...)` works the same escape hatch as `SmartMotorControllerTelemetryConfig`, taking a `DoubleTelemetryField`/`StructTelemetryField`/`StructArrayTelemetryField` (or an array of one) plus a boolean.
+
+### Live-tuning auto-align PID from NetworkTables
+
+`SwerveDriveTelemetryConfig`'s `HIGH` verbosity also publishes a tunable target `Pose2d` and tunable translation/rotation PID gains under a `Tuning` NetworkTables table. `SwerveDrive` publishes a "Live Tuning"-style command to SmartDashboard at `Mechanisms/<name>/tuning/driveToPose`, running it resets the translation/rotation PID controllers, then every loop reads the tunable target pose and P/I/D gains back from NetworkTables and drives the robot toward that pose live, useful for dialing in auto-align gains from a dashboard without redeploying code. `SwerveDrive.setRotationPID(...)`/`setTranslationPID(...)` only reset and replace a PID controller if a gain actually changed, so tuning doesn't wipe the integrator every single loop.
 
 ## Colors
 

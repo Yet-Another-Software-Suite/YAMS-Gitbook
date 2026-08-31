@@ -73,28 +73,30 @@ This keeps full NT4 telemetry for pit testing and practice, then automatically d
 ## Swerve Drive is different
 
 {% hint style="warning" %}
-`SwerveDriveConfig`/`SwerveModuleConfig` do **not** use `SmartMotorControllerTelemetryConfig`, and there is no way to disable NetworkTables for swerve telemetry. YAMS always publishes everything useful for the `TelemetryVerbosity` you choose, there's no granular field-by-field opt-in/opt-out at the swerve level.
+`SwerveDriveConfig`/`SwerveModuleConfig` do **not** use `SmartMotorControllerTelemetryConfig`, they have their own `SwerveDriveTelemetryConfig`/`SwerveModuleTelemetryConfig`. The shape is the same (verbosity preset plus individual `with*()` fields, `withoutNetworkTables()`, `withDataLogName(...)`), but the DataLog name for both the drive-level fields (pose, gyro, chassis speeds, module states) and a module's absolute encoder angle has to go through the telemetry config, neither `SwerveDriveConfig` nor `SwerveModuleConfig` has a `withDataLogName(...)` of its own.
 {% endhint %}
 
-`SwerveDriveConfig.withTelemetry(TelemetryVerbosity)` and `SwerveModuleConfig.withTelemetry(name, TelemetryVerbosity)` pick a verbosity preset the same way a single-motor mechanism does, but that's the only lever you get for the drive-level fields (pose, gyro, chassis speeds, module states) and each module's own fields (drive/azimuth motor telemetry, absolute encoder angle).
+`SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` and `SwerveModuleConfig.withTelemetry(name, TelemetryVerbosity)` pick a verbosity preset the same way a single-motor mechanism does, both always take the telemetry name as the first argument, there's no name-less overload. For anything more, hand `withTelemetry(name, ...)` a `SwerveDriveTelemetryConfig`/`SwerveModuleTelemetryConfig` instead of a bare `TelemetryVerbosity`, that's what lets you enable individual fields, disable NetworkTables, or set a DataLog name for the drive-level and per-module fields (pose, gyro, chassis speeds, module states, absolute encoder angle).
 
 You can still send this to DataLog:
 
 ```java
 SwerveDriveConfig driveConfig = new SwerveDriveConfig(this, frontLeft, frontRight, backLeft, backRight)
     .withGyro(gyro.getYaw().asSupplier())
-    .withTelemetry(TelemetryVerbosity.HIGH)
-    .withDataLogName("swerve");                 // logs pose, gyro, chassis speeds, module states
+    .withTelemetry("swerve", new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)
+        .withDataLogName("swerve"));                 // logs pose, gyro, chassis speeds, module states
 
 SwerveModuleConfig frontLeftConfig = new SwerveModuleConfig(driveMotorFL, azimuthMotorFL)
     .withWheelRadius(Meters.of(0.0508))
     .withLocation(new Translation2d(0.381, 0.381))
-    .withTelemetry("FrontLeft", TelemetryVerbosity.HIGH)
-    .withDataLogName("swerve/frontLeft");        // logs this module's absolute encoder angle only
+    .withTelemetry("FrontLeft", new SwerveModuleTelemetryConfig(TelemetryVerbosity.HIGH)
+        .withDataLogName("swerve/frontLeft"));       // logs this module's absolute encoder angle (+ state at HIGH)
 ```
 
+`new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)`/`new SwerveModuleTelemetryConfig(TelemetryVerbosity.HIGH)` are shorthand constructors for `new SwerveDriveTelemetryConfig().withTelemetryVerbosity(TelemetryVerbosity.HIGH)` and the module equivalent. Each module's DataLog name is independent of the drive's `SwerveDriveTelemetryConfig.withDataLogName(...)` above, set it separately per module if you want per-module DataLog prefixes.
+
 {% hint style="info" %}
-`SwerveDriveConfig.withDataLogName(...)` and `SwerveModuleConfig.withDataLogName(...)` are independent, neither cascades to the drive/azimuth motors that make up a module. Setting one does not log the other, and neither logs the motors.
+Neither the drive's nor a module's DataLog name cascades to the drive/azimuth motors that make up that module. Setting one does not log the other, and neither logs the motors.
 {% endhint %}
 
 ### Getting granular fields out of a swerve module's motors
