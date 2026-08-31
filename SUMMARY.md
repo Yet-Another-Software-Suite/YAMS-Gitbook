@@ -44,6 +44,7 @@
 * [Turrets/Wrists](details/turrets-wrists.md)
 * [Shooters](details/shooters.md)
 * [Swerve Drive](details/swerve-drive.md)
+  * [Swerve Module](details/swerve-module.md)
 * [run() vs runTo() Commands](details/run-vs-runto.md)
 * [Setpoint Methods vs Command Helpers](details/setpoint-methods.md)
 * [Telemetry](understanding/telemetry.md)

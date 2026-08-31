@@ -1,0 +1,94 @@
+---
+icon: gear
+---
+
+# Swerve Module
+
+See [Swerve Drive](swerve-drive.md) first for how modules fit into the drive as a whole. This page goes deeper on `SwerveModule` and `SwerveModuleConfig` themselves.
+
+## Two Motors, One Module
+
+A `SwerveModule` pairs exactly two `SmartMotorController`s: a drive motor (velocity control, drives the wheel) and an azimuth motor (position control, steers the wheel). `SwerveModuleConfig`'s constructor takes both directly:
+
+```java
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
+      .withAbsoluteEncoder(encoder.getAbsolutePosition().asSupplier())
+      .withLocation(Meters.of(0.3), Meters.of(0.3))
+      .withOptimization(true)
+      .withTelemetry("frontleft", TelemetryVerbosity.HIGH);
+
+SwerveModule fl = new SwerveModule(moduleConfig);
+```
+
+{% hint style="info" %}
+There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws, it's meant to be set exactly once.
+{% endhint %}
+
+## Absolute Encoder Wiring
+
+Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting position" to assume, the wheel could be facing any direction when the robot powers on. That's why `SwerveModule` reads the absolute encoder and seeds the azimuth motor's relative encoder from it at construction time (`seedAzimuthEncoder()`), rather than requiring a homing routine.
+
+`SwerveModuleConfig.withAbsoluteEncoder(...)` has two forms:
+
+* Pass a same-vendor absolute encoder object directly, and YAMS wires it into the azimuth `SmartMotorControllerConfig` as an external feedback encoder.
+* Pass a `Supplier<Angle>` (or `DoubleSupplier`) for any other absolute encoder, such as a CANcoder read through its own API.
+
+```java
+.withAbsoluteEncoder(encoder.getAbsolutePosition().asSupplier())
+.withAbsoluteEncoderOffset(Rotations.of(0.25)) // bevel-left zero offset
+```
+
+`getAbsoluteEncoderAngle()` returns the angle with gearing and offset applied, the value actually used for seeding and optimization. `getRawAbsoluteEncoderAngle()` returns the same reading with no offset or gearing conversion applied, useful when you're determining what offset to configure in the first place: point every wheel forward with the bevel gears facing the same direction, read the raw angle from each module, and that's your per-module offset.
+
+## The Flip-Decision Feedback Loop
+
+`SwerveModuleConfig.getOptimizedState(...)` is what `SwerveModule.setSwerveModuleState(...)` calls every loop before commanding the motors. When optimization is enabled, WPILib's `SwerveModuleState.optimize(...)` decides whether to flip a module 180 degrees and reverse the drive direction instead of steering the long way around, and that decision needs a reference angle to compare against.
+
+`SwerveModuleConfig` deliberately compares against `lastCommandedAngle`, the angle it last actually commanded, rather than the live absolute encoder reading. Kinematics recomputes the raw desired angle from scratch every loop with no memory of a prior flip. If the flip decision were re-derived from the encoder instead, a debounced flip in progress would get pulled back toward the raw angle by the encoder's own reading before the debounce could ever confirm it, a feedback loop that could leave the module chattering between two headings. Comparing against the last commanded angle avoids that entirely.
+
+## Minimum Velocity
+
+`SwerveModuleConfig.withMinimumVelocity(LinearVelocity)` sets a deadband below which `getOptimizedState(...)` zeroes the commanded speed and holds the module at its current angle instead of the kinematically-desired one. This keeps a module from spinning to face a new heading every time the requested drive speed is nearly zero, which otherwise reads as constant, pointless wheel chatter when the driver lets go of the stick.
+
+{% hint style="warning" %}
+`SwerveModuleConfig` also has a `couplingRatio` field intended for differential swerve modules where azimuth rotation mechanically couples into drive rotation, but it isn't wired into any public setter yet (tracked as a TODO in the source). Don't rely on it being applied.
+{% endhint %}
+
+## Module Telemetry
+
+`SwerveModuleConfig.withTelemetry(name, TelemetryVerbosity)` (or the `SwerveModuleTelemetryConfig` overload for finer control) is separate from the parent drive's telemetry, but `SwerveDrive` wires it up for you: `SwerveDriveTelemetry.setupTelemetry(...)` calls `SwerveModule.setupTelemetry(driveName)` for every module, which nests each module's NetworkTables entries under `Mechanisms/<driveName>/modules/<moduleName>`.
+
+`SwerveModuleTelemetryConfig` publishes two fields:
+
+| Field                  | NetworkTables key | `LOW` | `MID` | `HIGH` |
+| ----------------------- | ------------------- | :---: | :---: | :----: |
+| Absolute encoder angle  | `encoder`            |   ✓   |   ✓   |    ✓   |
+| SwerveModuleState       | `state`              |       |       |    ✓   |
+
+See [Telemetry](../understanding/telemetry.md) for how struct-encoded fields and verbosity presets work across YAMS generally.
+
+### Using `SwerveModuleTelemetryConfig` Directly
+
+Pass a `SwerveModuleTelemetryConfig` instead of a verbosity level when you need to route a single module's telemetry somewhere specific, such as nesting its DataLog entries under the same prefix as the parent drive:
+
+```java
+SwerveModuleTelemetryConfig telemetryCfg =
+    new SwerveModuleTelemetryConfig(TelemetryVerbosity.HIGH)
+        .withDataLogName("swerve/modules/frontleft");
+
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
+      .withAbsoluteEncoder(encoder.getAbsolutePosition().asSupplier())
+      .withLocation(Meters.of(0.3), Meters.of(0.3))
+      .withOptimization(true)
+      .withTelemetry("frontleft", telemetryCfg);
+```
+
+`SwerveModuleTelemetryConfig(TelemetryVerbosity)` is a shorthand constructor equivalent to `new SwerveModuleTelemetryConfig().withTelemetryVerbosity(verbosity)`.
+
+## How SwerveDrive Uses Each Module
+
+`SwerveDrive` computes one `SwerveModuleState[]` per loop from the requested `ChassisSpeeds` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where optimization and cosine compensation are actually applied (see [Cosine Compensation and Optimization](swerve-drive.md#cosine-compensation-and-optimization) on the Swerve Drive page), so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
+
+## Code Reference
+
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/swerve_drive/java/frc/robot/subsystems/SwerveSubsystem.java" %}

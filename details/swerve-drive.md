@@ -90,7 +90,45 @@ What makes this different from wiring up the PID controllers yourself is the tel
 
 ## Telemetry Verbosity
 
-Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` (and the equivalent on `SwerveModuleConfig`) picks a preset bundle of fields to publish, from pose and gyro angle at `LOW` up to full desired/measured chassis speeds and module states at `HIGH`. Pass a `SwerveDriveTelemetryConfig`/`SwerveModuleTelemetryConfig` instead of a verbosity level when you need finer control over exactly which fields are enabled, or where they're logged. See [Telemetry](../understanding/telemetry.md) for the shared telemetry architecture these configs build on.
+Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish, from pose and gyro angle at `LOW` up to full desired/measured chassis speeds and module states at `HIGH`. Each level includes everything the level below it publishes.
+
+| Field                                 | NetworkTables key           | `LOW` | `MID` | `HIGH` |
+| -------------------------------------- | ---------------------------- | :---: | :---: | :----: |
+| Pose                                   | `pose`                        |   ✓   |   ✓   |    ✓   |
+| Gyro angle                             | `gyro`                        |   ✓   |   ✓   |    ✓   |
+| Current robot-relative ChassisSpeeds   | `chassis/current`             |       |   ✓   |    ✓   |
+| Field-relative ChassisSpeeds           | `chassis/field`               |       |   ✓   |    ✓   |
+| Current module states                  | `states/current`              |       |   ✓   |    ✓   |
+| Desired robot-relative ChassisSpeeds   | `chassis/desired`             |       |       |    ✓   |
+| Desired module states                  | `states/desired`              |       |       |    ✓   |
+| Translation P/I/D (tunable)            | `autoalign/translation/p,i,d` |       |       |    ✓   |
+| Rotation P/I/D (tunable)               | `autoalign/rotation/p,i,d`    |       |       |    ✓   |
+| Target pose (tunable)                  | `tuning/driveToPose`          |       |       |        |
+
+{% hint style="warning" %}
+Target pose is never enabled by a verbosity preset, at any level. Even at `HIGH`, the auto-align PID gains become live-tunable but the target pose that `driveToPose` tuning drives toward does not; you must opt in explicitly with `withCustom(SwerveDriveTelemetry.StructTelemetryField.TargetPose, true)`. Without it, `SwerveDrive` never subscribes to that NetworkTables entry, so publishing a pose there has no effect on the robot.
+{% endhint %}
+
+### Using `SwerveDriveTelemetryConfig` Directly
+
+Pass a `SwerveDriveTelemetryConfig` instead of a verbosity level when you need finer control than a preset gives you, such as enabling the target pose for live tuning, or routing telemetry to a DataLog instead of NetworkTables during competition:
+
+```java
+SwerveDriveTelemetryConfig telemetryCfg =
+    new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)
+        // HIGH doesn't include this; opt in explicitly to enable live driveToPose tuning.
+        .withCustom(SwerveDriveTelemetry.StructTelemetryField.TargetPose, true)
+        .withoutNetworkTables()
+        .withDataLogName("swerve");
+
+SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
+      .withGyro(gyro.getYaw().asSupplier())
+      .withTranslationController(new PIDController(1.0, 0, 0))
+      .withRotationController(new PIDController(1.0, 0, 0))
+      .withTelemetry("swerve", telemetryCfg);
+```
+
+`SwerveDriveTelemetryConfig(TelemetryVerbosity)` is a shorthand constructor equivalent to `new SwerveDriveTelemetryConfig().withTelemetryVerbosity(verbosity)`, useful when you're about to layer more `with*()` calls on top anyway. See [Telemetry](../understanding/telemetry.md) for the shared telemetry architecture these configs build on.
 
 ## Code Reference
 
