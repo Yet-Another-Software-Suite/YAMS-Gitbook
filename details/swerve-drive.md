@@ -59,6 +59,12 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withLocation(Meters.of(0.3), Meters.of(0.3)); // X = forward, Y = left, from robot center
 ```
 
+`withDistanceFromCenterOfRotation` is an equivalent alternate form:
+
+```java
+moduleConfig.withDistanceFromCenterOfRotation(Meters.of(0.3), Meters.of(0.3));
+```
+
 {% hint style="warning" %}
 Every module needs its location set before it's handed to `SwerveDriveConfig`. A missing or wrong location silently produces incorrect kinematics rather than a compile error, so double check trackwidth/wheelbase math when a robot doesn't drive straight.
 {% endhint %}
@@ -69,15 +75,41 @@ The `withOptimization(true)` seen in the config above is a per-module flag, not 
 
 `SwerveDriveConfig.withGyro(Supplier<Angle>)` is what lets `SwerveDrive` convert between field-relative and robot-relative `ChassisSpeeds`. Internally, `SwerveDrive` always drives the modules with robot-relative speeds; `setFieldRelativeChassisSpeeds` just rotates the requested speeds into the robot frame using the current gyro angle before handing them to the same code path robot-relative callers use.
 
-`SwerveDriveConfig.withGyroOffset` and `withGyroInverted` exist so the gyro's raw zero and sign can be corrected without touching your drive code, and `withGyroVelocity`/`withGyroAngularVelocityScaleFactor` let you feed the gyro's own angular velocity measurement into pose estimation instead of relying solely on module odometry, which is usually more accurate during fast rotation.
+```java
+drive.setFieldRelativeChassisSpeeds(new ChassisSpeeds(1.0, 0, 0));
+```
+
+`SwerveDriveConfig.withGyroOffset` and `withGyroInverted` exist so the gyro's raw zero and sign can be corrected without touching your drive code:
+
+```java
+config.withGyroOffset(Degrees.of(90))
+      .withGyroInverted(true);
+```
+
+`withGyroVelocity`/`withGyroAngularVelocityScaleFactor` let you feed the gyro's own angular velocity measurement into pose estimation instead of relying solely on module odometry, which is usually more accurate during fast rotation:
+
+```java
+config.withGyroVelocity(() -> DegreesPerSecond.of(gyro.getRate()))
+      .withGyroAngularVelocityScaleFactor(1.0);
+```
 
 {% hint style="info" %}
 `SwerveInputStream` is the recommended way to turn raw joystick axes into a `ChassisSpeeds` supplier for `drive(...)`; it handles deadbanding, axis cubing, and alliance-relative flipping so you don't have to write that math by hand. See the [tutorial](../tutorials/swerve-drive.md) for a worked example.
 {% endhint %}
 
+```java
+var input = new SwerveInputStream(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
+drive.drive(input);
+```
+
 ## Auto-Align: `driveToPoseSetpoint` and Live PID Tuning
 
 `SwerveDrive` includes a built-in field-relative auto-align: `driveToPoseSetpoint(Pose2d targetPose)` uses the translation and rotation `PIDController`s from `SwerveDriveConfig` to compute the `ChassisSpeeds` needed to drive toward a target pose, and `driveToPose(Pose2d)` wraps that into a ready-to-schedule `Command`.
+
+```java
+Command alignToScore = drive.driveToPose(new Pose2d(2, 4, Rotation2d.kZero));
+alignToScore.schedule();
+```
 
 What makes this different from wiring up the PID controllers yourself is the telemetry integration: `SwerveDriveTelemetryConfig` publishes a live-tunable target pose and the translation/rotation PID gains to NetworkTables, and `SwerveDrive` publishes a matching tuning command to SmartDashboard (`Mechanisms/<name>/tuning/driveToPose`). Running that command from the dashboard repeatedly reads the tunable pose and gains and drives the real (or simulated) robot toward them, so you can tune auto-align PID gains live without redeploying code. Changing a gain only resets that controller's integrator if the gain actually changed, so tuning doesn't wipe accumulated state every loop.
 
@@ -93,6 +125,10 @@ What makes this different from wiring up the PID controllers yourself is the tel
 ## Telemetry Verbosity
 
 Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish, from pose and gyro angle at `LOW` up to full desired/measured chassis speeds and module states at `HIGH`. Each level includes everything the level below it publishes.
+
+```java
+config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
+```
 
 | Field                                 | NetworkTables key           | `LOW` | `MID` | `HIGH` |
 | -------------------------------------- | ---------------------------- | :---: | :---: | :----: |

@@ -21,6 +21,11 @@ See [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config) fo
 There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws, it's meant to be set exactly once.
 {% endhint %}
 
+```java
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig();
+moduleConfig.withSmartMotorController(driveSMC, azimuthSMC);
+```
+
 ## Absolute Encoder Wiring
 
 Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting position" to assume, the wheel could be facing any direction when the robot powers on. That's why `SwerveModule` reads the absolute encoder and seeds the azimuth motor's relative encoder from it at construction time (`seedAzimuthEncoder()`), rather than requiring a homing routine.
@@ -37,12 +42,22 @@ Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting posi
 
 `getAbsoluteEncoderAngle()` returns the angle with gearing and offset applied, the value actually used for seeding and optimization. `getRawAbsoluteEncoderAngle()` returns the same reading with no offset or gearing conversion applied, useful when you're determining what offset to configure in the first place: point every wheel forward with the bevel gears facing the same direction, read the raw angle from each module, and that's your per-module offset.
 
+```java
+Angle angle = moduleConfig.getAbsoluteEncoderAngle();
+Angle raw = moduleConfig.getRawAbsoluteEncoderAngle().get();
+```
+
 ## Optimization and Cosine Compensation
 
 Two `SwerveModuleConfig` flags exist purely to make a module track its setpoint more efficiently:
 
 * `withOptimization(true)` calls WPILib's `SwerveModuleState.optimize(...)`, so a module never rotates more than 90 degrees to reach a target heading (it reverses the drive direction instead of steering the long way around).
 * `withCosineCompensation(true)` scales the commanded drive velocity by the cosine of the angle error between the module's current heading and its desired heading, so a module that hasn't finished rotating yet doesn't also try to drive at full speed in the wrong direction.
+
+```java
+moduleConfig.withOptimization(true)
+            .withCosineCompensation(true);
+```
 
 Both are safe to leave enabled for essentially every swerve module; they exist as flags mainly so you can disable them while debugging module behavior in isolation. `SwerveModuleConfig.getOptimizedState(...)` is what `SwerveModule.setSwerveModuleState(...)` calls every loop to apply both before commanding the motors.
 
@@ -55,6 +70,10 @@ When optimization is enabled, WPILib's `SwerveModuleState.optimize(...)` decides
 ## Minimum Velocity
 
 `SwerveModuleConfig.withMinimumVelocity(LinearVelocity)` sets a deadband below which `getOptimizedState(...)` zeroes the commanded speed and holds the module at its current angle instead of the kinematically-desired one. This keeps a module from spinning to face a new heading every time the requested drive speed is nearly zero, which otherwise reads as constant, pointless wheel chatter when the driver lets go of the stick.
+
+```java
+moduleConfig.withMinimumVelocity(MetersPerSecond.of(0.05));
+```
 
 {% hint style="warning" %}
 `SwerveModuleConfig` also has a `couplingRatio` field intended for differential swerve modules where azimuth rotation mechanically couples into drive rotation, but it isn't wired into any public setter yet (tracked as a TODO in the source). Don't rely on it being applied.
