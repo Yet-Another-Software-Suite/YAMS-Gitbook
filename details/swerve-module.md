@@ -55,10 +55,35 @@ Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting posi
 `SwerveModuleConfig.withAbsoluteEncoder(...)` has two forms:
 
 * Pass a same-vendor absolute encoder object directly, and YAMS wires it into the azimuth `SmartMotorControllerConfig` as an external feedback encoder.
-* Pass a `Supplier<Angle>` (or `DoubleSupplier`) for any other absolute encoder, such as a CANcoder read through its own API.
+* Pass a `Supplier<Angle>` (or `DoubleSupplier`) for any other absolute encoder, such as a CANcoder read through its own API on a non-CTRE azimuth motor.
+
+A CANcoder feeding a `TalonFXWrapper` azimuth motor is same-vendor, so it can be passed directly:
 
 ```java
-.withAbsoluteEncoder(encoder.getAbsolutePosition().asSupplier())
+CANcoder canCoder = new CANcoder(3);
+SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2), DCMotor.getKrakenX60(1), azimuthCfg);
+
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
+      .withAbsoluteEncoder(canCoder)
+      .withAbsoluteEncoderOffset(Rotations.of(0.25)); // bevel-left zero offset
+```
+
+{% hint style="info" %}
+`withAbsoluteEncoder(Object)` and `withAbsoluteEncoderOffset(Angle)` are thin wrappers here: they call `SmartMotorControllerConfig.withExternalEncoder(...)` and `withExternalEncoderZeroOffset(...)` on the azimuth motor's config for you. `SwerveModuleConfig` has no equivalent wrapper for inversion, the wrap-around discontinuity point, or switching closed-loop feedback over to the external encoder, so if you need those, set them directly on the azimuth `SmartMotorControllerConfig`:
+
+```java
+azimuthCfg.withExternalEncoderInverted(true)
+          .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))
+          .withUseExternalFeedbackEncoder(true);
+```
+
+`withExternalEncoderDiscontinuityPoint(Angle)` must be `Rotations.of(0.5)` or `Rotations.of(1)`. `withUseExternalFeedbackEncoder(true)` is what actually makes the azimuth's closed-loop controller run on the absolute encoder continuously; without it, the absolute encoder is only used to seed the relative encoder once at construction (via `seedAzimuthEncoder()` above), and closed-loop control runs on the relative encoder from then on.
+{% endhint %}
+
+A CANcoder feeding a REV azimuth motor is a different vendor, so it goes through the `Supplier<Angle>` form instead:
+
+```java
+.withAbsoluteEncoder(canCoder.getAbsolutePosition().asSupplier())
 .withAbsoluteEncoderOffset(Rotations.of(0.25)) // bevel-left zero offset
 ```
 
