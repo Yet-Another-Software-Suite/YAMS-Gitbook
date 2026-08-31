@@ -33,7 +33,7 @@ setDefaultCommand(drive.drive(input));
 
 ## Modes Are Chosen Automatically
 
-A stream is always in exactly one of five internal modes: `ANGULAR_VELOCITY` (the default), `TRANSLATION_ONLY`, `HEADING`, `AIM`, or `DRIVE_TO_POSE`. You never select a mode directly. `get()` re-derives it on every call from which optional pieces are configured and whether the relevant `BooleanSupplier` trigger currently reports true, then transitions cleanly (resetting the relevant PID controllers) if the mode changed since the last call.
+A stream is always in exactly one of four internal modes: `ANGULAR_VELOCITY` (the default), `TRANSLATION_ONLY`, `HEADING`, or `AIM`. You never select a mode directly. `get()` re-derives it on every call from which optional pieces are configured and whether the relevant `BooleanSupplier` trigger currently reports true, then transitions cleanly (resetting the relevant PID controllers) if the mode changed since the last call.
 
 `withControllerHeadingAxis(x, y)` plus `withHeadingControl(trigger)` together enable `HEADING`, snapping to a heading derived from a second stick axis instead of rotating at a velocity:
 
@@ -45,8 +45,8 @@ SwerveInputStream headingStream = input.clone()
 
 `withTranslationOnly(trigger)` enables `TRANSLATION_ONLY` (locks the current heading, translates only), and `withAim(targetPoseSupplier, trigger)` enables `AIM` (rotates to face a target pose while translating normally) the same way, by supplying a trigger for a mode that's otherwise unreachable.
 
-{% hint style="warning" %}
-`DRIVE_TO_POSE` exists as an internal mode, but `SwerveInputStream` has no public setter for its target pose or PID controllers yet, so it can't currently be reached from outside the class (and `atTargetPose(...)` can't report anything meaningful either). Use [`SwerveDrive.driveToPose(...)`](swerve-drive.md#auto-align-drivetoposesetpoint-and-live-pid-tuning) for auto-align instead.
+{% hint style="info" %}
+`SwerveInputStream` used to have a `DRIVE_TO_POSE` mode and a matching `atTargetPose(...)` method; both have been removed. Use [`SwerveDrive.driveToPose(...)`](swerve-drive.md#auto-align-drivetoposesetpoint-and-live-pid-tuning) for auto-align instead.
 {% endhint %}
 
 ## Robot-Relative and Alliance-Relative Output
@@ -58,7 +58,7 @@ input.withRobotRelative(); // output robot-relative speeds instead of field-rela
 ```
 
 {% hint style="warning" %}
-`withAllianceRelativeControl()` and `withRobotRelative()` are incompatible outside of `DRIVE_TO_POSE` mode; combining them throws a `RuntimeException` at runtime, not a compile error.
+`withAllianceRelativeControl()` and `withRobotRelative()` are incompatible; combining them throws a `RuntimeException` at runtime, not a compile error.
 {% endhint %}
 
 ## Code Reference
