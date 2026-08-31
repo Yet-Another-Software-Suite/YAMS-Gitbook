@@ -69,7 +69,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 ```
 
 {% hint style="info" %}
-`withAbsoluteEncoder(Object)` and `withAbsoluteEncoderOffset(Angle)` are thin wrappers here: they call `SmartMotorControllerConfig.withExternalEncoder(...)` and `withExternalEncoderZeroOffset(...)` on the azimuth motor's config for you. `SwerveModuleConfig` has no equivalent wrapper for inversion, the wrap-around discontinuity point, or switching closed-loop feedback over to the external encoder, so those still need to be set directly on the azimuth `SmartMotorControllerConfig`.
+For a same-vendor encoder, `withAbsoluteEncoder(Object)` and `withAbsoluteEncoderOffset(Angle)` do exactly the same thing as calling `SmartMotorControllerConfig.withExternalEncoder(...)` and `withExternalEncoderZeroOffset(...)` on the azimuth motor's config yourself; they're forwarded there for you. `SwerveModuleConfig` has no equivalent wrapper for inversion, the wrap-around discontinuity point, or switching closed-loop feedback over to the external encoder, so those still need to be set directly on the azimuth `SmartMotorControllerConfig`.
 {% endhint %}
 
 Set those on the azimuth `SmartMotorControllerConfig` before constructing the azimuth `SmartMotorController`, then hand the same `CANcoder` object to `withAbsoluteEncoder(...)` as usual; it only ever touches the encoder object itself, so it won't disturb the inversion, discontinuity point, or feedback-source settings you configured directly on `azimuthCfg`:
