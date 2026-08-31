@@ -6,6 +6,28 @@ icon: gear
 
 See [Swerve Drive](swerve-drive.md) first for how modules fit into the drive as a whole. This page goes deeper on `SwerveModule` and `SwerveModuleConfig` themselves.
 
+## A Fully Configured Module
+
+Here's every `SwerveModuleConfig` option from this page in one place, the sections below explain each call:
+
+```java
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
+      .withAbsoluteEncoder(encoder.getAbsolutePosition().asSupplier())
+      .withAbsoluteEncoderOffset(Rotations.of(0.25))
+      .withAbsoluteEncoderGearing(new GearBox(new double[]{1.5}))
+      .withLocation(Meters.of(0.3), Meters.of(0.3))
+      .withOptimization(true)
+      .withCosineCompensation(true)
+      .withMinimumVelocity(MetersPerSecond.of(0.05))
+      .withTelemetry("frontleft", TelemetryVerbosity.HIGH);
+
+SwerveModule fl = new SwerveModule(moduleConfig);
+```
+
+{% hint style="info" %}
+`withWheelRadius(Distance)`/`withWheelDiameter(Distance)` also exist on `SwerveModuleConfig`, but the source recommends setting wheel size on the drive motor's `SmartMotorControllerConfig` instead (see [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config)), so they're left out above.
+{% endhint %}
+
 ## Two Motors, One Module
 
 A `SwerveModule` pairs exactly two `SmartMotorController`s: a drive motor (velocity control, drives the wheel) and an azimuth motor (position control, steers the wheel). `SwerveModuleConfig`'s constructor takes both directly:

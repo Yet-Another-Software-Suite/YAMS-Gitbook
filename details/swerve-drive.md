@@ -94,12 +94,14 @@ config.withGyroVelocity(() -> DegreesPerSecond.of(gyro.getRate()))
 ```
 
 {% hint style="info" %}
-`SwerveInputStream` is the recommended way to turn raw joystick axes into a `ChassisSpeeds` supplier for `drive(...)`; it handles deadbanding, axis cubing, and alliance-relative flipping so you don't have to write that math by hand. See the [tutorial](../tutorials/swerve-drive.md) for a worked example.
+`SwerveInputStream` is the recommended way to turn raw joystick axes into a `ChassisSpeeds` supplier for `drive(...)`; it handles deadbanding, axis cubing, and alliance-relative flipping so you don't have to write that math by hand. See [Swerve Input Stream](swerve-input-stream.md) for the full picture, or the [tutorial](../tutorials/swerve-drive.md) for a worked example.
 {% endhint %}
 
 ```java
-var input = new SwerveInputStream(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
-drive.drive(input);
+SwerveInputStream input =
+    SwerveInputStream.of(drive, controller::getLeftX, controller::getLeftY)
+        .withControllerRotationAxis(controller::getRightX);
+setDefaultCommand(drive.drive(input));
 ```
 
 ## Auto-Align: `driveToPoseSetpoint` and Live PID Tuning

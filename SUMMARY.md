@@ -45,6 +45,7 @@
 * [Shooters](details/shooters.md)
 * [Swerve Drive](details/swerve-drive.md)
   * [Swerve Module](details/swerve-module.md)
+  * [Swerve Input Stream](details/swerve-input-stream.md)
 * [run() vs runTo() Commands](details/run-vs-runto.md)
 * [Setpoint Methods vs Command Helpers](details/setpoint-methods.md)
 * [Telemetry](understanding/telemetry.md)
