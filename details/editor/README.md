@@ -34,9 +34,8 @@ The presentation from the video series continues onto PID, Feedforward, and Moti
 
 ## The difference between Rotor, Mechanism, and Measurement
 
-*
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
 
-    <figure><img src="../../.gitbook/assets/image (19).png" alt=""><figcaption></figcaption></figure>
 * **Rotor** is the motor output shaft.
 * **Mechanism** is the gearbox AND sprocket output shaft.
 * **Measurement** is the distance that the **Mechanism** travelled via its [**Mechanism Circumference**](../../how-to/how-to-find-your-mechanism-circumference.md)**.**
