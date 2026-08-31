@@ -63,14 +63,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 Every module needs its location set before it's handed to `SwerveDriveConfig`. A missing or wrong location silently produces incorrect kinematics rather than a compile error, so double check trackwidth/wheelbase math when a robot doesn't drive straight.
 {% endhint %}
 
-## Cosine Compensation and Optimization
-
-Two `SwerveModuleConfig` flags exist purely to make modules track setpoints more efficiently:
-
-* `withOptimization(true)` calls WPILib's `SwerveModuleState.optimize`, so a module never rotates more than 90 degrees to reach a target heading (it will reverse the drive direction instead of spinning the long way around).
-* `withCosineCompensation(true)` scales the commanded drive velocity by the cosine of the angle error between the module's current heading and its desired heading, so a module that hasn't finished rotating yet doesn't also try to drive at full speed in the wrong direction.
-
-Both are safe to leave enabled for essentially every swerve module; they exist as flags mainly so you can disable them while debugging module behavior in isolation.
+The `withOptimization(true)` seen in the config above is a per-module flag, not a drive-level one. See [Optimization and Cosine Compensation](swerve-module.md#optimization-and-cosine-compensation) on the Swerve Module page for what it (and its counterpart `withCosineCompensation`) actually does.
 
 ## Gyro Integration and Field vs. Robot Relative Speeds
 
@@ -87,6 +80,15 @@ Both are safe to leave enabled for essentially every swerve module; they exist a
 `SwerveDrive` includes a built-in field-relative auto-align: `driveToPoseSetpoint(Pose2d targetPose)` uses the translation and rotation `PIDController`s from `SwerveDriveConfig` to compute the `ChassisSpeeds` needed to drive toward a target pose, and `driveToPose(Pose2d)` wraps that into a ready-to-schedule `Command`.
 
 What makes this different from wiring up the PID controllers yourself is the telemetry integration: `SwerveDriveTelemetryConfig` publishes a live-tunable target pose and the translation/rotation PID gains to NetworkTables, and `SwerveDrive` publishes a matching tuning command to SmartDashboard (`Mechanisms/<name>/tuning/driveToPose`). Running that command from the dashboard repeatedly reads the tunable pose and gains and drives the real (or simulated) robot toward them, so you can tune auto-align PID gains live without redeploying code. Changing a gain only resets that controller's integrator if the gain actually changed, so tuning doesn't wipe accumulated state every loop.
+
+### How to Use Live Tuning
+
+1. Make sure the fields you need are enabled. `TranslationP/I/D` and `RotationP/I/D` are already live-tunable at `HIGH` verbosity. `TargetPose` is not enabled by any preset, so add `.withCustom(SwerveDriveTelemetry.StructTelemetryField.TargetPose, true)` to your `SwerveDriveTelemetryConfig` if you want to drive the pose itself from NetworkTables rather than from a scheduled `driveToPose(...)` command.
+2. Deploy the robot code, then open NetworkTables in AdvantageScope, Shuffleboard, Elastic, or a similar dashboard tool and browse to `Tuning/<name>/` (the name you passed to `withTelemetry`). You should see `autoalign/translation/p`, `i`, `d`, `autoalign/rotation/p`, `i`, `d`, and, if enabled, `tuning/driveToPose`.
+3. On SmartDashboard, find the command at `Mechanisms/<name>/tuning/driveToPose` and schedule it, either by binding it to a button or running it directly from your dashboard's command widget. Starting it resets both PID controllers, then it calls `driveToPoseSetpoint(...)` every loop using whatever pose and gains currently sit in `Tuning/<name>/`.
+4. With the tuning command running, edit `autoalign/translation/p` (and the other gain entries) live from your dashboard. If `TargetPose` is enabled, publish a new pose to `tuning/driveToPose` as well. The robot immediately drives toward the target using the updated gains, no redeploy needed.
+5. Once a gain feels right, copy its value back into the matching `SwerveDriveConfig.withTranslationController(...)` / `withRotationController(...)` call in code. Values edited live in NetworkTables are not persisted and reset the next time the robot code restarts.
+6. Unschedule the tuning command (or schedule your normal driving command over it) before handing control back to the driver.
 
 ## Telemetry Verbosity
 

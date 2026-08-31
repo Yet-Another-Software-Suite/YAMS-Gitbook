@@ -11,14 +11,11 @@ See [Swerve Drive](swerve-drive.md) first for how modules fit into the drive as 
 A `SwerveModule` pairs exactly two `SmartMotorController`s: a drive motor (velocity control, drives the wheel) and an azimuth motor (position control, steers the wheel). `SwerveModuleConfig`'s constructor takes both directly:
 
 ```java
-SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
-      .withAbsoluteEncoder(encoder.getAbsolutePosition().asSupplier())
-      .withLocation(Meters.of(0.3), Meters.of(0.3))
-      .withOptimization(true)
-      .withTelemetry("frontleft", TelemetryVerbosity.HIGH);
-
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC);
 SwerveModule fl = new SwerveModule(moduleConfig);
 ```
+
+See [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config) for a full worked example with the rest of the `withAbsoluteEncoder`/`withLocation`/`withOptimization`/`withTelemetry` chain filled in.
 
 {% hint style="info" %}
 There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws, it's meant to be set exactly once.
@@ -40,9 +37,18 @@ Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting posi
 
 `getAbsoluteEncoderAngle()` returns the angle with gearing and offset applied, the value actually used for seeding and optimization. `getRawAbsoluteEncoderAngle()` returns the same reading with no offset or gearing conversion applied, useful when you're determining what offset to configure in the first place: point every wheel forward with the bevel gears facing the same direction, read the raw angle from each module, and that's your per-module offset.
 
-## The Flip-Decision Feedback Loop
+## Optimization and Cosine Compensation
 
-`SwerveModuleConfig.getOptimizedState(...)` is what `SwerveModule.setSwerveModuleState(...)` calls every loop before commanding the motors. When optimization is enabled, WPILib's `SwerveModuleState.optimize(...)` decides whether to flip a module 180 degrees and reverse the drive direction instead of steering the long way around, and that decision needs a reference angle to compare against.
+Two `SwerveModuleConfig` flags exist purely to make a module track its setpoint more efficiently:
+
+* `withOptimization(true)` calls WPILib's `SwerveModuleState.optimize(...)`, so a module never rotates more than 90 degrees to reach a target heading (it reverses the drive direction instead of steering the long way around).
+* `withCosineCompensation(true)` scales the commanded drive velocity by the cosine of the angle error between the module's current heading and its desired heading, so a module that hasn't finished rotating yet doesn't also try to drive at full speed in the wrong direction.
+
+Both are safe to leave enabled for essentially every swerve module; they exist as flags mainly so you can disable them while debugging module behavior in isolation. `SwerveModuleConfig.getOptimizedState(...)` is what `SwerveModule.setSwerveModuleState(...)` calls every loop to apply both before commanding the motors.
+
+### The Flip-Decision Feedback Loop
+
+When optimization is enabled, WPILib's `SwerveModuleState.optimize(...)` decides whether to flip a module 180 degrees, and that decision needs a reference angle to compare against.
 
 `SwerveModuleConfig` deliberately compares against `lastCommandedAngle`, the angle it last actually commanded, rather than the live absolute encoder reading. Kinematics recomputes the raw desired angle from scratch every loop with no memory of a prior flip. If the flip decision were re-derived from the encoder instead, a debounced flip in progress would get pulled back toward the raw angle by the encoder's own reading before the debounce could ever confirm it, a feedback loop that could leave the module chattering between two headings. Comparing against the last commanded angle avoids that entirely.
 
@@ -87,7 +93,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 
 ## How SwerveDrive Uses Each Module
 
-`SwerveDrive` computes one `SwerveModuleState[]` per loop from the requested `ChassisSpeeds` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where optimization and cosine compensation are actually applied (see [Cosine Compensation and Optimization](swerve-drive.md#cosine-compensation-and-optimization) on the Swerve Drive page), so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
+`SwerveDrive` computes one `SwerveModuleState[]` per loop from the requested `ChassisSpeeds` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where [optimization and cosine compensation](#optimization-and-cosine-compensation) are actually applied, so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
 
 ## Code Reference
 
