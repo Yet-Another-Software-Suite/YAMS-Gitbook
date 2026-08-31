@@ -49,12 +49,16 @@ Pressing the left bumper swaps the aim target from the speaker to the amp. The d
 
 ## Velocity Limits
 
-`withMaximumLinearVelocity(LinearVelocity)` and `withMaximumAngularVelocity(AngularVelocity)` cap the chassis speed a fully-deflected stick produces. Defaults are 4 m/s and 1 rotation/s if never set.
+`withMaximumLinearVelocity(LinearVelocity)` and `withMaximumAngularVelocity(AngularVelocity)` cap the chassis speed a fully-deflected stick produces, defaulting to 4 m/s and 1 rotation/s if never set.
 
 ```java
 input.withMaximumLinearVelocity(MetersPerSecond.of(4.5))
      .withMaximumAngularVelocity(DegreesPerSecond.of(360));
 ```
+
+{% hint style="info" %}
+A stream copies `SwerveDriveConfig.withMaximumChassisSpeed(...)`'s value (if set) into its own maximum fields once, at construction time; if the drive has no maximum configured, the stream starts from its own defaults (4 m/s, 1 rotation/s) instead. Calling `withMaximumLinearVelocity(...)`/`withMaximumAngularVelocity(...)` afterward overrides that starting value for this stream only and takes effect immediately; the drive's config is never re-checked after construction, so the override sticks.
+{% endhint %}
 
 ## Controller Axes
 
