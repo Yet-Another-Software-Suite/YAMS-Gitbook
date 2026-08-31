@@ -31,11 +31,11 @@
 
 * [AdvantageKit Integration](details/advantagekit-integration.md)
 * [Organizing Configs in Constants](details/config-organization.md)
+* [Battery Simulation](understanding/battery-simulation.md)
 * [Smart Motor Controllers](details/editor/README.md)
   * [Motor Controller Feature Matrix](details/editor/feature-matrix.md)
   * [Simulation Only PID + FeedForward](details/editor/simulation-only-pid-+-feedforward.md)
   * [Limiting Power Consumption](details/editor/limiting-power-consumption.md)
-  * [Battery Simulation](details/editor/battery-simulation.md)
   * [Exponential Profiles](details/editor/exponential-profiles.md)
   * [LQR Controllers](details/editor/lqr-controllers.md)
 * [Sensors](details/sensors.md)

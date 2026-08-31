@@ -7,21 +7,21 @@ icon: car-battery
 YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`), reports its current draw into [`BatterySim`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and writes it to `RoboRioSim`.
 
 {% hint style="info" %}
-This is automatic. You do not need to call anything for basic voltage sag under combined load, it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](README.md#simulation-without-a-mechanism).
+This is automatic. You do not need to call anything for basic voltage sag under combined load, it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](../details/editor/#simulation-without-a-mechanism).
 {% endhint %}
 
 ## Why this matters
 
-Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from only their own current draw, whichever mechanism updated last would overwrite the other's contribution, so the simulated battery would never actually see the *combined* draw of the whole robot. With a shared `BatterySim`, a flywheel spinning up while an elevator is climbing will sag the simulated bus voltage the same way a real battery would under both loads at once, which is exactly the scenario that trips brownouts on a real robot. See [Limiting Power Consumption](limiting-power-consumption.md) for how to guard against that on top of realistic simulation.
+Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from only their own current draw, whichever mechanism updated last would overwrite the other's contribution, so the simulated battery would never actually see the _combined_ draw of the whole robot. With a shared `BatterySim`, a flywheel spinning up while an elevator is climbing will sag the simulated bus voltage the same way a real battery would under both loads at once, which is exactly the scenario that trips brownouts on a real robot. See [Limiting Power Consumption](../details/editor/limiting-power-consumption.md) for how to guard against that on top of realistic simulation.
 
 ## Accurate current draw starts with an accurate MOI
 
 `BatterySim` can only sag voltage as realistically as the current draw it's fed, and that current draw comes straight out of each mechanism's physics simulation (`SingleJointedArmSim`/`DCMotorSim`/`ElevatorSim`). Those models derive current from the torque needed to produce a given acceleration, so if the moment of inertia doesn't match your real mechanism, the simulated current, and therefore the simulated voltage sag, won't either. A default/guessed MOI tends to make mechanisms look artificially light, understating both acceleration current spikes and how much they actually sag the bus.
 
-Set a real MOI on the `SmartMotorControllerConfig` with `.withMomentOfInertia(Distance, Mass)` (estimated from a simple rod/arm model) or `.withMomentOfInertia(MomentOfInertia)` (a known/measured value), see [MOI](../turrets-wrists.md#moi) for the full explanation and an example.
+Set a real MOI on the `SmartMotorControllerConfig` with `.withMomentOfInertia(Distance, Mass)` (estimated from a simple rod/arm model) or `.withMomentOfInertia(MomentOfInertia)` (a known/measured value), see [MOI](../details/turrets-wrists.md#moi) for the full explanation and an example.
 
 {% hint style="info" %}
-This is the same MOI used for PID/feedforward tuning in simulation, so getting it right pays off twice: more realistic control-loop behavior *and* more realistic battery sag under load.
+This is the same MOI used for PID/feedforward tuning in simulation, so getting it right pays off twice: more realistic control-loop behavior _and_ more realistic battery sag under load.
 {% endhint %}
 
 ## Realistic discharge over a match
@@ -37,12 +37,12 @@ import yams.motorcontrollers.simulation.BatterySim;
 BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
 ```
 
-| Method                                                       | Description                                                                                       |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `enableDischarge(double capacityAh, Voltage, Resistance)`    | Turns on discharge modeling with the given capacity and nominal (fully-charged) voltage/resistance. |
-| `disableDischarge()`                                         | Reverts to a constant nominal voltage/resistance.                                                    |
-| `resetDischarge()`                                            | Resets the simulated battery back to a full charge, e.g. between test runs.                          |
-| `getStateOfCharge()`                                          | Returns the current state of charge from `0` (empty) to `1` (full), for telemetry or dashboards.     |
+| Method                                                    | Description                                                                                         |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `enableDischarge(double capacityAh, Voltage, Resistance)` | Turns on discharge modeling with the given capacity and nominal (fully-charged) voltage/resistance. |
+| `disableDischarge()`                                      | Reverts to a constant nominal voltage/resistance.                                                   |
+| `resetDischarge()`                                        | Resets the simulated battery back to a full charge, e.g. between test runs.                         |
+| `getStateOfCharge()`                                      | Returns the current state of charge from `0` (empty) to `1` (full), for telemetry or dashboards.    |
 {% endtab %}
 
 {% tab title="C++" %}
@@ -56,12 +56,12 @@ yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
     18.0, units::volt_t{12.9}, units::ohm_t{0.020});
 ```
 
-| Method                                                                              | Description                                                             |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `EnableDischarge(double capacityAh, units::volt_t, units::ohm_t)`                  | Turns on discharge modeling with the given capacity and nominal voltage/resistance. |
-| `DisableDischarge()`                                                                | Reverts to a constant nominal voltage/resistance.                            |
-| `ResetDischarge()`                                                                  | Resets the simulated battery back to a full charge.                          |
-| `GetStateOfCharge()`                                                                | Returns the current state of charge from `0` (empty) to `1` (full).          |
+| Method                                                            | Description                                                                         |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `EnableDischarge(double capacityAh, units::volt_t, units::ohm_t)` | Turns on discharge modeling with the given capacity and nominal voltage/resistance. |
+| `DisableDischarge()`                                              | Reverts to a constant nominal voltage/resistance.                                   |
+| `ResetDischarge()`                                                | Resets the simulated battery back to a full charge.                                 |
+| `GetStateOfCharge()`                                              | Returns the current state of charge from `0` (empty) to `1` (full).                 |
 {% endtab %}
 {% endtabs %}
 
@@ -131,7 +131,7 @@ Keys and values should span the full `[0, 1]` state-of-charge range. Querying ou
 
 ## Related pages
 
-* [Limiting Power Consumption](limiting-power-consumption.md)
-* [Simulation without a mechanism](README.md#simulation-without-a-mechanism)
-* [Simulation Only PID + FeedForward](simulation-only-pid-+-feedforward.md)
-* [MOI](../turrets-wrists.md#moi)
+* [Limiting Power Consumption](../details/editor/limiting-power-consumption.md)
+* [Simulation without a mechanism](../details/editor/#simulation-without-a-mechanism)
+* [Simulation Only PID + FeedForward](../details/editor/simulation-only-pid-+-feedforward.md)
+* [MOI](../details/turrets-wrists.md#moi)

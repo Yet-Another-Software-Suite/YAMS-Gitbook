@@ -1,6 +1,6 @@
 # How do I enable battery discharge simulation?
 
-By default, `BatterySim` only models instantaneous voltage sag from combined current draw, and the simulated battery itself never changes, so it sags from the same fully-charged 12V/20mΩ baseline whether it's the first cycle of the match or the last. Enabling discharge simulation layers state-of-charge modeling on top: as your simulated robot draws amp-hours, the battery's open-circuit voltage droops and its internal resistance rises, so a long autonomous-plus-teleop simulation run actually sags harder near the end, the way a real battery does late in a match. This page is the practical walkthrough; for the full explanation of why YAMS models one shared battery at all, see [Battery Simulation](../details/editor/battery-simulation.md).
+By default, `BatterySim` only models instantaneous voltage sag from combined current draw, and the simulated battery itself never changes, so it sags from the same fully-charged 12V/20mΩ baseline whether it's the first cycle of the match or the last. Enabling discharge simulation layers state-of-charge modeling on top: as your simulated robot draws amp-hours, the battery's open-circuit voltage droops and its internal resistance rises, so a long autonomous-plus-teleop simulation run actually sags harder near the end, the way a real battery does late in a match. This page is the practical walkthrough; for the full explanation of why YAMS models one shared battery at all, see [Battery Simulation](../understanding/battery-simulation.md).
 
 ## Turn on discharge modeling
 
@@ -101,11 +101,11 @@ yams::motorcontrollers::simulation::BatterySim::ReplaceSOCInterpolation(wornBatt
 {% endtabs %}
 
 {% hint style="info" %}
-Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end won't sag realistically there. See [Battery Simulation → Custom discharge curves](../details/editor/battery-simulation.md#custom-discharge-curves) for more on choosing curve points.
+Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end won't sag realistically there. See [Battery Simulation → Custom discharge curves](../understanding/battery-simulation.md#custom-discharge-curves) for more on choosing curve points.
 {% endhint %}
 
 ## Related pages
 
-* [Battery Simulation](../details/editor/battery-simulation.md), the full explanation of the shared-battery model and why it matters
+* [Battery Simulation](../understanding/battery-simulation.md), the full explanation of the shared-battery model and why it matters
 * [MOI](../details/turrets-wrists.md#moi), accurate current draw starts with an accurate moment of inertia
 * [Limiting Power Consumption](../details/editor/limiting-power-consumption.md)

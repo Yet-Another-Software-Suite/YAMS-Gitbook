@@ -6,9 +6,9 @@ icon: bolt-lightning
 
 ## Current limits
 
-There are two types of currents involved in a `SmartMotorController`, the **Supply** current and the **Stator** current.&#x20;
+There are two types of currents involved in a `SmartMotorController`, the **Supply** current and the **Stator** current.
 
-* The current input of the motor controller is the **Supply** current.&#x20;
+* The current input of the motor controller is the **Supply** current.
 * The current output of the motor controller is the **Stator** current.
 
 {% hint style="danger" %}
@@ -31,7 +31,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 
 ## Ramp Rates
 
-Ramp rates is the minimum time it takes for a motor to go from 0% to 100% power to the motor.&#x20;
+Ramp rates is the minimum time it takes for a motor to go from 0% to 100% power to the motor.
 
 {% hint style="info" %}
 If the ramp rate is omitted from configurations you will commonly see mechanisms taking up a majority of power whenever they go from rest to moving with a closed loop controller.
@@ -56,4 +56,4 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 
 ## Testing brownout scenarios in simulation
 
-YAMS combines the current draw of every simulated mechanism into one shared battery model, so simulated voltage sag reflects the *whole* robot pulling power at once, not just one mechanism in isolation. See [Battery Simulation](battery-simulation.md) for how to enable realistic discharge over a match and reproduce brownout-prone scenarios before they happen on the field.
+YAMS combines the current draw of every simulated mechanism into one shared battery model, so simulated voltage sag reflects the _whole_ robot pulling power at once, not just one mechanism in isolation. See [Battery Simulation](../../understanding/battery-simulation.md) for how to enable realistic discharge over a match and reproduce brownout-prone scenarios before they happen on the field.

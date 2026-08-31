@@ -32,8 +32,6 @@ All Mechanism tables are stored under `NT:/Mechanisms` NOT `NT:/SmartDashboard` 
 
 The image below has the Telemetry output of an Elevator with the Telemetry name of `Elevator` and the SmartMotorController TelemetryName of `ElevatorMotor`
 
-<figure><img src="../.gitbook/assets/127.0.0.1, AdvantageScope 9_2_2025 1_06_09 PM.png" alt=""><figcaption></figcaption></figure>
-
 ## Simulation vs Reality
 
 The simulation view of each mechanism is done with `Mechanism2d`'s. These windows could be outputted while on the actual robot but that is not necessary as all of the data from the `Mechanism2d` is in the Telemetry fields and accessible to the user.
@@ -64,8 +62,6 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withIdleMode(MotorMode.BRAKE)
       .withTelemetry("ElevatorMotor", motorTelemetryConfig)
 ```
-
-<figure><img src="../.gitbook/assets/127.0.0.1, AdvantageScope 9_2_2025 1_03_52 PM.png" alt=""><figcaption></figcaption></figure>
 
 If a field you want doesn't have its own `with*()` method, or you want to enable/disable a whole set of fields in one call, use the `withCustom(...)` escape hatch. It takes a `BooleanTelemetryField`/`DoubleTelemetryField` (or an array of either) plus a boolean to enable or disable them:
 

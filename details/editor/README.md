@@ -57,7 +57,7 @@ SmartMotorController config = new SmartMotorControllerConfig() //...
 
 ## Power optimization is crucial to prevent brownouts
 
-Power optimization can be done with [supply, and stator current limits, ramp rates](limiting-power-consumption.md), and adequately geared gearboxes and motors. In simulation, every mechanism's current draw feeds into one shared [Battery Simulation](battery-simulation.md), so voltage sag from combined load, and, optionally, a battery discharging over a match, is realistic before you ever get to the field.
+Power optimization can be done with [supply, and stator current limits, ramp rates](limiting-power-consumption.md), and adequately geared gearboxes and motors. In simulation, every mechanism's current draw feeds into one shared [Battery Simulation](../../understanding/battery-simulation.md), so voltage sag from combined load, and, optionally, a battery discharging over a match, is realistic before you ever get to the field.
 
 ## Tuning our closed loop controllers
 
