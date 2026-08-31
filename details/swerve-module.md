@@ -69,16 +69,25 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 ```
 
 {% hint style="info" %}
-`withAbsoluteEncoder(Object)` and `withAbsoluteEncoderOffset(Angle)` are thin wrappers here: they call `SmartMotorControllerConfig.withExternalEncoder(...)` and `withExternalEncoderZeroOffset(...)` on the azimuth motor's config for you. `SwerveModuleConfig` has no equivalent wrapper for inversion, the wrap-around discontinuity point, or switching closed-loop feedback over to the external encoder, so if you need those, set them directly on the azimuth `SmartMotorControllerConfig`:
+`withAbsoluteEncoder(Object)` and `withAbsoluteEncoderOffset(Angle)` are thin wrappers here: they call `SmartMotorControllerConfig.withExternalEncoder(...)` and `withExternalEncoderZeroOffset(...)` on the azimuth motor's config for you. `SwerveModuleConfig` has no equivalent wrapper for inversion, the wrap-around discontinuity point, or switching closed-loop feedback over to the external encoder, so those still need to be set directly on the azimuth `SmartMotorControllerConfig`.
+{% endhint %}
+
+Set those on the azimuth `SmartMotorControllerConfig` before constructing the azimuth `SmartMotorController`, then hand the same `CANcoder` object to `withAbsoluteEncoder(...)` as usual; it only ever touches the encoder object itself, so it won't disturb the inversion, discontinuity point, or feedback-source settings you configured directly on `azimuthCfg`:
 
 ```java
-azimuthCfg.withExternalEncoderInverted(true)
-          .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))
-          .withUseExternalFeedbackEncoder(true);
+SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
+      .withExternalEncoderInverted(true)
+      .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))
+      .withUseExternalFeedbackEncoder(true);
+
+SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2), DCMotor.getKrakenX60(1), azimuthCfg);
+
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
+      .withAbsoluteEncoder(canCoder)
+      .withAbsoluteEncoderOffset(Rotations.of(0.25));
 ```
 
 `withExternalEncoderDiscontinuityPoint(Angle)` must be `Rotations.of(0.5)` or `Rotations.of(1)`. `withUseExternalFeedbackEncoder(true)` is what actually makes the azimuth's closed-loop controller run on the absolute encoder continuously; without it, the absolute encoder is only used to seed the relative encoder once at construction (via `seedAzimuthEncoder()` above), and closed-loop control runs on the relative encoder from then on.
-{% endhint %}
 
 A CANcoder feeding a REV azimuth motor is a different vendor, so it goes through the `Supplier<Angle>` form instead:
 
