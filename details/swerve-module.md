@@ -66,25 +66,23 @@ SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2), DCMotor.get
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withAbsoluteEncoder(canCoder)
       .withAbsoluteEncoderOffset(Rotations.of(0.25)); // bevel-left zero offset
+      
+azimuthSMC.applyConfig(azimuthCfg); // Needed to apply the offset to the azimuthSmc
 ```
 
-{% hint style="info" %}
-For a same-vendor encoder, `withAbsoluteEncoder(Object)` and `withAbsoluteEncoderOffset(Angle)` do exactly the same thing as calling `SmartMotorControllerConfig.withExternalEncoder(...)` and `withExternalEncoderZeroOffset(...)` on the azimuth motor's config yourself; they're forwarded there for you. `SwerveModuleConfig` has no equivalent wrapper for inversion, the wrap-around discontinuity point, or switching closed-loop feedback over to the external encoder, so those still need to be set directly on the azimuth `SmartMotorControllerConfig`.
-{% endhint %}
-
-Set those on the azimuth `SmartMotorControllerConfig` before constructing the azimuth `SmartMotorController`, then hand the same `CANcoder` object to `withAbsoluteEncoder(...)` as usual; it only ever touches the encoder object itself, so it won't disturb the inversion, discontinuity point, or feedback-source settings you configured directly on `azimuthCfg`:
+Setting the External Encoder inside of the azimuth config is reccommended so the settings are propogated to the External Encoder.
 
 ```java
 SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
+      .withExternalEncoder(canCoder)
+      .withExternalEncoderZeroOffset(Rotations.of(0.25))
       .withExternalEncoderInverted(true)
       .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))
       .withUseExternalFeedbackEncoder(true);
 
 SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2), DCMotor.getKrakenX60(1), azimuthCfg);
 
-SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
-      .withAbsoluteEncoder(canCoder)
-      .withAbsoluteEncoderOffset(Rotations.of(0.25));
+SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC);
 ```
 
 `withExternalEncoderDiscontinuityPoint(Angle)` must be `Rotations.of(0.5)` or `Rotations.of(1)`. `withUseExternalFeedbackEncoder(true)` is what actually makes the azimuth's closed-loop controller run on the absolute encoder continuously; without it, the absolute encoder is only used to seed the relative encoder once at construction (via `seedAzimuthEncoder()` above), and closed-loop control runs on the relative encoder from then on.
@@ -142,9 +140,9 @@ moduleConfig.withMinimumVelocity(MetersPerSecond.of(0.05));
 `SwerveModuleTelemetryConfig` publishes two fields:
 
 | Field                  | NetworkTables key | `LOW` | `MID` | `HIGH` |
-| ----------------------- | ------------------- | :---: | :---: | :----: |
-| Absolute encoder angle  | `encoder`            |   ✓   |   ✓   |    ✓   |
-| SwerveModuleState       | `state`              |       |       |    ✓   |
+| ---------------------- | ----------------- | :---: | :---: | :----: |
+| Absolute encoder angle | `encoder`         |   ✓   |   ✓   |    ✓   |
+| SwerveModuleState      | `state`           |       |       |    ✓   |
 
 See [Telemetry](../understanding/telemetry.md) for how struct-encoded fields and verbosity presets work across YAMS generally.
 
@@ -168,7 +166,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 
 ## How SwerveDrive Uses Each Module
 
-`SwerveDrive` computes one `SwerveModuleState[]` per loop from the requested `ChassisSpeeds` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where [optimization and cosine compensation](#optimization-and-cosine-compensation) are actually applied, so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
+`SwerveDrive` computes one `SwerveModuleState[]` per loop from the requested `ChassisSpeeds` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where [optimization and cosine compensation](swerve-module.md#optimization-and-cosine-compensation) are actually applied, so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
 
 ## Code Reference
 
