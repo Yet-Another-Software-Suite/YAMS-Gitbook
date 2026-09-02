@@ -117,9 +117,10 @@ What makes this different from wiring up the PID controllers yourself is the tel
 
 ### How to Use Live Tuning
 
-1. Make sure the fields you need are enabled. `TranslationP/I/D`, `RotationP/I/D`, `autoalign/setpoint/x`, `autoalign/setpoint/y`, `autoalign/setpoint/rot`, and `autoalign/enabled` are all already live-tunable at `HIGH` verbosity, so no extra opt-in is needed.
-2. Deploy the robot code, then open NetworkTables in AdvantageScope, Shuffleboard, Elastic, or a similar dashboard tool and browse to `Tuning/<name>/` (the name you passed to `withTelemetry`). You should see `autoalign/translation/p`, `i`, `d`, `autoalign/rotation/p`, `i`, `d`, `autoalign/setpoint/x`, `autoalign/setpoint/y`, `autoalign/setpoint/rot`, and `autoalign/enabled`. The gain entries start pre-seeded with whatever you passed to `withTranslationController(...)`/`withRotationController(...)`, not `0`, the same way `SmartMotorControllerTelemetry` seeds its `kP`/`kI`/`kD` tuning entries from the motor's configured PID.
-3. On SmartDashboard, find the command at `Mechanisms/<name>/tuning/driveToPose` and schedule it, either by binding it to a button or running it directly from your dashboard's command widget. Starting it resets both PID controllers; it then checks `autoalign/enabled` every loop and, while `true`, calls `driveToPoseSetpoint(...)` using whatever `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and gains currently sit in `Tuning/<name>/`.
+1. Make sure the fields you need are enabled.
+   1. &#x20;`TranslationP/I/D`, `RotationP/I/D`, `autoalign/setpoint`, and `autoalign/enabled` are all already live-tunable at `HIGH` verbosity, so no extra opt-in is needed.
+2. Deploy the robot code, then open NetworkTables in AdvantageScope, Shuffleboard, Elastic, or a similar dashboard tool and browse to `Tuning/<name>/` (the name you passed to `withTelemetry`). You should see `autoalign/translation/p`, `i`, `d`, `autoalign/rotation/p`, `i`, `d`, `autoalign/setpoint`, and `autoalign/enabled`. The gain entries start pre-seeded with whatever you passed to `withTranslationController(...)`/`withRotationController(...)`, not `0`, the same way `SmartMotorControllerTelemetry` seeds its `kP`/`kI`/`kD` tuning entries from the motor's configured PID.
+3. On Elastic, find the command at `SmartDashboard/echanisms/<name>/tuning` and schedule it, either by binding it to a button or running it directly from your dashboard's command widget. Starting it resets both PID controllers; it then checks `autoalign/enabled` every loop and, while `true`, calls `driveToPoseSetpoint(...)` using whatever `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and gains currently sit in `Tuning/<name>/`.
 
 <figure><img src="../.gitbook/assets/autoalign-tuning-setup.png" alt=""><figcaption><p>AdvantageScope 2D field with the <code>driveToPose</code> command scheduled and the <code>Tuning/swerve/autoalign</code> tree expanded, showing <code>enabled</code>, <code>pose/x,y,rot</code>, and the translation/rotation gain entries.</p></figcaption></figure>
 
@@ -166,7 +167,9 @@ Both modes build a `SwerveModuleState[]` (one entry per module) and command it i
 {% endhint %}
 
 {% hint style="warning" %}
-**Only one tuning mode can be active at a time.** `autoalign/enabled`, `modules/drive/enabled`, and `modules/azimuth/enabled` are mutually exclusive, if you flip on a second one while another is already `true`, `SwerveDrive` immediately forces the others back to `false` in NetworkTables (priority order: auto-align, then drive tuning, then azimuth tuning), so the dashboard reflects which mode actually won. When `modules/drive/enabled` is `false` (and auto-align isn't driving the chassis instead), every module's drive motor is continuously commanded to `0` m/s so the wheels don't keep spinning at whatever velocity was last set while it was on. `modules/drive/inplace` only changes each module's target angle while `modules/drive/enabled` is `true`: `false` (the default) points every module at `0°`, `true` points them tangent to their position for a counter-clockwise spin in place. There's no equivalent auto-zero for azimuth, turning off `modules/azimuth/enabled` just stops commanding a new angle, it doesn't snap the wheels back to `0°`.
+**Only one tuning mode can be active at a time.** `autoalign/enabled`, `modules/drive/enabled`, and `modules/azimuth/enabled` are mutually exclusive, if you flip on a second one while another is already `true`, `SwerveDrive` immediately forces the others back to `false` in NetworkTables (priority order: auto-align, then drive tuning, then azimuth tuning), so the dashboard reflects which mode actually won. When `modules/drive/enabled` is `false` (and auto-align isn't driving the chassis instead), every module's drive motor is continuously commanded to `0` m/s so the wheels don't keep spinning at whatever velocity was last set while it was on. `modules/drive/inplace` only changes each module's target angle while `modules/drive/enabled` is `true`: `false` (the default) points every module at `0°`, `true` points them tangent to their position for a counter-clockwise spin in place.&#x20;
+
+There's no equivalent auto-zero for azimuth, turning off `modules/azimuth/enabled` just stops commanding a new angle, it doesn't snap the wheels back to `0°`.
 {% endhint %}
 
 ## Telemetry Verbosity
@@ -177,30 +180,30 @@ Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerb
 config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 ```
 
-| Field                                 | NetworkTables key           | `LOW` | `MID` | `HIGH` |
-| -------------------------------------- | ---------------------------- | :---: | :---: | :----: |
-| Pose                                   | `pose`                        |   ✓   |   ✓   |    ✓   |
-| Gyro angle                             | `gyro`                        |   ✓   |   ✓   |    ✓   |
-| Current robot-relative ChassisSpeeds   | `chassis/current`             |       |   ✓   |    ✓   |
-| Field-relative ChassisSpeeds           | `chassis/field`               |       |   ✓   |    ✓   |
-| Current module states                  | `states/current`              |       |   ✓   |    ✓   |
-| Desired robot-relative ChassisSpeeds   | `chassis/desired`             |       |       |    ✓   |
-| Desired module states                  | `states/desired`              |       |       |    ✓   |
-| Translation P/I/D (tunable)            | `autoalign/translation/p,i,d` |       |       |    ✓   |
-| Rotation P/I/D (tunable)               | `autoalign/rotation/p,i,d`    |       |       |    ✓   |
-| Auto-align target X (tunable)          | `autoalign/setpoint/x`                  |       |       |    ✓   |
-| Auto-align target Y (tunable)          | `autoalign/setpoint/y`                  |       |       |    ✓   |
-| Auto-align target rotation (tunable)   | `autoalign/setpoint/rot`                |       |       |    ✓   |
-| Auto-align enabled (tunable)           | `autoalign/enabled`            |       |       |    ✓   |
-| Modules drive P/I/D (tunable, shared)  | `modules/drive/feedback/p,i,d` |       |       |    ✓   |
-| Modules drive kS/kV/kA (tunable, shared) | `modules/drive/feedforward/s,v,a` |    |       |    ✓   |
-| Modules drive velocity (tunable, shared) | `modules/drive/velocity`     |       |       |    ✓   |
-| Modules drive tuning enabled (tunable) | `modules/drive/enabled`        |       |       |    ✓   |
-| Modules drive in place (tunable)       | `modules/drive/inplace`        |       |       |    ✓   |
-| Modules azimuth P/I/D (tunable, shared) | `modules/azimuth/feedback/p,i,d` |    |       |    ✓   |
-| Modules azimuth kS/kV/kA (tunable, shared) | `modules/azimuth/feedforward/s,v,a` |  |       |    ✓   |
-| Modules azimuth angle (tunable, shared) | `modules/azimuth/angle`       |       |       |    ✓   |
-| Modules azimuth tuning enabled (tunable) | `modules/azimuth/enabled`    |       |       |    ✓   |
+| Field                                      | NetworkTables key                   | `LOW` | `MID` | `HIGH` |
+| ------------------------------------------ | ----------------------------------- | :---: | :---: | :----: |
+| Pose                                       | `pose`                              |   ✓   |   ✓   |    ✓   |
+| Gyro angle                                 | `gyro`                              |   ✓   |   ✓   |    ✓   |
+| Current robot-relative ChassisSpeeds       | `chassis/current`                   |       |   ✓   |    ✓   |
+| Field-relative ChassisSpeeds               | `chassis/field`                     |       |   ✓   |    ✓   |
+| Current module states                      | `states/current`                    |       |   ✓   |    ✓   |
+| Desired robot-relative ChassisSpeeds       | `chassis/desired`                   |       |       |    ✓   |
+| Desired module states                      | `states/desired`                    |       |       |    ✓   |
+| Translation P/I/D (tunable)                | `autoalign/translation/p,i,d`       |       |       |    ✓   |
+| Rotation P/I/D (tunable)                   | `autoalign/rotation/p,i,d`          |       |       |    ✓   |
+| Auto-align target X (tunable)              | `autoalign/setpoint/x`              |       |       |    ✓   |
+| Auto-align target Y (tunable)              | `autoalign/setpoint/y`              |       |       |    ✓   |
+| Auto-align target rotation (tunable)       | `autoalign/setpoint/rot`            |       |       |    ✓   |
+| Auto-align enabled (tunable)               | `autoalign/enabled`                 |       |       |    ✓   |
+| Modules drive P/I/D (tunable, shared)      | `modules/drive/feedback/p,i,d`      |       |       |    ✓   |
+| Modules drive kS/kV/kA (tunable, shared)   | `modules/drive/feedforward/s,v,a`   |       |       |    ✓   |
+| Modules drive velocity (tunable, shared)   | `modules/drive/velocity`            |       |       |    ✓   |
+| Modules drive tuning enabled (tunable)     | `modules/drive/enabled`             |       |       |    ✓   |
+| Modules drive in place (tunable)           | `modules/drive/inplace`             |       |       |    ✓   |
+| Modules azimuth P/I/D (tunable, shared)    | `modules/azimuth/feedback/p,i,d`    |       |       |    ✓   |
+| Modules azimuth kS/kV/kA (tunable, shared) | `modules/azimuth/feedforward/s,v,a` |       |       |    ✓   |
+| Modules azimuth angle (tunable, shared)    | `modules/azimuth/angle`             |       |       |    ✓   |
+| Modules azimuth tuning enabled (tunable)   | `modules/azimuth/enabled`           |       |       |    ✓   |
 
 {% hint style="info" %}
 `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and `autoalign/enabled`, and the `modules/drive/*`/`modules/azimuth/*` tuning fields, only take effect while the `Mechanisms/<name>/tuning/driveToPose` command is scheduled — that's the loop that actually reads them. Publishing values to them with the tuning command idle has no effect on the robot.
