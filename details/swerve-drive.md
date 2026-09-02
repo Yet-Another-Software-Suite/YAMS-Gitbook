@@ -113,19 +113,19 @@ Command alignToScore = drive.driveToPose(new Pose2d(2, 4, Rotation2d.kZero));
 alignToScore.schedule();
 ```
 
-What makes this different from wiring up the PID controllers yourself is the telemetry integration: `SwerveDriveTelemetryConfig` publishes a live-tunable target pose (as separate `autoalign/pose/x`, `autoalign/pose/y`, `autoalign/pose/rot` entries, gated by an `autoalign/enabled` toggle) and the translation/rotation PID gains to NetworkTables, and `SwerveDrive` publishes a matching tuning command to SmartDashboard (`Mechanisms/<name>/tuning/driveToPose`). Running that command from the dashboard reads `autoalign/enabled` every loop; while it's `true`, it also reads the tunable pose fields and PID gains and drives the real (or simulated) robot toward them, so you can tune auto-align PID gains — or drive to an arbitrary pose — live without redeploying code. Changing a gain only resets that controller's integrator if the gain actually changed, so tuning doesn't wipe accumulated state every loop.
+What makes this different from wiring up the PID controllers yourself is the telemetry integration: `SwerveDriveTelemetryConfig` publishes a live-tunable target pose (as separate `autoalign/setpoint/x`, `autoalign/setpoint/y`, `autoalign/setpoint/rot` entries, gated by an `autoalign/enabled` toggle) and the translation/rotation PID gains to NetworkTables, and `SwerveDrive` publishes a matching tuning command to SmartDashboard (`Mechanisms/<name>/tuning/driveToPose`). Running that command from the dashboard reads `autoalign/enabled` every loop; while it's `true`, it also reads the tunable pose fields and PID gains and drives the real (or simulated) robot toward them, so you can tune auto-align PID gains — or drive to an arbitrary pose — live without redeploying code. Changing a gain only resets that controller's integrator if the gain actually changed, so tuning doesn't wipe accumulated state every loop.
 
 ### How to Use Live Tuning
 
-1. Make sure the fields you need are enabled. `TranslationP/I/D`, `RotationP/I/D`, `autoalign/pose/x`, `autoalign/pose/y`, `autoalign/pose/rot`, and `autoalign/enabled` are all already live-tunable at `HIGH` verbosity, so no extra opt-in is needed.
-2. Deploy the robot code, then open NetworkTables in AdvantageScope, Shuffleboard, Elastic, or a similar dashboard tool and browse to `Tuning/<name>/` (the name you passed to `withTelemetry`). You should see `autoalign/translation/p`, `i`, `d`, `autoalign/rotation/p`, `i`, `d`, `autoalign/pose/x`, `autoalign/pose/y`, `autoalign/pose/rot`, and `autoalign/enabled`. The gain entries start pre-seeded with whatever you passed to `withTranslationController(...)`/`withRotationController(...)`, not `0`, the same way `SmartMotorControllerTelemetry` seeds its `kP`/`kI`/`kD` tuning entries from the motor's configured PID.
-3. On SmartDashboard, find the command at `Mechanisms/<name>/tuning/driveToPose` and schedule it, either by binding it to a button or running it directly from your dashboard's command widget. Starting it resets both PID controllers; it then checks `autoalign/enabled` every loop and, while `true`, calls `driveToPoseSetpoint(...)` using whatever `autoalign/pose/x`/`autoalign/pose/y`/`autoalign/pose/rot` and gains currently sit in `Tuning/<name>/`.
+1. Make sure the fields you need are enabled. `TranslationP/I/D`, `RotationP/I/D`, `autoalign/setpoint/x`, `autoalign/setpoint/y`, `autoalign/setpoint/rot`, and `autoalign/enabled` are all already live-tunable at `HIGH` verbosity, so no extra opt-in is needed.
+2. Deploy the robot code, then open NetworkTables in AdvantageScope, Shuffleboard, Elastic, or a similar dashboard tool and browse to `Tuning/<name>/` (the name you passed to `withTelemetry`). You should see `autoalign/translation/p`, `i`, `d`, `autoalign/rotation/p`, `i`, `d`, `autoalign/setpoint/x`, `autoalign/setpoint/y`, `autoalign/setpoint/rot`, and `autoalign/enabled`. The gain entries start pre-seeded with whatever you passed to `withTranslationController(...)`/`withRotationController(...)`, not `0`, the same way `SmartMotorControllerTelemetry` seeds its `kP`/`kI`/`kD` tuning entries from the motor's configured PID.
+3. On SmartDashboard, find the command at `Mechanisms/<name>/tuning/driveToPose` and schedule it, either by binding it to a button or running it directly from your dashboard's command widget. Starting it resets both PID controllers; it then checks `autoalign/enabled` every loop and, while `true`, calls `driveToPoseSetpoint(...)` using whatever `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and gains currently sit in `Tuning/<name>/`.
 
 <figure><img src="../.gitbook/assets/autoalign-tuning-setup.png" alt=""><figcaption><p>AdvantageScope 2D field with the <code>driveToPose</code> command scheduled and the <code>Tuning/swerve/autoalign</code> tree expanded, showing <code>enabled</code>, <code>pose/x,y,rot</code>, and the translation/rotation gain entries.</p></figcaption></figure>
 
-4. With the tuning command running, edit `autoalign/translation/p` (and the other gain entries) live from your dashboard. Set `autoalign/pose/x`/`autoalign/pose/y` (meters) and `autoalign/pose/rot` (degrees) to the field-relative pose you want, then flip `autoalign/enabled` to `true`. The robot immediately drives toward the target using the current gains, no redeploy needed.
+4. With the tuning command running, edit `autoalign/translation/p` (and the other gain entries) live from your dashboard. Set `autoalign/setpoint/x`/`autoalign/setpoint/y` (meters) and `autoalign/setpoint/rot` (degrees) to the field-relative pose you want, then flip `autoalign/enabled` to `true`. The robot immediately drives toward the target using the current gains, no redeploy needed.
 
-<figure><img src="../.gitbook/assets/autoalign-tuning.gif" alt=""><figcaption><p>Live tuning in simulation: the robot drives from its current pose to a target of <code>autoalign/pose/x=12</code>, <code>autoalign/pose/y=4</code>, <code>autoalign/pose/rot=90</code> while <code>autoalign/enabled</code> is <code>true</code>.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/autoalign-tuning.gif" alt=""><figcaption><p>Live tuning in simulation: the robot drives from its current pose to a target of <code>autoalign/setpoint/x=12</code>, <code>autoalign/setpoint/y=4</code>, <code>autoalign/setpoint/rot=90</code> while <code>autoalign/enabled</code> is <code>true</code>.</p></figcaption></figure>
 
 5. Once a gain feels right, copy its value back into the matching `SwerveDriveConfig.withTranslationController(...)` / `withRotationController(...)` call in code. Values edited live in NetworkTables are not persisted and reset the next time the robot code restarts.
 6. Flip `autoalign/enabled` back to `false` (or unschedule the tuning command) before handing control back to the driver.
@@ -171,9 +171,9 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 | Desired module states                  | `states/desired`              |       |       |    ✓   |
 | Translation P/I/D (tunable)            | `autoalign/translation/p,i,d` |       |       |    ✓   |
 | Rotation P/I/D (tunable)               | `autoalign/rotation/p,i,d`    |       |       |    ✓   |
-| Auto-align target X (tunable)          | `autoalign/pose/x`                  |       |       |    ✓   |
-| Auto-align target Y (tunable)          | `autoalign/pose/y`                  |       |       |    ✓   |
-| Auto-align target rotation (tunable)   | `autoalign/pose/rot`                |       |       |    ✓   |
+| Auto-align target X (tunable)          | `autoalign/setpoint/x`                  |       |       |    ✓   |
+| Auto-align target Y (tunable)          | `autoalign/setpoint/y`                  |       |       |    ✓   |
+| Auto-align target rotation (tunable)   | `autoalign/setpoint/rot`                |       |       |    ✓   |
 | Auto-align enabled (tunable)           | `autoalign/enabled`            |       |       |    ✓   |
 | Modules drive P/I/D (tunable, shared)  | `modules/drive/feedback/p,i,d` |       |       |    ✓   |
 | Modules drive kS/kV/kA (tunable, shared) | `modules/drive/feedforward/s,v,a` |    |       |    ✓   |
@@ -185,7 +185,7 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 | Modules azimuth tuning enabled (tunable) | `modules/azimuth/enabled`    |       |       |    ✓   |
 
 {% hint style="info" %}
-`autoalign/pose/x`/`autoalign/pose/y`/`autoalign/pose/rot` and `autoalign/enabled`, and the `modules/drive/*`/`modules/azimuth/*` tuning fields, only take effect while the `Mechanisms/<name>/tuning/driveToPose` command is scheduled — that's the loop that actually reads them. Publishing values to them with the tuning command idle has no effect on the robot.
+`autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and `autoalign/enabled`, and the `modules/drive/*`/`modules/azimuth/*` tuning fields, only take effect while the `Mechanisms/<name>/tuning/driveToPose` command is scheduled — that's the loop that actually reads them. Publishing values to them with the tuning command idle has no effect on the robot.
 {% endhint %}
 
 {% hint style="warning" %}
