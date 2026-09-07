@@ -82,4 +82,4 @@ ArmConfig config = new ArmConfig()
 * [ ] Replace `config.withSmartMotorController(smc)` + `new Mechanism(config)` with `new Mechanism(config, smc)`.
 * [ ] Move every `.withMass(Mass)` call from a mechanism config to `.withMomentOfInertia(Distance, Mass)` (or `.withMomentOfInertia(MomentOfInertia)`) on that mechanism's `SmartMotorControllerConfig`.
 * [ ] Move every `.withStartingPosition(...)` call from a mechanism config to the corresponding `SmartMotorControllerConfig`.
-* [ ] Double check any hard-limit setter names — `withHardLimits(...)` (plural) is correct on `ArmConfig`/`ElevatorConfig`/`PivotConfig`; there has never been a singular `withHardLimit(...)`.
+* [ ] Double-check any hard-limit setter names: `withHardLimits(...)` (plural) is correct on `ArmConfig`/`ElevatorConfig`/`PivotConfig`; there has never been a singular `withHardLimit(...)`.

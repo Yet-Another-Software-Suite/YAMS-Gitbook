@@ -2,11 +2,11 @@
 icon: robot
 ---
 
-# Simulation Only PID + FeedForward
+# Simulation-only PID + feedforward
 
 Simulation is not exactly 1:1 to the real robot, no matter how much we wish it was. Therefore it is useful to setup a sim-only PID and FF value that will mimic the robot fairly well.
 
-## Configuring this in YAMS
+## Configure this in YAMS
 
 ```java
 SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)

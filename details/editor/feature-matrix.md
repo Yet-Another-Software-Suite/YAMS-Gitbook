@@ -2,11 +2,11 @@
 icon: table-cells
 ---
 
-# Motor Controller Feature Matrix
+# Motor controller feature matrix
 
 This page provides a comprehensive comparison of supported `SmartMotorControllerConfig` features across all motor controller wrappers in YAMS.
 
-## Supported Motor Controllers
+## Supported motor controllers
 
 | Wrapper           | Vendor | Hardware                                         | Package Location               |
 | ----------------- | ------ | ------------------------------------------------ | ------------------------------ |
@@ -14,22 +14,22 @@ This page provides a comprehensive comparison of supported `SmartMotorController
 | `TalonFXSWrapper` | CTRE   | TalonFXS (controls NEO, NEO 550, Vortex, Minion) | `yams.motorcontrollers.remote` |
 | `SparkWrapper`    | REV    | SparkMax, SparkFlex                              | `yams.motorcontrollers.local`  |
 
-## Vendor Configuration Classes
+## Vendor configuration classes
 
 Each wrapper accepts a specific vendor configuration class via `SmartMotorControllerConfig.withVendorConfig()`. This allows you to pass through vendor-specific settings that YAMS doesn't directly expose.
 
-| Wrapper                    | Accepted Vendor Config Class | Package                         |
-| -------------------------- | ---------------------------- | -------------------------------- |
-| `TalonFXWrapper`           | `TalonFXConfiguration`       | `com.ctre.phoenix6.configs`     |
-| `TalonFXSWrapper`          | `TalonFXSConfiguration`      | `com.ctre.phoenix6.configs`     |
-| `SparkWrapper` (SparkMax)  | `SparkMaxConfig`             | `com.revrobotics.spark.config`  |
-| `SparkWrapper` (SparkFlex) | `SparkFlexConfig`            | `com.revrobotics.spark.config`  |
+| Wrapper                    | Accepted Vendor Config Class | Package                        |
+| -------------------------- | ---------------------------- | ------------------------------ |
+| `TalonFXWrapper`           | `TalonFXConfiguration`       | `com.ctre.phoenix6.configs`    |
+| `TalonFXSWrapper`          | `TalonFXSConfiguration`      | `com.ctre.phoenix6.configs`    |
+| `SparkWrapper` (SparkMax)  | `SparkMaxConfig`             | `com.revrobotics.spark.config` |
+| `SparkWrapper` (SparkFlex) | `SparkFlexConfig`            | `com.revrobotics.spark.config` |
 
 {% hint style="warning" %}
 **SparkWrapper Note**: The vendor config class must match the actual hardware. Use `SparkMaxConfig` for `SparkMax` controllers and `SparkFlexConfig` for `SparkFlex` controllers. Using the wrong config type will throw a `SmartMotorControllerConfigurationException`.
 {% endhint %}
 
-### Vendor Config Examples
+### Vendor config examples
 
 #### TalonFX with TalonFXConfiguration
 
@@ -120,7 +120,7 @@ SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), 
 **Configuration Priority**: Settings in `SmartMotorControllerConfig` always take precedence over vendor config settings. The vendor config is applied first as a base, then YAMS overwrites any settings it manages directly.
 {% endhint %}
 
-## Feature Support Matrix
+## Feature support matrix
 
 ### Legend
 
@@ -132,7 +132,7 @@ SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), 
 
 ***
 
-### Basic Configuration
+### Basic configuration
 
 | Feature                   | TalonFX | TalonFXS | SparkMax/Flex |
 | ------------------------- | ------- | -------- | ------------- |
@@ -143,58 +143,58 @@ SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), 
 | Vendor Config Passthrough | ✅       | ✅        | ✅             |
 | Starting Position         | ✅       | ✅        | ✅             |
 
-### Current Limits
+### Current limits
 
 | Feature              | TalonFX | TalonFXS | SparkMax/Flex |
-| --------------------- | ------- | -------- | -------------- |
-| Stator Current Limit | ✅       | ✅        | ✅              |
-| Supply Current Limit | ✅       | ✅        | ❌              |
+| -------------------- | ------- | -------- | ------------- |
+| Stator Current Limit | ✅       | ✅        | ✅             |
+| Supply Current Limit | ✅       | ✅        | ❌             |
 
-### Voltage Configuration
+### Voltage configuration
 
 | Feature                 | TalonFX | TalonFXS | SparkMax/Flex |
-| ------------------------ | ------- | -------- | -------------- |
-| Voltage Compensation    | ❌       | ❌        | ✅              |
-| Closed Loop Max Voltage | ✅       | ✅        | ✅              |
+| ----------------------- | ------- | -------- | ------------- |
+| Voltage Compensation    | ❌       | ❌        | ✅             |
+| Closed Loop Max Voltage | ✅       | ✅        | ✅             |
 
 {% hint style="warning" %}
 **Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an exception if voltage compensation is configured, it's only supported on `SparkWrapper`.
 {% endhint %}
 
-### Ramp Rates
+### Ramp rates
 
 | Feature               | TalonFX | TalonFXS | SparkMax/Flex |
-| ---------------------- | ------- | -------- | -------------- |
-| Open Loop Ramp Rate   | ✅       | ✅        | ✅              |
-| Closed Loop Ramp Rate | ✅       | ✅        | ✅              |
+| --------------------- | ------- | -------- | ------------- |
+| Open Loop Ramp Rate   | ✅       | ✅        | ✅             |
+| Closed Loop Ramp Rate | ✅       | ✅        | ✅             |
 
 ### Gearing
 
 | Feature                          | TalonFX | TalonFXS | SparkMax/Flex |
-| ---------------------------------- | ------- | -------- | -------------- |
-| Mechanism Gearing                | ✅       | ✅        | ✅              |
-| External Encoder Gearing         | ✅       | ✅        | ✅              |
-| Mechanism Circumference (Linear) | ✅       | ✅        | ✅              |
+| -------------------------------- | ------- | -------- | ------------- |
+| Mechanism Gearing                | ✅       | ✅        | ✅             |
+| External Encoder Gearing         | ✅       | ✅        | ✅             |
+| Mechanism Circumference (Linear) | ✅       | ✅        | ✅             |
 
-### Closed Loop Control
+### Closed-loop control
 
 | Feature                 | TalonFX      | TalonFXS     | SparkMax/Flex                        |
-| ------------------------ | ------------ | ------------ | ------------------------------------- |
-| PID Controller          | ✅            | ✅            | ✅                                     |
-| LQR Controller          | ⚠️ (RoboRIO) | ⚠️ (RoboRIO) | ⚠️ (RoboRIO)                          |
-| Closed Loop Tolerance   | ✅            | ✅            | ✅                                     |
+| ----------------------- | ------------ | ------------ | ------------------------------------ |
+| PID Controller          | ✅            | ✅            | ✅                                    |
+| LQR Controller          | ⚠️ (RoboRIO) | ⚠️ (RoboRIO) | ⚠️ (RoboRIO)                         |
+| Closed Loop Tolerance   | ✅            | ✅            | ✅                                    |
 | Control Period Override | ❌            | ❌            | ⚠️ (requires an Exponential Profile) |
 
 {% hint style="warning" %}
 **LQR Controller Execution**: LQR is **not natively supported** by any motor controller hardware. When configured, the closed loop control runs on the **RoboRIO** via `SmartMotorController.iterateClosedLoop()`. This means you must call `iterateClosedLoop()` in your periodic method (mechanism classes handle this automatically). See [LQR Controllers](lqr-controllers.md) for details.
 {% endhint %}
 
-### Motion Profiles
+### Motion profiles
 
 | Feature             | TalonFX               | TalonFXS              | SparkMax/Flex |
-| -------------------- | --------------------- | --------------------- | -------------- |
+| ------------------- | --------------------- | --------------------- | ------------- |
 | Trapezoidal Profile | ✅ (Motion Magic)      | ✅ (Motion Magic)      | ✅ (MAXMotion) |
-| Exponential Profile | ✅ (Motion Magic Expo) | ✅ (Motion Magic Expo) | ⚠️ (RoboRIO)   |
+| Exponential Profile | ✅ (Motion Magic Expo) | ✅ (Motion Magic Expo) | ⚠️ (RoboRIO)  |
 
 {% hint style="info" %}
 **Profile Execution Location**:
@@ -206,45 +206,45 @@ SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), 
 ### Feedforward
 
 | Feature                | TalonFX | TalonFXS | SparkMax/Flex |
-| ----------------------- | ------- | -------- | -------------- |
-| SimpleMotorFeedforward | ✅       | ✅        | ✅              |
-| ArmFeedforward         | ✅       | ✅        | ✅              |
-| ElevatorFeedforward    | ✅       | ✅        | ✅              |
-| Simulation Feedforward | ✅       | ✅        | ✅              |
+| ---------------------- | ------- | -------- | ------------- |
+| SimpleMotorFeedforward | ✅       | ✅        | ✅             |
+| ArmFeedforward         | ✅       | ✅        | ✅             |
+| ElevatorFeedforward    | ✅       | ✅        | ✅             |
+| Simulation Feedforward | ✅       | ✅        | ✅             |
 
 ### Soft Limits
 
 | Feature              | TalonFX | TalonFXS | SparkMax/Flex |
-| --------------------- | ------- | -------- | -------------- |
-| Angle Soft Limits    | ✅       | ✅        | ✅              |
-| Distance Soft Limits | ✅       | ✅        | ✅              |
-| Continuous Wrapping  | ✅       | ✅        | ✅              |
+| -------------------- | ------- | -------- | ------------- |
+| Angle Soft Limits    | ✅       | ✅        | ✅             |
+| Distance Soft Limits | ✅       | ✅        | ✅             |
+| Continuous Wrapping  | ✅       | ✅        | ✅             |
 
-### External Encoders
+### External encoders
 
-| Feature                      | TalonFX | TalonFXS | SparkMax/Flex                        |
-| ----------------------------- | ------- | -------- | -------------------------------------- |
-| External Encoder Support     | ✅       | ✅        | ✅                                      |
-| External Encoder Inversion   | ✅       | ✅        | ✅                                      |
-| External Encoder Zero Offset | ✅       | ✅        | ✅                                      |
-| Use External for Feedback    | ✅       | ✅        | ✅                                      |
+| Feature                      | TalonFX | TalonFXS | SparkMax/Flex                                          |
+| ---------------------------- | ------- | -------- | ------------------------------------------------------ |
+| External Encoder Support     | ✅       | ✅        | ✅                                                      |
+| External Encoder Inversion   | ✅       | ✅        | ✅                                                      |
+| External Encoder Zero Offset | ✅       | ✅        | ✅                                                      |
+| Use External for Feedback    | ✅       | ✅        | ✅                                                      |
 | Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an Exponential Profile or LQR controller) |
 
 **Supported External Encoder Types:**
 
 | Wrapper       | Supported Encoders                             |
-| ------------- | ----------------------------------------------- |
+| ------------- | ---------------------------------------------- |
 | TalonFX       | `CANcoder`, `CANdi` (PWM1/PWM2)                |
 | TalonFXS      | `CANcoder`, `CANdi` (PWM1/PWM2)                |
 | SparkMax/Flex | `SparkAbsoluteEncoder` (Through Bore, REV Hex) |
 
-### Follower Motors
+### Follower motors
 
 | Feature                   | TalonFX | TalonFXS | SparkMax/Flex |
-| --------------------------- | ------- | -------- | -------------- |
-| Hardware Followers        | ✅       | ✅        | ✅              |
-| Follower Inversion        | ✅       | ✅        | ✅              |
-| Loosely Coupled Followers | ✅       | ✅        | ✅              |
+| ------------------------- | ------- | -------- | ------------- |
+| Hardware Followers        | ✅       | ✅        | ✅             |
+| Follower Inversion        | ✅       | ✅        | ✅             |
+| Loosely Coupled Followers | ✅       | ✅        | ✅             |
 
 {% hint style="warning" %}
 **Follower Compatibility**: Followers must be the same brand as the leader motor controller. You cannot mix vendors for hardware followers.
@@ -253,24 +253,24 @@ SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), 
 ### Telemetry
 
 | Feature                 | TalonFX | TalonFXS | SparkMax/Flex |
-| ------------------------- | ------- | -------- | -------------- |
-| Telemetry Name          | ✅       | ✅        | ✅              |
-| Telemetry Verbosity     | ✅       | ✅        | ✅              |
-| Custom Telemetry Config | ✅       | ✅        | ✅              |
+| ----------------------- | ------- | -------- | ------------- |
+| Telemetry Name          | ✅       | ✅        | ✅             |
+| Telemetry Verbosity     | ✅       | ✅        | ✅             |
+| Custom Telemetry Config | ✅       | ✅        | ✅             |
 
 ### Simulation
 
 | Feature              | TalonFX | TalonFXS | SparkMax/Flex |
-| --------------------- | ------- | -------- | -------------- |
-| DCMotorSim           | ✅       | ✅        | ✅              |
-| Moment of Inertia    | ✅       | ✅        | ✅              |
-| Custom Sim Supplier  | ✅       | ✅        | ✅              |
-| External Encoder Sim | ✅       | ✅        | ✅              |
+| -------------------- | ------- | -------- | ------------- |
+| DCMotorSim           | ✅       | ✅        | ✅             |
+| Moment of Inertia    | ✅       | ✅        | ✅             |
+| Custom Sim Supplier  | ✅       | ✅        | ✅             |
+| External Encoder Sim | ✅       | ✅        | ✅             |
 
 ### Safety Features
 
-| Feature            | TalonFX | TalonFXS | SparkMax/Flex                        |
-| -------------------- | ------- | -------- | -------------------------------------- |
+| Feature            | TalonFX | TalonFXS | SparkMax/Flex                              |
+| ------------------ | ------- | -------- | ------------------------------------------ |
 | Temperature Cutoff | ❌       | ❌        | ⚠️ (requires no motion profile configured) |
 
 {% hint style="info" %}
@@ -279,7 +279,7 @@ YAMS doesn't provide a built-in SysId routine. Use `SmartMechanism.setVoltage(Vo
 
 ***
 
-## Motor Type Support by Wrapper
+## Motor type support by wrapper
 
 ### TalonFXWrapper
 
@@ -302,7 +302,7 @@ YAMS doesn't provide a built-in SysId routine. Use `SmartMechanism.setVoltage(Vo
 
 ***
 
-## Configuration Examples
+## Configuration examples
 
 ### TalonFX with CANcoder
 
@@ -341,7 +341,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 SmartMotorController smc = new TalonFXSWrapper(motor, DCMotor.getNEO(1), config);
 ```
 
-### SparkMax with Absolute Encoder
+### SparkMax with absolute encoder
 
 ```java
 SparkMax spark = new SparkMax(1, MotorType.kBrushless);
@@ -362,7 +362,7 @@ SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNEO(1), config);
 
 ***
 
-## Known Limitations
+## Known limitations
 
 ### SparkMax/SparkFlex (SparkWrapper)
 

@@ -2,11 +2,11 @@
 icon: folder-tree
 ---
 
-# Organizing Configs in Constants
+# Organizing configs in constants
 
 As your robot grows, managing configuration across multiple subsystems can become unwieldy. YAMS supports a clean pattern where you define all your configs in a centralized Constants file, then bind them to subsystems at construction time using `.withSubsystem()`.
 
-## The Problem
+## The problem
 
 Without organization, each subsystem file contains its own configuration inline:
 
@@ -34,12 +34,13 @@ public class ArmSubsystem extends SubsystemBase {
 ```
 
 This approach has drawbacks:
-- Configs are scattered across many files
-- Hard to compare settings between mechanisms
-- Tuning requires opening multiple files
-- CAN IDs, motor types, and gear ratios are buried in subsystem code
 
-## The Solution: Centralized Constants with `withSubsystem()`
+* Configs are scattered across many files
+* Hard to compare settings between mechanisms
+* Tuning requires opening multiple files
+* CAN IDs, motor types, and gear ratios are buried in subsystem code
+
+## The solution: Centralized constants with `withSubsystem()`
 
 YAMS configs can be created **without** a subsystem reference, then bound later using `.withSubsystem()`. This enables a clean separation:
 
@@ -131,17 +132,17 @@ public class ArmSubsystem extends SubsystemBase {
 }
 ```
 
-## Benefits of This Pattern
+## Benefits of this pattern
 
-| Benefit | Description |
-|---------|-------------|
-| **Single Source of Truth** | All CAN IDs, gear ratios, PID gains in one file |
-| **Easy Comparison** | See all mechanism configs side-by-side |
-| **Faster Tuning** | Change gains without navigating subsystem files |
-| **Cleaner Subsystems** | Subsystem classes focus on behavior, not configuration |
-| **Reusable Configs** | Share base configs between similar mechanisms |
+| Benefit                    | Description                                            |
+| -------------------------- | ------------------------------------------------------ |
+| **Single Source of Truth** | All CAN IDs, gear ratios, PID gains in one file        |
+| **Easy Comparison**        | See all mechanism configs side-by-side                 |
+| **Faster Tuning**          | Change gains without navigating subsystem files        |
+| **Cleaner Subsystems**     | Subsystem classes focus on behavior, not configuration |
+| **Reusable Configs**       | Share base configs between similar mechanisms          |
 
-## Complete Example: Constants File
+## Complete example: Constants file
 
 ```java
 package frc.robot;
@@ -223,7 +224,7 @@ public final class Constants {
 }
 ```
 
-## Complete Example: Subsystem Using Constants
+## Complete example: Subsystem using constants
 
 ```java
 package frc.robot.subsystems;
@@ -284,7 +285,7 @@ public class ArmSubsystem extends SubsystemBase {
 }
 ```
 
-## Organizing Multiple Config Files
+## Organizing multiple config files
 
 For larger robots, you may want to split configs into separate files:
 
@@ -306,11 +307,11 @@ frc/robot/
 **Important**: When using this pattern, you **must** call `.withSubsystem()` before passing the `SmartMotorControllerConfig` to a `SmartMotorController`. Pass the `SmartMotorController` directly as the second argument to the mechanism constructor (e.g., `new Arm(armConfig, smc)`).
 {% endhint %}
 
-## When NOT to Use This Pattern
+## When not to use this pattern
 
 This pattern adds a layer of indirection. For simple robots with 1-2 mechanisms, inline configuration may be clearer. Consider using centralized configs when:
 
-- You have 3+ mechanisms
-- Multiple team members tune different subsystems
-- You want to quickly compare settings across mechanisms
-- You're building a constants dashboard or config loader
+* You have 3+ mechanisms
+* Multiple team members tune different subsystems
+* You want to quickly compare settings across mechanisms
+* You're building a constants dashboard or config loader

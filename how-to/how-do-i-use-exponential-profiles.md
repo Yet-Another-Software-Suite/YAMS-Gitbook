@@ -1,16 +1,16 @@
-# How do I use Exponential Profiles?
+# How do I use exponential profiles?
 
 Trapezoidal motion profiles assume constant maximum acceleration throughout a move, which can cause jerky starts on high-inertia mechanisms like heavy elevators or long arms. Exponential profiles let the acceleration vary continuously so the motor builds speed smoothly, following the physics of what the motor can actually deliver at each moment, this reduces overshoot and makes tuning more forgiving. Reach for exponential profiles when your trapezoidal profile produces oscillation, mechanical banging at the start of a move, or is difficult to tune around mechanical disturbances.
 
 ## What are exponential profiles?
 
-Exponential profiles are best described by CTRE, however with YAMS they are supported by all motor controllers.&#x20;
+Exponential profiles are best described by CTRE, however with YAMS they are supported by all motor controllers.
 
 {% embed url="https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo" %}
 
-## How can I use Exponential Profiles?
+## How can I use exponential profiles?
 
-All `SmartMotorController`s support Exponential Profiles via the `ExponentialProfilePIDController` closed loop controller. You would just have to use `ExponentialProfilePIDController` instead of `ProfiledPIDController` or `PIDController`.
+All `SmartMotorController`s support exponential profiles through the `ExponentialProfilePIDController` closed-loop controller. Use `ExponentialProfilePIDController` instead of `ProfiledPIDController` or `PIDController`.
 
 ```java
 private final Distance chainPitch = Inches.of(0.25);
@@ -32,11 +32,10 @@ private final SmartMotorControllerConfig motorConfig        = new SmartMotorCont
 ...
 ```
 
-There are multiple ways to create constraints, like [`createArmConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createArmConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\))  or [`createFlyWheelConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createFlywheelConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\))  or even [`createConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.units.measure.AngularVelocity,edu.wpi.first.units.measure.AngularAcceleration\)).&#x20;
+There are multiple ways to create constraints, like [`createArmConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createArmConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\)) or [`createFlyWheelConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createFlywheelConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\)) or even [`createConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.units.measure.AngularVelocity,edu.wpi.first.units.measure.AngularAcceleration\)).
 
-## When should I use Exponential Profiles?
+## When should I use exponential profiles?
 
 Exponential Profiles are easier to tune than Trapezoidal Profiles (from `ProfiledPIDController`) and are very good at overcoming mechanical failures to a point. It CANNOT speed up a mechanism that is massively under-powered and slow to move. Trapezoidal Profiles often fail miserably when a mechanism experiences disturbances along its movement, aside from fixing those disturbances an Exponential Profile is probably your best chance at getting it "working" quickly.
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/exponential_arm/java/frc/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}
-
