@@ -2,6 +2,7 @@
 
 * [Welcome](README.md)
 * [Why YAMS?](why-yams.md)
+* [Upgrading from 2026 to 2027](upgrading-from-2026-to-2027.md)
 
 ## Tutorials
 
