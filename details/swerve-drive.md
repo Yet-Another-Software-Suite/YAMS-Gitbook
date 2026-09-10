@@ -104,6 +104,36 @@ SwerveInputStream input =
 setDefaultCommand(drive.drive(input));
 ```
 
+## PathPlanner Integration and Feedforward Forces
+
+`setRobotRelativeChassisSpeeds` has an overload that accepts a per-module drive-wheel feedforward `Force[]` (FL, FR, BL, BR order, matching module order) alongside the `ChassisSpeeds`:
+
+```java
+drive.setRobotRelativeChassisSpeeds(speeds, feedforwardForces);
+```
+
+This exists specifically to plug into PathPlanner's `AutoBuilder.configure(...)`, whose `driveRobotRelative` consumer hands back a `DriveFeedforwards` alongside the requested `ChassisSpeeds` — its `linearForces()` is exactly the `Force[]` this overload expects:
+
+```java
+AutoBuilder.configure(
+    drive::getPose,
+    drive::resetOdometry,
+    drive::getRobotRelativeSpeed,
+    (speeds, feedforwards) -> drive.setRobotRelativeChassisSpeeds(speeds, feedforwards.linearForces()),
+    new PPHolonomicDriveController(new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+    RobotConfig.fromGUISettings(),
+    () -> DriverStation.getAlliance().filter(a -> a == DriverStation.Alliance.Red).isPresent(),
+    this);
+```
+
+Each module's drive `SmartMotorController` converts its share of the `Force[]` into the correct feedforward for whatever control mode it's using — voltage or torque-current — via `SmartMotorControllerConfig.convertToVoltage(...)`/`convertToCurrent(...)`, which need `withGearing(...)` and `withMechanismCircumference(...)`/`withWheelRadius(...)` configured on that motor to do the conversion. Passing an empty `Force[]` (or just calling the original single-argument overload) skips the feedforward entirely, so existing code that only calls `setRobotRelativeChassisSpeeds(speeds)` keeps working unchanged.
+
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/swerve_drive_pathplanner/java/frc/robot/subsystems/SwerveSubsystem.java#L212-L248" %}
+
+{% hint style="info" %}
+`SmartMotorController.setVelocity(velocity, force)` is the underlying per-motor API this builds on, and it isn't specific to swerve — any velocity-controlled `SmartMotorController` with gearing and a mechanism circumference configured can take a feedforward `Force` the same way. A `null`/unset force falls back to plain velocity control, which is what `getSetpointFeedforwardForce()` and the `SetpointForce` telemetry field then read back as empty/`0`.
+{% endhint %}
+
 ## Auto-Align: `driveToPoseSetpoint` and Live PID Tuning
 
 `SwerveDrive` includes a built-in field-relative auto-align: `driveToPoseSetpoint(Pose2d targetPose)` uses the translation and rotation `PIDController`s from `SwerveDriveConfig` to compute the `ChassisSpeeds` needed to drive toward a target pose, and `driveToPose(Pose2d)` wraps that into a ready-to-schedule `Command`.
