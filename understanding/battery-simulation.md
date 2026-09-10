@@ -26,7 +26,7 @@ This is the same MOI used for PID/feedforward tuning in simulation, so getting i
 
 ## Realistic discharge over a match
 
-By default the simulated battery holds a constant nominal voltage and resistance (12V / 20 mΩ), enough to model voltage sag under instantaneous load, but not a battery getting weaker over the course of a match. Call `BatterySim.enableDischarge(...)` to layer state-of-charge modeling on top: as amp-hours are drawn from the battery, its open-circuit voltage droops along a discharge curve and its internal resistance rises, both becoming more pronounced as the battery empties, the same way a real lead-acid FRC battery behaves late in a match.
+By default the simulated battery holds a constant nominal voltage and resistance (12V / 20 mΩ), enough to model voltage sag under instantaneous load, but not a battery getting weaker over the course of a match. Call `BatterySim.enableDischarge(...)` to layer state-of-charge modeling on top: as amp-hours are drawn from the battery, its open-circuit voltage droops along a discharge curve and its internal resistance rises, both becoming more pronounced as the battery empties, the same way a real lead-acid FRC battery behaves late in a match. The amp-hours drawn are also derated by discharge rate, so heavy sustained current drains the modeled capacity faster than the same amp-hours drawn slowly, see [Capacity derating](#capacity-derating) below.
 
 {% tabs %}
 {% tab title="Java" %}
@@ -128,6 +128,45 @@ yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
 {% hint style="info" %}
 Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end will not sag realistically there.
 {% endhint %}
+
+## Capacity derating
+
+Sealed lead-acid batteries are far less coulombically efficient than lithium chemistries at high discharge rates. This is known as the Peukert effect: the faster you discharge a lead-acid battery, the fewer total amp-hours it actually delivers before it's empty. A battery rated for 18 Ah at a light 0.9A discharge (the 20-hour rate its label is based on) might only deliver ~11 Ah at a sustained 54A draw, well within normal FRC match currents.
+
+`enableDischarge(...)` accounts for this by derating the amp-hours consumed against a discharge-current → capacity-fraction curve, so a match spent at high sustained current drains the modeled state of charge faster than the same amp-hours drawn gently would. The default curve is averaged from discharge testing across five FRC battery manufacturers, see [Detailed FRC Battery Comparison for 2026](https://www.chiefdelphi.com/t/detailed-frc-battery-comparison-for-2026/508077). Call `BatterySim.replaceCapacityDerating(...)` **before** `enableDischarge(...)` if you have measured discharge-rate-vs-capacity data for your own battery.
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import yams.motorcontrollers.simulation.BatterySim;
+
+InterpolatingDoubleTreeMap measuredDerating = new InterpolatingDoubleTreeMap();
+measuredDerating.put(0.9, 1.000);
+measuredDerating.put(20.0, 0.80);
+measuredDerating.put(40.0, 0.65);
+measuredDerating.put(60.0, 0.55);
+
+BatterySim.replaceCapacityDerating(measuredDerating);
+BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+#include <map>
+#include <yams/motorcontrollers/simulation/BatterySim.hpp>
+
+std::map<double, double> measuredDerating{
+    {0.9, 1.000}, {20.0, 0.80}, {40.0, 0.65}, {60.0, 0.55},
+};
+
+yams::motorcontrollers::simulation::BatterySim::ReplaceCapacityDerating(measuredDerating);
+yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
+    18.0, units::volt_t{12.9}, units::ohm_t{0.020});
+```
+{% endtab %}
+{% endtabs %}
 
 ## Related pages
 

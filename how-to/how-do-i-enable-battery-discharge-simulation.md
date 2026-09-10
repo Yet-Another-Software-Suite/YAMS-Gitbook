@@ -104,6 +104,27 @@ yams::motorcontrollers::simulation::BatterySim::ReplaceSOCInterpolation(wornBatt
 Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end won't sag realistically there. See [Battery Simulation → Custom discharge curves](../understanding/battery-simulation.md#custom-discharge-curves) for more on choosing curve points.
 {% endhint %}
 
+## Replace the capacity derating curve (optional)
+
+Lead-acid batteries deliver noticeably fewer amp-hours the faster they're discharged (the Peukert effect), so `enableDischarge(...)` derates the amp-hours consumed against a discharge-current → capacity-fraction curve averaged from real FRC battery testing. If you have measured discharge-rate-vs-capacity data for your own battery, call `BatterySim.replaceCapacityDerating(...)` with your own curve **before** calling `enableDischarge(...)`.
+
+```java
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import yams.motorcontrollers.simulation.BatterySim;
+
+InterpolatingDoubleTreeMap measuredDerating = new InterpolatingDoubleTreeMap();
+measuredDerating.put(0.9, 1.000);
+measuredDerating.put(20.0, 0.80);
+measuredDerating.put(40.0, 0.65);
+measuredDerating.put(60.0, 0.55);
+
+BatterySim.replaceCapacityDerating(measuredDerating);
+// Call enableDischarge(...) AFTER replaceCapacityDerating(...), or it uses the default curve.
+BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
+```
+
+See [Battery Simulation → Capacity derating](../understanding/battery-simulation.md#capacity-derating) for where the default curve comes from and the C++ equivalent.
+
 ## Related pages
 
 * [Battery Simulation](../understanding/battery-simulation.md), the full explanation of the shared-battery model and why it matters
