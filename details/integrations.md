@@ -105,13 +105,18 @@ When live tuning, it's important to understand what units each parameter expects
 
 ### Units and AdvantageScope
 
-YAMS publishes every field, both tunable and read-only, in **base SI-adjacent units**:
+YAMS publishes read-only fields and tunable fields in different units:
 
-* Angular position and velocity → **Rotations** and **Rotations per Second**
-* Linear position and velocity (elevators, linear slides) → **Meters** and **Meters per Second**
-* Voltage → **Volts**, Current → **Amps**, Temperature → **Celsius**
+| Quantity | Read-only fields | Tunable fields |
+| --- | --- | --- |
+| Angular position | **Rotations** | **Degrees** |
+| Angular velocity | **Rotations per Second** | **Rotations per Minute (RPM)** |
+| Angular acceleration | **Rotations per Second²** | **RPM per Second** |
+| Linear position, velocity, acceleration (linear closed loop control) | **Meters**, **Meters per Second**, **Meters per Second²** | Same as read-only |
+| Voltage, current | **Volts**, **Amps** | **Volts**, **Amps** |
+| Temperature | **Fahrenheit** | Not tunable |
 
-This means the value you type into a tunable field must be in those same units. For example, a soft limit of 30° must be entered as `0.0833` (30 ÷ 360) rotations, and a flywheel target of 3000 RPM must be entered as `50` rot/s (3000 ÷ 60).
+This means the value you type into a tunable field is in the tunable unit, not the unit of the read-only field next to it. For example, a flywheel target of 3000 RPM is entered as `3000` in `TunableSetpointVelocity` while `MechanismVelocity` reads `50` rot/s (3000 ÷ 60), and an arm soft limit of 30° is entered as `30` in `MechanismUpperLimit` while `MechanismPosition` reads `0.0833` rotations (30 ÷ 360).
 
 **AdvantageScope solves this.** Its built-in unit conversion lets you display any read-only field in whatever units feel natural for your mechanism, degrees for arms, RPM for flywheels, inches for elevators, without changing the underlying data or your robot code. To set it up:
 
@@ -119,7 +124,7 @@ This means the value you type into a tunable field must be in those same units. 
 2. Right-click the field in the graph legend → **Convert Units…**
 3. Pick your target unit (Rotations → Degrees, rot/s → RPM, Meters → Inches, etc.)
 
-Once conversion is applied, you can read the mechanism position in degrees while the tunable soft limit field still expects rotations, so you know to type `0.5` when the graph shows 180°. This approach lets you monitor the mechanism in intuitive units and calculate the correct tunable values without guessing.
+Once conversion is applied, the graph shows the mechanism position in degrees and velocity in RPM, the same units the tunable fields expect, so you can type `180` into a tunable position field when the graph shows 180°.
 
 {% hint style="success" %}
 **Recommended setup for a tuning session:** Open AdvantageScope and configure unit conversions for `MechanismPosition` (→ degrees or inches), `MechanismVelocity` (→ deg/s, RPM, or in/s), and `ClosedLoopError` (same as position). Keep these graphs visible alongside the tunable fields in your NT dashboard. The converted read-only fields give you a real-unit view of what the mechanism is actually doing while you enter raw-unit values into the tunable fields.
@@ -248,23 +253,25 @@ Every tunable field has a corresponding read-only field you should monitor while
 
 | Tunable Field                       | Unit             | What to Watch (Read-Only)                 | Why                                                                                                 |
 | ----------------------------------- | ---------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `TrapezoidalProfileMaxVelocity`     | rot/s (or m/s)   | `MechanismVelocity` during cruise phase   | The plateau velocity. Increase to move faster; decrease if the motor is stalling during the cruise. |
-| `TrapezoidalProfileMaxAcceleration` | rot/s² (or m/s²) | `StatorCurrent`, `MechanismVelocity` ramp | Controls how quickly velocity builds. High acceleration = high current spike at start of motion.    |
-| `TrapezoidalProfileMaxJerk`         | rot/s³           | `MechanismVelocity` shape                 | Smooths the velocity ramp. Useful when acceleration discontinuities cause mechanical shock.         |
+| `TrapezoidalProfileMaxVelocity`     | RPM (or m/s)     | `MechanismVelocity` during cruise phase   | The plateau velocity. Increase to move faster; decrease if the motor is stalling during the cruise. |
+| `TrapezoidalProfileMaxAcceleration` | RPM/s (or m/s²)  | `StatorCurrent`, `MechanismVelocity` ramp | Controls how quickly velocity builds. High acceleration = high current spike at start of motion.    |
+| `TrapezoidalProfileMaxJerk`         | RPM/s²           | `MechanismVelocity` shape                 | Smooths the velocity ramp. Useful when acceleration discontinuities cause mechanical shock.         |
 
 ### Setpoints (Tunable Test Inputs)
 
 | Tunable Field             | Unit           | What to Watch (Read-Only)              | Why                                                                                                                   |
 | ------------------------- | -------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `TunableSetpointPosition` | rot (or m)     | `MechanismPosition`, `ClosedLoopError` | Command the mechanism to a specific position without button bindings. Use to test individual setpoints during tuning. |
-| `TunableSetpointVelocity` | rot/s (or m/s) | `MeasurementVelocity`, `OutputVoltage` | Command a specific velocity. Use to characterize kV without running a full motion profile.                            |
+| `TunableSetpointPosition` | deg (or m)     | `MechanismPosition`, `ClosedLoopError` | Command the mechanism to a specific position without button bindings. Use to test individual setpoints during tuning. |
+| `TunableSetpointVelocity` | RPM (or m/s)   | `MeasurementVelocity`, `OutputVoltage` | Command a specific velocity. Use to characterize kV without running a full motion profile.                            |
 
 ### Soft Limits
 
 | Tunable Field         | Unit       | What to Watch (Read-Only)                            | Why                                                                                                                     |
 | --------------------- | ---------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `MechanismLowerLimit` | rot (or m) | `MechanismPosition`, `MechanismLowerLimit` (boolean) | Boolean flips true when the mechanism hits the lower soft limit. Adjust the limit to change where the controller clips. |
-| `MechanismUpperLimit` | rot (or m) | `MechanismPosition`, `MechanismUpperLimit` (boolean) | Same for upper limit.                                                                                                   |
+| `MechanismLowerLimit` | deg        | `MechanismPosition`, `MechanismLowerLimit` (boolean) | Boolean flips true when the mechanism hits the lower soft limit. Adjust the limit to change where the controller clips. |
+| `MechanismUpperLimit` | deg        | `MechanismPosition`, `MechanismUpperLimit` (boolean) | Same for upper limit.                                                                                                   |
+
+Linear mechanisms also publish `MeasurementLowerLimit` and `MeasurementUpperLimit`, tunable in meters.
 
 ### Current Limits
 
