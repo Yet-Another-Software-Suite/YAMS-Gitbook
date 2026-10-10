@@ -198,13 +198,18 @@ The C++ API still names the Trigger factory `IsNear(...)`.
 
 ### Live tuning registration
 
-The "Live Tuning" command is registered automatically against the config's `Subsystem` (or Commands v3 `Mechanism`) when the motor's telemetry verbosity is `TelemetryVerbosity.HIGH`. To register it in other circumstances, call `setupLiveTuning()` on the config explicitly:
+The "Live Tuning" command is registered automatically against the config's `Subsystem` (or Commands v3 `Mechanism`) when the motor controller sets up its telemetry with `TelemetryVerbosity.HIGH`, which YAMS mechanisms do for you. If you set up telemetry yourself with `setupTelemetry(NetworkTable, NetworkTable)`, call `setupLiveTuning()` on the config afterwards. Before the telemetry is set up the call does nothing:
 
 ```java
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
+SmartMotorController motor = new TalonFXWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
+
+motor.setupTelemetry(telemetryTable, tuningTable);
 motorConfig.setupLiveTuning();
 ```
+
+Tunable fields are in degrees and RPM (meters and meters per second for linear mechanisms), while the read-only fields next to them are in rotations and rotations per second.
 
 See [Live tuning](details/integrations.md) for how to use it.
 
@@ -261,6 +266,6 @@ The C++ swerve API still uses `GetGyroAngle()` and has no `GyroAxis` yet.
 * [ ] Rename Trigger factory calls `isNear(...)` to `near(...)` (Java). Keep `isNear(...)` where you need a `boolean`.
 * [ ] Rename `withIdleMode(...)` to `withZeroPower(...)`.
 * [ ] Rename `getZeroOffset()` to `getExternalEncoderZeroOffset()`, and `getExternalEncoderPosition()`/`getExternalEncoderVelocity()` to `getExternalEncoderMechanismPosition()`/`getExternalEncoderMechanismVelocity()`.
-* [ ] If you need the "Live Tuning" command without `TelemetryVerbosity.HIGH`, call `config.setupLiveTuning()`.
+* [ ] If you set up motor controller telemetry yourself, call `config.setupLiveTuning()` after `setupTelemetry(...)` to get the "Live Tuning" command.
 * [ ] Swerve (Java): pass a `Supplier<Rotation3d>` to `withGyro(...)`, replace `getGyroAngle()` with `getGyroRotation3d()`, and add `withGyroHeadingAxis(...)` if your gyro is not mounted flat.
 * [ ] Double-check any hard-limit setter names: `withHardLimits(...)` (plural) is correct on `ArmConfig`/`ElevatorConfig`/`PivotConfig`; there has never been a singular `withHardLimit(...)`.
