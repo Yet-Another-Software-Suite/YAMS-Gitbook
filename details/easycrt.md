@@ -95,6 +95,8 @@ Coming from the 2026 `EasyCRTConfig` API? See [Upgrading from 2026 to 2027](../u
 
 ### How the solver works
 
+
+<figure><img src="../.gitbook/assets/easycrt-how-it-works.gif" alt="Animation: as the turret turns, encoder A and encoder B readings wrap at different rates, and EasyCRT reports the one turret angle that fits both"><figcaption><p>Each encoder wraps many times, at different rates. Only one turret angle fits both readings.</p></figcaption></figure>
 1. Encoder A's reading fits several shared gear angles, one for each number of whole turns the pinion could have made. `EasyCRT` lists every one inside the travel.
 2. For each candidate it predicts what encoder B should read.
 3. The candidate whose prediction is closest to encoder B's real reading wins.
@@ -103,6 +105,8 @@ This is not a textbook Chinese Remainder Theorem solve. It is the same idea done
 
 ### Before you call solve
 
+
+<figure><img src="../.gitbook/assets/easycrt-encoder-direction.gif" alt="Animation: with encoder B counting down, solve returns empty; after inverting encoder B so both count up, solve returns the turret angle"><figcaption><p>Both encoders have to count up when the turret turns in its positive direction.</p></figcaption></figure>
 `EasyCRT` takes the two readings as they are, so the encoders have to be set up first:
 
 * **Zero both encoders with the mechanism at zero.** Use the vendor tool to set each encoder's offset. If an encoder cannot store an offset, subtract it yourself: `crt.solve(encoderA.get().minus(offsetA), encoderB.get().minus(offsetB))`.
@@ -193,6 +197,8 @@ position from `EasyCRT`. Two gearings are involved, and they are not the same th
 #### Layout 1: CRT gears on the turret gear
 
 <figure><img src="../.gitbook/assets/easycrt-layout-1.png" alt="EasyCRT layout 1: the drive gear and both encoder pinions mesh with the turret gear, which is the shared gear" width="375"><figcaption><p>Layout 1: the turret gear is the shared gear. Not to scale.</p></figcaption></figure>
+
+<figure><img src="../.gitbook/assets/easycrt-layout-1-motion.gif" alt="Animation of layout 1: the turret gear turns the drive gear and both encoder pinions, and solve returns the turret angle"><figcaption><p>Layout 1 in motion.</p></figcaption></figure>
 
 The motor's drive gear and both encoder pinions mesh with the turret gear. The turret gear is the
 shared gear, so there is nothing to convert.
@@ -297,6 +303,8 @@ The pinions are two meshes away from the turret, so they turn the same way as th
 
 <figure><img src="../.gitbook/assets/easycrt-layout-3.png" alt="EasyCRT layout 3: both encoder pinions mesh with their own common gear, the shared gear, which meshes with the turret gear alongside the drive gear" width="375"><figcaption><p>Layout 3: the common gear is the shared gear. Not to scale.</p></figcaption></figure>
 
+<figure><img src="../.gitbook/assets/easycrt-layout-3-motion.gif" alt="Animation of layout 3: the turret gear turns the common gear, which turns both encoder pinions, and the common gear angle is scaled to the turret angle"><figcaption><p>Layout 3 in motion.</p></figcaption></figure>
+
 Both pinions mesh with their own gear, which meshes with the turret gear. The motor's drive gear
 also meshes with the turret gear. The common gear is the shared gear, so `solve` returns the common
 gear angle, and the conversion works the same way as layout 2.
@@ -350,6 +358,8 @@ As in layout 2, the pinions turn the same way as the turret.
 
 #### Travel, range and shortcuts
 
+<figure><img src="../.gitbook/assets/easycrt-travel.png" alt="Turret travel of minus 200 to plus 200 degrees is the same motion as minus 1000 to plus 1000 degrees of a drive gear that turns 5 times per turret turn"><figcaption><p>The same motion, as turret angles and as shared gear angles.</p></figcaption></figure>
+
 `solve(a, b)` and `solve(a, b, min, max)` work in shared gear angles. In layouts 2 and 3 that is
 not the turret, so convert the turret's travel before passing it in:
 
@@ -360,9 +370,13 @@ crt.solve(encoderA.get(), encoderB.get(),
     Degrees.of(-200).times(driveTurnsPerTurretTurn), Degrees.of(200).times(driveTurnsPerTurretTurn));
 ```
 
+<figure><img src="../.gitbook/assets/easycrt-range.png" alt="Number line of the turret angle showing the 1.995 turn unique range with the turret travel and hard stops inside it"><figcaption><p>The travel has to fit inside the unique range.</p></figcaption></figure>
+
 The unique range is the same in all three layouts. Meshing gears pass the same number of teeth,
 so the readings repeat every `lcm(19, 21) = 399` teeth on whichever gear you look at, which is
 `399 / 200 = 1.995` turns of the turret.
+
+<figure><img src="../.gitbook/assets/easycrt-shortcut.png" alt="Turret gear, drive gear and encoder pinion in a row: 200 over 40 times 40 over 19 is 200 over 19, so the drive gear cancels"><figcaption><p>A gear that only meshes passes teeth through one for one.</p></figcaption></figure>
 
 {% hint style="success" %}
 **Shortcut for layouts 2 and 3.** When every gear between the pinions and the turret simply meshes
@@ -371,6 +385,8 @@ times per turret turn no matter which gear it touches. So you can use the turret
 `new EasyCRT(200, 19, 21)`, and the result is the turret angle with no conversion. Only the encoder
 directions differ between layouts.
 {% endhint %}
+
+<figure><img src="../.gitbook/assets/easycrt-compound.png" alt="A 60 tooth shared gear and a 20 tooth gear on the same shaft, with the 20 tooth gear meshing with the turret gear, so the tooth counts do not cancel"><figcaption><p>Two different gears on one shaft change the ratio.</p></figcaption></figure>
 
 {% hint style="warning" %}
 **When you need the ratio.** The shortcut does not work if the shared gear sits on a shaft with a
@@ -472,6 +488,12 @@ The `BroncBotz_2026` examples have a complete `Turret` class: [Commands v2](http
 
 ### Troubleshooting
 
+
+Two failures are worth seeing in motion.
+
+<figure><img src="../.gitbook/assets/easycrt-out-of-range.gif" alt="Animation: as the real turret angle moves past the end of the unique range, the solved angle jumps to the other end of the range"><figcaption><p>Past the unique range the answer comes from the other end.</p></figcaption></figure>
+
+<figure><img src="../.gitbook/assets/easycrt-backlash.gif" alt="Animation: as encoder B drifts from its predicted reading, solve goes from the correct angle, to empty, to a wrong angle a different turn away"><figcaption><p>A match must be within a quarter of the gap between candidates. Half way gives no answer, and further gives a wrong one.</p></figcaption></figure>
 | Symptom | Likely cause |
 | ------- | ------------ |
 | Always empty | An encoder is not zeroed at the mechanism's zero, or one encoder counts the wrong way. |
