@@ -328,4 +328,4 @@ if (arm.isNear(targetAngle, tolerance)) {
 
 - [run() vs runTo() Commands](run-vs-runto.md) - Important differences between continuous and goal-based commands
 - [AdvantageKit Integration](advantagekit-integration.md) - Using YAMS with AdvantageKit's IO pattern
-- [Live Tuning](integrations.md) - Units for all tunable parameters
+- [Live Tuning](live-tuning/README.md) - Units for all tunable parameters

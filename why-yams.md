@@ -66,13 +66,13 @@ For CTRE TalonFX and TalonFXS motors, YAMS feeds its physics results directly ba
 2. Open Phoenix Tuner X and connect to the simulation
 3. Every TalonFX signal, position, velocity, voltage, current, reads exactly as it would from real hardware
 
-You can watch closed-loop error, plot signal graphs, and verify your gains in TunerX's familiar interface without touching a physical robot. The same workflow you use to diagnose real hardware works identically in simulation.
+You can watch closed-loop error, plot signal graphs, and verify your gains in TunerX's familiar interface without touching a physical robot. The same workflow you use to diagnose real hardware works identically in simulation. See [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md) for the steps.
 
 ## Live tuning without reflashing
 
 `TelemetryVerbosity.HIGH` publishes all PID gains, feedforward constants, motion profile constraints, soft limits, and current limits as writable NetworkTable entries. At `HIGH` verbosity YAMS also registers a `Live Tuning` command for each motor (call `setupLiveTuning()` on the config to register it in other cases). The command (visible in Elastic or any NT-aware dashboard) applies those values to the running motor controller in real time.
 
-Changing `kP` from 4 to 6 and seeing the mechanism respond takes seconds, not the minutes a redeploy would cost. See the [Live Tuning](details/integrations.md) page for a full field-by-field reference.
+Changing `kP` from 4 to 6 and seeing the mechanism respond takes seconds, not the minutes a redeploy would cost. See the [Live Tuning](details/live-tuning/README.md) page for a full field-by-field reference.
 
 ## Loop overruns
 

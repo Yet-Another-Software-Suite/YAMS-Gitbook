@@ -29,23 +29,6 @@ motorConfig.setupLiveTuning();
 
 In C++ there is no explicit call: the `Live Tuning` command is registered when `SetupTelemetry()` runs with `TelemetryVerbosity::HIGH` and the config has a subsystem.
 
-## TunerX in simulation (CTRE hardware)
-
-For TalonFX and TalonFXS motors, YAMS feeds its physics simulation results back through CTRE's vendorsim layer via Phoenix's `getSimState()` API. This means Phoenix Tuner X can connect to your simulation and display every motor signal, position, velocity, closed-loop error, applied voltage, current draw, exactly as it would on real hardware.
-
-**To use TunerX in sim:**
-
-1. In a terminal, run your robot code in simulation (for example, `./gradlew simulateJava`).
-2. Open Phoenix Tuner X.
-3. Connect to the simulation instance. It appears as a local device.
-4. In the motor view, open the **Signal** tab. The physics simulation updates every signal in real time.
-
-This is the same workflow as diagnosing real hardware. You can verify gain behavior, confirm soft/hard limit triggering, and plot signal graphs without ever touching a physical robot.
-
-{% hint style="info" %}
-TunerX vendorsim integration is specific to **CTRE TalonFX and TalonFXS** motors. REV Spark motors use WPILib's simulation framework and are visible through AdvantageScope or Elastic via NetworkTables instead.
-{% endhint %}
-
 <pre class="language-java"><code class="lang-java">SmartMotorControllerConfig lowerFlyWheelConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withZeroPower(MotorMode.COAST)
@@ -58,6 +41,10 @@ TunerX vendorsim integration is specific to **CTRE TalonFX and TalonFXS** motors
       .withMotorInverted(false)
 <strong>      .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH) // yams.core.telemetry.enums.TelemetryVerbosity
 </strong></code></pre>
+
+{% hint style="info" %}
+Using CTRE TalonFX or TalonFXS motors? Phoenix Tuner X can connect to your simulation too. See [TunerX in simulation](tunerx-in-simulation.md).
+{% endhint %}
 
 ## How do I use live tuning?
 
@@ -89,11 +76,11 @@ The command requires the mechanism and runs a `while (true)` loop that applies t
 The `Live Tuning` command requires the subsystem or mechanism, so it can be interrupted by the controller, a default command, or any other trigger for that subsystem or mechanism in your program! Dashboard edits are only applied while it runs.
 {% endhint %}
 
-<figure><img src="../.gitbook/assets/new_liveutinging.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/new_liveutinging.gif" alt=""><figcaption></figcaption></figure>
 
 You can tune your mechanism while the robot is enabled.
 
-<figure><img src="../.gitbook/assets/AScopeLiveTuningExample.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/AScopeLiveTuningExample.gif" alt=""><figcaption></figcaption></figure>
 
 ## When should I not use live tuning?
 

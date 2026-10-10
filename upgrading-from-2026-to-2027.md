@@ -211,7 +211,7 @@ motorConfig.setupLiveTuning();
 
 Tunable fields are in degrees and RPM (meters and meters per second for linear mechanisms), while the read-only fields next to them are in rotations and rotations per second.
 
-See [Live tuning](details/integrations.md) for how to use it.
+See [Live tuning](details/live-tuning/README.md) for how to use it.
 
 ### `withIdleMode` renamed to `withZeroPower`
 
