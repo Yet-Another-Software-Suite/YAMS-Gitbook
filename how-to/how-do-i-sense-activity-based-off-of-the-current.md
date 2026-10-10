@@ -29,7 +29,7 @@ In this case you can sense if there is a game piece by the current on the smart 
     .withOpenLoopRampRate(Seconds.of(0.25));
 
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
 <strong>  private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
@@ -43,3 +43,6 @@ In this case you can sense if there is a game piece by the current on the smart 
 </strong><strong>      return statorDebounce.calculate(sparkSmartMotorController.getStatorCurrent().gte(Amps.of(40))); 
 </strong><strong>  }
 </strong></code></pre>
+
+`Debouncer` is `org.wpilib.math.filter.Debouncer` and `CANPort` is `org.wpilib.hardware.bus.CANPort` in WPILib 2027. To use the check as a `Trigger`, wrap it: `new Trigger(this::isGamePieceIn)`.
+

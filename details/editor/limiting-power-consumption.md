@@ -12,7 +12,7 @@ There are two types of currents involved in a `SmartMotorController`, the **Supp
 * The current output of the motor controller is the **Stator** current.
 
 {% hint style="danger" %}
-Some motor controllers, like SparkMax and SparkFlex do not let you set these separately
+Some motor controllers, like SparkMax and SparkFlex, only support a stator current limit. `SparkWrapper` throws a `SmartMotorControllerConfigurationException` if you set a supply current limit.
 {% endhint %}
 
 CTRE has excellent documentation explaining the relationship between the supply and stator currents.
@@ -45,6 +45,10 @@ There are two ramp rates defined in motor controllers.
 * Open loop ramp rate
 
 These ramp rates are applied whenever the motor controller is in the appropriate mode. So the **closed loop ramp rate** is used when the motor controller **PID** is used. The **open loop ramp rate** is used when the dutycycle or voltage control is used.
+
+{% hint style="warning" %}
+The Thrifty Nova has a single ramp rate for open and closed loop control. `NovaWrapper` throws a `SmartMotorControllerConfigurationException` if the two ramp rates differ, so set only one of them, or both to the same value.
+{% endhint %}
 
 ### Setting Ramp Rates in YAMS
 

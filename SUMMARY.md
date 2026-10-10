@@ -27,6 +27,8 @@
 * [How do I use absolute encoders on my Arm?](how-to/how-do-i-use-absolute-encoders-on-my-arm.md)
 * [How to disable linear closed loop control?](how-to/how-to-disable-linear-closed-loop-control.md)
 * [How do I view my DataLog in AdvantageScope?](how-to/how-do-i-view-my-datalog-in-advantagescope.md)
+* [How do I use a Thrifty Nova?](how-to/how-do-i-use-a-thrifty-nova.md)
+* [How do I use a gyro mounted on its side?](how-to/how-do-i-use-a-gyro-mounted-on-its-side.md)
 
 ## Understanding
 

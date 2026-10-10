@@ -23,6 +23,6 @@ Inside of your `SmartMotorControllerConfig` you would use `withLinearClosedLoopC
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withWheelDiameter(Inches.of(4))
       .withZeroPower(MotorMode.COAST)
-      .withClosedLoopController(50,0,0,MetersPerSecond.of(3), MetersPerSecondPerSecond.of(5))
+      .withClosedLoopController(50,0,0)
 <strong>      .withLinearClosedLoopController(false);
 </strong></code></pre>

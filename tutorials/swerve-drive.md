@@ -5,7 +5,7 @@ description: We will learn how to program a Swerve Drive!
 # Swerve Drive
 
 {% hint style="danger" %}
-Swerve drive requires more hardware configuration than a tank drive. Make sure you have installed REVLib (for SparkMax motors) and Phoenix 6 (for CANcoder and Pigeon2) before starting.
+Swerve drive requires more hardware configuration than a tank drive. Make sure you have installed YAMS (see [Installation](../README.md#installation); this tutorial uses the Commands v2 vendordep), REVLib (for SparkMax motors) and Phoenix 6 (for CANcoder and Pigeon2) before starting.
 {% endhint %}
 
 ## Intro
@@ -35,19 +35,19 @@ This swerve drive will be using the following hardware and control details:
 
 We start with the `SmartMotorControllerConfig` for the **drive** motors. The drive motors use velocity control, so we configure a PID controller and a feedforward.
 
-<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package frc.robot.subsystems;
+<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.MetersPerSecond;
 
-<strong>import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-</strong><strong>import edu.wpi.first.math.geometry.Translation2d;
-</strong>import edu.wpi.first.wpilibj2.command.SubsystemBase;
-<strong>import yams.gearing.MechanismGearing;
-</strong><strong>import yams.motorcontrollers.SmartMotorControllerConfig;
-</strong><strong>import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
+<strong>import org.wpilib.math.controller.SimpleMotorFeedforward;
+</strong><strong>import org.wpilib.math.geometry.Translation2d;
+</strong>import org.wpilib.command2.SubsystemBase;
+<strong>import yams.core.gearing.MechanismGearing;
+</strong><strong>import yams.commands2.config.SmartMotorControllerConfig;
+</strong><strong>import yams.core.telemetry.enums.TelemetryVerbosity;
 </strong>
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -75,19 +75,19 @@ The `withFeedforward` calculates `kV` from your maximum linear velocity and whee
 
 The **azimuth** (steering) motors use position control. A single `kP=1` is typically enough at a `6.75:1` reduction because the gear ratio makes the output stiff.
 
-<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package frc.robot.subsystems;
+<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.MetersPerSecond;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.MechanismGearing;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.MechanismGearing;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -122,26 +122,26 @@ public class SwerveSubsystem extends SubsystemBase {
 
 Now we write a helper method that takes the two `SparkMax` objects and a `CANcoder`, wraps them in `SmartMotorController`s, and returns a configured `SwerveModule`.
 
-<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package frc.robot.subsystems;
+<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.spark.SparkMax;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.MechanismGearing;
-<strong>import yams.mechanisms.config.SwerveModuleConfig;
-</strong><strong>import yams.mechanisms.swerve.SwerveModule;
-</strong><strong>import yams.motorcontrollers.SmartMotorController;
-</strong>import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-<strong>import yams.motorcontrollers.local.SparkWrapper;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.MechanismGearing;
+<strong>import yams.core.mechanisms.config.SwerveModuleConfig;
+</strong><strong>import yams.core.mechanisms.swerve.SwerveModule;
+</strong><strong>import yams.core.motorcontrollers.SmartMotorController;
+</strong>import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+<strong>import yams.core.motorcontrollers.local.SparkWrapper;
 </strong>
 
 public class SwerveSubsystem extends SubsystemBase {
@@ -178,96 +178,98 @@ The `withLocation(Translation2d)` call uses WPILib's coordinate convention: `+X`
 {% step %}
 #### Instantiate the Four Modules and Create `SwerveDrive`
 
-In the constructor, we create all four modules and pass them to `SwerveDriveConfig`. The gyro supplier gives field-relative driving its heading reference.
+In the constructor, we create all four modules and pass them to `SwerveDriveConfig`. The gyro supplier gives YAMS the robot's attitude as a `Rotation3d`: its yaw is the heading reference for field-relative driving.
 
-<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package frc.robot.subsystems;
+<pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.MetersPerSecond;
 
-import com.ctre.phoenix6.hardware.CANcoder;
+<strong>import com.ctre.phoenix6.CANBus;
+</strong>import com.ctre.phoenix6.hardware.CANcoder;
 <strong>import com.ctre.phoenix6.hardware.Pigeon2;
-</strong>import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.SwerveModuleConfig;
-<strong>import yams.mechanisms.config.SwerveDriveConfig;
-</strong><strong>import yams.mechanisms.swerve.SwerveDrive;
-</strong>import yams.mechanisms.swerve.SwerveModule;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+</strong><strong>import com.revrobotics.spark.SparkLowLevel.MotorType;
+</strong>import com.revrobotics.spark.SparkMax;
+<strong>import org.wpilib.hardware.bus.CANPort;
+</strong>import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.SwerveModuleConfig;
+<strong>import yams.commands2.config.SwerveDriveConfig;
+</strong><strong>import yams.commands2.swerve.SwerveDrive;
+</strong>import yams.core.mechanisms.swerve.SwerveModule;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+import yams.core.motorcontrollers.local.SparkWrapper;
 
 public class SwerveSubsystem extends SubsystemBase {
 
 <strong>  private final SwerveDrive drive;
-</strong><strong>  private final Field2d field = new Field2d();
+</strong>
+<strong>  // CAN ID 14, update to match your robot's Pigeon2 CAN ID.
+</strong><strong>  private final Pigeon2 gyro = new Pigeon2(14, new CANBus(CANPort.CAN_S0));
 </strong>
   // ... buildDriveCfg(), buildAzimuthCfg(), createModule() from previous steps ...
 
   public SwerveSubsystem() {
-<strong>    // CAN ID 14, update to match your robot's Pigeon2 CAN ID.
-</strong><strong>    Pigeon2 gyro = new Pigeon2(14);
-</strong>
 <strong>    // Module locations: +X forward, +Y left. 24-inch offsets assume module
 </strong><strong>    // centers are 24 in from the robot center, update to match your chassis.
 </strong><strong>    // CAN IDs are grouped as (drive, steer, CANcoder) per module.
-</strong><strong>    var fl = createModule(new SparkMax(1, MotorType.kBrushless),
-</strong><strong>                          new SparkMax(2, MotorType.kBrushless),
-</strong><strong>                          new CANcoder(3), "frontleft",
+</strong><strong>    var fl = createModule(new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless),
+</strong><strong>                          new SparkMax(CANPort.CAN_S0, 2, MotorType.kBrushless),
+</strong><strong>                          new CANcoder(3, new CANBus(CANPort.CAN_S0)), "frontleft",
 </strong><strong>                          new Translation2d(Inches.of(24), Inches.of(24)));
-</strong><strong>    var fr = createModule(new SparkMax(4, MotorType.kBrushless),
-</strong><strong>                          new SparkMax(5, MotorType.kBrushless),
-</strong><strong>                          new CANcoder(6), "frontright",
+</strong><strong>    var fr = createModule(new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless),
+</strong><strong>                          new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless),
+</strong><strong>                          new CANcoder(6, new CANBus(CANPort.CAN_S0)), "frontright",
 </strong><strong>                          new Translation2d(Inches.of(24), Inches.of(-24)));
-</strong><strong>    var bl = createModule(new SparkMax(7, MotorType.kBrushless),
-</strong><strong>                          new SparkMax(8, MotorType.kBrushless),
-</strong><strong>                          new CANcoder(9), "backleft",
+</strong><strong>    var bl = createModule(new SparkMax(CANPort.CAN_S0, 7, MotorType.kBrushless),
+</strong><strong>                          new SparkMax(CANPort.CAN_S0, 8, MotorType.kBrushless),
+</strong><strong>                          new CANcoder(9, new CANBus(CANPort.CAN_S0)), "backleft",
 </strong><strong>                          new Translation2d(Inches.of(-24), Inches.of(24)));
-</strong><strong>    var br = createModule(new SparkMax(10, MotorType.kBrushless),
-</strong><strong>                          new SparkMax(11, MotorType.kBrushless),
-</strong><strong>                          new CANcoder(12), "backright",
+</strong><strong>    var br = createModule(new SparkMax(CANPort.CAN_S0, 10, MotorType.kBrushless),
+</strong><strong>                          new SparkMax(CANPort.CAN_S0, 11, MotorType.kBrushless),
+</strong><strong>                          new CANcoder(12, new CANBus(CANPort.CAN_S0)), "backright",
 </strong><strong>                          new Translation2d(Inches.of(-24), Inches.of(-24)));
 </strong>
 <strong>    SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
-</strong><strong>        // gyro.getYaw() gives the heading used for field-relative driving.
-</strong><strong>        .withGyro(gyro.getYaw().asSupplier())
+</strong><strong>        // The gyro's Rotation3d: its yaw is the heading used for field-relative driving.
+</strong><strong>        .withGyro(gyro::getRotation3d)
 </strong><strong>        .withStartingPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)))
 </strong><strong>        // Translation and rotation PIDs are used by driveToPose(); kP=1 is a conservative start.
 </strong><strong>        .withTranslationController(new PIDController(1, 0, 0))
 </strong><strong>        .withRotationController(new PIDController(1, 0, 0));
 </strong>
 <strong>    drive = new SwerveDrive(config);
-</strong><strong>    SmartDashboard.putData("Field", field);
 </strong>  }
 
 }
 </code></pre>
+
+{% hint style="info" %}
+If your gyro is mounted so that the robot turning shows up as its roll or pitch instead of its yaw, add `.withGyroHeadingAxis(GyroAxis.ROLL)` or `.withGyroHeadingAxis(GyroAxis.PITCH)` to the `SwerveDriveConfig` (`yams.core.mechanisms.config.enums.GyroAxis`, the default is `GyroAxis.YAW`). Read the heading back with `drive.getGyroRotation3d().toRotation2d()`.
+{% endhint %}
 {% endstep %}
 
 {% step %}
 #### Add Periodic Updates and Drive Commands
 
-`periodic()` must call `drive.updateTelemetry()` to keep odometry and SmartDashboard fresh. `simulationPeriodic()` must call `drive.simIterate()` to step the physics engine.
+`periodic()` must call `drive.updateTelemetry()` to keep odometry and telemetry fresh. `simulationPeriodic()` must call `drive.simIterate()` to step the physics engine, and then feeds the simulated heading back into the Pigeon2.
 
 <pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers data-full-width="true"><code class="lang-java">  // ... fields and constructor from previous steps ...
 
   /**
    * Drive the robot with field-relative chassis speeds.
    */
-<strong>  public Command drive(Supplier&#x3C;ChassisSpeeds> speedsSupplier) {
+<strong>  public Command drive(Supplier&#x3C;ChassisVelocities> speedsSupplier) {
 </strong><strong>    return run(() -> drive.setFieldRelativeChassisSpeeds(speedsSupplier.get()))
 </strong><strong>        .withName("Field Oriented Drive");
 </strong><strong>  }
@@ -281,47 +283,53 @@ public class SwerveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-<strong>    drive.updateTelemetry();           // updates pose estimator and telemetry
-</strong><strong>    field.setRobotPose(drive.getPose()); // keeps the Field2d widget current
+<strong>    drive.updateTelemetry();           // updates pose estimator, telemetry and the drive's Field2d
 </strong>  }
 
   @Override
   public void simulationPeriodic() {
 <strong>    drive.simIterate();  // steps the motor physics simulation
+</strong><strong>    // Keep the simulated Pigeon2 in step with the simulated robot heading.
+</strong><strong>    gyro.getSimState().setRawYaw(drive.getSimPose().getRotation().getMeasure());
 </strong>  }
 </code></pre>
+
+These methods use `org.wpilib.math.kinematics.ChassisVelocities` (WPILib 2027's name for `ChassisSpeeds`), `org.wpilib.command2.Command` and `java.util.function.Supplier`. `lock()` turns every module toward the robot center (the X pattern) and holds it there.
 
 You can also expose `getPose()`, `resetOdometry()`, and `addVisionMeasurement()` as needed for autonomous and vision integration.
 
 {% hint style="info" %}
-`SwerveDrive` already builds and publishes its own `Field2d` internally (to `Mechanisms/<name>/field`), so the `Field2d field` instance above is actually redundant. Call `drive.getField2d()` instead of keeping a separate widget; this also lets vision or autonomous code plot extra objects (e.g. detected AprilTags, path previews) onto the same widget the drive already publishes, rather than creating and registering yet another one.
+`SwerveDrive` builds and publishes its own `Field2d` internally (to `Mechanisms/<name>/field`) and updates it in `updateTelemetry()`, so do not create another one. Call `drive.getField2d()` when vision or autonomous code needs to plot extra objects (e.g. detected AprilTags, path previews) onto the same widget the drive already publishes.
 {% endhint %}
 
 {% hint style="info" %}
-In simulation, `drive.getSimPose()` returns a ground-truth `Pose2d` computed by assuming every module hit its last-commanded `SwerveModuleState` perfectly, separate from `getPose()`'s noisy, fused odometry estimate. It's a convenient "known truth" source for a simulated vision subsystem to generate synthetic target detections from, letting you test vision-dependent code without physical hardware. It only advances during `simIterate()` and stays at the configured starting pose on a real robot.
+In simulation, `drive.getSimPose()` returns a ground-truth `Pose2d` computed by assuming every module hit its last-commanded `SwerveModuleVelocity` perfectly, separate from `getPose()`'s noisy, fused odometry estimate. It's a convenient "known truth" source for a simulated vision subsystem to generate synthetic target detections from, letting you test vision-dependent code without physical hardware. It only advances during `simIterate()` and stays at the configured starting pose on a real robot.
 {% endhint %}
 
 {% hint style="success" %}
-**Tuning the `driveToPose()` PID gains live**: with `TelemetryVerbosity.HIGH` (the default), YAMS publishes a "Live Tuning"-style command to SmartDashboard at `Mechanisms/<name>/tuning/driveToPose`, along with a tunable target pose (`autoalign/setpoint/x`/`autoalign/setpoint/y` in meters, `autoalign/setpoint/rot` in degrees) gated by an `autoalign/enabled` boolean, plus tunable translation/rotation P/I/D gains, all under the `Tuning` NetworkTables table. Schedule that command from your dashboard, set `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` to the pose you want and flip `autoalign/enabled` to `true`, and it repeatedly drives toward that pose using whatever gains you edit live in NetworkTables, so you can dial in `withTranslationController(...)`/`withRotationController(...)` without redeploying code. `setRotationPID(...)`/`setTranslationPID(...)` only reset a PID controller when a gain actually changes, so tuning doesn't wipe out the integrator every loop.
+**Tuning the `driveToPose()` PID gains live**: when both `withTranslationController(...)` and `withRotationController(...)` are configured, YAMS publishes a "Live Tuning"-style command at `Mechanisms/<name>/tuning`, along with a tunable target pose (`autoalign/setpoint/x`/`autoalign/setpoint/y` in meters, `autoalign/setpoint/rot` in degrees) gated by an `autoalign/enabled` boolean, plus tunable translation/rotation P/I/D gains, all under the `Tuning` NetworkTables table. Schedule that command from your dashboard, set `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` to the pose you want and flip `autoalign/enabled` to `true`, and it repeatedly drives toward that pose using whatever gains you edit live in NetworkTables, so you can dial in `withTranslationController(...)`/`withRotationController(...)` without redeploying code. `setRotationPID(...)`/`setTranslationPID(...)` only reset a PID controller when a gain actually changes, so tuning doesn't wipe out the integrator every loop.
 {% endhint %}
 {% endstep %}
 
 {% step %}
 #### Create a `SwerveInputStream` and Bind the Default Command
 
-`SwerveInputStream` converts raw joystick values into `ChassisSpeeds` with deadband, cubing, and alliance-relative field orientation applied automatically. Set it as the subsystem's default command in `RobotContainer`.
+`SwerveInputStream` (`yams.commands2.swerve.SwerveInputStream`) converts raw joystick values into field-relative `ChassisVelocities` with deadband, cubing, and alliance-relative field orientation applied automatically. Set it as the subsystem's default command in `RobotContainer`.
 
 <pre class="language-java" data-title="SwerveSubsystem.java" data-line-numbers><code class="lang-java">  // Add this method to SwerveSubsystem
 <strong>  public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier translationX,
 </strong><strong>                                                     DoubleSupplier translationY,
 </strong><strong>                                                     DoubleSupplier rotation) {
-</strong><strong>    return new SwerveInputStream(drive, translationX, translationY, rotation)
+</strong><strong>    return SwerveInputStream.of(drive, translationX, translationY)
+</strong><strong>        .withControllerRotationAxis(rotation)
 </strong><strong>        .withMaximumAngularVelocity(DegreesPerSecond.of(360))
 </strong><strong>        .withMaximumLinearVelocity(MetersPerSecond.of(1))
 </strong><strong>        .withDeadband(0.01)
 </strong><strong>        .withCubeRotationControllerAxis()     // non-linear rotation response
 </strong><strong>        .withCubeTranslationControllerAxis()  // non-linear translation response
-</strong><strong>        .withAllianceRelativeControl();        // alliance-aware field-relative
+</strong><strong>        .withAllianceRelativeControl()        // alliance-aware field-relative
+</strong><strong>        // Publishes the stream's inputs and outputs, and lets you tune it live.
+</strong><strong>        .withTelemetry("Driver", TelemetryVerbosity.HIGH);
 </strong><strong>  }
 </strong>
 </code></pre>
@@ -329,37 +337,41 @@ In simulation, `drive.getSimPose()` returns a ground-truth `Pose2d` computed by 
 <pre class="language-java" data-title="RobotContainer.java" data-line-numbers><code class="lang-java">public class RobotContainer {
 
 <strong>  private final SwerveSubsystem drive = new SwerveSubsystem();
-</strong><strong>  private final CommandXboxController xboxController = new CommandXboxController(0);
+</strong><strong>  private final CommandGamepad controller = new CommandGamepad(0);
 </strong>
   public RobotContainer() {
-    DriverStation.silenceJoystickConnectionWarning(true);
-
 <strong>    // Left stick translates, right stick X rotates.
+</strong><strong>    // Pushing a stick forward or left reads negative, so negate each axis to match
+</strong><strong>    // WPILib's +X forward, +Y left, counterclockwise positive convention.
 </strong><strong>    drive.setDefaultCommand(drive.drive(
 </strong><strong>        drive.getChassisSpeedsSupplier(
-</strong><strong>            xboxController::getLeftY,
-</strong><strong>            xboxController::getLeftX,
-</strong><strong>            xboxController::getRightX)));
+</strong><strong>            () -> -controller.getLeftY(),
+</strong><strong>            () -> -controller.getLeftX(),
+</strong><strong>            () -> -controller.getRightX())));
 </strong>
     configureBindings();
   }
 
   private void configureBindings() {
-<strong>    xboxController.button(5).whileTrue(drive.driveToPose(
+<strong>    controller.leftBumper().whileTrue(drive.driveToPose(
 </strong><strong>        new Pose2d(Meters.of(3), Meters.of(3), Rotation2d.fromDegrees(30))));
 </strong>  }
 }
 </code></pre>
+
+`CommandGamepad` comes from `org.wpilib.command2.button.CommandGamepad`. See [Swerve Input Stream](../details/swerve-input-stream.md) for everything the stream can do, including its telemetry and live tuning.
 {% endstep %}
 {% endstepper %}
 
 ## Complete Example
 
-The following files show a complete swerve drive implementation matching the hardware described in this tutorial.
+The following files from the YAMS `simple_robot-2027` Commands v2 example show a complete swerve drive implementation matching the hardware described in this tutorial.
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/swerve_drive/java/frc/robot/subsystems/SwerveSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/SwerveSubsystem.java" %}
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/swerve_drive/java/frc/robot/RobotContainer.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/RobotContainer.java" %}
+
+For the Commands v3 version of the same drive (`yams.commands3`, with a `Mechanism` class and coroutine commands), see `SwerveMechanism.java` in [`examples/commands3/simple_robot-2027`](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/simple_robot-2027).
 
 ## Next Steps
 

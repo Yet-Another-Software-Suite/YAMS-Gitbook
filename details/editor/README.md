@@ -51,7 +51,7 @@ An easy way to do this with YAMS is by using `GearBox.fromReductionStages`and `S
 YAMS does its best to prevent simple mistakes from turning into big headaches, so it will reset your previous smart motor controller configuration from other runs by default. You can configure this behavior with
 
 ```java
-SmartMotorController config = new SmartMotorControllerConfig() //...
+SmartMotorControllerConfig config = new SmartMotorControllerConfig(this) //...
                                 .withResetPreviousConfig(false);
 ```
 
@@ -81,8 +81,10 @@ You can learn how to tune PID and feedforwards from WPILib here!
 SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
   // Feedback Constants (PID Constants)
-  .withClosedLoopController(50, 0, 0, DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
-  .withSimClosedLoopController(50, 0, 0, DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+  .withClosedLoopController(50, 0, 0)
+  .withSimClosedLoopController(50, 0, 0)
+  // Motion Profile Constraints
+  .withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
   // Feedforward Constants
   .withFeedforward(new ArmFeedforward(0, 0, 0))
   .withSimFeedforward(new ArmFeedforward(0, 0, 0))
@@ -92,7 +94,7 @@ SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 
 ## External encoders
 
-At the moment YAMS will only accept external encoders of the same vendor as this is the only vendor-supported way of using them. It is possible for external encoders to not have the same gearing as the rotor to the mechanism or not be a 1:1 to the mechanism so we do provide an external encoder gearing configuration option!
+At the moment YAMS will only accept external encoders of the same vendor as this is the only vendor-supported way of using them. See the [feature matrix](feature-matrix.md#external-encoders) for the encoders each wrapper accepts. It is possible for external encoders to not have the same gearing as the rotor to the mechanism or not be a 1:1 to the mechanism so we do provide an external encoder gearing configuration option!
 
 {% hint style="danger" %}
 Absolute encoders cannot go beyond 1 rotation or 360 degrees, even less with discontinuity points!
@@ -116,7 +118,7 @@ Follower motors are not always the same inversion as your main motor so we help 
 
 ```java
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-      .withFollowers(Pair.of(new SparkMax(4, MotorType.kBrushless), false))
+      .withFollowers(Pair.of(new SparkMax(CANPorts.fromBusId(1), 4, MotorType.kBrushless), false))
 ```
 
 ### Loosely Coupled Follower Motors
@@ -128,8 +130,8 @@ Loosely coupled followers **DO NOT** forward Voltage, or DutyCycle requests.
 {% endhint %}
 
 <pre class="language-java"><code class="lang-java">SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this);
-SmartMotorController       motor2      = new TalonFXWrapper(new TalonFX(1), DCMotor.getKrakenX60(1), motor2Config.clone());
-SmartMotorController       motor1      = new SparkWrapper(new SparkMax(2, MotorType.kBrushless), DCMotor.getNeo(1), 
+SmartMotorController       motor2      = new TalonFXWrapper(new TalonFX(1, new CANBus(CANPort.CAN_S0)), DCMotor.getKrakenX60(1), motorConfig.clone());
+SmartMotorController       motor1      = new SparkWrapper(new SparkMax(CANPorts.fromBusId(1), 2, MotorType.kBrushless), DCMotor.getNEO(1), 
 <strong>                                                                motorConfig.withLooselyCoupledFollowers(motor2));
 </strong></code></pre>
 
@@ -168,7 +170,7 @@ Mechanism options like `.withSoftLimits` often will call the `SmartMotorControll
 
 `SmartMotorControllerConfig` has the ability to use a supplied vendor config as the base to overwrite with the `SmartMotorControllerConfig` options. This allows you to set vendor specific configurations easily while creating the `SmartMotorControllerConfig`.
 
-<pre class="language-java"><code class="lang-java">TalonFX                    armMotor      = new TalonFX(1);
+<pre class="language-java"><code class="lang-java">TalonFX                    armMotor      = new TalonFX(1, new CANBus(CANPort.CAN_S0));
 SmartMotorControllerConfig motorConfig   = new SmartMotorControllerConfig(this)
       .withClosedLoopController(1, 0, 0)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))

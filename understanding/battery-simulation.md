@@ -4,7 +4,7 @@ icon: car-battery
 
 # Battery Simulation
 
-YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`), reports its current draw into [`BatterySim`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and writes it to `RoboRioSim`.
+YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`), reports its current draw into [`BatterySim`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and writes it to `RoboRioSim`.
 
 {% hint style="info" %}
 This is automatic. You do not need to call anything for basic voltage sag under combined load, it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](../details/editor/#simulation-without-a-mechanism).
@@ -31,10 +31,10 @@ By default the simulated battery holds a constant nominal voltage and resistance
 {% tabs %}
 {% tab title="Java" %}
 ```java
-import yams.motorcontrollers.simulation.BatterySim;
+import yams.core.motorcontrollers.simulation.BatterySim;
 
 // Somewhere in robotInit(), with a fresh, fully-charged 18Ah battery model:
-BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
+BatterySim.enableDischarge(18.0, Volts.of(12.9), MilliOhms.of(20));
 ```
 
 | Method                                                    | Description                                                                                         |
@@ -53,12 +53,12 @@ The same model is available as `yams::motorcontrollers::simulation::BatterySim`:
 
 // Somewhere during robot setup:
 yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
-    18.0, units::volt_t{12.9}, units::ohm_t{0.020});
+    18.0, wpi::units::volt_t{12.9}, wpi::units::ohm_t{0.020});
 ```
 
 | Method                                                            | Description                                                                         |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `EnableDischarge(double capacityAh, units::volt_t, units::ohm_t)` | Turns on discharge modeling with the given capacity and nominal voltage/resistance. |
+| `EnableDischarge(double capacityAh, wpi::units::volt_t, wpi::units::ohm_t)` | Turns on discharge modeling with the given capacity and nominal voltage/resistance. |
 | `DisableDischarge()`                                              | Reverts to a constant nominal voltage/resistance.                                   |
 | `ResetDischarge()`                                                | Resets the simulated battery back to a full charge.                                 |
 | `GetStateOfCharge()`                                              | Returns the current state of charge from `0` (empty) to `1` (full).                 |
@@ -66,7 +66,7 @@ yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
 {% endtabs %}
 
 {% hint style="warning" %}
-Discharge only affects simulation. On a real robot `BatterySim` is never consulted, the RIO reports the actual battery voltage from hardware.
+Discharge only affects simulation. On a real robot `BatterySim` is never consulted, the SystemCore reports the actual battery voltage from hardware.
 {% endhint %}
 
 {% hint style="info" %}
@@ -85,8 +85,8 @@ Reach for this when:
 {% tabs %}
 {% tab title="Java" %}
 ```java
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import yams.motorcontrollers.simulation.BatterySim;
+import org.wpilib.math.interpolation.InterpolatingDoubleTreeMap;
+import yams.core.motorcontrollers.simulation.BatterySim;
 
 // Model a well-used competition battery that sags earlier and more severely than a new one.
 InterpolatingDoubleTreeMap wornBatteryCurve = new InterpolatingDoubleTreeMap();
@@ -102,7 +102,7 @@ wornBatteryCurve.put(1.00, 12.6);
 
 BatterySim.replaceSOCInterpolation(wornBatteryCurve);
 // Pair with a reduced usable capacity and higher resistance to match a worn battery.
-BatterySim.enableDischarge(15.0, Volts.of(12.6), Milliohms.of(28));
+BatterySim.enableDischarge(15.0, Volts.of(12.6), MilliOhms.of(28));
 ```
 {% endtab %}
 
@@ -120,7 +120,7 @@ std::map<double, double> wornBatteryCurve{
 yams::motorcontrollers::simulation::BatterySim::ReplaceSOCInterpolation(wornBatteryCurve);
 // Pair with a reduced usable capacity and higher resistance to match a worn battery.
 yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
-    15.0, units::volt_t{12.6}, units::ohm_t{0.028});
+    15.0, wpi::units::volt_t{12.6}, wpi::units::ohm_t{0.028});
 ```
 {% endtab %}
 {% endtabs %}
@@ -138,8 +138,8 @@ Sealed lead-acid batteries are far less coulombically efficient than lithium che
 {% tabs %}
 {% tab title="Java" %}
 ```java
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import yams.motorcontrollers.simulation.BatterySim;
+import org.wpilib.math.interpolation.InterpolatingDoubleTreeMap;
+import yams.core.motorcontrollers.simulation.BatterySim;
 
 InterpolatingDoubleTreeMap measuredDerating = new InterpolatingDoubleTreeMap();
 measuredDerating.put(0.9, 1.000);
@@ -148,7 +148,7 @@ measuredDerating.put(40.0, 0.65);
 measuredDerating.put(60.0, 0.55);
 
 BatterySim.replaceCapacityDerating(measuredDerating);
-BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
+BatterySim.enableDischarge(18.0, Volts.of(12.9), MilliOhms.of(20));
 ```
 {% endtab %}
 
@@ -163,7 +163,7 @@ std::map<double, double> measuredDerating{
 
 yams::motorcontrollers::simulation::BatterySim::ReplaceCapacityDerating(measuredDerating);
 yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
-    18.0, units::volt_t{12.9}, units::ohm_t{0.020});
+    18.0, wpi::units::volt_t{12.9}, wpi::units::ohm_t{0.020});
 ```
 {% endtab %}
 {% endtabs %}

@@ -20,6 +20,10 @@ Using a `Sensor` wrapper will NEVER be as fast or efficient as using the origina
 You can create a sensor using `SensorConfig` which is where you define the Sensor name, and fields.
 
 ```java
+import org.wpilib.hardware.discrete.DigitalInput;
+import yams.core.mechanisms.config.SensorConfig;
+import yams.core.motorcontrollers.simulation.Sensor;
+
 private DigitalInput dio = new DigitalInput(0); // Standard DIO
 private final Sensor coralSensor = new SensorConfig("CoralDetectorBeamBreak") // Name of the sensor 
   .withField("Beam", dio::get, false) // Add a Field to the sensor named "Beam" whose value is dio.get() and defaults to false
@@ -32,7 +36,7 @@ You can use `int`, `long`, `double`, or `bool` as sensor field values.
 
 ## How do I add simulated values to a sensor?
 
-You can add simulated values to an existing `Sensor` using `Sensor.addSimTrigger` like below.
+You can add simulated values to an existing `Sensor` using `Sensor.addSimTrigger(field, value, trigger)` like below. The value is a `HALValue` (`org.wpilib.hardware.hal.HALValue`), for example `HALValue.makeBoolean(true)`.
 
 <pre class="language-java"><code class="lang-java">private DigitalInput dio = new DigitalInput(0); // Standard DIO
 private final Sensor coralSensor = new SensorConfig("CoralDetectorBeamBreak") // Name of the sensor 
@@ -41,7 +45,7 @@ private final Sensor coralSensor = new SensorConfig("CoralDetectorBeamBreak") //
   .getSensor(); // Get the sensor.
 
 ...
-<strong>coralSensor.addSimTrigger("Beam",()->arm.isNear(Degrees.of(40), Degrees.of(2)), true); // Change "Beam" field to true when the arm is near 40deg +- 2deg
+<strong>coralSensor.addSimTrigger("Beam", HALValue.makeBoolean(true), ()->arm.isNear(Degrees.of(40), Degrees.of(2))); // Change "Beam" field to true when the arm is near 40deg +- 2deg
 </strong></code></pre>
 
 ## What does this look like?
@@ -70,12 +74,26 @@ Instead of doing `dio.get()` in the example, you would have to do `coralSensor.g
 You can set the sensor value manually by getting the field (`.getField`) from a sensor and calling the `.set` function. It will overwrite the previous value of the sensor field until its changed from glass or via `.set` again.
 
 {% hint style="info" %}
-This will only change the sensor value when running under simulations. It does not affect the real value whenr unning on the robot.
+This will only change the sensor value when running under simulations. It does not affect the real value when running on the robot.
 {% endhint %}
 
+{% tabs %}
+{% tab title="Commands v2" %}
 ```java
 public void setBeamBreakWhenArmIsLow()
 {
-    new Trigger(arm::isLow).onTrue(Commands.run(()->coralSensor.getField("Beam").set(true)));
+    arm.lte(Degrees.of(10)).onTrue(Commands.runOnce(()->coralSensor.getField("Beam").set(true)));
 }
 ```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+public void setBeamBreakWhenArmIsLow()
+{
+    arm.lte(Degrees.of(10)).onTrue(Command.noRequirements(coroutine -> coralSensor.getField("Beam").set(true))
+                                          .named("Set Beam Break"));
+}
+```
+{% endtab %}
+{% endtabs %}

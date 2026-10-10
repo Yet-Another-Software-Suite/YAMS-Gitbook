@@ -10,9 +10,10 @@ Each `SmartMotorController` wrapper only accepts the encoders from its own vendo
 
 | Wrapper | Supported absolute encoders |
 |---|---|
-| `SparkWrapper` (SparkMax / SparkFlex) | `SparkAbsoluteEncoder` (`armMotor.getAbsoluteEncoder()`) |
+| `SparkWrapper` (SparkMax / SparkFlex) | `SparkAbsoluteEncoder` (`armMotor.getAbsoluteEncoder()`), `DetachedEncoder` |
 | `TalonFXWrapper` (TalonFX / Kraken) | `CANcoder`, `CANdi` |
 | `TalonFXSWrapper` (TalonFXS / Minion) | `CANcoder`, `CANdi` |
+| `NovaWrapper` (Thrifty Nova) | `FeedbackSensorType.ABS` (absolute encoder on the Nova's data port), Thrifty `CanEncoder` |
 
 ## Check your inversion
 
@@ -48,7 +49,7 @@ An absolute encoder wraps at its **discontinuity point**, the angle at which the
 ```
 
 {% hint style="info" %}
-`SparkWrapper` **requires** the discontinuity point to be set explicitly. For `TalonFXWrapper` and `TalonFXSWrapper` it is optional but recommended for clarity.
+If you don't set a discontinuity point, `SparkWrapper` and `NovaWrapper` use `Rotations.of(1.0)` (the **\[0, 1\]** range). Setting it explicitly is recommended for clarity on every wrapper. On a `SparkWrapper`, setting both `.withExternalEncoderGearing(...)` and a discontinuity point raises an alert, because the discontinuity point is not scaled by the gearing.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -65,6 +66,10 @@ Move the arm to exactly horizontal (0° from horizontal, parallel to the ground)
 
 Negative offsets are automatically converted to their positive equivalent (1 rotation is added internally).
 
+The offset is applied to the absolute encoder itself (for example the CANcoder's magnet offset or the SPARK's absolute encoder zero offset). `TalonFXWrapper` and `TalonFXSWrapper` no longer set a separate rotor offset on the motor.
+
+To check the result, read the encoder back through the `SmartMotorController`: `getExternalEncoderMechanismPosition()` returns the absolute encoder's position in mechanism units (empty if there is no external encoder), and `getRelativeMechanismPosition()` returns the motor's built-in relative encoder position. With the offset set correctly, both should read about 0° with the arm horizontal.
+
 ## Configure the simulation starting position
 
 Simulation has no physical encoder, so the absolute encoder reading is unavailable in sim. Use `.withSimStartingPosition()` to tell the simulator where the arm starts. On a real robot this value is ignored, the true encoder reading is always used.
@@ -80,7 +85,7 @@ Simulation has no physical encoder, so the absolute encoder reading is unavailab
 ### SparkMax + SparkAbsoluteEncoder
 
 ```java
-private final SparkMax armMotor = new SparkMax(1, MotorType.kBrushless);
+private final SparkMax armMotor = new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless);
 
 private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
@@ -96,7 +101,7 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withExternalEncoderInverted(false)
     .withExternalEncoderGearing(1.0)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
-    .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range, required for SparkWrapper
+    .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
     .withUseExternalFeedbackEncoder(true)
     .withSimStartingPosition(Degrees.of(0));
 
@@ -106,8 +111,8 @@ private final SmartMotorController smc = new SparkWrapper(armMotor, DCMotor.getN
 ### TalonFX + CANcoder
 
 ```java
-private final TalonFX armMotor = new TalonFX(1);
-private final CANcoder cancoder = new CANcoder(2);
+private final TalonFX armMotor = new TalonFX(1, new CANBus(CANPort.CAN_S0));
+private final CANcoder cancoder = new CANcoder(2, new CANBus(CANPort.CAN_S0));
 
 private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
@@ -135,8 +140,8 @@ private final SmartMotorController smc = new TalonFXWrapper(armMotor, DCMotor.ge
 The `CANdi` connects to the TalonFXS via its PWM port and is treated the same as a CANcoder for configuration purposes.
 
 ```java
-private final TalonFXS armMotor = new TalonFXS(1);
-private final CANdi candi = new CANdi(2);
+private final TalonFXS armMotor = new TalonFXS(1, new CANBus(CANPort.CAN_S0));
+private final CANdi candi = new CANdi(2, new CANBus(CANPort.CAN_S0));
 
 private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
@@ -158,6 +163,41 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
 private final SmartMotorController smc = new TalonFXSWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
 ```
 
+### Thrifty Nova + absolute encoder on the data port
+
+Pass `FeedbackSensorType.ABS` as the external encoder and tell the Nova which encoder is wired to its data port through the vendor config. A Thrifty `CanEncoder` on the same CAN bus works too: pass the `CanEncoder` object to `.withExternalEncoder(...)` instead.
+
+```java
+private final Nova armMotor = new Nova(0, 1, MotorType.NEO);
+
+private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(4, 0, 0)
+    .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
+    .withFeedforward(new ArmFeedforward(0, 0, 0, 0))
+    .withSoftLimits(Degrees.of(-30), Degrees.of(100))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+    .withZeroPower(MotorMode.BRAKE)
+    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
+    .withStatorCurrentLimit(Amps.of(40))
+    .withVendorConfig(NovaConfig.absoluteEncoderType(AbsoluteEncoderType.REV_ENCODER))
+    .withExternalEncoder(FeedbackSensorType.ABS)
+    .withExternalEncoderInverted(false)
+    .withExternalEncoderGearing(1.0)
+    .withExternalEncoderZeroOffset(Degrees.of(33.25))
+    .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
+    .withUseExternalFeedbackEncoder(true)
+    .withSimStartingPosition(Degrees.of(0));
+
+private final SmartMotorController smc = new NovaWrapper(armMotor, DCMotor.getNEO(1), motorConfig);
+```
+
+The Nova types come from ThriftyLib: `com.thrifty.nova.Nova`, `com.thrifty.nova.NovaConfig`, `com.thrifty.core.Motor.MotorType`, `com.thrifty.core.Motor.FeedbackSensorType` and `com.thrifty.core.Motor.AbsoluteEncoderType`. See [How do I use a Thrifty Nova?](how-do-i-use-a-thrifty-nova.md) for the rest of the Nova setup.
+
+{% hint style="info" %}
+Imports for these examples: `SmartMotorControllerConfig` comes from `yams.commands2.config` (or `yams.commands3.config` for Commands v3). `SmartMotorController`, the wrappers (`yams.core.motorcontrollers.local.SparkWrapper`, `yams.core.motorcontrollers.local.NovaWrapper`, `yams.core.motorcontrollers.remote.TalonFXWrapper`, `yams.core.motorcontrollers.remote.TalonFXSWrapper`), `yams.core.motorcontrollers.enums.ControlMode`/`MotorMode`, `yams.core.gearing.*` and `yams.core.telemetry.enums.TelemetryVerbosity` all come from `yams.core`. CTRE devices take a `com.ctre.phoenix6.CANBus`, built here from WPILib's `org.wpilib.hardware.bus.CANPort`.
+{% endhint %}
+
 ***
 
 ## Using absolute encoders on a Pivot
@@ -166,6 +206,6 @@ The exact same external encoder setup described above works identically for `Piv
 
 ## Code Reference
 
-The exponential arm example demonstrates configuring an absolute encoder with an offset:
+The arm example demonstrates configuring an arm with a CANcoder as its external feedback encoder:
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/exponential_arm/java/frc/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ArmSubsystem.java" %}

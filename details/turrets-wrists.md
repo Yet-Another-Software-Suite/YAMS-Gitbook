@@ -13,7 +13,22 @@ Turrets and Wrists are known as Pivots in YAMS. They are different from Arms as 
 From the YAMS examples we have the following as a basic config.
 
 ```java
-TalonFXS                   turretMotor = new TalonFXS(1);
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.hardware.TalonFXS;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.system.DCMotor;
+import yams.commands2.config.SmartMotorControllerConfig; // yams.commands3.config for Commands v3
+import yams.commands2.mechanisms.Pivot;                  // yams.commands3.mechanisms for Commands v3
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.PivotConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.remote.TalonFXSWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+
+TalonFXS                   turretMotor = new TalonFXS(1, new CANBus(CANPort.CAN_S0));
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withClosedLoopController(4, 0, 0)
@@ -67,4 +82,4 @@ MOI also drives the current draw reported to [Battery Simulation](../understandi
 
 ## Code Reference
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/simple_robot/src/main/java/frc/robot/subsystems/TurretSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/TurretSubsystem.java" %}

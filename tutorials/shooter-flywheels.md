@@ -22,10 +22,10 @@ This `Shooter` will be using the following hardware specs and control details
 
 * `SparkMax` controlling the `Shooter`
 * `12:1` GearBox on the `Shooter`
-* Pressing `A` will make the `Shooter` go to 60 RPM
-* Pressing `B` will make the `Shooter` go to 300 RPM
-* Pressing `X` will make the `Shooter` speed up.
-* Pressing `Y` will make the `Shooter` slow down.
+* Pressing the bottom face button (`A` on an Xbox controller) will make the `Shooter` go to 60 RPM
+* Pressing the right face button (`B` on an Xbox controller) will make the `Shooter` go to 300 RPM
+* Pressing the left face button (`X` on an Xbox controller) will make the `Shooter` speed up.
+* Pressing the top face button (`Y` on an Xbox controller) will make the `Shooter` slow down.
 
 ## Lets create a WPILib Command-Based Project!
 
@@ -46,7 +46,7 @@ This will bring up the “New Project Creator Window:”
 <figure><img src="../.gitbook/assets/image (7).png" alt=""><figcaption></figcaption></figure>
 
 1. Click on **Select a project type (Example or Template)**
-2. Select **Template** then **Java** then **Command Robot**
+2. Select **Template** then **Java** then **Command v2 Robot**
 3. Click on **Select a new project folder** and select a folder to store your robot project in.
 4. Fill in **Project Name** with the name of your robot code project.
 5. Enter your **Team Number** in so you can deploy to your robot.
@@ -62,9 +62,13 @@ Congratulations! You now have a Command Based robot project!
 
 ### Install YAMS!
 
-Click on the **WPILib logo** on the **left** pane. Scroll down to **Yet Another Mechanism System** and click **Install**!
+YAMS ships as two vendordeps, one for each WPILib command framework. This tutorial uses Commands v2, so install **Yet Another Mechanism System (Commands v2)**. Only install one of the two; they conflict with each other.
+
+Click on the **WPILib logo** on the **left** pane. Scroll down to **Yet Another Mechanism System (Commands v2)** and click **Install**!
 
 <figure><img src="../.gitbook/assets/RobotContainer.java - simple_robot - Visual Studio Code 9_2_2025 3_40_21 PM.png" alt=""><figcaption></figcaption></figure>
+
+If it is not in the list, open the command palette with <kbd>Ctrl+Shift+P</kbd>, run **WPILib: Manage Vendor Libraries**, choose **Install new libraries (online)** and paste `https://cdn.yassrobotics.com/yams_commands2.json`. See [Installation](../README.md#installation) for the Commands v3 vendordep and the offline install.
 
 Congratulations you have now installed YAMS! :tada:
 
@@ -80,21 +84,23 @@ We are going to start by configuring out motor controller.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-<strong>import static edu.wpi.first.units.Units.Amps;
-</strong><strong>import static edu.wpi.first.units.Units.DegreesPerSecond;
-</strong><strong>import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
-</strong><strong>import static edu.wpi.first.units.Units.Seconds;
+<strong>import static org.wpilib.units.Units.Amps;
+</strong><strong>import static org.wpilib.units.Units.DegreesPerSecond;
+</strong><strong>import static org.wpilib.units.Units.DegreesPerSecondPerSecond;
+</strong><strong>import static org.wpilib.units.Units.Seconds;
 </strong>
-<strong>import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-</strong>import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-<strong>import yams.mechanisms.SmartMechanism;
-</strong><strong>import yams.motorcontrollers.SmartMotorControllerConfig;
-</strong><strong>import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-</strong><strong>import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-</strong><strong>import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
+<strong>import org.wpilib.math.controller.SimpleMotorFeedforward;
+</strong>import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+<strong>import yams.core.mechanisms.SmartMechanism;
+</strong><strong>import yams.commands2.config.SmartMotorControllerConfig;
+</strong><strong>import yams.core.motorcontrollers.enums.ControlMode;
+</strong><strong>import yams.core.motorcontrollers.enums.MotorMode;
+</strong><strong>import yams.core.telemetry.enums.TelemetryVerbosity;
 </strong>
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -173,25 +179,28 @@ Now we add it to the `ExampleSubsystem.java`
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.DegreesPerSecond;
+import static org.wpilib.units.Units.DegreesPerSecondPerSecond;
+import static org.wpilib.units.Units.Seconds;
 
 <strong>import com.revrobotics.spark.SparkLowLevel.MotorType;
 </strong><strong>import com.revrobotics.spark.SparkMax;
+import org.wpilib.hardware.bus.CANPort;
 </strong>
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.mechanisms.SmartMechanism;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.SmartMechanism;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -215,7 +224,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withStatorCurrentLimit(Amps.of(40));
 
 <strong>  // Vendor motor controller object
-</strong><strong>  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+</strong><strong>  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 </strong>
 
   /** Creates a new ExampleSubsystem. */
@@ -267,28 +276,31 @@ Our `SmartMotorController` will easily configure and interface with the vendor m
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.DegreesPerSecond;
+import static org.wpilib.units.Units.DegreesPerSecondPerSecond;
+import static org.wpilib.units.Units.Seconds;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import org.wpilib.hardware.bus.CANPort;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
-<strong>import edu.wpi.first.math.system.plant.DCMotor;
-</strong>import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.mechanisms.SmartMechanism;
-<strong>import yams.motorcontrollers.SmartMotorController;
-</strong>import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-<strong>import yams.motorcontrollers.local.SparkWrapper;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+<strong>import org.wpilib.math.system.DCMotor;
+</strong>import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.SmartMechanism;
+<strong>import yams.core.motorcontrollers.SmartMotorController;
+</strong>import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+<strong>import yams.core.motorcontrollers.local.SparkWrapper;
 </strong>
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -312,7 +324,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withStatorCurrentLimit(Amps.of(40));
 
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 
 <strong>  // Create our SmartMotorController from our Spark and config with the NEO.
 </strong><strong>  private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
@@ -367,32 +379,36 @@ Our `FlyWheel` will easily configure the `SmartMotorController` and create a sim
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
-<strong>import static edu.wpi.first.units.Units.Feet;
-</strong><strong>import static edu.wpi.first.units.Units.Pounds;
-</strong>import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.DegreesPerSecond;
+import static org.wpilib.units.Units.DegreesPerSecondPerSecond;
+<strong>import static org.wpilib.units.Units.Feet;
+</strong><strong>import static org.wpilib.units.Units.Pounds;
+</strong>import static org.wpilib.units.Units.Seconds;
+import static org.wpilib.units.Units.Inches;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import org.wpilib.hardware.bus.CANPort;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.mechanisms.SmartMechanism;
-<strong>import yams.mechanisms.config.FlyWheelConfig;
-</strong><strong>import yams.mechanisms.velocity.FlyWheel;
-</strong>import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.SmartMechanism;
+<strong>import yams.core.mechanisms.config.FlyWheelConfig;
+</strong><strong>import yams.commands2.mechanisms.FlyWheel;
+</strong>import yams.core.motorcontrollers.SmartMotorController;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+import yams.core.motorcontrollers.local.SparkWrapper;
 
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -416,7 +432,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withStatorCurrentLimit(Amps.of(40));
 
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
   private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
@@ -481,35 +497,39 @@ We use the `FlyWheel` class as a interface to create commands!
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Feet;
-import static edu.wpi.first.units.Units.Pounds;
-<strong>import static edu.wpi.first.units.Units.Second;
-</strong><strong>import static edu.wpi.first.units.Units.Seconds;
-</strong><strong>import static edu.wpi.first.units.Units.Volts;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.DegreesPerSecond;
+import static org.wpilib.units.Units.DegreesPerSecondPerSecond;
+import static org.wpilib.units.Units.Feet;
+import static org.wpilib.units.Units.Pounds;
+<strong>import static org.wpilib.units.Units.Second;
+</strong><strong>import static org.wpilib.units.Units.Seconds;
+</strong><strong>import static org.wpilib.units.Units.Volts;
+import static org.wpilib.units.Units.Inches;
 </strong>
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import org.wpilib.hardware.bus.CANPort;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-<strong>import edu.wpi.first.units.measure.AngularVelocity;
-</strong>import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.mechanisms.SmartMechanism;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.mechanisms.velocity.FlyWheel;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+<strong>import org.wpilib.units.measure.AngularVelocity;
+</strong>import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.SmartMechanism;
+import yams.core.mechanisms.config.FlyWheelConfig;
+import yams.commands2.mechanisms.FlyWheel;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+import yams.core.motorcontrollers.local.SparkWrapper;
 
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -533,7 +553,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withStatorCurrentLimit(Amps.of(40));
 
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
   private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
@@ -558,7 +578,7 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>   * Runs the shooter at the given velocity.
 </strong><strong>   *
 </strong><strong>   * @param speed Speed to set.
-</strong><strong>   * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
+</strong><strong>   * @return {@link org.wpilib.command2.RunCommand}
 </strong><strong>   */
 </strong><strong>  public Command run(AngularVelocity speed) {return shooter.run(speed);}
 </strong>  
@@ -569,19 +589,11 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>   */
 </strong><strong>  public void setVelocitySetpoint(AngularVelocity speed) {shooter.setMechanismVelocitySetpoint(speed);}
 </strong>  
-  /**
-   * Runs the shooter at the given velocity.
-   *
-   * @param speed Speed to set.
-   * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
-   */
-  public Command run(AngularVelocity speed) {return shooter.run(speed);}
-
 <strong>  /**
 </strong><strong>   * Set the dutycycle of the shooter.
 </strong><strong>   *
 </strong><strong>   * @param dutyCycle DutyCycle to set.
-</strong><strong>   * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
+</strong><strong>   * @return {@link org.wpilib.command2.RunCommand}
 </strong><strong>   */
 </strong><strong>  public Command set(double dutyCycle) {return shooter.set(dutyCycle);}
 </strong>
@@ -637,18 +649,18 @@ We bind buttons to use the `Commands` from our `FlyWheel`
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package first.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import first.robot.Constants.OperatorConstants;
+import first.robot.commands.Autos;
+import first.robot.commands.ExampleCommand;
+import first.robot.subsystems.ExampleSubsystem;
 
-<strong>import static edu.wpi.first.units.Units.RPM;
+<strong>import static org.wpilib.units.Units.RPM;
 </strong>
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.button.CommandGamepad;
+import org.wpilib.command2.button.Trigger;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -658,11 +670,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  private final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandGamepad driverController =
+      new CommandGamepad(OperatorConstants.DRIVER_CONTROLLER_PORT);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -670,28 +681,26 @@ public class RobotContainer {
     configureBindings();
 
 <strong>    // Set the default command to force the shooter rest.
-</strong><strong>    m_exampleSubsystem.setDefaultCommand(m_exampleSubsystem.set(0));
+</strong><strong>    exampleSubsystem.setDefaultCommand(exampleSubsystem.set(0));
 </strong>  }
 
   /**
    * Use this method to define your trigger->command mappings. Triggers can be created via the
    * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
+   * predicate, or via the named factories in {@link org.wpilib.command2.button.CommandGenericHID}'s
+   * subclasses for {@link CommandGamepad Gamepad} gamepads or {@link
+   * org.wpilib.command2.button.CommandJoystick Flight joysticks}.
    */
   private void configureBindings() {
     
-<strong>    // Schedule `run` when the Xbox controller's B button is pressed,
+<strong>    // Schedule `run` while the Gamepad's bottom (A) or right (B) face button is held,
 </strong><strong>    // cancelling on release.
-</strong><strong>    m_driverController.a().whileTrue(m_exampleSubsystem.run(RPM.of(60)));
-</strong><strong>    m_driverController.b().whileTrue(m_exampleSubsystem.run(RPM.of(300)));
-</strong><strong>    // Schedule `set` when the Xbox controller's B button is pressed,
+</strong><strong>    driverController.faceDown().whileTrue(exampleSubsystem.run(RPM.of(60)));
+</strong><strong>    driverController.faceRight().whileTrue(exampleSubsystem.run(RPM.of(300)));
+</strong><strong>    // Schedule `set` while the Gamepad's left (X) or top (Y) face button is held,
 </strong><strong>    // cancelling on release.
-</strong><strong>    m_driverController.x().whileTrue(m_exampleSubsystem.set(0.3));
-</strong><strong>    m_driverController.y().whileTrue(m_exampleSubsystem.set(-0.3));
+</strong><strong>    driverController.faceLeft().whileTrue(exampleSubsystem.set(0.3));
+</strong><strong>    driverController.faceUp().whileTrue(exampleSubsystem.set(-0.3));
 </strong>
   }
 
@@ -702,7 +711,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return Autos.exampleAuto(exampleSubsystem);
   }
 }
 
@@ -716,7 +725,7 @@ We can use our `FlyWheel` in simulation, with the exact same code that will cont
 
 <figure><img src="../.gitbook/assets/image (16).png" alt=""><figcaption></figcaption></figure>
 
-Connect an Xbox controller to your system and drag and drop from **System Joysticks** to **Joystick\[0]**
+Connect a controller to your system and drag and drop from **System Joysticks** to **Joystick\[0]**
 
 Open up the Simulated mechanism with **NetworkTables -> SmartDashboard -> Shooter-> mechanism**
 
@@ -734,8 +743,10 @@ Congratulations on successfully programming your Shooter!! :tada::tada:
 
 ## Complete Example
 
-The following files show a complete, working single-flywheel Shooter implementation.
+The following files show a complete, working single-flywheel Shooter from the YAMS `simple_robot-2027` Commands v2 example. It uses a `TalonFX` instead of the `SparkMax` in this tutorial; the YAMS code is otherwise the same.
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/simple_shooter/java/frc/robot/subsystems/ShooterSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ShooterSubsystem.java" %}
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/simple_shooter/java/frc/robot/RobotContainer.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/RobotContainer.java" %}
+
+For the Commands v3 version of the same robot (a `Mechanism` class and coroutine commands with `yams.commands3`), see [`examples/commands3/simple_robot-2027`](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/simple_robot-2027).

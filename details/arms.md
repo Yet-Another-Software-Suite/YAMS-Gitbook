@@ -13,7 +13,23 @@ In accordance with WPILib standards Arm's are at 0deg when they are parallel fro
 At this point we should have a `SmartMotorController` and a subsystem for our `Arm` which we bound the `SmartMotorControllerConfig` to already.
 
 ```java
-SparkMax                   armMotor    = new SparkMax(1, MotorType.kBrushless);
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.util.CANPorts;
+import org.wpilib.math.controller.ArmFeedforward;
+import org.wpilib.math.system.DCMotor;
+import yams.commands2.config.SmartMotorControllerConfig; // yams.commands3.config for Commands v3
+import yams.commands2.mechanisms.Arm;                    // yams.commands3.mechanisms for Commands v3
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ArmConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+
+SparkMax                   armMotor    = new SparkMax(CANPorts.fromBusId(1), 1, MotorType.kBrushless);
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withClosedLoopController(4, 0, 0)
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
@@ -110,6 +126,6 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 
 ## Code Reference
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/simple_arm/java/frc/robot/subsystems/ArmSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ArmSubsystem.java" %}
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/exponential_arm/java/frc/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}

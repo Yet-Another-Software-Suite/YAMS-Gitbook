@@ -6,6 +6,8 @@ icon: sliders
 
 YAMS Mechanism classes provide two ways to control mechanisms: **direct setpoint methods** inherited from `SmartMechanism`, and **command helper methods** that return `Command` objects. Understanding when to use each is key to writing clean, effective robot code.
 
+The command helpers come from the mechanism classes in `yams.commands2.mechanisms` (Commands v2) or `yams.commands3.mechanisms` (Commands v3). Both have the same method names and arguments; only the returned `Command` and `Trigger` types differ (`org.wpilib.command2.Command` and `org.wpilib.command2.button.Trigger`, or `org.wpilib.command3.Command` and `org.wpilib.command3.Trigger`). The direct setpoint methods come from `yams.core.mechanisms.SmartMechanism` and are the same in both.
+
 ## Overview
 
 | Approach | Example | Returns | Use Case |
@@ -19,9 +21,9 @@ Command helpers are methods on Mechanism classes that return `Command` objects. 
 
 ### Why Use Command Helpers?
 
-1. **Subsystem Requirements** - Commands automatically require their subsystem, preventing conflicts
+1. **Subsystem Requirements** - Commands automatically require their subsystem (or Commands v3 mechanism), preventing conflicts
 2. **Lifecycle Management** - Commands handle starting/stopping the closed loop controller
-3. **Composability** - Easy to chain with `.andThen()`, `.alongWith()`, etc.
+3. **Composability** - Easy to chain with `.andThen()`, `.alongWith()`, etc. in Commands v2, or to `await` inside a coroutine in Commands v3
 4. **Trigger Integration** - Work directly with button triggers like `controller.a().onTrue()`
 5. **Naming** - Commands are automatically named for debugging
 
@@ -32,7 +34,7 @@ Command helpers are methods on Mechanism classes that return `Command` objects. 
 ```java
 // Run continuously to an angle (use for teleop)
 arm.run(Degrees.of(45))
-arm.run(() -> joystick.getY() * 90)  // Supplier version
+arm.run(() -> Degrees.of(joystick.getY() * 90))  // Supplier version
 arm.setAngle(Degrees.of(45))         // Alias for run()
 
 // Run to angle and end when reached (use in autonomous sequences)
@@ -67,7 +69,6 @@ elevator.setVoltage(Volts.of(6))
 // Run continuously at a velocity (use for teleop)
 flywheel.run(RPM.of(5000))
 flywheel.run(() -> RPM.of(targetRPM))
-flywheel.setSpeed(RPM.of(5000))      // Alias for run()
 
 // Run to velocity and end when reached (use for spin-up sequences)
 flywheel.runTo(RPM.of(5000), RPM.of(100))  // with tolerance
@@ -83,6 +84,8 @@ flywheel.setVoltage(Volts.of(10))
 
 ### Example: Button Bindings
 
+{% tabs %}
+{% tab title="Commands v2" %}
 ```java
 // Teleop controls - use run() for continuous control
 controller.a().whileTrue(arm.run(Degrees.of(45)));
@@ -97,6 +100,25 @@ controller.leftBumper().onTrue(
         .andThen(intake.feedNote())
 );
 ```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+// Teleop controls - use run() for continuous control
+controller.a().whileTrue(arm.run(Degrees.of(45)));
+controller.b().whileTrue(arm.run(Degrees.of(-30)));
+controller.x().whileTrue(elevator.run(Meters.of(1.0)));
+controller.y().whileTrue(flywheel.run(RPM.of(5000)));
+
+// Autonomous-style - await each runTo() inside a coroutine instead of chaining
+controller.leftBumper().onTrue(Command.noRequirements(coroutine -> {
+  coroutine.await(arm.runTo(Degrees.of(90), Degrees.of(2)));
+  coroutine.await(shooter.runTo(RPM.of(5000), RPM.of(50)));
+  coroutine.await(intake.feedNote());
+}).named("Aim And Shoot"));
+```
+{% endtab %}
+{% endtabs %}
 
 ## Direct Setpoint Methods
 
@@ -116,7 +138,7 @@ void setMechanismVelocitySetpoint(AngularVelocity vel)  // Rotational velocity
 void setMeasurementVelocitySetpoint(LinearVelocity vel) // Linear velocity (Elevator, FlyWheel)
 
 // Open loop setpoints
-void setMechanismVoltageSetpoint(Voltage volts)     // Voltage control
+void setVoltageSetpoint(Voltage volts)              // Voltage control
 void setDutyCycleSetpoint(double dutyCycle)         // Duty cycle [-1, 1]
 ```
 
@@ -160,9 +182,27 @@ public class ComplexArmCommand extends Command {
 }
 ```
 
+In Commands v3 there are no command classes with `execute()`. Write the same logic as a `while (true)` coroutine on your mechanism:
+
+```java
+public Command complexArmCommand(Supplier<Angle> targetSupplier) {
+  return run(coroutine -> {
+    while (true) {
+      Angle target = targetSupplier.get();
+      // Apply custom logic before setting
+      if (arm.getAngle().lt(Degrees.of(0))) {
+        target = target.plus(Degrees.of(5)); // Offset when below horizontal
+      }
+      arm.setMechanismPositionSetpoint(target);
+      coroutine.yield();
+    }
+  }).named("Complex Arm Command");
+}
+```
+
 ## Setpoint Method Support Matrix
 
-Not all setpoint methods are supported by all Mechanism classes. Methods that don't apply throw `UnsupportedOperationException` or `RuntimeException`.
+Every Mechanism class inherits all of these methods, but not all of them make sense for every mechanism. "No" below means the method does not apply to that mechanism.
 
 ### Position Setpoint Methods
 
@@ -184,45 +224,68 @@ Not all setpoint methods are supported by all Mechanism classes. Methods that do
 
 | Method | Arm | Pivot | Elevator | FlyWheel |
 |--------|-----|-------|----------|----------|
-| `setMechanismVoltageSetpoint(Voltage)` | Yes | Yes | Yes | Yes |
+| `setVoltageSetpoint(Voltage)` | Yes | Yes | Yes | Yes |
 | `setDutyCycleSetpoint(double)` | Yes | Yes | Yes | Yes |
 
 {% hint style="warning" %}
-**Unsupported Methods**: Calling an unsupported method (like `setMeasurementPositionSetpoint(Distance)` on an `Arm`) will throw a `RuntimeException`. Check the matrix above before using direct setpoint methods.
+**Linear Methods**: The `Distance` and `LinearVelocity` methods convert through the mechanism circumference in the `SmartMotorControllerConfig`. Calling one without a circumference configured (like `setMeasurementPositionSetpoint(Distance)` on an `Arm`) throws a `SmartMotorControllerConfigurationException`, and `FlyWheel.setMeasurementVelocitySetpoint(LinearVelocity)` throws a `FlyWheelConfigurationException` if the FlyWheel diameter is not set. Check the matrix above before using direct setpoint methods.
 {% endhint %}
 
-## Checking Position with isNear()
+## Checking Position with near() and isNear()
 
-To check if a mechanism is near a target position, use the `isNear()` method which returns a `Trigger`:
+To check if a mechanism is near a target, use `near()`, which returns a `Trigger`:
 
 ```java
 // Arm / Pivot - uses Angle.isNear() internally
-Trigger nearTarget = arm.isNear(Degrees.of(45), Degrees.of(2));
+Trigger nearTarget = arm.near(Degrees.of(45), Degrees.of(2));
 
 // Elevator - uses Distance.isNear() internally  
-Trigger nearHeight = elevator.isNear(Meters.of(1.0), Centimeters.of(2));
+Trigger nearHeight = elevator.near(Meters.of(1.0), Centimeters.of(2));
 
 // FlyWheel - uses AngularVelocity.isNear() internally
-Trigger atSpeed = flywheel.isNear(RPM.of(5000), RPM.of(100));
+Trigger atSpeed = flywheel.near(RPM.of(5000), RPM.of(100));
 ```
 
 These methods use WPILib's built-in `isNear()` function on the `Angle`, `Distance`, and `AngularVelocity` measure classes for accurate tolerance checking.
 
-### Using isNear() in Commands
+{% hint style="info" %}
+The `Trigger` factory used to be called `isNear()` and was renamed to `near()` to match the other Trigger factories (`gte()`, `lte()`, `between()`, `max()`, `min()`). `isNear()` with the same arguments still exists and returns a plain `boolean`, for use outside a `Command` or `Trigger`.
+{% endhint %}
 
+### Using near() in Commands
+
+{% tabs %}
+{% tab title="Commands v2" %}
 ```java
 // Wait until arm is near target
-Commands.waitUntil(arm.isNear(Degrees.of(45), Degrees.of(1)))
+Commands.waitUntil(arm.near(Degrees.of(45), Degrees.of(1)))
 
 // Conditional logic based on position
-arm.isNear(Degrees.of(90), Degrees.of(5)).onTrue(ledSubsystem.setGreen());
+arm.near(Degrees.of(90), Degrees.of(5)).onTrue(ledSubsystem.setGreen());
 
-// In a command's isFinished()
+// In a command's isFinished(), use the boolean isNear()
 @Override
 public boolean isFinished() {
-    return arm.isNear(targetAngle, tolerance).getAsBoolean();
+    return arm.isNear(targetAngle, tolerance);
 }
 ```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+// Wait until arm is near target, inside a coroutine
+coroutine.waitUntil(arm.near(Degrees.of(45), Degrees.of(1)));
+
+// Conditional logic based on position
+arm.near(Degrees.of(90), Degrees.of(5)).onTrue(leds.setGreen());
+
+// Plain boolean check, e.g. in an if statement inside a coroutine
+if (arm.isNear(targetAngle, tolerance)) {
+  // ...
+}
+```
+{% endtab %}
+{% endtabs %}
 
 ## Decision Guide
 
@@ -259,7 +322,7 @@ public boolean isFinished() {
 3. **Use runTo() for Sequences** - When you need to wait for the mechanism to reach a target
 4. **Use Direct Methods for IO** - When implementing AdvantageKit IO or custom commands
 5. **Always Check Support** - Verify the method is supported before using direct setpoint methods
-6. **Use Triggers for State** - Use `isNear()`, `max()`, `min()` triggers instead of polling
+6. **Use Triggers for State** - Use `near()`, `max()`, `min()` triggers instead of polling
 
 ## See Also
 

@@ -34,15 +34,15 @@ This `DoubleFlyWheel` will use the following hardware specs and control details:
 * Two `TalonFX` (Kraken X60) motors controlling each flywheel independently
 * `3:1` GearBox on each flywheel
 * 4 inch diameter, 1 pound flywheels
-* Pressing `A` will set both flywheels to 3000 RPM (neutral spin)
-* Pressing `B` will set upper to 3500 RPM, lower to 2500 RPM (backspin)
-* Pressing `X` will set upper to 2500 RPM, lower to 3500 RPM (topspin)
-* Pressing `Y` will stop both flywheels
+* Pressing the bottom face button (`A` on an Xbox controller) will set both flywheels to 3000 RPM (neutral spin)
+* Pressing the right face button (`B` on an Xbox controller) will set upper to 3500 RPM, lower to 2500 RPM (backspin)
+* Pressing the left face button (`X` on an Xbox controller) will set upper to 2500 RPM, lower to 3500 RPM (topspin)
+* Pressing the top face button (`Y` on an Xbox controller) will stop both flywheels
 
 ## Lets create a WPILib Command-Based Project!
 
 {% hint style="success" %}
-IF you already have a project and know how to place the `DoubleFlyWheel` mechanism into your own subsystem please skip to [#install-yams](double-flywheel.md#install-yams "mention")
+IF you already have a project and know how to place the double flywheel into your own subsystem please skip to [#install-yams](double-flywheel.md#install-yams "mention")
 {% endhint %}
 
 ### Setup our Command-Based Project
@@ -52,7 +52,7 @@ Follow [WPILib's tutorial](https://docs.wpilib.org/en/stable/docs/zero-to-robot/
 Bring up the Visual Studio Code command palette with <kbd>Ctrl+Shift+P</kbd>. Then, type "WPILib" into the prompt and select "Create a new project".
 
 1. Click on **Select a project type (Example or Template)**
-2. Select **Template** then **Java** then **Command Robot**
+2. Select **Template** then **Java** then **Command v2 Robot**
 3. Click on **Select a new project folder** and select a folder to store your robot project in.
 4. Fill in **Project Name** with the name of your robot code project.
 5. Enter your **Team Number**
@@ -60,9 +60,21 @@ Bring up the Visual Studio Code command palette with <kbd>Ctrl+Shift+P</kbd>. Th
 
 ### Install YAMS!
 
-Click on the **WPILib logo** on the **left** pane. Scroll down to **Yet Another Mechanism System** and click **Install**!
+YAMS ships as two vendordeps, one for each WPILib command framework. This tutorial uses Commands v2, so install **Yet Another Mechanism System (Commands v2)**. Only install one of the two; they conflict with each other.
+
+Click on the **WPILib logo** on the **left** pane. Scroll down to **Yet Another Mechanism System (Commands v2)** and click **Install**!
+
+If it is not in the list, open the command palette with <kbd>Ctrl+Shift+P</kbd>, run **WPILib: Manage Vendor Libraries**, choose **Install new libraries (online)** and paste `https://cdn.yassrobotics.com/yams_commands2.json`. See [Installation](../README.md#installation) for the Commands v3 vendordep and the offline install.
+
+Install the Phoenix 6 vendor library the same way, since this tutorial uses `TalonFX` motor controllers.
 
 ## Let's make a Double FlyWheel!
+
+{% hint style="info" %}
+A subsystem should hold at most one YAMS mechanism class, so that live tuning keeps working. Both flywheels here are driven together by one subsystem, so this tutorial controls the two `SmartMotorController`s directly instead of creating two `FlyWheel` mechanisms. This is the same approach as the `DoubleFlyWheelSubsystem` in the YAMS examples.
+
+If you would rather have a `FlyWheel` mechanism (with its `Mechanism2d` and Trigger factories) for each wheel, give each wheel its own subsystem and follow the [Shooter/FlyWheels](shooter-flywheels.md) tutorial for both.
+{% endhint %}
 
 {% stepper %}
 {% step %}
@@ -75,30 +87,21 @@ We need separate configurations for each flywheel since they will be controlled 
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Pounds;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.Seconds;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.mechanisms.velocity.FlyWheel;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.remote.TalonFXWrapper;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class DoubleFlywheelSubsystem extends SubsystemBase {
 
@@ -115,6 +118,8 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH)
       // Gearing from the motor rotor to final shaft (3:1 reduction)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+      // Moment of inertia for the simulation, estimated from the 4 inch, 1 pound flywheel
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
       // Motor properties
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
@@ -122,7 +127,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
 
-  // Lower FlyWheel Motor Config  
+  // Lower FlyWheel Motor Config
   private SmartMotorControllerConfig lowerConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withClosedLoopController(0.1, 0, 0)
@@ -131,6 +136,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
       .withMotorInverted(true) // Often inverted relative to upper for proper game piece direction
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -146,33 +152,30 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 {% step %}
 #### Create our motor controllers
 
-Create the vendor motor controller objects for each flywheel.
+Create the vendor motor controller objects for each flywheel and wrap each one in a `SmartMotorController`. Then call `updateTelemetry()` and `simIterate()` on both every loop.
 
 ```java
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Pounds;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.Seconds;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
-
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.mechanisms.velocity.FlyWheel;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.remote.TalonFXWrapper;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.remote.TalonFXWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class DoubleFlywheelSubsystem extends SubsystemBase {
 
@@ -185,13 +188,14 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
 
-  // Lower FlyWheel Motor Config  
+  // Lower FlyWheel Motor Config
   private SmartMotorControllerConfig lowerConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withClosedLoopController(0.1, 0, 0)
@@ -200,6 +204,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -207,120 +212,32 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withOpenLoopRampRate(Seconds.of(0.25));
 
   // Vendor motor controller objects
-  private TalonFX upperTalon = new TalonFX(1);
-  private TalonFX lowerTalon = new TalonFX(2);
+  private TalonFX upperTalon = new TalonFX(1, new CANBus(CANPort.CAN_S0));
+  private TalonFX lowerTalon = new TalonFX(2, new CANBus(CANPort.CAN_S0));
 
   // Create our SmartMotorControllers with Kraken X60 motors
   private SmartMotorController upperMotor = new TalonFXWrapper(upperTalon, DCMotor.getKrakenX60(1), upperConfig);
   private SmartMotorController lowerMotor = new TalonFXWrapper(lowerTalon, DCMotor.getKrakenX60(1), lowerConfig);
 
   /** Creates a new DoubleFlywheelSubsystem. */
-  public DoubleFlywheelSubsystem() {}
-}
-```
-{% endstep %}
-
-{% step %}
-#### Create and Configure our `FlyWheel` mechanisms
-
-Each flywheel gets its own `FlyWheel` mechanism for intuitive control.
-
-```java
-package frc.robot.subsystems;
-
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Pounds;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Seconds;
-
-import com.ctre.phoenix6.hardware.TalonFX;
-
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.mechanisms.velocity.FlyWheel;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.remote.TalonFXWrapper;
-
-public class DoubleFlywheelSubsystem extends SubsystemBase {
-
-  // Upper FlyWheel Motor Config
-  private SmartMotorControllerConfig upperConfig = new SmartMotorControllerConfig(this)
-      .withControlMode(ControlMode.CLOSED_LOOP)
-      .withClosedLoopController(0.1, 0, 0)
-      .withSimClosedLoopController(0.1, 0, 0)
-      .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH)
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMotorInverted(false)
-      .withZeroPower(MotorMode.COAST)
-      .withStatorCurrentLimit(Amps.of(40))
-      .withClosedLoopRampRate(Seconds.of(0.25))
-      .withOpenLoopRampRate(Seconds.of(0.25));
-
-  // Lower FlyWheel Motor Config  
-  private SmartMotorControllerConfig lowerConfig = new SmartMotorControllerConfig(this)
-      .withControlMode(ControlMode.CLOSED_LOOP)
-      .withClosedLoopController(0.1, 0, 0)
-      .withSimClosedLoopController(0.1, 0, 0)
-      .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMotorInverted(true)
-      .withZeroPower(MotorMode.COAST)
-      .withStatorCurrentLimit(Amps.of(40))
-      .withClosedLoopRampRate(Seconds.of(0.25))
-      .withOpenLoopRampRate(Seconds.of(0.25));
-
-  // Vendor motor controller objects
-  private TalonFX upperTalon = new TalonFX(1);
-  private TalonFX lowerTalon = new TalonFX(2);
-
-  // Create our SmartMotorControllers with Kraken X60 motors
-  private SmartMotorController upperMotor = new TalonFXWrapper(upperTalon, DCMotor.getKrakenX60(1), upperConfig);
-  private SmartMotorController lowerMotor = new TalonFXWrapper(lowerTalon, DCMotor.getKrakenX60(1), lowerConfig);
-
-  // Upper FlyWheel Mechanism Config
-  private final FlyWheelConfig upperFlywheelConfig = new FlyWheelConfig()
-      .withDiameter(Inches.of(4))
-      .withTelemetry("UpperFlyWheelMech", TelemetryVerbosity.HIGH);
-
-  // Lower FlyWheel Mechanism Config
-  private final FlyWheelConfig lowerFlywheelConfig = new FlyWheelConfig()
-      .withDiameter(Inches.of(4))
-      .withTelemetry("LowerFlyWheelMech", TelemetryVerbosity.HIGH);
-
-  // FlyWheel Mechanisms
-  private FlyWheel upperFlywheel = new FlyWheel(upperFlywheelConfig, upperMotor);
-  private FlyWheel lowerFlywheel = new FlyWheel(lowerFlywheelConfig, lowerMotor);
-
-  /** Creates a new DoubleFlywheelSubsystem. */
-  public DoubleFlywheelSubsystem() {}
+  public DoubleFlywheelSubsystem() {
+    // There is no mechanism class to do this for us, so set up the telemetry (and live tuning) ourselves.
+    upperMotor.setupTelemetry();
+    lowerMotor.setupTelemetry();
+  }
 
   @Override
   public void periodic() {
     // Update telemetry for both flywheels
-    upperFlywheel.updateTelemetry();
-    lowerFlywheel.updateTelemetry();
+    upperMotor.updateTelemetry();
+    lowerMotor.updateTelemetry();
   }
 
   @Override
   public void simulationPeriodic() {
     // Run simulation for both flywheels
-    upperFlywheel.simIterate();
-    lowerFlywheel.simIterate();
+    upperMotor.simIterate();
+    lowerMotor.simIterate();
   }
 }
 ```
@@ -329,35 +246,33 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 {% step %}
 #### Create `Command`s for our Double FlyWheel
 
-Now we create command factory methods for different shot types.
+Now we create command factory methods for different shot types. A single command sets both velocity setpoints, so both wheels always change together.
 
 ```java
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Pounds;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.RPM;
+import static org.wpilib.units.Units.Seconds;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
-
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.mechanisms.velocity.FlyWheel;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.remote.TalonFXWrapper;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.AngularVelocity;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.remote.TalonFXWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class DoubleFlywheelSubsystem extends SubsystemBase {
 
@@ -370,13 +285,14 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
 
-  // Lower FlyWheel Motor Config  
+  // Lower FlyWheel Motor Config
   private SmartMotorControllerConfig lowerConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withClosedLoopController(0.1, 0, 0)
@@ -385,6 +301,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -392,29 +309,19 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withOpenLoopRampRate(Seconds.of(0.25));
 
   // Vendor motor controller objects
-  private TalonFX upperTalon = new TalonFX(1);
-  private TalonFX lowerTalon = new TalonFX(2);
+  private TalonFX upperTalon = new TalonFX(1, new CANBus(CANPort.CAN_S0));
+  private TalonFX lowerTalon = new TalonFX(2, new CANBus(CANPort.CAN_S0));
 
   // Create our SmartMotorControllers with Kraken X60 motors
   private SmartMotorController upperMotor = new TalonFXWrapper(upperTalon, DCMotor.getKrakenX60(1), upperConfig);
   private SmartMotorController lowerMotor = new TalonFXWrapper(lowerTalon, DCMotor.getKrakenX60(1), lowerConfig);
 
-  // Upper FlyWheel Mechanism Config
-  private final FlyWheelConfig upperFlywheelConfig = new FlyWheelConfig()
-      .withDiameter(Inches.of(4))
-      .withTelemetry("UpperFlyWheelMech", TelemetryVerbosity.HIGH);
-
-  // Lower FlyWheel Mechanism Config
-  private final FlyWheelConfig lowerFlywheelConfig = new FlyWheelConfig()
-      .withDiameter(Inches.of(4))
-      .withTelemetry("LowerFlyWheelMech", TelemetryVerbosity.HIGH);
-
-  // FlyWheel Mechanisms
-  private FlyWheel upperFlywheel = new FlyWheel(upperFlywheelConfig, upperMotor);
-  private FlyWheel lowerFlywheel = new FlyWheel(lowerFlywheelConfig, lowerMotor);
-
   /** Creates a new DoubleFlywheelSubsystem. */
-  public DoubleFlywheelSubsystem() {}
+  public DoubleFlywheelSubsystem() {
+    // There is no mechanism class to do this for us, so set up the telemetry (and live tuning) ourselves.
+    upperMotor.setupTelemetry();
+    lowerMotor.setupTelemetry();
+  }
 
   /**
    * Set both flywheel speeds independently.
@@ -424,10 +331,10 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
    * @return Command to set both flywheel speeds
    */
   public Command setFlywheelSpeeds(AngularVelocity upperSpeed, AngularVelocity lowerSpeed) {
-    return Commands.parallel(
-        upperFlywheel.run(upperSpeed),
-        lowerFlywheel.run(lowerSpeed)
-    );
+    return run(() -> {
+      upperMotor.setVelocity(upperSpeed);
+      lowerMotor.setVelocity(lowerSpeed);
+    }).withName("Set FlyWheel Speeds");
   }
 
   /**
@@ -475,8 +382,8 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
    * @return true if both flywheels are within tolerance of the given targets
    */
   public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
-    return upperFlywheel.isNear(upperTarget, tolerance).getAsBoolean()
-        && lowerFlywheel.isNear(lowerTarget, tolerance).getAsBoolean();
+    return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+        && lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
   }
 
   /**
@@ -485,7 +392,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
    * @return Upper flywheel velocity
    */
   public AngularVelocity getUpperVelocity() {
-    return upperFlywheel.getVelocity();
+    return upperMotor.getMechanismVelocity();
   }
 
   /**
@@ -494,19 +401,21 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
    * @return Lower flywheel velocity
    */
   public AngularVelocity getLowerVelocity() {
-    return lowerFlywheel.getVelocity();
+    return lowerMotor.getMechanismVelocity();
   }
 
   @Override
   public void periodic() {
-    upperFlywheel.updateTelemetry();
-    lowerFlywheel.updateTelemetry();
+    // Update telemetry for both flywheels
+    upperMotor.updateTelemetry();
+    lowerMotor.updateTelemetry();
   }
 
   @Override
   public void simulationPeriodic() {
-    upperFlywheel.simIterate();
-    lowerFlywheel.simIterate();
+    // Run simulation for both flywheels
+    upperMotor.simIterate();
+    lowerMotor.simIterate();
   }
 }
 ```
@@ -518,32 +427,32 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 Wire up the controller buttons to our shot types.
 
 ```java
-package frc.robot;
+package first.robot;
 
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.subsystems.DoubleFlywheelSubsystem;
+import first.robot.subsystems.DoubleFlywheelSubsystem;
+import org.wpilib.command2.button.CommandGamepad;
 
 public class RobotContainer {
 
-  private final DoubleFlywheelSubsystem m_doubleFlywheel = new DoubleFlywheelSubsystem();
-  private final CommandXboxController m_controller = new CommandXboxController(0);
+  private final DoubleFlywheelSubsystem doubleFlywheel = new DoubleFlywheelSubsystem();
+  private final CommandGamepad controller = new CommandGamepad(0);
 
   public RobotContainer() {
     configureBindings();
   }
 
   private void configureBindings() {
-    // A button - Neutral spin shot (both wheels at 3000 RPM)
-    m_controller.a().onTrue(m_doubleFlywheel.neutralSpinShot());
-    
-    // B button - Backspin shot (upper faster)
-    m_controller.b().onTrue(m_doubleFlywheel.backspinShot());
-    
-    // X button - Topspin shot (lower faster)
-    m_controller.x().onTrue(m_doubleFlywheel.topspinShot());
-    
-    // Y button - Stop flywheels
-    m_controller.y().onTrue(m_doubleFlywheel.stopFlywheels());
+    // Bottom face button (A) - Neutral spin shot (both wheels at 3000 RPM)
+    controller.faceDown().onTrue(doubleFlywheel.neutralSpinShot());
+
+    // Right face button (B) - Backspin shot (upper faster)
+    controller.faceRight().onTrue(doubleFlywheel.backspinShot());
+
+    // Left face button (X) - Topspin shot (lower faster)
+    controller.faceLeft().onTrue(doubleFlywheel.topspinShot());
+
+    // Top face button (Y) - Stop flywheels
+    controller.faceUp().onTrue(doubleFlywheel.stopFlywheels());
   }
 }
 ```
@@ -552,7 +461,7 @@ public class RobotContainer {
 
 ## Using Loosely Coupled Followers
 
-If your double flywheel design has both motors mechanically linked (same shaft), you can use loosely coupled followers instead of separate mechanisms:
+If your double flywheel design has both motors mechanically linked (same shaft), you can use loosely coupled followers instead of commanding each motor yourself:
 
 ```java
 SmartMotorControllerConfig lowerConfig = new SmartMotorControllerConfig(this)
@@ -569,7 +478,7 @@ SmartMotorController upperMotor = new TalonFXWrapper(upperTalon, DCMotor.getKrak
 ```
 
 {% hint style="warning" %}
-Loosely coupled followers only forward velocity and position requests, **NOT** DutyCycle or Voltage requests. Use separate mechanisms when you need fully independent control.
+Loosely coupled followers only forward velocity and position requests, **NOT** DutyCycle or Voltage requests. Command each `SmartMotorController` yourself when you need fully independent control.
 {% endhint %}
 
 ## Advanced: Dynamic Spin Control
@@ -608,16 +517,14 @@ You now have a fully functional double flywheel shooter with:
 The key differences from a single flywheel are:
 
 1. Two separate `SmartMotorControllerConfig` instances
-2. Two separate `SmartMotorController` instances
-3. Two separate `FlyWheel` mechanism instances
-4. Commands that coordinate both flywheels using `Commands.parallel()`
+2. Two separate `SmartMotorController` instances, controlled directly instead of through a `FlyWheel` mechanism
+3. The subsystem calls `setupTelemetry()`, `updateTelemetry()` and `simIterate()` on each `SmartMotorController`
+4. Commands that set both velocity setpoints from a single command
 
 ## Complete Example
 
-The following files show a complete hooded-shooter implementation with two independent flywheels and a hood pivot.
+The following files from the YAMS `simple_robot-2027` Commands v2 example show a complete double flywheel subsystem with two independent flywheels, and a hood pivot in its own subsystem.
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/hooded_shooter/java/frc/robot/subsystems/FlywheelSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/doubleflywheel/DoubleFlyWheelSubsystem.java" %}
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/hooded_shooter/java/frc/robot/subsystems/HoodSubsystem.java" %}
-
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/hooded_shooter/java/frc/robot/RobotContainer.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/HoodSubsystem.java" %}

@@ -1,6 +1,6 @@
 # How to set an Arm's target Angle?
 
-An `Arm`'s position setpoint is an `Angle` expressed in WPILib's typed unit system (`Angle`, `edu.wpi.first.units.measure.Angle`). Understanding the difference between `run()`, which tracks the setpoint continuously, and `runTo()`, which ends the command once the setpoint is reached within tolerance, shapes how you bind controls in `RobotContainer`.
+An `Arm`'s position setpoint is an `Angle` expressed in WPILib's typed unit system (`Angle`, `org.wpilib.units.measure.Angle`). Understanding the difference between `run()`, which tracks the setpoint continuously, and `runTo()`, which ends the command once the setpoint is reached within tolerance, shapes how you bind controls in `RobotContainer`.
 
 ## Create `Command`s with our `Arm`
 
@@ -10,36 +10,34 @@ We use the `Arm` class as a interface to create commands!
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Feet;
-import static edu.wpi.first.units.Units.Pounds;
-<strong>import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.Feet;
+import static org.wpilib.units.Units.Pounds;
+<strong>import static org.wpilib.units.Units.Seconds;
 </strong>
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-<strong>import edu.wpi.first.units.measure.Angle;
-</strong><strong>import edu.wpi.first.units.measure.Voltage;
-</strong>import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.mechanisms.SmartMechanism;
-import yams.mechanisms.config.ArmConfig;
-import yams.mechanisms.positional.Arm;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.ArmFeedforward;
+import org.wpilib.math.system.DCMotor;
+<strong>import org.wpilib.units.measure.Angle;
+</strong><strong>import org.wpilib.units.measure.Voltage;
+</strong>import yams.commands2.config.SmartMotorControllerConfig;
+import yams.commands2.mechanisms.Arm;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ArmConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -56,6 +54,12 @@ public class ExampleSubsystem extends SubsystemBase {
   // Gearing from the motor rotor to final shaft.
   // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+  // Soft limit is applied to the SmartMotorControllers PID
+  .withSoftLimits(Degrees.of(-20), Degrees.of(10))
+  // Starting position is where your arm starts
+  .withStartingPosition(Degrees.of(-5))
+  // Length and mass of your arm, used to estimate the moment of inertia for sim.
+  .withMomentOfInertia(Feet.of(3), Pounds.of(8))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
   .withZeroPower(MotorMode.BRAKE)
@@ -64,19 +68,15 @@ public class ExampleSubsystem extends SubsystemBase {
   .withOpenLoopRampRate(Seconds.of(0.25));
 
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
   private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
 
   private ArmConfig armCfg = new ArmConfig()
-  // Soft limit is applied to the SmartMotorControllers PID
-  .withSoftLimits(Degrees.of(-20), Degrees.of(10))
   // Hard limit is applied to the simulation.
   .withHardLimits(Degrees.of(-30), Degrees.of(40))
-  // Starting position is where your arm starts
-  .withStartingPosition(Degrees.of(-5))
-  // Length and mass of your arm for sim.
+  // Length of your arm for sim.
   .withLength(Feet.of(3))
   // Telemetry name and verbosity for the arm.
   .withTelemetry("Arm", TelemetryVerbosity.HIGH);
@@ -101,7 +101,7 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>   * Set the angle of the arm.
 </strong><strong>   * @param angle Angle to go to.
 </strong><strong>   */
-</strong><strong>  public void setAngleSetpoint(Angle angle) { return arm.setMechanismPositionSetpoint(angle); }
+</strong><strong>  public void setAngleSetpoint(Angle angle) { arm.setMechanismPositionSetpoint(angle); }
 </strong>
 <strong>  /**
 </strong><strong>   * Move the arm up and down.
@@ -110,7 +110,7 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>  public Command set(double dutycycle) { return arm.set(dutycycle);}
 </strong>
 <strong>  /**
-</strong><strong>   * Set the voltage of the arm, useful for feeding a WPILib {@link edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine}.
+</strong><strong>   * Set the voltage of the arm, useful for feeding a WPILib {@link org.wpilib.command2.sysid.SysIdRoutine}.
 </strong><strong>   * @param volts Voltage to apply.
 </strong><strong>   */
 </strong><strong>  public Command setVoltage(Voltage volts) { return arm.setVoltage(volts);}
@@ -141,18 +141,15 @@ We bind buttons to use the `Commands` from our `Arm`
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package first.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import first.robot.subsystems.ExampleSubsystem;
 
-<strong>import static edu.wpi.first.units.Units.Degrees;
+<strong>import static org.wpilib.units.Units.Degrees;
 </strong>
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.button.CommandNiDsXboxController;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -164,9 +161,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandNiDsXboxController m_driverController = new CommandNiDsXboxController(0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -177,22 +172,15 @@ public class RobotContainer {
 </strong><strong>    m_exampleSubsystem.setDefaultCommand(m_exampleSubsystem.run(Degrees.of(0)));
 </strong>  }
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
-   */
+  /** Use this method to define your trigger->command mappings. */
   private void configureBindings() {
     
-<strong>    // Schedule `run` when the Xbox controller's B button is pressed,
+<strong>    // Schedule `run` when the Xbox controller's A or B button is pressed,
 </strong><strong>    // cancelling on release.
 </strong><strong>    m_driverController.a().whileTrue(m_exampleSubsystem.run(Degrees.of(-5)));
 </strong><strong>    m_driverController.b().whileTrue(m_exampleSubsystem.run(Degrees.of(15)));
-</strong><strong>    // Schedule `set` when the Xbox controller's B button is pressed,
+</strong>
+<strong>    // Schedule `set` when the Xbox controller's X or Y button is pressed,
 </strong><strong>    // cancelling on release.
 </strong><strong>    m_driverController.x().whileTrue(m_exampleSubsystem.set(0.3));
 </strong><strong>    m_driverController.y().whileTrue(m_exampleSubsystem.set(-0.3));
@@ -205,9 +193,12 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return Commands.print("No autonomous command configured");
   }
 }
 
 </code></pre>
+
+{% hint style="info" %}
+**Using Commands v3?** Import `yams.commands3.config.SmartMotorControllerConfig` and `yams.commands3.mechanisms.Arm` instead, have your class implement `org.wpilib.command3.Mechanism` instead of extending `SubsystemBase`, and return `org.wpilib.command3.Command`. The `Arm` command and trigger factories (`run()`, `runTo()`, `setAngle()`, `set()`, `near()`) have the same names. Call `updateTelemetry()` and `simIterate()` from your robot's periodic method yourself, since a v3 `Mechanism` has no `periodic()` hook. See `examples/commands3/simple_robot-2027` in the YAMS repo for a complete robot.
+{% endhint %}

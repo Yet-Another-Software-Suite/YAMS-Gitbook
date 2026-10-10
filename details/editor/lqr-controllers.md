@@ -38,10 +38,10 @@ icon: chart-line
 ## LQR Execution in YAMS
 
 {% hint style="warning" %}
-**Important**: LQR controllers are **not natively supported** by any motor controller hardware. When you configure an LQR controller in YAMS, the closed loop control **always runs on the RoboRIO** via `SmartMotorController.iterateClosedLoop()`.
+**Important**: LQR controllers are **not natively supported** by any motor controller hardware. When you configure an LQR controller in YAMS, the closed loop control **always runs on the SystemCore**. The wrapper starts a `Notifier` that calls `SmartMotorController.iterateClosedLoopController()` every closed loop control period (20 ms by default), so you never call it yourself.
 {% endhint %}
 
-### Why RoboRIO-Only?
+### Why SystemCore-Only?
 
 Motor controller vendors (CTRE, REV, ThriftyBot) implement PID controllers on their hardware, but none support LQR natively. LQR requires:
 
@@ -54,11 +54,11 @@ These operations are beyond what current motor controller firmware supports.
 
 ### Performance Implications
 
-| Aspect | Motor Controller PID | RoboRIO LQR |
+| Aspect | Motor Controller PID | SystemCore LQR |
 |--------|---------------------|-------------|
-| **Update Rate** | 1kHz+ (on controller) | 50Hz (robot loop) or custom period |
+| **Update Rate** | 1kHz+ (on controller) | 50Hz (20 ms `Notifier`) by default |
 | **Latency** | Minimal (~1ms) | CAN bus round-trip (~5-20ms) |
-| **CPU Load** | None on RoboRIO | Small increase on RoboRIO |
+| **CPU Load** | None on SystemCore | Small increase on SystemCore |
 | **Best For** | Fast loops, simple control | Complex control, slower mechanisms |
 
 {% hint style="info" %}
@@ -228,14 +228,13 @@ LQRConfig config = new LQRConfig(motor, gearing, moi)
     .withMeasurementDelay(Milliseconds.of(25));  // Compensate for 25ms delay
 ```
 
-### Custom Loop Period
+### Loop Period
 
-By default, LQR uses a 20ms (50Hz) loop period. Override if using a faster loop:
+`LQRConfig` uses a 20ms (50Hz) period for its discrete-time calculations (see `LQRConfig.getPeriod()`), which matches the default closed loop control period of the `Notifier` that runs the controller. There is currently no setter for the LQR period, so keep the default closed loop control period when using LQR.
 
-```java
-// LQRConfig uses the period internally for discrete-time calculations
-// The period should match your actual control loop rate
-```
+{% hint style="info" %}
+`SmartMotorControllerConfig.withClosedLoopControlPeriod` changes how often the `Notifier` runs, but `TalonFXWrapper` and `TalonFXSWrapper` throw if it is set, and it does not change the period `LQRConfig` was built with.
+{% endhint %}
 
 ## Simulation-Only LQR
 
@@ -274,7 +273,7 @@ public class LQRArmSubsystem extends SubsystemBase {
     private final Arm arm;
 
     public LQRArmSubsystem() {
-        TalonFX talonFX = new TalonFX(1);
+        TalonFX talonFX = new TalonFX(1, new CANBus(CANPort.CAN_S0));
         
         // Define mechanism parameters
         DCMotor dcMotor = DCMotor.getKrakenX60(1);
@@ -304,7 +303,7 @@ public class LQRArmSubsystem extends SubsystemBase {
             .withClosedLoopController(lqrController)
             .withFeedforward(new ArmFeedforward(0.1, 0.45, 1.2, 0.05))
             .withSoftLimits(Degrees.of(-10), Degrees.of(110))
-            .withClosedLoopTolerance(Degrees.of(1))
+            .withStartingPosition(Degrees.of(0))
             .withZeroPower(MotorMode.BRAKE)
             .withStatorCurrentLimit(Amps.of(40))
             .withTelemetry("LQRArm", TelemetryVerbosity.HIGH);
@@ -312,19 +311,31 @@ public class LQRArmSubsystem extends SubsystemBase {
         motor = new TalonFXWrapper(talonFX, dcMotor, config);
 
         ArmConfig armConfig = new ArmConfig()
+            .withLength(Inches.of(24))
+            .withHardLimits(Degrees.of(-20), Degrees.of(120))
             .withTelemetry("LQRArm", TelemetryVerbosity.HIGH);
 
         arm = new Arm(armConfig, motor);
     }
     
     public Command goToAngle(Angle target) {
-        return arm.goTo(() -> target);
+        return arm.setAngle(target);
+    }
+
+    @Override
+    public void periodic() {
+        arm.updateTelemetry();
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        arm.simIterate();
     }
 }
 ```
 
 {% hint style="danger" %}
-**Critical**: LQR runs on the RoboRIO via `SmartMotorController.iterateClosedLoop()`. If you use the `Arm`, `Elevator`, or other mechanism classes, this is handled automatically. If you use `SmartMotorController` directly, you must call `iterateClosedLoop()` in your periodic method.
+**Critical**: LQR runs on the SystemCore, in a `Notifier` that calls `SmartMotorController.iterateClosedLoopController()`. The wrapper starts it when the control mode is `ControlMode.CLOSED_LOOP`, whether or not you use a mechanism class. LQR does not support a closed loop tolerance: `withClosedLoopTolerance` together with an `LQRController` throws an `IllegalArgumentException`.
 {% endhint %}
 
 ## Tuning Strategy
@@ -399,6 +410,6 @@ LQR can behave very differently with small parameter changes. Always validate in
 | **States Controlled** | Typically one (position or velocity) | Multiple (position AND velocity) |
 | **Model Required** | No | Yes (motor, gearing, inertia) |
 | **Optimality** | Not guaranteed | Mathematically optimal |
-| **Hardware Support** | Motor controllers | RoboRIO only |
-| **Update Rate** | 1kHz+ (on controller) | 50Hz (RoboRIO) |
+| **Hardware Support** | Motor controllers | SystemCore only |
+| **Update Rate** | 1kHz+ (on controller) | 50Hz (SystemCore) |
 | **YAMS API** | `withClosedLoopController(kP, kI, kD)` | `withClosedLoopController(LQRController)` |

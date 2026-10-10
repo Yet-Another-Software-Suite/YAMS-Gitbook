@@ -82,7 +82,7 @@ Create an interface that defines what inputs your subsystem reads and what outpu
 ### Arm IO Interface
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -123,7 +123,7 @@ public interface ArmIO {
 ### Elevator IO Interface
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -157,7 +157,7 @@ public interface ElevatorIO {
 ### Shooter IO Interface
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -194,14 +194,17 @@ If the @AutoLog fails to generate the coresponding AutoLogged class, check your 
 
 ### Build.gradle
 
-```java
-
-def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
+```groovy
+dependencies {
+    annotationProcessor wpi.java.deps.wpilibAnnotations()
+    def akitJson = new groovy.json.JsonSlurper().parseText(
+        new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
+    // ...
+}
+```
 
-```  
-
-Comment or delete out this line 'annotationProcessor wpi.java.deps.wpilibAnnotations()' and clean the project with a .gradle clean (windows) or ./gradlew clean (linux) and then build
+This is the setup used by the YAMS AdvantageKit examples. After changing it, clean the project with `gradlew clean` (Windows) or `./gradlew clean` (Linux/macOS) and then build. If the class still does not generate, try commenting out the `annotationProcessor wpi.java.deps.wpilibAnnotations()` line and clean again.
 {% endhint %}
 
 ## Step 2: Implement the IO Class
@@ -211,22 +214,24 @@ With YAMS, you only need **one IO implementation** that works for both real hard
 ### Arm IO Implementation (Works for Real and Sim!)
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.ArmConfig;
-import yams.mechanisms.positional.Arm;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.remote.TalonFXWrapper;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.ArmFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.command2.SubsystemBase;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ArmConfig;
+import yams.commands2.mechanisms.Arm;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.remote.TalonFXWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 /**
  * Single IO implementation for the arm - works in BOTH real and simulation!
@@ -238,7 +243,7 @@ public class ArmIOTalonFX implements ArmIO {
   private final SmartMotorController motor;
 
   public ArmIOTalonFX(SubsystemBase subsystem, int canId) {
-    TalonFX talonFX = new TalonFX(canId);
+    TalonFX talonFX = new TalonFX(canId, new CANBus(CANPort.CAN_S0));
     
     // Step 1: Create SmartMotorControllerConfig
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
@@ -246,19 +251,19 @@ public class ArmIOTalonFX implements ArmIO {
         .withClosedLoopController(5, 0, 0.1)
         .withSoftLimits(Rotations.of(-0.25), Rotations.of(0.25))
         .withFeedforward(new ArmFeedforward(0.1, 0.3, 0.5, 0.01))
-        .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0));
+        .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0))
+        .withStartingPosition(Rotations.of(0));  // Starting position lives on the SmartMotorControllerConfig
     
     // Step 2: Create SmartMotorController (TalonFXWrapper)
     SmartMotorController smc = new TalonFXWrapper(talonFX, DCMotor.getKrakenX60(1), smcConfig);
     
     // Step 3: Create ArmConfig
     ArmConfig armConfig = new ArmConfig()
-        .withLength(Inches.of(18))           // Arm length - used for simulation physics
+        .withLength(Inches.of(18))           // Arm length, used for simulation physics
         .withHardLimits(Rotations.of(-0.3), Rotations.of(0.3))  // Physical hard stops for sim
-        .withStartingPosition(Rotations.of(0))
         .withTelemetry("Arm", TelemetryVerbosity.HIGH);
     
-    // Step 4: Create Arm mechanism - handles simulation automatically!
+    // Step 4: Create Arm mechanism, simulation is handled automatically
     this.arm = new Arm(armConfig, smc);
     
     // Get reference to underlying SmartMotorController for telemetry
@@ -309,22 +314,24 @@ public class ArmIOTalonFX implements ArmIO {
 ### Elevator IO Implementation (Works for Real and Sim!)
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.ElevatorConfig;
-import yams.mechanisms.positional.Elevator;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.remote.TalonFXWrapper;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.ElevatorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.command2.SubsystemBase;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ElevatorConfig;
+import yams.commands2.mechanisms.Elevator;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.remote.TalonFXWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 /**
  * Single IO implementation - uses YAMS Elevator mechanism with SmartMotorController telemetry.
@@ -335,7 +342,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final SmartMotorController motor;
 
   public ElevatorIOTalonFX(SubsystemBase subsystem, int canId) {
-    TalonFX talonFX = new TalonFX(canId);
+    TalonFX talonFX = new TalonFX(canId, new CANBus(CANPort.CAN_S0));
     
     // Step 1: Create SmartMotorControllerConfig
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
@@ -356,7 +363,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         .withHardLimits(Meters.of(0), Meters.of(1.5))  // Physical hard stops for sim
         .withTelemetry("Elevator", TelemetryVerbosity.HIGH);
     
-    // Step 4: Create Elevator mechanism - handles simulation automatically!
+    // Step 4: Create Elevator mechanism, simulation is handled automatically
     this.elevator = new Elevator(elevatorConfig, smc);
     
     // Get reference to underlying SmartMotorController for telemetry
@@ -372,8 +379,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     inputs.supplyCurrentAmps = motor.getSupplyCurrent().map(c -> c.in(Amps)).orElse(0.0);
     inputs.statorCurrentAmps = motor.getStatorCurrent().in(Amps);
     inputs.temperatureCelsius = motor.getTemperature().in(Celsius);
-    inputs.targetPositionMeters = motor.getMeasurementPositionSetpoint()
-        .map(d -> d.in(Meters)).orElse(0.0);
+    // The setpoint is stored as a mechanism angle; convert it to a height with the config
+    inputs.targetPositionMeters = motor.getMechanismPositionSetpoint()
+        .map(a -> motor.getConfig().convertFromMechanism(a).in(Meters)).orElse(0.0);
   }
 
   @Override
@@ -407,22 +415,24 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 ### Shooter (FlyWheel) IO Implementation (Works for Real and Sim!)
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.mechanisms.velocity.FlyWheel;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.remote.TalonFXWrapper;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.command2.SubsystemBase;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.FlyWheelConfig;
+import yams.commands2.mechanisms.FlyWheel;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.remote.TalonFXWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 /**
  * Single IO implementation - uses YAMS FlyWheel mechanism with SmartMotorController telemetry.
@@ -433,7 +443,7 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final SmartMotorController motor;
 
   public ShooterIOTalonFX(SubsystemBase subsystem, int canId) {
-    TalonFX talonFX = new TalonFX(canId);
+    TalonFX talonFX = new TalonFX(canId, new CANBus(CANPort.CAN_S0));
     
     // Step 1: Create SmartMotorControllerConfig
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
@@ -450,7 +460,7 @@ public class ShooterIOTalonFX implements ShooterIO {
         .withDiameter(Inches.of(4))              // Flywheel diameter
         .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
     
-    // Step 4: Create FlyWheel mechanism - handles simulation automatically!
+    // Step 4: Create FlyWheel mechanism, simulation is handled automatically
     this.flywheel = new FlyWheel(flywheelConfig, smc);
     
     // Get reference to underlying SmartMotorController for telemetry
@@ -506,12 +516,13 @@ public class ShooterIOTalonFX implements ShooterIO {
 The subsystem uses the IO interface and doesn't know whether it's running on real hardware or in simulation.
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.units.measure.Angle;
 import org.littletonrobotics.junction.Logger;
 
 public class ArmSubsystem extends SubsystemBase {
@@ -580,12 +591,13 @@ See [run() vs runTo() Commands](run-vs-runto.md) for important information about
 
 ## Step 4: Wire It Up in RobotContainer
 
-With YAMS's passive simulation, you don't need conditional logic for real vs sim - the same IO class works for both!
+With YAMS's passive simulation, you don't need conditional logic for real vs sim. The same IO class works for both!
 
 ```java
-package frc.robot;
+package first.robot;
 
-import frc.robot.subsystems.akit.*;
+import org.wpilib.command2.button.CommandNiDsXboxController;
+import first.robot.subsystems.akit.*;
 
 public class RobotContainer {
 
@@ -593,9 +605,11 @@ public class RobotContainer {
   private final ElevatorSubsystem elevator;
   private final ShooterSubsystem shooter;
 
+  private final CommandNiDsXboxController controller = new CommandNiDsXboxController(0);
+
   public RobotContainer() {
     // Same IO implementation works for BOTH real robot and simulation!
-    // No need for if(RobotBase.isReal()) checks - YAMS handles it automatically
+    // No need for if(RobotBase.isReal()) checks, YAMS handles it automatically
     arm = new ArmSubsystem(new ArmIOTalonFX(arm, 1));
     elevator = new ElevatorSubsystem(new ElevatorIOTalonFX(elevator, 2));
     shooter = new ShooterSubsystem(new ShooterIOTalonFX(shooter, 3));
@@ -605,10 +619,10 @@ public class RobotContainer {
 
   private void configureBindings() {
     // Commands work identically on real robot and in simulation
-    controller.a().whileTrue(arm.setAngle(Rotations.of(0.25)));
-    controller.b().whileTrue(arm.setAngle(Rotations.of(-0.25)));
-    controller.x().whileTrue(elevator.run(Meters.of(1.0)));
-    controller.y().whileTrue(shooter.run(RotationsPerSecond.of(80)));
+    controller.a().whileTrue(arm.setAngle(0.25));   // rotations
+    controller.b().whileTrue(arm.setAngle(-0.25));
+    controller.x().whileTrue(elevator.setHeight(1.0)); // meters
+    controller.y().whileTrue(shooter.setVelocity(80)); // rotations per second
   }
 }
 ```
@@ -619,10 +633,10 @@ public class RobotContainer {
 
 ## Log Replay Mode
 
-For [log replay](https://docs.advantagekit.org/getting-started/what-is-advantagekit), AdvantageKit provides a "replay" mode where inputs are read from a log file instead of hardware. This is the **one case** where you need a separate IO implementation - an empty one that does nothing:
+For [log replay](https://docs.advantagekit.org/getting-started/what-is-advantagekit), AdvantageKit provides a "replay" mode where inputs are read from a log file instead of hardware. This is the **one case** where you need a separate IO implementation: an empty one that does nothing.
 
 ```java
-package frc.robot.subsystems.akit;
+package first.robot.subsystems.akit;
 
 /**
  * Empty IO implementation for log replay.
@@ -634,11 +648,11 @@ public class ArmIOReplay implements ArmIO {
 }
 ```
 
-In RobotContainer, only check for replay mode:
+In RobotContainer, only check for replay mode (the YAMS AdvantageKit examples define `Mode` and `currentMode` in `Robot`):
 
 ```java
 public RobotContainer() {
-  if (Constants.currentMode == Mode.REPLAY) {
+  if (Robot.currentMode == Robot.Mode.REPLAY) {
     // Replay mode: empty IO, AdvantageKit injects logged values
     arm = new ArmSubsystem(new ArmIOReplay());
     elevator = new ElevatorSubsystem(new ElevatorIOReplay());
@@ -655,8 +669,8 @@ public RobotContainer() {
 {% hint style="success" %}
 **Summary**: With YAMS + AdvantageKit, you only need **2 IO classes** per mechanism:
 
-1. **One real IO class** (e.g., `ArmIOTalonFX`) - works for both real robot and simulation
-2. **One empty replay IO class** (e.g., `ArmIOReplay`) - for log replay only
+1. **One real IO class** (e.g., `ArmIOTalonFX`): works for both real robot and simulation
+2. **One empty replay IO class** (e.g., `ArmIOReplay`): for log replay only
 
 Compare this to traditional AdvantageKit which requires **3 IO classes** (Real, Sim, Replay).
 {% endhint %}
@@ -666,7 +680,7 @@ Compare this to traditional AdvantageKit which requires **3 IO classes** (Real, 
 The examples above demonstrate the recommended pattern for using YAMS with AdvantageKit:
 
 1. **Create Mechanism classes** (`Arm`, `Elevator`, `FlyWheel`, etc.) for high-level control
-2. **Get the underlying `SmartMotorController`** via `mechanism.getSmartMotorController()`
+2. **Get the underlying `SmartMotorController`** via `mechanism.getMotor()`
 3. **Pull telemetry from `SmartMotorController`** for AdvantageKit logging
 4. **Use Mechanism methods** like `setMechanismPositionSetpoint()` for control
 5. **Optionally expose the Mechanism** via a getter for command helpers like `run()` and `runTo()`
@@ -678,7 +692,7 @@ This pattern gives you the best of both worlds:
 * **Passive simulation** works automatically in both
 
 {% hint style="info" %}
-See the [YAMS example code](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/simple_robot/src/main/java/frc/robot/subsystems/akit) for complete examples of using YAMS Mechanism classes with AdvantageKit's IO pattern.
+See the YAMS AdvantageKit examples for complete robot projects that log YAMS mechanisms with AdvantageKit: [Commands v2](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/advantage_kit) and [Commands v3](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/advantage_kit).
 {% endhint %}
 
 ### Using WPILib's isNear() for Tolerance Checking
@@ -696,47 +710,67 @@ boolean atTarget = currentPosition.isNear(targetPosition, tolerance);
 
 This approach works with any unit type and handles conversions automatically.
 
-## Swerve Drive with AdvantageKit
-
-YAMS swerve integrates seamlessly with AdvantageKit. Here's a complete example based on the [official YAMS AdvantageKit swerve example](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/advantage_kit/src/main/java/frc/robot/subsystems/SwerveSubsystem.java):
+To get a `Trigger` instead of a `boolean`, build it from the logged value so replay sees the same result. This is what the Commands v3 AdvantageKit example does in `ArmMechanism`:
 
 ```java
-package frc.robot.subsystems;
+public Trigger near(Angle angle, Angle within) {
+  return new Trigger(() -> getAngle().isNear(angle, within));
+}
+```
 
-import static edu.wpi.first.units.Units.*;
+{% hint style="info" %}
+YAMS mechanisms have their own `near(...)` Trigger factory (renamed from `isNear(...)`, the boolean check is still `isNear(...)`). Those read the live `SmartMotorController`, not your logged inputs, so prefer the logged value when the result must be replayed.
+{% endhint %}
 
+## Swerve Drive with AdvantageKit
+
+YAMS swerve integrates seamlessly with AdvantageKit. Here's a complete example based on the official YAMS AdvantageKit swerve examples ([Commands v2 `SwerveSubsystem`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/advantage_kit/java/first/robot/subsystems/SwerveSubsystem.java), [Commands v3 `SwerveMechanism`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/advantage_kit/java/first/robot/mechanisms/SwerveMechanism.java)):
+
+{% hint style="info" %}
+WPILib 2027 renamed the swerve kinematics types: `ChassisSpeeds` is now `ChassisVelocities` and `SwerveModuleState` is now `SwerveModuleVelocity`. The YAMS swerve API uses the new names.
+{% endhint %}
+
+```java
+package first.robot.subsystems;
+
+import static org.wpilib.units.Units.*;
+
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import com.revrobotics.util.CANPorts;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Rotation3d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.LinearVelocity;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.SwerveDriveConfig;
-import yams.mechanisms.config.SwerveModuleConfig;
-import yams.mechanisms.swerve.SwerveDrive;
-import yams.mechanisms.swerve.SwerveModule;
-import yams.mechanisms.swerve.utility.SwerveInputStream;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.commands2.config.SwerveDriveConfig;
+import yams.commands2.swerve.SwerveDrive;
+import yams.commands2.swerve.SwerveInputStream;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.SwerveModuleConfig;
+import yams.core.mechanisms.swerve.SwerveModule;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -749,50 +783,50 @@ public class SwerveSubsystem extends SubsystemBase {
   @AutoLog
   public static class SwerveInputs {
     public SwerveModulePosition[] positions = new SwerveModulePosition[4];
-    public SwerveModuleState[] states = new SwerveModuleState[4];
+    public SwerveModuleVelocity[] states = new SwerveModuleVelocity[4];
     public Angle gyroRotation = Degrees.of(0);
-    public ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds(0, 0, 0);
+    public ChassisVelocities robotRelativeSpeeds = new ChassisVelocities(0, 0, 0);
     public Pose2d estimatedPose = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
   }
 
   private final SwerveInputsAutoLogged swerveInputs = new SwerveInputsAutoLogged();
   private final SwerveDrive drive;
 
-  public SwerveModule createModule(SparkMax driveMotor, SparkMax azimuthMotor, 
+  public SwerveModule createModule(SparkMax driveMotor, SparkMax azimuthMotor,
       CANcoder absoluteEncoder, String moduleName, Translation2d location) {
-    
+
     MechanismGearing driveGearing = new MechanismGearing(GearBox.fromStages("12:1", "2:1"));
     MechanismGearing azimuthGearing = new MechanismGearing(GearBox.fromStages("21:1"));
-    
+
     SmartMotorControllerConfig driveCfg = new SmartMotorControllerConfig(this)
         .withWheelDiameter(Inches.of(4))
         .withClosedLoopController(50, 0, 4)
         .withGearing(driveGearing)
         .withStatorCurrentLimit(Amps.of(40))
         .withTelemetry("driveMotor", TelemetryVerbosity.HIGH);
-    
+
     SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
         .withClosedLoopController(50, 0, 4)
         .withContinuousWrapping(Radians.of(-Math.PI), Radians.of(Math.PI))
         .withGearing(azimuthGearing)
         .withStatorCurrentLimit(Amps.of(20))
         .withTelemetry("angleMotor", TelemetryVerbosity.HIGH);
-    
+
     SmartMotorController driveSMC = new SparkWrapper(driveMotor, DCMotor.getNEO(1), driveCfg);
     SmartMotorController azimuthSMC = new SparkWrapper(azimuthMotor, DCMotor.getNEO(1), azimuthCfg);
-    
+
     SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
         .withAbsoluteEncoder(absoluteEncoder.getAbsolutePosition().asSupplier())
         .withTelemetry(moduleName, TelemetryVerbosity.HIGH)
         .withLocation(location)
         .withOptimization(true);
-    
+
     return new SwerveModule(moduleConfig);
   }
 
-  public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier x, DoubleSupplier y, 
+  public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier x, DoubleSupplier y,
       DoubleSupplier rot) {
-    return new SwerveInputStream(drive, x, y, rot)
+    return SwerveInputStream.of(drive, x, y, rot)
         .withMaximumAngularVelocity(maxAngularVelocity)
         .withMaximumLinearVelocity(maxLinearVelocity)
         .withDeadband(0.01)
@@ -802,28 +836,33 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public SwerveSubsystem() {
-    Pigeon2 gyro = new Pigeon2(14);
+    Pigeon2 gyro = new Pigeon2(14, new CANBus(CANPort.CAN_S0));
     gyroAngleSupplier = gyro.getYaw().asSupplier();
 
-    var fl = createModule(new SparkMax(1, MotorType.kBrushless),
-        new SparkMax(2, MotorType.kBrushless), new CANcoder(3),
+    var fl = createModule(new SparkMax(CANPorts.fromBusId(1), 1, MotorType.kBrushless),
+        new SparkMax(CANPorts.fromBusId(1), 2, MotorType.kBrushless),
+        new CANcoder(3, new CANBus(CANPort.CAN_S0)),
         "frontleft", new Translation2d(Inches.of(12), Inches.of(12)));
-    var fr = createModule(new SparkMax(4, MotorType.kBrushless),
-        new SparkMax(5, MotorType.kBrushless), new CANcoder(6),
+    var fr = createModule(new SparkMax(CANPorts.fromBusId(1), 4, MotorType.kBrushless),
+        new SparkMax(CANPorts.fromBusId(1), 5, MotorType.kBrushless),
+        new CANcoder(6, new CANBus(CANPort.CAN_S0)),
         "frontright", new Translation2d(Inches.of(12), Inches.of(-12)));
-    var bl = createModule(new SparkMax(7, MotorType.kBrushless),
-        new SparkMax(8, MotorType.kBrushless), new CANcoder(9),
+    var bl = createModule(new SparkMax(CANPorts.fromBusId(1), 7, MotorType.kBrushless),
+        new SparkMax(CANPorts.fromBusId(1), 8, MotorType.kBrushless),
+        new CANcoder(9, new CANBus(CANPort.CAN_S0)),
         "backleft", new Translation2d(Inches.of(-12), Inches.of(12)));
-    var br = createModule(new SparkMax(10, MotorType.kBrushless),
-        new SparkMax(11, MotorType.kBrushless), new CANcoder(12),
+    var br = createModule(new SparkMax(CANPorts.fromBusId(1), 10, MotorType.kBrushless),
+        new SparkMax(CANPorts.fromBusId(1), 11, MotorType.kBrushless),
+        new CANcoder(12, new CANBus(CANPort.CAN_S0)),
         "backright", new Translation2d(Inches.of(-12), Inches.of(-12)));
 
     config = new SwerveDriveConfig(this, fl, fr, bl, br)
-        .withGyro(() -> getGyroAngle().getMeasure())
+        // The gyro supplier returns a Rotation3d built from the LOGGED yaw, so replay is deterministic
+        .withGyro(() -> new Rotation3d(getGyroAngle()))
         .withStartingPose(swerveInputs.estimatedPose)
         .withTranslationController(new PIDController(1, 0, 0))
         .withRotationController(new PIDController(1, 0, 0));
-    
+
     drive = new SwerveDrive(config);
   }
 
@@ -839,29 +878,50 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveInputs.gyroRotation = gyroAngleSupplier.get();
   }
 
-  public Command setRobotRelativeChassisSpeeds(Supplier<ChassisSpeeds> speedsSupplier) {
-    return run(() -> {
-      Logger.recordOutput("Swerve/DesiredChassisSpeeds", speedsSupplier.get());
-      SwerveModuleState[] states = drive.getStateFromRobotRelativeChassisSpeeds(speedsSupplier.get());
-      Logger.recordOutput("Swerve/DesiredStates", states);
-      drive.setSwerveModuleStates(states);
-    }).withName("Set Robot Relative Chassis Speeds");
+  /** Drive with field relative speeds (e.g. from a SwerveInputStream) using the logged gyro angle. */
+  public Command setFieldRelativeChassisSpeeds(Supplier<ChassisVelocities> fieldRelativeSpeeds) {
+    return run(() -> setRobotRelativeChassisSpeedsSetpoint(
+        fieldRelativeSpeeds.get().toRobotRelative(getGyroAngle())))
+        .withName("Set Field Relative Chassis Speeds Supplier");
   }
 
+  private void setRobotRelativeChassisSpeedsSetpoint(ChassisVelocities speeds) {
+    Logger.recordOutput("Swerve/DesiredChassisSpeeds", speeds);
+    SwerveModuleVelocity[] states = drive.getStateFromRobotRelativeChassisSpeeds(speeds);
+    Logger.recordOutput("Swerve/DesiredStates", states);
+    drive.setSwerveModuleStates(states);
+  }
+
+  /** PID drive to a pose using the logged pose and gyro angle, so replay follows the same path. */
   public Command driveToPose(Pose2d pose) {
-    return drive.driveToPose(pose);
+    return startRun(() -> {
+      drive.resetTranslationPID();
+      drive.resetRotationPID();
+    }, () -> drive.setRobotRelativeChassisSpeeds(
+        drive.driveToPoseSetpoint(pose, getPose(), getGyroAngle())))
+        .withName("Drive to Pose");
   }
 
+  /** Point every module at its corner (X pattern) with zero drive speed, logging the desired states. */
   public Command lock() {
-    return run(drive::lockPose);
+    return run(() -> {
+      SwerveModule[] modules = config.getModules();
+      SwerveModuleVelocity[] desiredStates = new SwerveModuleVelocity[modules.length];
+      for (int i = 0; i < modules.length; i++) {
+        desiredStates[i] = new SwerveModuleVelocity(0,
+            modules[i].getConfig().getLocation().orElseThrow().getAngle().orElse(Rotation2d.ZERO));
+      }
+      Logger.recordOutput("Swerve/DesiredStates", desiredStates);
+      drive.setSwerveModuleStates(desiredStates);
+    }).withName("Lock");
   }
 
   public Pose2d getPose() { return swerveInputs.estimatedPose; }
-  public ChassisSpeeds getRobotRelativeSpeeds() { return swerveInputs.robotRelativeSpeeds; }
+  public ChassisVelocities getRobotRelativeSpeeds() { return swerveInputs.robotRelativeSpeeds; }
 
   @Override
   public void periodic() {
-    drive.updateTelemetry();  // Updates pose estimator - call BEFORE updateInputs
+    drive.updateTelemetry();  // Updates pose estimator, call BEFORE updateInputs
     updateInputs();
     Logger.processInputs("Swerve", swerveInputs);
   }
@@ -873,31 +933,127 @@ public class SwerveSubsystem extends SubsystemBase {
 }
 ```
 
+The `SwerveInputStream` output is field relative, so bind it through `setFieldRelativeChassisSpeeds`. `withTelemetry(...)` on the stream publishes its mode and configuration, and at `HIGH` adds a `Live Tuning` command (see [SwerveInputStream](swerve-input-stream.md)):
+
+```java
+// In RobotContainer
+drive.setDefaultCommand(drive.setFieldRelativeChassisSpeeds(
+    drive.getChassisSpeedsSupplier(() -> -xboxController.getLeftY(),
+                                   () -> -xboxController.getLeftX(),
+                                   () -> -xboxController.getRightX())
+         .withTelemetry("Driver", TelemetryVerbosity.HIGH)));
+```
+
+{% hint style="warning" %}
+`SwerveDrive.lockPose()` turns every module to its corner (the X pattern) with zero drive speed, but it is marked as not compatible with AdvantageKit. The YAMS AdvantageKit example builds the same X pattern itself in `lock()` and sends it with `setSwerveModuleStates()`, so the desired states are recorded with `Logger.recordOutput()` like every other drive command.
+{% endhint %}
+
+### Commands v3
+
+The [Commands v3 AdvantageKit example](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/advantage_kit) uses the same inputs class and module setup, with these differences:
+
+* The class implements `org.wpilib.command3.Mechanism` instead of extending `SubsystemBase`, and imports `yams.commands3.config.SmartMotorControllerConfig`, `yams.commands3.config.SwerveDriveConfig`, `yams.commands3.swerve.SwerveDrive` and `yams.commands3.swerve.SwerveInputStream`.
+* Commands are coroutines (`while (true)` + `coroutine.yield()`).
+* `periodic()` and `simulationPeriodic()` are plain methods that `Robot.robotPeriodic()` and `Robot.simulationPeriodic()` call before `scheduler.run()`.
+* The teleop opmode creates the `SwerveInputStream` and hands it to the drive mechanism.
+
+```java
+// SwerveMechanism
+private SwerveInputStream inputStream;
+
+public Command driveInputStream() {
+  return run(coroutine -> {
+    while (true) {
+      setFieldRelativeChassisSpeeds(inputStream.get());
+      coroutine.yield();
+    }
+  }).named("Swerve Drive Input Stream");
+}
+
+public void setInputStream(SwerveInputStream inputStream) {
+  // Stop publishing the old stream's telemetry before replacing it
+  if (this.inputStream != null) {
+    this.inputStream.getTelemetry().ifPresent(SwerveInputStreamTelemetry::close);
+  }
+  this.inputStream = inputStream;
+}
+
+public SwerveDrive getSwerveDrive() {
+  return drive;
+}
+```
+
+```java
+// AngularVelocityTeleop, created from Robot.teleopInit()
+robot.drive.setInputStream(SwerveInputStream.of(
+        robot.drive.getSwerveDrive(),
+        () -> -controller.getLeftY(),
+        () -> -controller.getLeftX(),
+        () -> -controller.getRightX())
+    .withDeadband(0.01)
+    .withCubeRotationControllerAxis()
+    .withCubeTranslationControllerAxis()
+    .withAllianceRelativeControl()
+    .withTelemetry("Driver", TelemetryVerbosity.HIGH));
+robot.drive.setDefaultCommand(robot.drive.driveInputStream());
+```
+
 ### Key Points for Swerve with AdvantageKit
 
 1. **Create an `@AutoLog` inputs class** with module states, positions, gyro, and pose
-2. **Call `updateTelemetry()` BEFORE `updateInputs()`** - the pose estimator and internal state updates in `updateTelemetry()`
-3. **Log desired states and speeds** using `Logger.recordOutput()` for replay debugging
-4. **Call `simIterate()` in `simulationPeriodic()`** for physics simulation
+2. **Call `updateTelemetry()` BEFORE `updateInputs()`**: the pose estimator and internal state update in `updateTelemetry()`
+3. **Feed the gyro from the logged yaw** (`withGyro(() -> new Rotation3d(getGyroAngle()))`) so odometry is deterministic in replay
+4. **Log desired states and speeds** using `Logger.recordOutput()` for replay debugging
+5. **Call `simIterate()` in `simulationPeriodic()`** for physics simulation
 
 {% hint style="warning" %}
 **Important: Replay Data Scope**
 
-During AdvantageKit log replay, **only data inside the `@AutoLog` inputs classes is mutated**. YAMS's built-in telemetry (published via `withTelemetry()`) is NOT affected by replay - it will show live simulation values, not replayed values.
+During AdvantageKit log replay, **only data inside the `@AutoLog` inputs classes is mutated**. YAMS's built-in telemetry (published via `withTelemetry()`) is NOT affected by replay: it will show live simulation values, not replayed values.
 
 This means:
 
-* **Inputs you define** (in `SwerveInputs`, `ArmInputs`, etc.) - Replayed correctly
-* **YAMS telemetry** (from `.withTelemetry("Arm")`) - Shows live sim values during replay
+* **Inputs you define** (in `SwerveInputs`, `ArmInputs`, etc.): replayed correctly
+* **YAMS telemetry** (from `.withTelemetry("Arm")`): shows live sim values during replay
 
 To ensure accurate replay debugging, always pull the data you need into your `@AutoLog` inputs class rather than relying on YAMS telemetry during replay.
 {% endhint %}
 
 ## Alternative Pattern: Direct Subsystem (No IO Layer)
 
-For simpler projects where replay isn't needed, you can use YAMS mechanisms directly as shown in the [official examples](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/advantage_kit/src/main/java/frc/robot/subsystems):
+For simpler projects, you can use YAMS mechanisms directly as shown in the official examples ([Commands v2 subsystems](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/advantage_kit/java/first/robot/subsystems), [Commands v3 mechanisms](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/advantage_kit/java/first/robot/mechanisms)):
 
+{% tabs %}
+{% tab title="Commands v2" %}
 ```java
+package first.robot.subsystems;
+
+import static org.wpilib.units.Units.*;
+
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.hardware.TalonFX;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.ArmFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Current;
+import org.wpilib.units.measure.Voltage;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.littletonrobotics.junction.AutoLog;
+import org.littletonrobotics.junction.Logger;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.commands2.mechanisms.Arm;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ArmConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.remote.TalonFXWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+
 public class ArmSubsystem extends SubsystemBase {
 
   @AutoLog
@@ -920,13 +1076,13 @@ public class ArmSubsystem extends SubsystemBase {
         .withFeedforward(new ArmFeedforward(-0.1, 1.2, 0, 0))
         .withGearing(new MechanismGearing(GearBox.fromReductionStages(12.5, 1)))
         .withZeroPower(MotorMode.BRAKE)
-        .withStatorCurrentLimit(Amps.of(120));
+        .withStatorCurrentLimit(Amps.of(120))
+        .withStartingPosition(Degrees.of(141));
 
-    armSMC = new TalonFXWrapper(new TalonFX(40), DCMotor.getFalcon500(1), smcConfig);
+    armSMC = new TalonFXWrapper(new TalonFX(40, new CANBus(CANPort.CAN_S0)), DCMotor.getFalcon500(1), smcConfig);
 
     ArmConfig armCfg = new ArmConfig()
         .withHardLimits(Degrees.of(-25), Degrees.of(141))
-        .withStartingPosition(Degrees.of(141))
         .withLength(Feet.of(14.0 / 12))
         .withTelemetry("Arm", TelemetryVerbosity.HIGH);
 
@@ -941,14 +1097,14 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public Command setAngle(Angle angle) {
-    return arm.run(angle);
+    return arm.setAngle(angle);
   }
 
   @Override
   public void periodic() {
-    arm.updateTelemetry();  // Always call BEFORE updateInputs
     updateInputs();
     Logger.processInputs("Arm", armInputs);
+    arm.updateTelemetry();
   }
 
   @Override
@@ -957,6 +1113,69 @@ public class ArmSubsystem extends SubsystemBase {
   }
 }
 ```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+In Commands v3 the class implements `Mechanism`, imports the `yams.commands3` bindings, and `Robot` calls `periodic()` and `simulationPeriodic()` itself. The inputs, configuration and `updateInputs()` are the same as the Commands v2 tab.
+
+```java
+package first.robot.mechanisms;
+
+// Same static units, CTRE, WPILib math/units, AdvantageKit and yams.core imports as Commands v2, plus:
+import org.wpilib.command3.Command;
+import org.wpilib.command3.Mechanism;
+import org.wpilib.command3.Trigger;
+import yams.commands3.config.SmartMotorControllerConfig;
+import yams.commands3.mechanisms.Arm;
+
+public class ArmMechanism implements Mechanism {
+
+  // ArmInputs, armInputs, smcConfig, armSMC, armCfg, arm and updateInputs() as in Commands v2
+
+  public Command setAngle(Angle angle) {
+    return arm.setAngle(angle);
+  }
+
+  /** Trigger built from the logged angle, so it replays correctly. */
+  public Trigger near(Angle angle, Angle within) {
+    return new Trigger(() -> armInputs.pivotPosition.isNear(angle, within));
+  }
+
+  public void periodic() {
+    updateInputs();
+    Logger.processInputs("Arm", armInputs);
+    arm.updateTelemetry();
+  }
+
+  public void simulationPeriodic() {
+    arm.simIterate();
+  }
+}
+```
+
+```java
+// Robot.java (extends LoggedRobot)
+@Override
+public void robotPeriodic() {
+  drive.periodic();
+  arm.periodic();
+  elevator.periodic();
+  shooter.periodic();
+  indexer.periodic();
+  scheduler.run();
+}
+
+@Override
+public void simulationPeriodic() {
+  drive.simulationPeriodic();
+  arm.simulationPeriodic();
+  elevator.simulationPeriodic();
+  shooter.simulationPeriodic();
+  indexer.simulationPeriodic();
+}
+```
+{% endtab %}
+{% endtabs %}
 
 This pattern is simpler and **does support log replay**, but with a key difference: during replay, the full YAMS simulation runs alongside the logged data. This means:
 
@@ -982,4 +1201,5 @@ Choose the IO layer pattern if you need lightweight replay; choose this direct p
 * [What is AdvantageKit?](https://docs.advantagekit.org/getting-started/what-is-advantagekit)
 * [IO Interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces)
 * [Template Projects](https://docs.advantagekit.org/getting-started/template-projects)
-* [YAMS Example Code](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/simple_robot/src/main/java/frc/robot/subsystems/akit)
+* [YAMS AdvantageKit Example (Commands v2)](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/advantage_kit)
+* [YAMS AdvantageKit Example (Commands v3)](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/advantage_kit)

@@ -10,7 +10,7 @@ Exponential profiles are best described by CTRE, however with YAMS they are supp
 
 ## How can I use exponential profiles?
 
-All `SmartMotorController`s support exponential profiles through the `ExponentialProfilePIDController` closed-loop controller. Use `ExponentialProfilePIDController` instead of `ProfiledPIDController` or `PIDController`.
+All `SmartMotorController`s support exponential profiles. Set your PID gains with `withClosedLoopController(kP, kI, kD)` and add `withExponentialProfile(...)` instead of `withTrapezoidalProfile(...)`. The static helpers on `yams.core.math.ExponentialProfilePIDController` build the profile constraints from your mechanism's physical properties.
 
 ```java
 private final Distance chainPitch = Inches.of(0.25);
@@ -26,16 +26,16 @@ private final SmartMotorControllerConfig motorConfig        = new SmartMotorCont
       ExponentialProfilePIDController.createElevatorConstraints(
                                      Volts.of(12), // Maximum voltage during profile
                                      motors, // Motors
-                                     weight, // Carraige weight
+                                     weight, // Carriage weight
                                      chainPitch.times(toothCount).div(2 * Math.PI), // Drum radius
-                                     gearing))) // Gearing
+                                     gearing)) // Gearing
 ...
 ```
 
-There are multiple ways to create constraints, like [`createArmConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createArmConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\)) or [`createFlyWheelConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createFlywheelConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\)) or even [`createConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.units.measure.AngularVelocity,edu.wpi.first.units.measure.AngularAcceleration\)).
+There are multiple ways to create constraints, like [`createArmConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/math/ExponentialProfilePIDController.html) or [`createFlywheelConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/math/ExponentialProfilePIDController.html) or even [`createConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/math/ExponentialProfilePIDController.html) from a maximum voltage, velocity and acceleration. `SmartMotorControllerConfig` also has `withExponentialProfile(...)` overloads that take the maximum voltage, `DCMotor` and moment of inertia (or carriage mass and drum radius) directly.
 
 ## When should I use exponential profiles?
 
 Exponential Profiles are easier to tune than Trapezoidal Profiles (from `ProfiledPIDController`) and are very good at overcoming mechanical failures to a point. It CANNOT speed up a mechanism that is massively under-powered and slow to move. Trapezoidal Profiles often fail miserably when a mechanism experiences disturbances along its movement, aside from fixing those disturbances an Exponential Profile is probably your best chance at getting it "working" quickly.
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/exponential_arm/java/frc/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}

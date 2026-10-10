@@ -4,41 +4,38 @@
 
 ## Create and Configure our `Elevator`
 
-Our `Arm` will easily configure the `SmartMotorController` and create a simple and intuitive interface.
+Our `Elevator` will easily configure the `SmartMotorController` and create a simple and intuitive interface.
 
 <pre class="language-java" data-title="ExampleSubsystem.java" data-line-numbers><code class="lang-java">// Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
-<strong>import static edu.wpi.first.units.Units.Feet;
-</strong><strong>import static edu.wpi.first.units.Units.Pounds;
-</strong>import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.Seconds;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.mechanisms.SmartMechanism;
-<strong>import yams.mechanisms.config.ElevatorConfig;
-</strong><strong>import yams.mechanisms.positional.Elevator;
-</strong>import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.ElevatorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import yams.commands2.config.SmartMotorControllerConfig;
+<strong>import yams.commands2.mechanisms.Elevator;
+</strong>import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+<strong>import yams.core.mechanisms.config.ElevatorConfig;
+</strong>import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -57,6 +54,8 @@ public class ExampleSubsystem extends SubsystemBase {
   // Gearing from the motor rotor to final shaft.
   // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+  // Starting height of the carriage, required for simulation.
+  .withStartingPosition(Meters.of(0))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
   .withZeroPower(MotorMode.BRAKE)
@@ -65,7 +64,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withOpenLoopRampRate(Seconds.of(0.25));
 
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
   private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
@@ -127,38 +126,35 @@ We use the `Elevator` class as a interface to create commands!
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Feet;
-import static edu.wpi.first.units.Units.Pounds;
-<strong>import static edu.wpi.first.units.Units.Second;
-</strong><strong>import static edu.wpi.first.units.Units.Seconds;
-</strong><strong>import static edu.wpi.first.units.Units.Volts;
-</strong>
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.MetersPerSecondPerSecond;
+import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.Seconds;
+
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
-import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.system.plant.DCMotor;
-<strong>import edu.wpi.first.units.measure.Distance;
-</strong>import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import yams.mechanisms.SmartMechanism;
-import yams.mechanisms.config.ElevatorConfig;
-import yams.mechanisms.positional.Elevator;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.ElevatorFeedforward;
+import org.wpilib.math.system.DCMotor;
+<strong>import org.wpilib.units.measure.Distance;
+</strong>import yams.commands2.config.SmartMotorControllerConfig;
+import yams.commands2.mechanisms.Elevator;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ElevatorConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public class ExampleSubsystem extends SubsystemBase {
 
@@ -167,8 +163,10 @@ public class ExampleSubsystem extends SubsystemBase {
   // Drum radius is required for elevators. Chain-driven: specify chain pitch and tooth count.
   .withDrumRadius(Inches.of(0.25), 22)
   // Feedback Constants (PID Constants)
-  .withClosedLoopController(4, 0, 0, MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
-  .withSimClosedLoopController(4, 0, 0, MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
+  .withClosedLoopController(4, 0, 0)
+  .withSimClosedLoopController(4, 0, 0)
+  // Motion profile limits (max velocity and acceleration)
+  .withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
   // Feedforward Constants
   .withFeedforward(new ElevatorFeedforward(0, 0, 0))
   .withSimFeedforward(new ElevatorFeedforward(0, 0, 0))
@@ -177,6 +175,8 @@ public class ExampleSubsystem extends SubsystemBase {
   // Gearing from the motor rotor to final shaft.
   // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+  // Starting height of the carriage, required for simulation.
+  .withStartingPosition(Meters.of(0))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
   .withZeroPower(MotorMode.BRAKE)
@@ -185,7 +185,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withOpenLoopRampRate(Seconds.of(0.25));
 
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
   private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
@@ -193,7 +193,6 @@ public class ExampleSubsystem extends SubsystemBase {
   private ElevatorConfig elevconfig = new ElevatorConfig()
       .withHardLimits(Meters.of(0), Meters.of(3))
       .withTelemetry("Elevator", TelemetryVerbosity.HIGH)
-      .withMechanismPositionConfig(m_robotToMechanism)
       .withCarriageWeight(Pounds.of(16));
 
   // Elevator Mechanism
@@ -201,7 +200,7 @@ public class ExampleSubsystem extends SubsystemBase {
 
 <strong>  /**
 </strong><strong>   * Set the height of the elevator.
-</strong><strong>   * @param angle Distance to go to.
+</strong><strong>   * @param height Distance to go to.
 </strong><strong>   */
 </strong><strong>  public Command run(Distance height) { return elevator.run(height);}
 </strong>
@@ -237,18 +236,15 @@ We bind buttons to use the `Commands` from our `Elevator`
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package first.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import first.robot.subsystems.ExampleSubsystem;
 
-<strong>import static edu.wpi.first.units.Units.Meters;
+<strong>import static org.wpilib.units.Units.Meters;
 </strong>
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.button.CommandNiDsXboxController;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -260,9 +256,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandNiDsXboxController m_driverController = new CommandNiDsXboxController(0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -273,22 +267,15 @@ public class RobotContainer {
 </strong><strong>    m_exampleSubsystem.setDefaultCommand(m_exampleSubsystem.run(Meters.of(0)));
 </strong>  }
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
-   */
+  /** Use this method to define your trigger->command mappings. */
   private void configureBindings() {
     
-<strong>    // Schedule `run` when the Xbox controller's B button is pressed,
+<strong>    // Schedule `run` when the Xbox controller's A or B button is pressed,
 </strong><strong>    // cancelling on release.
 </strong><strong>    m_driverController.a().whileTrue(m_exampleSubsystem.run(Meters.of(0.5)));
 </strong><strong>    m_driverController.b().whileTrue(m_exampleSubsystem.run(Meters.of(1)));
-</strong><strong>    // Schedule `set` when the Xbox controller's B button is pressed,
+</strong>
+<strong>    // Schedule `set` when the Xbox controller's X or Y button is pressed,
 </strong><strong>    // cancelling on release.
 </strong><strong>    m_driverController.x().whileTrue(m_exampleSubsystem.set(0.3));
 </strong><strong>    m_driverController.y().whileTrue(m_exampleSubsystem.set(-0.3));
@@ -301,8 +288,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return Commands.print("No autonomous command configured");
   }
 }
 
@@ -327,3 +313,7 @@ Press **Teleoperated** in **Robot State** then you can use your controller like 
 <figure><img src="../.gitbook/assets/Robot Simulation 2025-08-30 18-37-59.gif" alt=""><figcaption></figcaption></figure>
 
 Congratulations on successfully programming your Elevator!! :tada::tada:
+
+{% hint style="info" %}
+**Using Commands v3?** Import `yams.commands3.config.SmartMotorControllerConfig` and `yams.commands3.mechanisms.Elevator` instead, have your class implement `org.wpilib.command3.Mechanism` instead of extending `SubsystemBase`, and return `org.wpilib.command3.Command`. The `Elevator` command and trigger factories (`run()`, `runTo()`, `setHeight()`, `set()`, `near()`) have the same names. Call `updateTelemetry()` and `simIterate()` from your robot's periodic method yourself, since a v3 `Mechanism` has no `periodic()` hook. See `examples/commands3/simple_robot-2027` in the YAMS repo for a complete robot.
+{% endhint %}

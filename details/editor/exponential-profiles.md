@@ -111,7 +111,7 @@ This shows that as velocity (ω) increases, the available acceleration (α) decr
 
 ## Exponential Profiles in YAMS
 
-YAMS provides `ExponentialProfilePIDController` which combines an exponential motion profile with a PID controller. This replaces `ProfiledPIDController` (which uses trapezoidal profiles) or `PIDController` (which has no profiling).
+YAMS provides `ExponentialProfilePIDController` (`yams.core.math.ExponentialProfilePIDController`), which combines an exponential motion profile with a PID controller and has factory methods for the profile's constraints. In a `SmartMotorControllerConfig` you set the PID gains with `withClosedLoopController(kP, kI, kD)` and the profile with `withExponentialProfile(constraints)`, instead of a trapezoidal profile (`withTrapezoidalProfile`) or no profile at all.
 
 ### Creating Constraints
 
@@ -170,17 +170,13 @@ ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.cre
 ```java
 SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(new ExponentialProfilePIDController(
-        30,  // kP
-        0,   // kI
-        0,   // kD
-        ExponentialProfilePIDController.createElevatorConstraints(
-            Volts.of(12),
-            DCMotor.getNEO(2),
-            Pounds.of(15),
-            Inches.of(1),
-            gearing
-        )
+    .withClosedLoopController(30, 0, 0) // kP, kI, kD
+    .withExponentialProfile(ExponentialProfilePIDController.createElevatorConstraints(
+        Volts.of(12),
+        DCMotor.getNEO(2),
+        Pounds.of(15),
+        Inches.of(1),
+        gearing
     ))
     .withGearing(gearing)
     .withFeedforward(new ElevatorFeedforward(0, 0.5, 0, 0))
@@ -251,10 +247,11 @@ When using exponential profiles, the profile itself handles the velocity and acc
 | ------------------------ | ------------------------ | ----------------------------- | --------------------------- |
 | TalonFX (Kraken, Falcon) | On-device (Motion Magic) | On-device (Motion Magic Expo) | Best performance            |
 | TalonFXS                 | On-device (Motion Magic) | On-device (Motion Magic Expo) | Best performance            |
-| SparkMax/SparkFlex       | On-device (MAXMotion)    | RoboRIO                       | Exponential runs on RoboRIO |
+| SparkMax/SparkFlex       | On-device (MAXMotion)    | SystemCore                    | Exponential runs on the SystemCore |
+| Thrifty Nova             | SystemCore               | SystemCore                    | All closed loop control runs on the SystemCore |
 
 {% hint style="info" %}
-When exponential profiles run on the RoboRIO, there's slightly more latency compared to on-device execution. However, the profile calculation is still very fast and suitable for most mechanisms.
+When exponential profiles run on the SystemCore, there's slightly more latency compared to on-device execution. However, the profile calculation is still very fast and suitable for most mechanisms.
 {% endhint %}
 
 ## Common Issues and Solutions
@@ -297,27 +294,26 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
         .withControlMode(ControlMode.CLOSED_LOOP)
         .withDrumRadius(chainPitch, toothCount)
-        .withClosedLoopController(new ExponentialProfilePIDController(
-            15, 0, 0,
-            ExponentialProfilePIDController.createElevatorConstraints(
-                Volts.of(10), // Conservative voltage for testing
-                motors,
-                carriageMass,
-                chainPitch.times(toothCount).div(2 * Math.PI),
-                gearing
-            )
+        .withClosedLoopController(15, 0, 0)
+        .withExponentialProfile(ExponentialProfilePIDController.createElevatorConstraints(
+            Volts.of(10), // Conservative voltage for testing
+            motors,
+            carriageMass,
+            chainPitch.times(toothCount).div(2 * Math.PI),
+            gearing
         ))
-        .withSimClosedLoopController(15, 0, 0, 
-            MetersPerSecond.of(1), MetersPerSecondPerSecond.of(2))
+        .withSimClosedLoopController(15, 0, 0)
         .withFeedforward(new ElevatorFeedforward(0.1, 0.25, 0, 0))
         .withSimFeedforward(new ElevatorFeedforward(0, 0.2, 0, 0))
         .withGearing(gearing)
         .withZeroPower(MotorMode.BRAKE)
         .withStatorCurrentLimit(Amps.of(40))
+        .withSoftLimits(Meters.of(0), Meters.of(1.2))
+        .withStartingPosition(Meters.of(0))
         .withTelemetry("ElevatorMotor", TelemetryVerbosity.HIGH);
 
-    private final SparkMax leftSpark = new SparkMax(1, MotorType.kBrushless);
-    private final SparkMax rightSpark = new SparkMax(2, MotorType.kBrushless);
+    private final SparkMax leftSpark = new SparkMax(CANPorts.fromBusId(1), 1, MotorType.kBrushless);
+    private final SparkMax rightSpark = new SparkMax(CANPorts.fromBusId(1), 2, MotorType.kBrushless);
     
     private final SmartMotorController motor = new SparkWrapper(
         leftSpark, 
@@ -327,16 +323,24 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private final Elevator elevator = new Elevator(
         new ElevatorConfig()
-            .withSoftLimits(Meters.of(0), Meters.of(1.2))
             .withHardLimits(Meters.of(-0.05), Meters.of(1.3))
-            .withStartingPosition(Meters.of(0))
             .withCarriageWeight(carriageMass)
             .withTelemetry("Elevator", TelemetryVerbosity.HIGH),
         motor
     );
 
     public Command goToHeight(Distance height) {
-        return elevator.setGoalCommand(height);
+        return elevator.setHeight(height);
+    }
+
+    @Override
+    public void periodic() {
+        elevator.updateTelemetry();
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        elevator.simIterate();
     }
 }
 ```

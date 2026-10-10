@@ -63,7 +63,7 @@ An example of this for an Elevator would be as follows
   .withClosedLoopController(kP, kI, kD)
   .withTrapezoidalProfile(maxVel, maxAccel)
   // Uncomment below to set sim only values.
-  //.withSimClosedLoopController(4, 0, 0, MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
+  //.withSimClosedLoopController(4, 0, 0)
   // Feedforward Constants
   .withFeedforward(realFeedforward)
   .withSimFeedforward(simFeedforward)
@@ -89,7 +89,7 @@ An example of this for an Elevator would be as follows
   .withClosedLoopController(kP, kI, kD)
   .withTrapezoidalProfile(maxVel, maxAccel)
   // Uncomment below to set sim only values.
-  //.withSimClosedLoopController(4, 0, 0, MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
+  //.withSimClosedLoopController(4, 0, 0)
   // Feedforward Constants
   .withFeedforward(realFeedforward)
   .withSimFeedforward(simFeedforward)
@@ -106,8 +106,8 @@ An example of this for an Elevator would be as follows
   .withOpenLoopRampRate(openLoopRampRate);
 
   // Vendor motor controller object
-  private SparkMax leftSpark = new SparkMax(4, MotorType.kBrushless);
-  private SparkMax rightSpark = new SparkMax(6, MotorType.kBrushless);
+  private SparkMax leftSpark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+  private SparkMax rightSpark = new SparkMax(CANPort.CAN_S0, 6, MotorType.kBrushless);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
   private SmartMotorController leftSparkSmartMotorController = new SparkWrapper(leftSpark, DCMotor.getNEO(1), leftSmcConfig);
@@ -127,10 +127,10 @@ An example of this for an Elevator would be as follows
   /**
    * Set the dutycycle of the SmartMotorController without interrupting 
    *
-   * @param dutyCycle Value between [-1, 1] which will control the speed of the motor.
+   * @param dutycycle Value between [-1, 1] which will control the speed of the motor.
    * @return StartRun command which turns off the closed loop controller, sets the dutycycle of the SMC then turns the closed loop controller back on when interrupted.
    */
-<strong>  public Command setDutyCycle(double dutyCycle)
+<strong>  public Command setDutyCycle(double dutycycle)
 </strong><strong>  {
 </strong><strong>    return startRun(()->{leftSparkSmartMotorController.stopClosedLoopController();rightSparkSmartMotorController.stopClosedLoopController();}, // Stop the closed loop controller since the motor is in ControlMode.CLOSED_LOOP
 </strong><strong>           () -> {leftSparkSmartMotorController.setDutyCycle(dutycycle);rightSparkSmartMotorController.setDutyCycle(dutycycle);}) // Apply the dutycycle given
@@ -151,12 +151,12 @@ An example of this for an Elevator would be as follows
 </strong>  
   /**
    * Set the position of the spark motor controller.
-   * @param position Measurement position to go to.
+   * @param height Measurement position to go to.
    * @return RunCommand which will set the position of the measurement until interrupted.
    */
 <strong>  public Command setMechanismPosition(Distance height)
 </strong><strong>  {
-</strong><strong>    return run(() -> {leftSparkSmartMotorController.setPosition(position);rightSparkSmartMotorController.setPosition(position);})
+</strong><strong>    return run(() -> {leftSparkSmartMotorController.setPosition(height);rightSparkSmartMotorController.setPosition(height);})
 </strong><strong>            .withName("Custom SetPosition with Height");
 </strong><strong>  }
 </strong>  
@@ -175,6 +175,12 @@ An example of this for an Elevator would be as follows
   }
 }
 </code></pre>
+
+{% hint style="info" %}
+For Commands v2, `SmartMotorControllerConfig` and `Elevator` come from `yams.commands2.config` and `yams.commands2.mechanisms`. `SmartMotorController`, `SparkWrapper`, `ElevatorConfig`, the gearing classes and the enums come from `yams.core`. With Commands v3, use the `yams.commands3` classes and write the commands as coroutines on your `Mechanism` instead of `startRun(...)` and `run(...)`.
+
+If both motors should simply chase the same position or velocity setpoint, `SmartMotorControllerConfig.withLooselyCoupledFollowers(SmartMotorController...)` forwards those requests for you. Keep at most one YAMS mechanism class per subsystem so live tuning keeps working.
+{% endhint %}
 
 {% hint style="success" %}
 Remember that mechanisms will re-apply a modified `SmartMotorControllerConfig` with changes from their respective config classes when the mechanism is created!&#x20;

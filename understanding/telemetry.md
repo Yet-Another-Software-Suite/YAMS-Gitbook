@@ -7,7 +7,7 @@ icon: hand-pointer
 ## The basics of telemetry
 
 {% hint style="info" %}
-Using DataLog will increase your storage on the RIO and could have negative consequences. Please review [WPILib ](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog)for more information.
+Using DataLog will increase your storage on the SystemCore and could have negative consequences. Please review [WPILib ](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog)for more information.
 {% endhint %}
 
 By default telemetry is sent to NetworkTables via NT4 entries. This is not the only way telemetry can be logged! If you set a DataLogName inside of `SmartMotorControllerTelemetryConfig` with `SmartMotorControllerTelemetryConfig.withDataLogName(entry)` it will log everything that is sent to NT4 in that log. However this can pollute your telemetry quite alot! We recommend pruning your telemetry so that only things you absolutely want in the file will appear.
@@ -28,7 +28,7 @@ Looking for a deeper dive on enabling/disabling NetworkTables, choosing what to 
 
 Every Mechanism has a Tuning table and a display table on the robot. Mechanism tables contain the SmartMotorControllers used in that mechanism.
 
-All Mechanism tables are stored under `NT:/Mechanisms` NOT `NT:/SmartDashboard` however `NT:/SmartDashboard` does contain some useful Mechanism2d's that can be shown in your dashboard, and commands like "Live Tuning"
+All Mechanism tables are stored under `NT:/Mechanisms` NOT `NT:/SmartDashboard`. Each mechanism's `Mechanism2d` is published at `NT:/Mechanisms/<name>/mechanism`, and tunable values plus commands like "Live Tuning" live under `NT:/Tuning` (the command is at `NT:/Tuning/<SubsystemName>/Live Tuning`, see [Live tuning](../details/integrations.md)).
 
 The image below has the Telemetry output of an Elevator with the Telemetry name of `Elevator` and the SmartMotorController TelemetryName of `ElevatorMotor`
 
@@ -56,11 +56,12 @@ SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControl
           .withMechanismUpperLimit();
           
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-      .withClosedLoopController(4, 0, 0, DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
+      .withClosedLoopController(4, 0, 0)
+      .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
       .withSoftLimits(Degrees.of(-30), Degrees.of(100))
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withZeroPower(MotorMode.BRAKE)
-      .withTelemetry("ElevatorMotor", motorTelemetryConfig)
+      .withTelemetry("ElevatorMotor", motorTelemetryConfig);
 ```
 
 If a field you want doesn't have its own `with*()` method, or you want to enable/disable a whole set of fields in one call, use the `withCustom(...)` escape hatch. It takes a `BooleanTelemetryField`/`DoubleTelemetryField` (or an array of either) plus a boolean to enable or disable them:
@@ -75,14 +76,20 @@ SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControl
           }, false);
 ```
 
-See the `SmartMotorControllerTelemetryConfig` API reference page for the full method list. `withCustom(...)` is currently Java-only.
+See the `SmartMotorControllerTelemetryConfig` API reference page for the full method list. In C++ the equivalent is `WithCustom(field, enabled)`, which takes a single field or a `std::vector` of fields.
+
+In Java, `SmartMotorControllerTelemetryConfig`, `SmartMotorControllerTelemetry` and the swerve telemetry configs live in `yams.core.telemetry`, and `TelemetryVerbosity` is `yams.core.telemetry.enums.TelemetryVerbosity`.
 
 ## StructTelemetry and StructArrayTelemetry
 
-`SmartMotorControllerTelemetry` publishes plain numbers and booleans with `DoubleTelemetry`/`BooleanTelemetry`. Swerve telemetry needs to publish NT4 struct-encoded types instead, a single `Pose2d` or `ChassisSpeeds`, or an array of `SwerveModuleState`, so it's built on two generic counterparts:
+`SmartMotorControllerTelemetry` publishes plain numbers and booleans with `DoubleTelemetry`/`BooleanTelemetry`. Swerve telemetry needs to publish NT4 struct-encoded types instead, a single `Pose2d` or `ChassisVelocities`, or an array of `SwerveModuleVelocity`, so it's built on two generic counterparts:
 
-* `StructTelemetry<T>` publishes a single struct-serializable value (anything WPILib can encode as an NT4 struct: `Pose2d`, `ChassisSpeeds`, `SwerveModuleState`, etc.).
-* `StructArrayTelemetry<T>` publishes an array of that same kind of value, used for the four-module `SwerveModuleState[]` fields.
+* `StructTelemetry<T>` publishes a single struct-serializable value (anything WPILib can encode as an NT4 struct: `Pose2d`, `ChassisVelocities`, `SwerveModuleVelocity`, etc.).
+* `StructArrayTelemetry<T>` publishes an array of that same kind of value, used for the four-module `SwerveModuleVelocity[]` fields.
+
+{% hint style="info" %}
+WPILib 2027 renamed `ChassisSpeeds` to `ChassisVelocities` and `SwerveModuleState` to `SwerveModuleVelocity`. The YAMS method and telemetry field names (`withDesiredModuleStates()`, `setSwerveModuleStates(...)`, `withFieldRelativeChassisSpeeds()`) kept their old spelling.
+{% endhint %}
 
 Both work exactly like `DoubleTelemetry`, they can be enabled/disabled per field, wired to NetworkTables and/or a DataLog entry, and (for fields marked tunable) read back a live-edited value from NetworkTables. You won't normally construct these directly, `SwerveDriveTelemetryConfig` and `SwerveModuleTelemetryConfig` (below) create and manage them for you.
 
@@ -103,13 +110,13 @@ SwerveDriveTelemetryConfig driveTelemetryConfig = new SwerveDriveTelemetryConfig
     .withDataLogName("swerve");
 
 SwerveDriveConfig driveConfig = new SwerveDriveConfig(this, frontLeft, frontRight, backLeft, backRight)
-    .withGyro(gyro.getYaw().asSupplier())
+    .withGyro(gyro::getRotation3d)
     .withTelemetry("swerve", driveTelemetryConfig);
 ```
 
 Unlike a single-motor mechanism's `withTelemetry(...)`, `SwerveDriveConfig.withTelemetry(...)` always takes the telemetry name as its first argument: `withTelemetry(String name, TelemetryVerbosity)` or `withTelemetry(String name, SwerveDriveTelemetryConfig)`, there's no name-less overload and no separate `withTelemetryName(...)` setter. There is no `SwerveDriveConfig.withDataLogName(...)` either, DataLog configuration lives entirely on `SwerveDriveTelemetryConfig`, passed in via `withTelemetry(name, SwerveDriveTelemetryConfig)`. If you already have a `TelemetryVerbosity` in hand and don't need to customize anything else, `new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)` is shorthand for `new SwerveDriveTelemetryConfig().withTelemetryVerbosity(TelemetryVerbosity.HIGH)` (same shorthand constructor exists on `SwerveModuleTelemetryConfig`).
 
-`SwerveModuleTelemetryConfig` follows the same pattern for a single module (`withAbsoluteEncoder()`, `withState()` for the module's `SwerveModuleState`), fed to `SwerveModuleConfig.withTelemetry(name, SwerveModuleTelemetryConfig)`. Note that `withTelemetryVerbosity(...)` only enables `withState()` at `HIGH`, at `MID`/`LOW` only the absolute encoder angle is published. `SwerveModuleConfig` does not have its own `withDataLogName(...)` shorthand, DataLog configuration for a module goes through `SwerveModuleTelemetryConfig.withDataLogName(...)` the same way it does for the drive.
+`SwerveModuleTelemetryConfig` follows the same pattern for a single module (`withAbsoluteEncoder()`, `withState()` for the module's `SwerveModuleVelocity`), fed to `SwerveModuleConfig.withTelemetry(name, SwerveModuleTelemetryConfig)`. Note that `withTelemetryVerbosity(...)` only enables `withState()` at `HIGH`, at `MID`/`LOW` only the absolute encoder angle is published. `SwerveModuleConfig` does not have its own `withDataLogName(...)` shorthand, DataLog configuration for a module goes through `SwerveModuleTelemetryConfig.withDataLogName(...)` the same way it does for the drive.
 
 Neither `SwerveDriveTelemetryConfig` nor `SwerveModuleTelemetryConfig` cascades down to the drive/azimuth motors inside a module. If you want granular control over an individual drive or azimuth motor's telemetry (including its own DataLog name), build that motor's `SmartMotorControllerConfig` with `.withTelemetry(name, SmartMotorControllerTelemetryConfig)` exactly like you would for any standalone `SmartMotorController`, see [DataLog Best Practices](../details/datalog-best-practices.md) for a full walkthrough.
 
@@ -117,11 +124,11 @@ If a field doesn't have its own `with*()` method, `withCustom(...)` works the sa
 
 ### Live-tuning auto-align PID from NetworkTables
 
-`SwerveDriveTelemetryConfig`'s `HIGH` verbosity also publishes a tunable target pose (`autoalign/setpoint/x`/`autoalign/setpoint/y` in meters, `autoalign/setpoint/rot` in degrees, gated by an `autoalign/enabled` boolean) and tunable translation/rotation PID gains under a `Tuning` NetworkTables table. `SwerveDrive` publishes a "Live Tuning"-style command to SmartDashboard at `Mechanisms/<name>/tuning/driveToPose`; running it resets the translation/rotation PID controllers, then every loop it checks `autoalign/enabled` and, while `true`, reads the tunable target pose and P/I/D gains back from NetworkTables and drives the robot toward that pose live, useful for dialing in auto-align gains from a dashboard without redeploying code. `SwerveDrive.setRotationPID(...)`/`setTranslationPID(...)` only reset and replace a PID controller if a gain actually changed, so tuning doesn't wipe the integrator every single loop.
+`SwerveDriveTelemetryConfig`'s `HIGH` verbosity also publishes a tunable target pose (`autoalign/setpoint/x`/`autoalign/setpoint/y` in meters, `autoalign/setpoint/rot` in degrees, gated by an `autoalign/enabled` boolean) and tunable translation/rotation PID gains (`autoalign/translation/p,i,d`, `autoalign/rotation/p,i,d`) under the `Tuning/<name>` NetworkTables table. When both a translation and a rotation PID controller are configured, `SwerveDrive` publishes a "Live Tuning"-style command at `Mechanisms/<name>/tuning` (a Commands v2 `Command` with `yams.commands2`, a Commands v3 command wrapped in `CommandTunable` with `yams.commands3`); running it resets the translation/rotation PID controllers, then every loop it checks `autoalign/enabled` and, while `true`, reads the tunable target pose and P/I/D gains back from NetworkTables and drives the robot toward that pose live, useful for dialing in auto-align gains from a dashboard without redeploying code. `SwerveDrive.setRotationPID(...)`/`setTranslationPID(...)` only reset and replace a PID controller if a gain actually changed, so tuning doesn't wipe the integrator every single loop.
 
-The same `HIGH` verbosity also publishes a shared set of drive-motor (`modules/drive/feedback/p,i,d`, `modules/drive/feedforward/s,v,a`, `modules/drive/velocity`, `modules/drive/enabled`, `modules/drive/inplace`) and azimuth-motor (`modules/azimuth/feedback/p,i,d`, `modules/azimuth/feedforward/s,v,a`, `modules/azimuth/angle`, `modules/azimuth/enabled`) tuning fields, read from the same `Mechanisms/<name>/tuning/driveToPose` command. These apply to **every module on the drive at once** (there's no per-module variant), which is normally what you want since a swerve chassis's modules are built identically. As with the auto-align gains, a `modules/*/feedback/*` PID gain or `modules/*/feedforward/*` feedforward gain only calls `SmartMotorController.setKp(...)`/`setKi(...)`/`setKd(...)`/`setKs(...)`/`setKv(...)`/`setKa(...)` on each module's drive or azimuth motor when that gain's NetworkTables value actually changes, not every loop; the velocity/angle setpoint, by contrast, is re-applied every loop while its `enabled` toggle is `true`, same as the auto-align target pose. Both setpoints are applied via a `SwerveModuleState[]` (one entry per module) passed to `SwerveDrive.setSwerveModuleStates(...)` in a single call, rather than the drive/azimuth `SmartMotorController`s directly: while `modules/drive/inplace` is `false` (the default), drive tuning builds each module's state with the tuned velocity and an angle of `0°`; while `modules/drive/inplace` is `true`, it instead orients each module tangent to its position around the robot center (that module's location angle plus `90°`), so a positive `modules/drive/velocity` spins the whole robot counter-clockwise in place, matching WPILib's positive rotation direction. Azimuth tuning builds every module's state with the tuned angle and `0` speed (so it never also drives). The feedback and feedforward gains are pre-seeded from the first module's configured PID controller and `SimpleMotorFeedforward`, not `0`.
+The same `HIGH` verbosity also publishes a shared set of drive-motor (`modules/drive/feedback/p,i,d`, `modules/drive/feedforward/s,v,a`, `modules/drive/velocity`, `modules/drive/enabled`, `modules/drive/inplace`) and azimuth-motor (`modules/azimuth/feedback/p,i,d`, `modules/azimuth/feedforward/s,v,a`, `modules/azimuth/angle`, `modules/azimuth/enabled`) tuning fields, applied by the same `Mechanisms/<name>/tuning` command. These apply to **every module on the drive at once** (there's no per-module variant), which is normally what you want since a swerve chassis's modules are built identically. As with the auto-align gains, a `modules/*/feedback/*` PID gain or `modules/*/feedforward/*` feedforward gain only calls `SmartMotorController.setKp(...)`/`setKi(...)`/`setKd(...)`/`setKs(...)`/`setKv(...)`/`setKa(...)` on each module's drive or azimuth motor when that gain's NetworkTables value actually changes, not every loop; the velocity/angle setpoint, by contrast, is re-applied every loop while its `enabled` toggle is `true`, same as the auto-align target pose. Both setpoints are applied via a `SwerveModuleVelocity[]` (one entry per module) passed to `SwerveDrive.setSwerveModuleStates(...)` in a single call, rather than the drive/azimuth `SmartMotorController`s directly: while `modules/drive/inplace` is `false` (the default), drive tuning builds each module's state with the tuned velocity and an angle of `0°`; while `modules/drive/inplace` is `true`, it instead orients each module tangent to its position around the robot center (that module's location angle plus `90°`), so a positive `modules/drive/velocity` spins the whole robot counter-clockwise in place, matching WPILib's positive rotation direction. Azimuth tuning builds every module's state with the tuned angle and `0` speed (so it never also drives). The feedback and feedforward gains are pre-seeded from the first module's configured PID controller and `SimpleMotorFeedforward`, not `0`.
 
-`autoalign/enabled`, `modules/drive/enabled`, and `modules/azimuth/enabled` are mutually exclusive: `ApplyTuningValues` only ever acts on one (priority order auto-align, then drive tuning, then azimuth tuning) and forces the others' NetworkTables value back to `false` if more than one is `true` at once. Turning off `modules/drive/enabled` (while auto-align isn't active) also commands every module's drive motor to `0` m/s every loop, so it doesn't keep coasting at the last tuned velocity. `modules/drive/inplace` only matters while `modules/drive/enabled` is `true`; it doesn't have its own auto-off behavior.
+`autoalign/enabled`, `modules/drive/enabled`, and `modules/azimuth/enabled` are mutually exclusive: `applyTuningValues()` only ever acts on one (priority order auto-align, then drive tuning, then azimuth tuning) and forces the others' NetworkTables value back to `false` if more than one is `true` at once. Turning off `modules/drive/enabled` (while auto-align isn't active) also commands every module's drive motor to `0` m/s every loop, so it doesn't keep coasting at the last tuned velocity. `modules/drive/inplace` only matters while `modules/drive/enabled` is `true`; it doesn't have its own auto-off behavior.
 
 ## Colors
 
@@ -146,25 +153,25 @@ All telemetry values in YAMS are logged with specific units. Understanding these
 | RotorPosition       | Rotations (rot)              | Position of the motor rotor (before gearing)          |
 | MechanismVelocity   | Rotations per Second (rot/s) | Velocity of the mechanism output shaft                |
 | RotorVelocity       | Rotations per Second (rot/s) | Velocity of the motor rotor                           |
-| MechanismLowerLimit | Rotations (rot)              | Lower soft limit position                             |
-| MechanismUpperLimit | Rotations (rot)              | Upper soft limit position                             |
-| ClosedLoopTarget    | Rotations (rot) or rot/s     | Target position or velocity depending on control mode |
-| ClosedLoopError     | Rotations (rot) or rot/s     | Error from target (same unit as target)               |
-| AppliedVoltage      | Volts (V)                    | Voltage currently being applied to the motor          |
+| MechanismLowerLimit | Degrees (deg)                | Lower soft limit position                             |
+| MechanismUpperLimit | Degrees (deg)                | Upper soft limit position                             |
+| SetpointPosition    | Rotations (rot) or Meters    | Closed loop position target (meters for linear mechanisms) |
+| SetpointVelocity    | rot/s or m/s                 | Closed loop velocity target                           |
+| OutputVoltage       | Volts (V)                    | Voltage currently being applied to the motor          |
 | SupplyCurrent       | Amps (A)                     | Current drawn from the battery                        |
 | StatorCurrent       | Amps (A)                     | Current through the motor windings                    |
-| Temperature         | Celsius (°C)                 | Motor controller temperature                          |
+| MotorTemperature    | Fahrenheit (°F)              | Motor temperature                                     |
 
 ### Linear Mechanism Units
 
 When you configure a mechanism with a circumference (using `.withMechanismCircumference()`, or one of the `.withWheelDiameter()`/`.withWheelRadius()`/`.withDrumRadius()` helpers that set it internally), linear telemetry fields become available:
 
-| Telemetry Field  | Unit                    | Description                      |
-| ---------------- | ----------------------- | -------------------------------- |
-| LinearPosition   | Meters (m)              | Linear position of the mechanism |
-| LinearVelocity   | Meters per Second (m/s) | Linear velocity of the mechanism |
-| LinearLowerLimit | Meters (m)              | Lower soft limit in linear units |
-| LinearUpperLimit | Meters (m)              | Upper soft limit in linear units |
+| Telemetry Field       | Unit                    | Description                      |
+| --------------------- | ----------------------- | -------------------------------- |
+| MeasurementPosition   | Meters (m)              | Linear position of the mechanism |
+| MeasurementVelocity   | Meters per Second (m/s) | Linear velocity of the mechanism |
+| MeasurementLowerLimit | Meters (m)              | Lower soft limit in linear units |
+| MeasurementUpperLimit | Meters (m)              | Upper soft limit in linear units |
 
 {% hint style="info" %}
 YAMS logs rotational units by default. Linear units are calculated from rotational units using your configured circumference: `linear = rotational × circumference`
@@ -196,7 +203,7 @@ AdvantageScope allows you to plot values with **different units on the same axis
 
 **Example: Comparing Position and Velocity** You can plot both `MechanismPosition` (in degrees) and `MechanismVelocity` (in degrees/second) on the same graph to see how velocity changes relative to position during a motion profile.
 
-**Example: Comparing Setpoint vs Actual** Plot `ClosedLoopTarget` and `MechanismPosition` with the same unit conversion to directly compare your target trajectory against actual mechanism movement.
+**Example: Comparing Setpoint vs Actual** Plot `SetpointPosition` and `MechanismPosition` with the same unit conversion to directly compare your target trajectory against actual mechanism movement.
 
 **Example: Analyzing Current Draw** Plot `SupplyCurrent` and `StatorCurrent` together to understand the relationship between battery load and motor torque output.
 

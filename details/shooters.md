@@ -9,6 +9,22 @@ icon: crosshairs-simple
 Given the [tutorial](../tutorials/shooter-flywheels.md) we have a basic shooter config below.
 
 ```java
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.util.CANPorts;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import yams.commands2.config.SmartMotorControllerConfig; // yams.commands3.config for Commands v3
+import yams.commands2.mechanisms.FlyWheel;               // yams.commands3.mechanisms for Commands v3
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.FlyWheelConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+
 SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withControlMode(ControlMode.CLOSED_LOOP)
   // Feedback Constants (PID Constants)
@@ -31,21 +47,21 @@ SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
   .withMomentOfInertia(Inches.of(4), Pounds.of(1));
 
 // Vendor motor controller object
-SparkMax spark = new SparkMax(4, MotorType.kBrushless);
+SparkMax spark = new SparkMax(CANPorts.fromBusId(1), 4, MotorType.kBrushless);
 
 // Create our SmartMotorController from our Spark and config with the NEO.
 SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
 
 FlyWheelConfig shooterConfig = new FlyWheelConfig()
-  // Telemetry name and verbosity for the arm.
+  // Telemetry name and verbosity for the shooter.
   .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
 
-  // Shooter Mechanism
-  private FlyWheel shooter = new FlyWheel(shooterConfig, sparkSmartMotorController);
+// Shooter Mechanism
+FlyWheel shooter = new FlyWheel(shooterConfig, sparkSmartMotorController);
 ```
 
 ## Code Reference
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/simple_shooter/java/frc/robot/subsystems/ShooterSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ShooterSubsystem.java" %}
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/hooded_shooter/java/frc/robot/subsystems/FlywheelSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/simple_robot-2027/src/main/java/first/robot/mechanisms/ShooterMechanism.java" %}

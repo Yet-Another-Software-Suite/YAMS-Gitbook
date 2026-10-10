@@ -11,18 +11,20 @@ Every YAMS telemetry field can be routed to a WPILib `DataLog` in addition to (o
 `DataLogManager` owns the actual file on disk; YAMS just writes into it. Start it once, early, in `Robot.java`:
 
 ```java
-@Override
-public void robotInit() {
+import org.wpilib.driverstation.DriverStation;
+import org.wpilib.system.DataLogManager;
+
+public Robot() {
   DataLogManager.start();
   DriverStation.startDataLog(DataLogManager.getLog()); // optional: also logs joystick/DS data
 }
 ```
 
 {% hint style="info" %}
-If you never call `DataLogManager.start()` yourself, YAMS still starts it lazily the first time a field with a DataLog name is published, but calling it explicitly in `robotInit()` guarantees the log begins at power-on (not at the first telemetry update) and lets you fold in DS/joystick data with `DriverStation.startDataLog(...)`.
+If you never call `DataLogManager.start()` yourself, YAMS still starts it lazily the first time a field with a DataLog name is published, but calling it explicitly in your `Robot` constructor guarantees the log begins at power-on (not at the first telemetry update) and lets you fold in DS/joystick data with `DriverStation.startDataLog(...)`.
 {% endhint %}
 
-On the real robot, `.wpilog` files are written to a USB drive if one is plugged in, otherwise to `/home/lvuser/logs` on the roboRIO's internal storage. In simulation, they land in your project's `logs/` folder next to `build.gradle`. WPILib initially names the file `FRC_TBD_<random>.wpilog` and renames it to a timestamp (e.g. `FRC_20260817_010558.wpilog`) once it has a real time source, you'll see a `DataLog: Renamed log file from '...' to '...'` line in the console when that happens.
+On the real robot, `.wpilog` files are written to a USB drive if one is plugged in, otherwise to `/home/systemcore/logs` on the SystemCore's internal storage. In simulation, they land in your project's `logs/` folder next to `build.gradle`. WPILib initially names the file `WPILIB_TBD_<random>.wpilog` and renames it to a timestamp (e.g. `WPILIB_20260817_010558.wpilog`) once the Driver Station connects and it has a real time source, you'll see a `DataLog: Renamed log file from '...' to '...'` line in the console when that happens.
 
 ## Configure the SwerveDrive to log
 
@@ -49,7 +51,7 @@ public SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder abso
       .withFeedforward(new SimpleMotorFeedforward(0,
           12.0 / (maximumChassisSpeedsLinearVelocity.in(MetersPerSecond) / wheelDiameter.in(Meters)), 0.01))
       .withStatorCurrentLimit(Amps.of(40))
-      .withTelemetry("driveMotor", SmartMotorControllerConfig.TelemetryVerbosity.HIGH);
+      .withTelemetry("driveMotor", TelemetryVerbosity.HIGH);
 
   SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
       .withClosedLoopController(1, 0, 0)
@@ -59,7 +61,7 @@ public SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder abso
       // Granular per-field config (see "Granular control" below), chosen fields + its own DataLog name,
       // instead of the name+verbosity shorthand used for the drive motor above.
       .withTelemetry("angleMotor", new SmartMotorControllerTelemetryConfig()
-          .withTelemetryVerbosity(SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
+          .withTelemetryVerbosity(TelemetryVerbosity.HIGH)
           .withDataLogName(moduleName));
 
   SmartMotorController driveSMC   = new SparkWrapper(drive, DCMotor.getNEO(1), driveCfg);
@@ -69,7 +71,7 @@ public SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder abso
       .withAbsoluteEncoder(absoluteEncoder.getAbsolutePosition().asSupplier())
       // Nested under the same "Swerve" DataLog prefix as SwerveDriveConfig below, so the module's
       // absolute encoder shows up alongside the rest of the drive's DataLog entries.
-      .withTelemetry(moduleName, new SwerveModuleTelemetryConfig(SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
+      .withTelemetry(moduleName, new SwerveModuleTelemetryConfig(TelemetryVerbosity.HIGH)
           .withDataLogName("Swerve/" + moduleName))
       .withLocation(location)
       .withOptimization(true);
@@ -79,16 +81,18 @@ public SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder abso
 
 ```java
 SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
-    .withGyro(gyro.getYaw().asSupplier())
+    .withGyro(gyro::getRotation3d)
     .withStartingPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)))
     .withTranslationController(new PIDController(1, 0, 0))
     .withRotationController(new PIDController(1, 0, 0))
-    .withTelemetry("swerve", new SwerveDriveTelemetryConfig(SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
+    .withTelemetry("swerve", new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)
         // Logs pose/gyro/chassis speeds/module states to a WPILib DataLog (readable with AdvantageScope
         // or DataLogTool) in addition to NetworkTables. Each module above nests under "Swerve/<name>".
         .withDataLogName("Swerve"));
 drive = new SwerveDrive(config);
 ```
+
+`TelemetryVerbosity` is `yams.core.telemetry.enums.TelemetryVerbosity`, and the `*TelemetryConfig` classes live in `yams.core.telemetry`. `SmartMotorControllerConfig`, `SwerveDriveConfig` and `SwerveDrive` come from `yams.commands2` (or `yams.commands3` for Commands v3).
 {% endtab %}
 
 {% tab title="C++" %}
@@ -97,8 +101,8 @@ The same shape applies with `WithDataLogName`, based on the [C++ swerve example]
 ```cpp
 m_driveConfig.WithSubsystem(this)
     .WithModules({&m_fl.value(), &m_fr.value(), &m_bl.value(), &m_br.value()})
-    .WithGyro([gyroPtr = &m_gyro]() -> units::degree_t {
-      return units::degree_t{units::turn_t{gyroPtr->GetYaw().GetValue()}};
+    .WithGyro([gyroPtr = &m_gyro]() -> wpi::units::degree_t {
+      return wpi::units::degree_t{wpi::units::turn_t{gyroPtr->GetYaw().GetValue()}};
     })
     .WithTelemetry("swerve", yams::telemetry::SwerveDriveTelemetryConfig(SwerveDriveConfig::TelemetryVerbosity::HIGH)
         .WithDataLogName("Swerve"));
@@ -132,9 +136,9 @@ A common competition pattern is to keep NT4 for practice/pit testing and drop it
 
 ```java
 .withTelemetry("angleMotor", new SmartMotorControllerTelemetryConfig()
-    .withTelemetryVerbosity(SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
+    .withTelemetryVerbosity(TelemetryVerbosity.HIGH)
     .withDataLogName(moduleName)
-    .withNetworkTables(!DriverStation.isFMSAttached()));
+    .withNetworkTables(!RobotState.isFMSAttached()));
 ```
 
 {% hint style="info" %}
@@ -149,7 +153,7 @@ Deploy or simulate the robot, enable it, and drive around for a bit, every enabl
 
 ## Pull the file and open it in AdvantageScope
 
-1. Grab the `.wpilog` off the RIO (USB drive, or `scp lvuser@10.TE.AM.2:/home/lvuser/logs/*.wpilog .`), or straight from your sim project's `logs/` folder.
+1. Grab the `.wpilog` off the SystemCore (USB drive, or copy it from `/home/systemcore/logs`), or straight from your sim project's `logs/` folder.
 2. Open **AdvantageScope**, then **File → Open File...** (or drag the `.wpilog` onto the window). Do **not** use "Connect to Robot/Simulator", that connects live over NetworkTables, which shows _current_ values, not the recorded run.
 
 <figure><img src="../.gitbook/assets/datalog-walkthrough-3-open-in-advantagescope.gif" alt=""><figcaption><p>Opening the recorded <code>.wpilog</code> via AdvantageScope's file picker, note the other logs from earlier runs sitting alongside it in the same <code>logs/</code> folder.</p></figcaption></figure>
@@ -160,7 +164,7 @@ Deploy or simulate the robot, enable it, and drive around for a bit, every enabl
 
 Add a tab to visualize the data:
 
-* **Swerve** tab, AdvantageScope's built-in module visualizer. Drag a `SwerveModuleState[]` field (e.g. `Swerve/states/current`) into the **Sources** list at the bottom to see wheel vectors animate over the timeline.
+* **Swerve** tab, AdvantageScope's built-in module visualizer. Drag a module states field (a `SwerveModuleVelocity[]`, e.g. `Swerve/states/current`) into the **Sources** list at the bottom to see wheel vectors animate over the timeline.
 * **2D Field** tab, drag `Swerve/pose` in to see the robot's recorded path.
 * **Line Graph** tab, drag any numeric field (gyro angle, a motor's stator current, mechanism position) to plot it over time, and use **right-click → Convert Units...** to change the displayed unit without touching robot code (see [Telemetry](../understanding/telemetry.md#using-advantagescope-for-unit-conversion)).
 

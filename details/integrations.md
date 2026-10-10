@@ -8,7 +8,26 @@ icon: plug-circle-plus
 
 Live tuning lets you tune your closed-loop controller and feedforward through NetworkTables with AdvantageScope or Elastic.
 
-Live Tuning is enabled when any tunable setpoint is enabled with `TelemetryVerbosity.HIGH`
+Live Tuning is set up automatically for any `SmartMotorController` whose config uses `TelemetryVerbosity.HIGH` (or a `SmartMotorControllerTelemetryConfig` passed to `withTelemetry(name, telemetryConfig)`, which also uses `HIGH`). When the motor controller sets up its telemetry, YAMS registers one shared `Live Tuning` command per subsystem (Commands v2) or mechanism (Commands v3). Every motor controller in that subsystem or mechanism adds itself to the same command.
+
+### Setting up live tuning explicitly
+
+If you set up telemetry yourself, for example with `SmartMotorController.setupTelemetry(NetworkTable, NetworkTable)`, the `Live Tuning` command is not registered for you. Call `setupLiveTuning()` on the config to opt in:
+
+```java
+SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
+SmartMotorController motor = new TalonFXWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
+
+motor.setupTelemetry(telemetryTable, tuningTable);
+motorConfig.setupLiveTuning();
+```
+
+{% hint style="info" %}
+`setupLiveTuning()` does nothing until the `SmartMotorController` has set up its telemetry (that is what attaches the controller to the config), or when the config has no subsystem (Commands v2) or mechanism (Commands v3). Registering two different subsystem or mechanism instances with the same name throws an `IllegalStateException`, so give each one a unique name (for example `LeftTurret` and `RightTurret`).
+{% endhint %}
+
+In C++ there is no explicit call: the `Live Tuning` command is registered when `SetupTelemetry()` runs with `TelemetryVerbosity::HIGH` and the config has a subsystem.
 
 ## TunerX in simulation (CTRE hardware)
 
@@ -37,7 +56,7 @@ TunerX vendorsim integration is specific to **CTRE TalonFX and TalonFXS** motors
                                 0) // You generally do not want a profile because its not a position controlled loop.
       .withFeedforward(new SimpleMotorFeedforward(0, 0, 0)) // Helps track changing RPM goals
       .withMotorInverted(false)
-<strong>      .withTelemetry("LowerFlyWheel", SmartMotorControllerConfig.TelemetryVerbosity.HIGH)
+<strong>      .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH) // yams.core.telemetry.enums.TelemetryVerbosity
 </strong></code></pre>
 
 ## How do I use live tuning?
@@ -46,12 +65,28 @@ TunerX vendorsim integration is specific to **CTRE TalonFX and TalonFXS** motors
 Live tuning can be **dangerous**. Test it in simulation before using it on the robot.
 {% endhint %}
 
-In Elastic, drag the `Live Tuning` command from `NT:/SmartDashboard/MECHANISM_NAME/Commands/SUBSYSTEM_NAME/Live Tuning`.
+The `Live Tuning` command is published to `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning`, where `SUBSYSTEM_NAME` is the name of the subsystem (Commands v2) or mechanism (Commands v3) given to the `SmartMotorControllerConfig`. The tunable values themselves are published under `NT:/Tuning/`.
+
+{% tabs %}
+{% tab title="Commands v2" %}
+In Elastic, drag the `Live Tuning` command from `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning`. It is a regular WPILib Commands v2 `Command` that requires the subsystem.
 
 After you enable the robot, press the button to enable Live tuning.
+{% endtab %}
+
+{% tab title="Commands v3" %}
+Commands v3 commands are not dashboard widgets themselves, so YAMS publishes the `Live Tuning` command through `yams.commands3.telemetry.CommandTunable`. It shows up as a `Command` with a single `running` boolean at `NT:/Tuning/MECHANISM_NAME/Live Tuning/running`:
+
+* Set `running` to `true` to schedule the command on the default `Scheduler`.
+* Set `running` to `false` to cancel it.
+* `running` reads back whether the command is currently running.
+
+The command requires the mechanism and runs a `while (true)` loop that applies the dashboard values and calls `coroutine.yield()` each loop.
+{% endtab %}
+{% endtabs %}
 
 {% hint style="warning" %}
-The button will run the `Live Tuning` command which can be interrupted by the controller or any other triggers for that subsystem in your program!
+The `Live Tuning` command requires the subsystem or mechanism, so it can be interrupted by the controller, a default command, or any other trigger for that subsystem or mechanism in your program! Dashboard edits are only applied while it runs.
 {% endhint %}
 
 <figure><img src="../.gitbook/assets/new_liveutinging.gif" alt=""><figcaption></figcaption></figure>
