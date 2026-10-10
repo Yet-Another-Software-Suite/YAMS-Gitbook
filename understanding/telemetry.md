@@ -28,7 +28,7 @@ Looking for a deeper dive on enabling/disabling NetworkTables, choosing what to 
 
 Every Mechanism has a Tuning table and a display table on the robot. Mechanism tables contain the SmartMotorControllers used in that mechanism.
 
-All Mechanism tables are stored under `NT:/Mechanisms` NOT `NT:/SmartDashboard`. Each mechanism's `Mechanism2d` is published at `NT:/Mechanisms/<name>/mechanism`, and tunable values plus commands like "Live Tuning" live under `NT:/Tuning` (the command is at `NT:/Tuning/<SubsystemName>/Live Tuning`, see [Live tuning](../details/integrations.md)).
+All Mechanism tables are stored under `NT:/Mechanisms` NOT `NT:/SmartDashboard`. Each mechanism's `Mechanism2d` is published at `NT:/Mechanisms/<name>/mechanism`, and tunable values plus commands like "Live Tuning" live under `NT:/Tuning` (the command is at `NT:/Tuning/<SubsystemName>/Live Tuning`, see [Live tuning](../details/live-tuning/README.md)).
 
 The image below has the Telemetry output of an Elevator with the Telemetry name of `Elevator` and the SmartMotorController TelemetryName of `ElevatorMotor`
 
