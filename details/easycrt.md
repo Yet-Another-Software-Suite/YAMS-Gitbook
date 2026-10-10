@@ -105,6 +105,8 @@ This is not a textbook Chinese Remainder Theorem solve. It is the same idea done
 
 ### Before you call solve
 
+<figure><img src="../.gitbook/assets/easycrt-zeroing.gif" alt="Animation: the turret is moved to the middle of its travel, both absolute encoders are zeroed there, and solve then reports angles either side of zero"><figcaption><p>Center the turret, zero both encoders there, then check both directions.</p></figcaption></figure>
+
 <figure><img src="../.gitbook/assets/easycrt-encoder-direction.gif" alt="Animation: with encoder B counting down, solve returns empty; after inverting encoder B so both count up, solve returns the turret angle"><figcaption><p>Both encoders have to count up when the turret turns in its positive direction.</p></figcaption></figure>
 
 `EasyCRT` takes the two readings as they are, so the encoders have to be set up first:
