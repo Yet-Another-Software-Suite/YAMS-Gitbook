@@ -4,30 +4,13 @@ icon: plug-circle-plus
 
 # Live tuning
 
-## What is live tuning?
+Live tuning lets you change gains, motion profiles and limits from a dashboard while the robot is enabled, and see the result straight away. It works over NetworkTables with AdvantageScope or Elastic.
 
-Live tuning lets you tune your closed-loop controller and feedforward through NetworkTables with AdvantageScope or Elastic.
+<figure><img src="../../.gitbook/assets/live-tuning-loop.png" alt="A loop: the dashboard sends tunable values under NT:/Tuning to the Live Tuning command, which applies them to the SmartMotorController every loop, and telemetry under NT:/Mechanisms flows back to the dashboard"><figcaption><p>Change a number, watch the graph, change it again.</p></figcaption></figure>
 
-Live Tuning is set up automatically for any `SmartMotorController` whose config uses `TelemetryVerbosity.HIGH` (or a `SmartMotorControllerTelemetryConfig` passed to `withTelemetry(name, telemetryConfig)`, which also uses `HIGH`). When the motor controller sets up its telemetry, YAMS registers one shared `Live Tuning` command per subsystem (Commands v2) or mechanism (Commands v3). Every motor controller in that subsystem or mechanism adds itself to the same command.
+## Turn it on
 
-### Setting up live tuning explicitly
-
-If you set up telemetry yourself, for example with `SmartMotorController.setupTelemetry(NetworkTable, NetworkTable)`, the `Live Tuning` command is not registered for you. Call `setupLiveTuning()` on the config to opt in:
-
-```java
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
-SmartMotorController motor = new TalonFXWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
-
-motor.setupTelemetry(telemetryTable, tuningTable);
-motorConfig.setupLiveTuning();
-```
-
-{% hint style="info" %}
-`setupLiveTuning()` does nothing until the `SmartMotorController` has set up its telemetry (that is what attaches the controller to the config), or when the config has no subsystem (Commands v2) or mechanism (Commands v3). Registering two different subsystem or mechanism instances with the same name throws an `IllegalStateException`, so give each one a unique name (for example `LeftTurret` and `RightTurret`).
-{% endhint %}
-
-In C++ there is no explicit call: the `Live Tuning` command is registered when `SetupTelemetry()` runs with `TelemetryVerbosity::HIGH` and the config has a subsystem.
+Give the motor's telemetry `TelemetryVerbosity.HIGH`. That is all most robots need.
 
 <pre class="language-java"><code class="lang-java">SmartMotorControllerConfig lowerFlyWheelConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
@@ -42,27 +25,78 @@ In C++ there is no explicit call: the `Live Tuning` command is registered when `
 <strong>      .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH) // yams.core.telemetry.enums.TelemetryVerbosity
 </strong></code></pre>
 
+| How the motor's telemetry is set up | Live Tuning command |
+| --- | --- |
+| `withTelemetry(name, TelemetryVerbosity.HIGH)` | Registered for you |
+| `withTelemetry(name, telemetryConfig)` with a `SmartMotorControllerTelemetryConfig` | Registered for you |
+| You call `setupTelemetry(NetworkTable, NetworkTable)` yourself (Java) | Call `setupLiveTuning()` afterwards, see below |
+| C++ with `TelemetryVerbosity::HIGH` and a subsystem on the config | Registered for you when `SetupTelemetry()` runs |
+
+YAMS registers **one** `Live Tuning` command per subsystem (Commands v2) or mechanism (Commands v3). Every motor controller in that subsystem or mechanism joins the same command.
+
+<details>
+
+<summary>Setting up live tuning explicitly</summary>
+
+If you set up telemetry yourself, the `Live Tuning` command is not registered for you. Call `setupLiveTuning()` on the config after the telemetry is set up:
+
+```java
+SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
+SmartMotorController motor = new TalonFXWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
+
+motor.setupTelemetry(telemetryTable, tuningTable);
+motorConfig.setupLiveTuning();
+```
+
+`setupLiveTuning()` does nothing when:
+
+* the `SmartMotorController` has not set up its telemetry yet (that is what attaches the controller to the config), or
+* the config has no subsystem (Commands v2) or mechanism (Commands v3).
+
+Registering two different subsystem or mechanism instances with the same name throws an `IllegalStateException`. Give each one a unique name, for example `LeftTurret` and `RightTurret`.
+
+In C++ there is no explicit call.
+
+</details>
+
 {% hint style="info" %}
 Using CTRE TalonFX or TalonFXS motors? Phoenix Tuner X can connect to your simulation too. See [TunerX in simulation](tunerx-in-simulation.md).
 {% endhint %}
 
-## How do I use live tuning?
+## Use it
 
 {% hint style="danger" %}
-Live tuning can be **dangerous**. Test it in simulation before using it on the robot.
+Live tuning can be **dangerous**. Test it in simulation before using it on the robot, and understand how it behaves first.
 {% endhint %}
 
-The `Live Tuning` command is published to `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning`, where `SUBSYSTEM_NAME` is the name of the subsystem (Commands v2) or mechanism (Commands v3) given to the `SmartMotorControllerConfig`. The tunable values themselves are published under `NT:/Tuning/`.
+{% stepper %}
+{% step %}
+#### Try it in simulation
+
+Run the robot code in simulation and go through the steps below there first.
+{% endstep %}
+
+{% step %}
+#### Enable the robot
+
+Dashboard edits are only applied while the robot is enabled and the `Live Tuning` command is running.
+{% endstep %}
+
+{% step %}
+#### Start the `Live Tuning` command
+
+It is published at `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning`, where `SUBSYSTEM_NAME` is the name of the subsystem (Commands v2) or mechanism (Commands v3) given to the `SmartMotorControllerConfig`.
 
 {% tabs %}
 {% tab title="Commands v2" %}
-In Elastic, drag the `Live Tuning` command from `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning`. It is a regular WPILib Commands v2 `Command` that requires the subsystem.
+In Elastic, drag the `Live Tuning` command from `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning` onto your dashboard and press its button.
 
-After you enable the robot, press the button to enable Live tuning.
+It is a regular WPILib Commands v2 `Command` that requires the subsystem.
 {% endtab %}
 
 {% tab title="Commands v3" %}
-Commands v3 commands are not dashboard widgets themselves, so YAMS publishes the `Live Tuning` command through `yams.commands3.telemetry.CommandTunable`. It shows up as a `Command` with a single `running` boolean at `NT:/Tuning/MECHANISM_NAME/Live Tuning/running`:
+Commands v3 commands are not dashboard widgets themselves, so YAMS publishes the command through `yams.commands3.telemetry.CommandTunable`. It shows up with a single `running` boolean at `NT:/Tuning/MECHANISM_NAME/Live Tuning/running`:
 
 * Set `running` to `true` to schedule the command on the default `Scheduler`.
 * Set `running` to `false` to cancel it.
@@ -71,240 +105,216 @@ Commands v3 commands are not dashboard widgets themselves, so YAMS publishes the
 The command requires the mechanism and runs a `while (true)` loop that applies the dashboard values and calls `coroutine.yield()` each loop.
 {% endtab %}
 {% endtabs %}
+{% endstep %}
+
+{% step %}
+#### Change a value
+
+The tunable values are published under `NT:/Tuning/`. Edit one, and it is applied on the next loop.
+{% endstep %}
+
+{% step %}
+#### Watch what happens
+
+Graph the matching read-only fields under `NT:/Mechanisms/`. [What to tune and what to watch](#what-to-tune-and-what-to-watch) lists which field to watch for each value.
+{% endstep %}
+{% endstepper %}
 
 {% hint style="warning" %}
-The `Live Tuning` command requires the subsystem or mechanism, so it can be interrupted by the controller, a default command, or any other trigger for that subsystem or mechanism in your program! Dashboard edits are only applied while it runs.
+The `Live Tuning` command requires the subsystem or mechanism, so the controller, a default command, or any other trigger for that subsystem or mechanism can interrupt it. Dashboard edits stop being applied when it is interrupted.
 {% endhint %}
 
-<figure><img src="../../.gitbook/assets/new_liveutinging.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/new_liveutinging.gif" alt="Starting the Live Tuning command and editing a tunable value on the dashboard"><figcaption><p>Starting the command and changing a value.</p></figcaption></figure>
 
-You can tune your mechanism while the robot is enabled.
+<figure><img src="../../.gitbook/assets/AScopeLiveTuningExample.gif" alt="Tuning a mechanism in AdvantageScope while the robot is enabled"><figcaption><p>Tuning while the robot is enabled.</p></figcaption></figure>
 
-<figure><img src="../../.gitbook/assets/AScopeLiveTuningExample.gif" alt=""><figcaption></figcaption></figure>
+## Units: what you type and what you read
 
-## When should I not use live tuning?
+Tunable fields and read-only fields do not use the same units.
 
-Do not use Live tuning before testing it in simulation. Understand its behavior first.
+<figure><img src="../../.gitbook/assets/live-tuning-units.png" alt="For a flywheel you type 3000 RPM and read 50 rotations per second. For an arm you type 30 degrees and read 0.0833 rotations."><figcaption><p>The value you type is in the tunable unit, not the unit of the read-only field next to it.</p></figcaption></figure>
 
-## Tunable Parameters and Their Units
-
-When live tuning, it's important to understand what units each parameter expects. Below is a comprehensive reference for all tunable values.
-
-### Units and AdvantageScope
-
-YAMS publishes read-only fields and tunable fields in different units:
-
-| Quantity | Read-only fields | Tunable fields |
+| Quantity | You type (tunable fields) | You read (read-only fields) |
 | --- | --- | --- |
-| Angular position | **Rotations** | **Degrees** |
-| Angular velocity | **Rotations per Second** | **Rotations per Minute (RPM)** |
-| Angular acceleration | **Rotations per Second²** | **RPM per Second** |
-| Linear position, velocity, acceleration (linear closed loop control) | **Meters**, **Meters per Second**, **Meters per Second²** | Same as read-only |
+| Angular position | **Degrees** | **Rotations** |
+| Angular velocity | **RPM** | **Rotations per second** |
+| Angular acceleration | **RPM per second** | **Rotations per second²** |
+| Linear position, velocity, acceleration (linear closed loop control) | **Meters**, **m/s**, **m/s²** | **Meters**, **m/s**, **m/s²** |
 | Voltage, current | **Volts**, **Amps** | **Volts**, **Amps** |
-| Temperature | **Fahrenheit** | Not tunable |
+| Temperature | Not tunable | **Fahrenheit** |
 
-This means the value you type into a tunable field is in the tunable unit, not the unit of the read-only field next to it. For example, a flywheel target of 3000 RPM is entered as `3000` in `TunableSetpointVelocity` while `MechanismVelocity` reads `50` rot/s (3000 ÷ 60), and an arm soft limit of 30° is entered as `30` in `MechanismUpperLimit` while `MechanismPosition` reads `0.0833` rotations (30 ÷ 360).
+### See both in the same units with AdvantageScope
 
-**AdvantageScope solves this.** Its built-in unit conversion lets you display any read-only field in whatever units feel natural for your mechanism, degrees for arms, RPM for flywheels, inches for elevators, without changing the underlying data or your robot code. To set it up:
+AdvantageScope can convert any read-only field for display, without changing the data or your robot code.
 
-1. Drag the telemetry field (e.g. `NT:/Mechanisms/Arm/ArmMotor/MechanismPosition`) into a Line Graph
-2. Right-click the field in the graph legend → **Convert Units…**
-3. Pick your target unit (Rotations → Degrees, rot/s → RPM, Meters → Inches, etc.)
+1. Drag the telemetry field, for example `NT:/Mechanisms/Arm/ArmMotor/MechanismPosition`, into a Line Graph.
+2. Right-click the field in the graph legend and choose **Convert Units…**
+3. Pick the target unit: Rotations to Degrees, rot/s to RPM, Meters to Inches, and so on.
 
-Once conversion is applied, the graph shows the mechanism position in degrees and velocity in RPM, the same units the tunable fields expect, so you can type `180` into a tunable position field when the graph shows 180°.
-
-{% hint style="success" %}
-**Recommended setup for a tuning session:** Open AdvantageScope and configure unit conversions for `MechanismPosition` (→ degrees or inches), `MechanismVelocity` (→ deg/s, RPM, or in/s), and `SetpointPosition` (same as `MechanismPosition`). YAMS has no closed loop error field, so graph `SetpointPosition` and `MechanismPosition` together and read the error as the gap between them. Keep these graphs visible alongside the tunable fields in your NT dashboard. The converted read-only fields give you a real-unit view of what the mechanism is actually doing while you enter raw-unit values into the tunable fields.
-{% endhint %}
-
-### PID Controller Parameters
-
-| Parameter         | Symbol | Unit                                  | Description                                                                                      |
-| ----------------- | ------ | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Proportional Gain | kP     | Volts per Rotation (V/rot)            | Output voltage per unit of position error. For linear mechanisms, this is V/m.                   |
-| Integral Gain     | kI     | Volts per Rotation-Second (V/(rot·s)) | Output voltage per accumulated position error over time. For linear mechanisms, this is V/(m·s). |
-| Derivative Gain   | kD     | Volts per Rotation/Second (V/(rot/s)) | Output voltage per unit of velocity error. For linear mechanisms, this is V/(m/s).               |
-
-{% hint style="info" %}
-**Position Control**: Error is measured in **Rotations** (mechanism output shaft) or **Meters** (for linear mechanisms with linear closed loop controllers set).
-
-**Velocity Control**: Error is measured in **Rotations per Second** or **Meters per Second**.
-{% endhint %}
-
-### Feedforward Parameters
-
-#### SimpleMotorFeedforward (Flywheels, Simple Velocity Control)
-
-| Parameter         | Symbol | Unit                                    | Description                                                              |
-| ----------------- | ------ | --------------------------------------- | ------------------------------------------------------------------------ |
-| Static Gain       | kS     | Volts (V)                               | Voltage to overcome static friction. Applied in the direction of motion. |
-| Velocity Gain     | kV     | Volts per Rotation/Second (V/(rot/s))   | Voltage per unit of target velocity.                                     |
-| Acceleration Gain | kA     | Volts per Rotation/Second² (V/(rot/s²)) | Voltage per unit of target acceleration.                                 |
-
-#### ArmFeedforward (Arms, Pivots)
-
-| Parameter         | Symbol | Unit                                    | Description                                                                     |
-| ----------------- | ------ | --------------------------------------- | ------------------------------------------------------------------------------- |
-| Static Gain       | kS     | Volts (V)                               | Voltage to overcome static friction.                                            |
-| Gravity Gain      | kG     | Volts (V)                               | Voltage to hold the arm horizontal (at 0°). Actual output is `kG * cos(angle)`. |
-| Velocity Gain     | kV     | Volts per Rotation/Second (V/(rot/s))   | Voltage per unit of target angular velocity.                                    |
-| Acceleration Gain | kA     | Volts per Rotation/Second² (V/(rot/s²)) | Voltage per unit of target angular acceleration.                                |
-
-{% hint style="info" %}
-In YAMS, `ArmFeedforward` uses **Rotations** for kV and kA units, consistent with other feedforward types. The cosine calculation for gravity compensation is handled internally.
-{% endhint %}
-
-#### ElevatorFeedforward (Elevators, Linear Lifts)
-
-| Parameter         | Symbol | Unit                               | Description                                                                                      |
-| ----------------- | ------ | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Static Gain       | kS     | Volts (V)                          | Voltage to overcome static friction.                                                             |
-| Gravity Gain      | kG     | Volts (V)                          | Constant voltage to counteract gravity. Applied continuously when moving up or holding position. |
-| Velocity Gain     | kV     | Volts per Meter/Second (V/(m/s))   | Voltage per unit of target velocity.                                                             |
-| Acceleration Gain | kA     | Volts per Meter/Second² (V/(m/s²)) | Voltage per unit of target acceleration.                                                         |
-
-### Motion Profile Parameters
-
-#### Trapezoidal Profile
-
-| Parameter        | Symbol | Unit                           | Description                                                                    |
-| ---------------- | ------ | ------------------------------ | ------------------------------------------------------------------------------ |
-| Max Velocity     | maxV   | Rotations per Second (rot/s)   | Maximum velocity during the cruise phase. For linear: Meters per Second (m/s). |
-| Max Acceleration | maxA   | Rotations per Second² (rot/s²) | Acceleration/deceleration rate. For linear: Meters per Second² (m/s²).         |
-
-#### Exponential Profile
-
-| Parameter         | Symbol | Unit                                    | Description                                               |
-| ----------------- | ------ | --------------------------------------- | --------------------------------------------------------- |
-| Max Input Voltage | V      | Volts (V)                               | Maximum voltage the profile will command.                 |
-| kV                | kV     | Volts per Rotation/Second (V/(rot/s))   | System velocity constant from motor characterization.     |
-| kA                | kA     | Volts per Rotation/Second² (V/(rot/s²)) | System acceleration constant from motor characterization. |
-
-### Soft Limits
-
-| Parameter             | Unit                          | Description                                       |
-| --------------------- | ----------------------------- | ------------------------------------------------- |
-| Lower Limit           | Rotations (rot) or Meters (m) | Minimum allowed mechanism position.               |
-| Upper Limit           | Rotations (rot) or Meters (m) | Maximum allowed mechanism position.               |
-| Closed Loop Tolerance | Rotations (rot) or Meters (m) | Position error threshold for "at goal" detection. |
-
-### Current Limits
-
-| Parameter            | Unit     | Description                                                         |
-| -------------------- | -------- | ------------------------------------------------------------------- |
-| Stator Current Limit | Amps (A) | Maximum current through the motor windings. Controls torque output. |
-| Supply Current Limit | Amps (A) | Maximum current drawn from the battery. Prevents brownouts.         |
-
-### Ramp Rates
-
-| Parameter             | Unit        | Description                                              |
-| --------------------- | ----------- | -------------------------------------------------------- |
-| Open Loop Ramp Rate   | Seconds (s) | Time to ramp from 0% to 100% output in open loop mode.   |
-| Closed Loop Ramp Rate | Seconds (s) | Time to ramp from 0% to 100% output in closed loop mode. |
-
-### Temperature
-
-| Parameter          | Unit         | Description                                                   |
-| ------------------ | ------------ | ------------------------------------------------------------- |
-| Temperature Cutoff | Celsius (°C) | Motor controller will stop if temperature exceeds this value. |
-
-### Voltage
-
-| Parameter               | Unit      | Description                                                                           |
-| ----------------------- | --------- | ------------------------------------------------------------------------------------- |
-| Voltage Compensation    | Volts (V) | Nominal voltage for consistent behavior regardless of battery voltage. Typically 12V. |
-| Closed Loop Max Voltage | Volts (V) | Maximum voltage output from the closed loop controller.                               |
-
-## Tunable Fields and What to Watch
-
-Every tunable field has a corresponding read-only field you should monitor while adjusting it. The table below maps each tunable parameter to the telemetry signals that tell you whether your change is working.
-
-### PID Gains
-
-| Tunable Field | Unit                      | What to Watch (Read-Only)                                    | Why                                                                                                      |
-| ------------- | ------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `kP`          | V/rot (or V/m for linear) | `MechanismPosition` vs `SetpointPosition`                    | Error should shrink faster as kP rises. Oscillation means kP is too high.                                |
-| `kI`          | V/(rot·s)                 | `MechanismPosition` vs `SetpointPosition` over time          | Persistent steady-state error that won't converge, kI eliminates it. Watch for windup causing overshoot. |
-| `kD`          | V/(rot/s)                 | `MechanismVelocity`, `OutputVoltage`                         | Dampens oscillation. If voltage spikes on direction changes, kD is too high.                             |
-
-### Feedforward Gains
-
-| Tunable Field         | Unit       | What to Watch (Read-Only)                                    | Why                                                                                                                      |
-| --------------------- | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| `kS`                  | V          | `OutputVoltage` at rest                                      | Voltage to overcome static friction. Increase until the mechanism just barely starts moving from rest.                   |
-| `kV`                  | V/(rot/s)  | `MeasurementVelocity` vs `SetpointVelocity`, `OutputVoltage` | At steady state (kP = 0), adjust kV until measured velocity matches setpoint velocity.                                   |
-| `kA`                  | V/(rot/s²) | `MeasurementVelocity` during acceleration ramp               | Improves tracking during the acceleration phase of a motion profile.                                                     |
-| `kG` (Arms/Elevators) | V          | `MechanismPosition`, `OutputVoltage` at horizontal           | For arms: hold horizontal and increase until the arm holds position. For elevators: constant offset that fights gravity. |
-
-### Motion Profile Constraints
-
-| Tunable Field                       | Unit             | What to Watch (Read-Only)                 | Why                                                                                                 |
-| ----------------------------------- | ---------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `TrapezoidalProfileMaxVelocity`     | RPM (or m/s)     | `MechanismVelocity` during cruise phase   | The plateau velocity. Increase to move faster; decrease if the motor is stalling during the cruise. |
-| `TrapezoidalProfileMaxAcceleration` | RPM/s (or m/s²)  | `StatorCurrent`, `MechanismVelocity` ramp | Controls how quickly velocity builds. High acceleration = high current spike at start of motion.    |
-| `TrapezoidalProfileMaxJerk`         | RPM/s²           | `MechanismVelocity` shape                 | Smooths the velocity ramp. Useful when acceleration discontinuities cause mechanical shock.         |
-
-### Setpoints (Tunable Test Inputs)
-
-| Tunable Field             | Unit           | What to Watch (Read-Only)              | Why                                                                                                                   |
-| ------------------------- | -------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `TunableSetpointPosition` | deg (or m)     | `MechanismPosition` vs `SetpointPosition` | Command the mechanism to a specific position without button bindings. Use to test individual setpoints during tuning. |
-| `TunableSetpointVelocity` | RPM (or m/s)   | `MeasurementVelocity`, `OutputVoltage` | Command a specific velocity. Use to characterize kV without running a full motion profile.                            |
-
-### Soft Limits
-
-| Tunable Field         | Unit       | What to Watch (Read-Only)                            | Why                                                                                                                     |
-| --------------------- | ---------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `MechanismLowerLimit` | deg        | `MechanismPosition`, `MechanismLowerLimit` (boolean) | Boolean flips true when the mechanism hits the lower soft limit. Adjust the limit to change where the controller clips. |
-| `MechanismUpperLimit` | deg        | `MechanismPosition`, `MechanismUpperLimit` (boolean) | Same for upper limit.                                                                                                   |
-
-Linear mechanisms also publish `MeasurementLowerLimit` and `MeasurementUpperLimit`, tunable in meters.
-
-### Current Limits
-
-| Tunable Field        | Unit | What to Watch (Read-Only)            | Why                                                                                          |
-| -------------------- | ---- | ------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `StatorCurrentLimit` | A    | `StatorCurrent`, `MechanismVelocity` | Lower stator limit = lower torque cap. Watch velocity sag when the limit is too restrictive. |
-| `SupplyCurrentLimit` | A    | `SupplyCurrent`, `OutputVoltage`     | Prevents battery brownouts. Reduce if SupplyCurrent spikes cause voltage dips.               |
-
-### Ramp Rates
-
-| Tunable Field        | Unit       | What to Watch (Read-Only)                 | Why                                                                                          |
-| -------------------- | ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `OpenloopRampRate`   | s (0→100%) | `OutputVoltage` during open-loop commands | Slows voltage changes in open loop. Reduces mechanical shock on `set(dutyCycle)` commands.   |
-| `ClosedloopRampRate` | s (0→100%) | `OutputVoltage` during closed-loop ramp   | Similar but for closed loop. Useful when step-changes in setpoint cause large voltage jumps. |
-
-{% hint style="info" %}
-**Useful read-only fields at all times during tuning:**
-
-* `MotorTemperature`, watch for thermal throttling masking gain problems
-* `OutputVoltage`, the raw command the motor is receiving; confirms your feedforward math
-* `RotorPosition` / `RotorVelocity`, pre-gearing values; useful for verifying gearing configuration is correct
-{% endhint %}
-
-## Example: Tuning a Flywheel
-
-When tuning a flywheel with `SimpleMotorFeedforward`:
-
-1. **Start with kS**: Slowly increase until the wheel just barely starts moving
-2. **Tune kV**: Set a target velocity, then adjust kV until the steady-state velocity matches (with kP = 0)
-3. **Add kP**: Increase proportional gain to reduce steady-state error and improve response time
-4. **Fine-tune kD**: If there's oscillation, add derivative gain to dampen it
-5. **Add kA** (optional): If you need faster acceleration response, tune the acceleration feedforward
+Now the graph shows degrees and RPM, the same units the tunable fields expect. When the graph shows 180°, you type `180`.
 
 {% hint style="success" %}
-**Units Example**: If your flywheel has a kV of 0.12 V/(rot/s), that means 0.12 volts are needed for every rotation per second of velocity. At 100 rot/s (6000 RPM), the feedforward would contribute 12V.
+**Recommended setup for a tuning session**
+
+* Convert `MechanismPosition` and `SetpointPosition` to degrees (or inches).
+* Convert `MechanismVelocity` to RPM (or deg/s, in/s).
+* Graph `SetpointPosition` and `MechanismPosition` together. YAMS has no closed loop error field: the error is the gap between the two lines.
+* Keep the graphs visible next to the tunable fields.
 {% endhint %}
 
-## Example: Tuning an Arm
+## What to tune and what to watch
 
-When tuning an arm with `ArmFeedforward`:
+Every tunable field has a read-only field that tells you whether your change worked.
 
-1. **Find kG**: Hold the arm horizontal (90° from vertical or 0° from horizontal depending on your coordinate system) and increase kG until it holds position
-2. **Set kV and kA**: These come from SysId characterization
-3. **Tune kP**: Increase until position tracking is responsive but not oscillating
-4. **Add kD**: Dampen any oscillations
+<figure><img src="../../.gitbook/assets/live-tuning-response.png" alt="Three step responses: kP too low rises slowly and stops short, about right settles quickly on the setpoint, kP too high overshoots and rings"><figcaption><p>What the position graph looks like after a setpoint change.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="PID" %}
+| Tunable field | Watch | Why |
+| --- | --- | --- |
+| `kP` | `MechanismPosition` vs `SetpointPosition` | Error should shrink faster as kP rises. Oscillation means kP is too high. |
+| `kI` | `MechanismPosition` vs `SetpointPosition` over time | Removes a steady error that never closes. Watch for windup causing overshoot. |
+| `kD` | `MechanismVelocity`, `OutputVoltage` | Dampens oscillation. If voltage spikes on direction changes, kD is too high. |
+
+Gains are in volts per rotation of error (per meter for linear mechanisms). See [Gain units](#gain-units) below.
+{% endtab %}
+
+{% tab title="Feedforward" %}
+| Tunable field | Watch | Why |
+| --- | --- | --- |
+| `kS` | `OutputVoltage` at rest | Voltage to overcome static friction. Raise until the mechanism just starts to move. |
+| `kV` | `MeasurementVelocity` vs `SetpointVelocity`, `OutputVoltage` | With kP = 0, adjust until measured velocity matches the setpoint at steady state. |
+| `kA` | `MeasurementVelocity` during the acceleration ramp | Improves tracking while a motion profile accelerates. |
+| `kG` (arms, elevators) | `MechanismPosition`, `OutputVoltage` | Arms: hold level and raise until the arm stays put. Elevators: a constant that fights gravity. |
 
 {% hint style="info" %}
-Remember that `kG * cos(angle)` is applied, so at vertical (±90° from horizontal), no gravity compensation is applied, and at horizontal (0°), full kG is applied.
+For arms, `kG * cos(angle)` is applied: full kG when level (0°), none when vertical (±90°). YAMS handles the cosine for you.
 {% endhint %}
+{% endtab %}
+
+{% tab title="Motion profile" %}
+| Tunable field | You type | Watch | Why |
+| --- | --- | --- | --- |
+| `TrapezoidalProfileMaxVelocity` | RPM (or m/s) | `MechanismVelocity` while cruising | The plateau speed. Raise to move faster; lower if the motor stalls while cruising. |
+| `TrapezoidalProfileMaxAcceleration` | RPM/s (or m/s²) | `StatorCurrent`, `MechanismVelocity` ramp | How quickly speed builds. High acceleration means a current spike at the start. |
+| `TrapezoidalProfileMaxJerk` | RPM/s² | Shape of `MechanismVelocity` | Smooths the ramp when sudden acceleration causes mechanical shock. |
+| `ExponentialProfileKV`, `ExponentialProfileKA` | Same units as kV, kA | `MechanismVelocity` | The system constants the exponential profile plans with. |
+| `ExponentialProfileMaxInput` | Volts | `OutputVoltage` | The most voltage the exponential profile will ask for. |
+{% endtab %}
+
+{% tab title="Setpoints" %}
+| Tunable field | You type | Watch | Why |
+| --- | --- | --- | --- |
+| `TunableSetpointPosition` | Degrees (or m) | `MechanismPosition` vs `SetpointPosition` | Send the mechanism to a position without a button binding. |
+| `TunableSetpointVelocity` | RPM (or m/s) | `MeasurementVelocity`, `OutputVoltage` | Command a speed, for example to find kV without a full profile. |
+| `TunableClosedLoopControllerSlot` | Slot number | `ActiveClosedLoopControllerSlot` | Switch which gain slot the controller uses. |
+{% endtab %}
+
+{% tab title="Limits" %}
+| Tunable field | You type | Watch | Why |
+| --- | --- | --- | --- |
+| `MechanismLowerLimit` | Degrees | `MechanismPosition`, `MechanismLowerLimit` (boolean) | The boolean turns true at the lower soft limit. Move the limit to change where it stops. |
+| `MechanismUpperLimit` | Degrees | `MechanismPosition`, `MechanismUpperLimit` (boolean) | The same for the upper soft limit. |
+| `MeasurementLowerLimit`, `MeasurementUpperLimit` | Meters | `MeasurementPosition` | Soft limits for linear mechanisms. |
+| `StatorCurrentLimit` | Amps | `StatorCurrent`, `MechanismVelocity` | Caps torque. Watch for speed sagging when the limit is too low. |
+| `SupplyCurrentLimit` | Amps | `SupplyCurrent`, `OutputVoltage` | Prevents brownouts. Lower it if supply current spikes dip the voltage. |
+{% endtab %}
+
+{% tab title="Ramp rates" %}
+| Tunable field | You type | Watch | Why |
+| --- | --- | --- | --- |
+| `OpenloopRampRate` | Seconds, 0 to 100% | `OutputVoltage` during open loop commands | Slows voltage changes in open loop. Reduces shock on `set(dutyCycle)`. |
+| `ClosedloopRampRate` | Seconds, 0 to 100% | `OutputVoltage` during closed loop moves | The same for closed loop, when a setpoint step causes a big voltage jump. |
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+**Worth watching the whole time**
+
+* `MotorTemperature`: a hot motor backing off can look like a gain problem.
+* `OutputVoltage`: the raw command the motor is getting. Confirms your feedforward math.
+* `RotorPosition`, `RotorVelocity`: values before gearing. Useful for checking the gearing is right.
+{% endhint %}
+
+Some settings are **not** tunable live and have to be changed in the config: the closed loop tolerance, voltage compensation, the closed loop maximum voltage and the temperature cutoff.
+
+### Gain units
+
+<details>
+
+<summary>PID gains</summary>
+
+| Gain | Unit | Meaning |
+| --- | --- | --- |
+| `kP` | V/rot | Volts per rotation of position error. Linear mechanisms: V/m. |
+| `kI` | V/(rot·s) | Volts per accumulated position error over time. Linear: V/(m·s). |
+| `kD` | V/(rot/s) | Volts per unit of velocity error. Linear: V/(m/s). |
+
+For position control the error is in rotations of the mechanism (or meters with linear closed loop control). For velocity control it is in rotations per second (or meters per second).
+
+</details>
+
+<details>
+
+<summary>Feedforward gains</summary>
+
+| Gain | SimpleMotorFeedforward (flywheels) | ArmFeedforward (arms, pivots) | ElevatorFeedforward (elevators) |
+| --- | --- | --- | --- |
+| `kS` | V, static friction | V, static friction | V, static friction |
+| `kG` | Not used | V, holds the arm level; applied as `kG * cos(angle)` | V, constant against gravity |
+| `kV` | V/(rot/s) | V/(rot/s) | V/(m/s) |
+| `kA` | V/(rot/s²) | V/(rot/s²) | V/(m/s²) |
+
+In YAMS, `ArmFeedforward` uses rotations for kV and kA, like the other feedforward types.
+
+</details>
+
+<details>
+
+<summary>Motion profile settings in code</summary>
+
+| Profile | Setting | Unit in code |
+| --- | --- | --- |
+| Trapezoidal | Max velocity | Any WPILib angular velocity (or linear velocity) unit |
+| Trapezoidal | Max acceleration | Any WPILib angular acceleration (or linear acceleration) unit |
+| Exponential | Max input | Volts |
+| Exponential | kV, kA | V/(rot/s), V/(rot/s²) |
+
+On the dashboard, the trapezoidal values are typed in RPM and RPM per second, as in the Motion profile tab above.
+
+</details>
+
+## Tuning order
+
+Tune the feedforward first, then the feedback, one value at a time.
+
+<figure><img src="../../.gitbook/assets/live-tuning-order.png" alt="Flywheel order: kS, kV with kP at zero, kP, kD if it oscillates, then optionally kA. Arm order: kG, kV and kA from SysId, kP, then kD."><figcaption><p>The order to tune in for a flywheel and for an arm.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Flywheel" %}
+With `SimpleMotorFeedforward`:
+
+1. **kS**: raise slowly until the wheel just starts to move.
+2. **kV**: set a target speed with kP = 0, then adjust kV until the steady speed matches.
+3. **kP**: raise to remove the leftover error and speed up the response.
+4. **kD**: only if it oscillates, add a little to damp it.
+5. **kA** (optional): for faster spin up.
+
+{% hint style="success" %}
+**Units example:** a kV of 0.12 V/(rot/s) means 0.12 volts for every rotation per second. At 100 rot/s (6000 RPM) the feedforward contributes 12 V.
+{% endhint %}
+{% endtab %}
+
+{% tab title="Arm" %}
+With `ArmFeedforward`:
+
+1. **kG**: hold the arm level (0° from horizontal) and raise kG until it stays there.
+2. **kV and kA**: start from SysId characterization values.
+3. **kP**: raise until tracking is quick but not oscillating.
+4. **kD**: damp any oscillation that is left.
+
+{% hint style="info" %}
+`kG * cos(angle)` is applied, so there is no gravity compensation when the arm is vertical (±90° from horizontal) and full kG when it is level.
+{% endhint %}
+{% endtab %}
+{% endtabs %}
