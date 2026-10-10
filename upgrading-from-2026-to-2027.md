@@ -242,6 +242,29 @@ The external encoder getters were renamed, and new getters read only the motor's
 
 `getMechanismPosition()` and `getMechanismVelocity()` are unchanged: they read the external encoder when `withUseExternalFeedbackEncoder(true)` is set, otherwise the relative encoder. The external encoder getters return an empty `Optional` when no external encoder is attached.
 
+### EasyCRT
+
+`EasyCRTConfig` is gone. `EasyCRT` now takes the three tooth counts and the two readings, and works out its own tolerance:
+
+```java
+// Before (2026)
+EasyCRTConfig config = new EasyCRTConfig(encoderA::get, encoderB::get)
+    .withCommonDriveGear(1.0, 100, 19, 21)
+    .withAbsoluteEncoderOffsets(offsetA, offsetB)
+    .withMechanismRange(Rotations.of(-1.5), Rotations.of(1.5))
+    .withMatchTolerance(Rotations.of(0.006));
+Optional<Angle> angle = new EasyCRT(config).getAngleOptional();
+
+// After (2027)
+Optional<Angle> angle = new EasyCRT(100, 19, 21).solve(encoderA.get(), encoderB.get());
+```
+
+* Offsets and inversion are no longer EasyCRT settings. Set them on the encoders, or adjust the readings before passing them in. The old offsets were added to the raw reading.
+* `solve(a, b)` assumes travel centered on zero. Use `solve(a, b, min, max)` otherwise.
+* The solved angle is the angle of the gear both pinions mesh with. If the mechanism is geared to that gear (the old `commonRatio`), divide the result by the ratio.
+* The status, error and iteration getters and the gear recommender are removed. The [EasyCRT](details/easycrt.md) page shows how to choose gears and check your margin yourself.
+* C++ changed the same way: `EasyCRT{100, 19, 21}.Solve(a, b)`.
+
 ### Swerve drive (Java)
 
 * `SwerveDriveConfig.withGyro(...)` now takes a `Supplier<Rotation3d>` (the robot's attitude) instead of a `Supplier<Angle>`. Pass the gyro's full rotation, for example `.withGyro(pigeon::getRotation3d)`.
@@ -267,5 +290,6 @@ The C++ swerve API still uses `GetGyroAngle()` and has no `GyroAxis` yet.
 * [ ] Rename `withIdleMode(...)` to `withZeroPower(...)`.
 * [ ] Rename `getZeroOffset()` to `getExternalEncoderZeroOffset()`, and `getExternalEncoderPosition()`/`getExternalEncoderVelocity()` to `getExternalEncoderMechanismPosition()`/`getExternalEncoderMechanismVelocity()`.
 * [ ] If you set up motor controller telemetry yourself, call `config.setupLiveTuning()` after `setupTelemetry(...)` to get the "Live Tuning" command.
+* [ ] Replace `EasyCRTConfig` with `new EasyCRT(sharedGearTeeth, encoderATeeth, encoderBTeeth)` and `solve(encoderA, encoderB)`, and move offsets and inversion onto the encoders.
 * [ ] Swerve (Java): pass a `Supplier<Rotation3d>` to `withGyro(...)`, replace `getGyroAngle()` with `getGyroRotation3d()`, and add `withGyroHeadingAxis(...)` if your gyro is not mounted flat.
 * [ ] Double-check any hard-limit setter names: `withHardLimits(...)` (plural) is correct on `ArmConfig`/`ElevatorConfig`/`PivotConfig`; there has never been a singular `withHardLimit(...)`.

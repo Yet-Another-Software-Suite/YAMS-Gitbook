@@ -18,26 +18,23 @@ Team 4967 has made this excellent white paper describing exactly how Chinese Rem
 ## Warnings
 
 {% hint style="danger" %}
-`EasyCRT` offsets are unlike the rest of YAMS and YAGSL: they are added to the raw encoder readings, so they expect to be given negative values to set offsets.
-{% endhint %}
-
-{% hint style="danger" %}
 ### Debugging a read failure by 2181
 
-Your defined range will affect your reading.
+Your range will affect your reading.
 
-Check if the result is `AMBIGUOUS` and set your range to have a negative possibility!
+If `solve` comes back empty near the ends of travel, your turret/mechanism is probably sitting just outside the range you gave. Use a range with room on both sides!
 
-For example, instead of a range from `(0,2)` use `(-1.1,1.1)` that way the range can't easily be exceeded
+For example, instead of `solve(a, b, Rotations.of(0), Rotations.of(2))` use `solve(a, b, Rotations.of(-0.1), Rotations.of(2.1))`, as long as the range is still shorter than `getUniqueRange()`. That way the range can't easily be exceeded. `solve(a, b)` already does this for travel centered on zero: it allows half of the unique range either side of zero.
 
-If your turret/mechanism is slightly out of bounds your CRT reading will be very **VERY** off.
+If your turret/mechanism is outside the unique range your CRT reading will be very **VERY** off.
 {% endhint %}
 
-* There is an impact on your loop times every time you resolve the turrets angle due to the implementation. You should **ONLY** measure the turrets absolute encoder angle **ONCE** on startup to safely execute your robot program with minimal impact.
-* CRT is very sensitive to any latency between the two encoder reads (in practice this makes it unreliable if used with measurements taken when the mechanism is in motion).
-* There’s also other pitfalls with the technique (eg FRC encoders are integer measurements) that can manifest in reliability issues / large position errors in edge cases
-* The absolute encoder gears MUST be coprime
-* CRT works within a unique coverage range based off your common gearing, and absolute encoder gear teeth.
+* You should **ONLY** solve for the turrets absolute angle **ONCE** on startup, then seed the motor controller with the result. Do not use `EasyCRT` as closed loop feedback.
+* CRT is very sensitive to any latency between the two encoder reads (in practice this makes it unreliable if used with measurements taken when the mechanism is in motion). Read both encoders while the mechanism is still.
+* There are other pitfalls with the technique (eg backlash between the two encoders, loose pinions or magnets) that can manifest in reliability issues. `solve` returns an empty result instead of a guess when the two readings do not agree, so your code has to handle an empty result.
+* The absolute encoder pinion tooth counts should share no common factor (coprime). Sharing a factor throws unique range away.
+* `EasyCRT` has no offset or inversion settings. Both encoders MUST read zero with the mechanism at zero, and both MUST count up when the mechanism moves in its positive direction.
+* CRT works within a unique range based off the shared gear teeth and the absolute encoder pinion teeth.
   * When you exceed that range CRT will resolve to different values.
 
 ## Alternatives
@@ -49,213 +46,216 @@ CRT is not the only way to find the absolute angle of your turret and you should
 * An absolute encoder with a 1:1 reduction
   * Optionally add a slightly less than 1:1 pinon on a second absolute encoder and find how many turns there are algebraically.
 
-## EasyCRT Absolute Encoder Configuration Guide
+## EasyCRT Guide
 
-This guide shows how to configure the EasyCRT solver (`EasyCRT` + `EasyCRTConfig`).
+`EasyCRT` finds the absolute angle of a mechanism that turns more than once, usually a turret, from two absolute encoders. Each encoder sits on a pinion with a different tooth count, and both pinions mesh with the same gear. Neither encoder knows the angle on its own, but the pair of readings is unique over a much longer travel than either one.
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+import yams.core.units.EasyCRT;
+
+// 100 tooth turret gear, 19 tooth pinion on encoder A, 21 tooth pinion on encoder B.
+EasyCRT crt = new EasyCRT(100, 19, 21);
+
+// Read once at startup, while the turret is not moving.
+Optional<Angle> turretAngle = crt.solve(encoderA.get(), encoderB.get());
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+#include "yams/units/EasyCRT.hpp"
+
+// 100 tooth turret gear, 19 tooth pinion on encoder A, 21 tooth pinion on encoder B.
+yams::units::EasyCRT crt{100, 19, 21};
+
+// Read once at startup, while the turret is not moving.
+std::optional<wpi::units::turn_t> turretAngle = crt.Solve(encoderA, encoderB);
+```
+{% endtab %}
+{% endtabs %}
+
+That is the whole API:
+
+| Java | C++ | What it does |
+| ---- | --- | ------------ |
+| `new EasyCRT(shared, a, b)` | `EasyCRT{shared, a, b}` | Tooth counts of the shared gear and the two encoder pinions. |
+| `solve(a, b)` | `Solve(a, b)` | Angle of the shared gear, for travel centered on zero. |
+| `solve(a, b, min, max)` | `Solve(a, b, min, max)` | The same, for travel that is not centered on zero. |
+| `getUniqueRange()` | `GetUniqueRange()` | How far the shared gear can turn before the readings repeat. |
+
+`solve` returns an empty `Optional` (`std::nullopt` in C++) when the two readings do not agree on one angle.
+
+Everything else you might want (choosing gears, zeroing, inversion, gear trains, checking your margin) is something you do yourself, and the rest of this guide shows how.
+
+{% hint style="info" %}
+Coming from the 2026 `EasyCRTConfig` API? See [Upgrading from 2026 to 2027](../upgrading-from-2026-to-2027.md#easycrt) for the before and after.
+{% endhint %}
 
 ### How the solver works
 
-* You supply two absolute enocder angles (wrapping to \[0,1) is taken care of by the config) plus their rotations-per-mechanism-rotation ratios.
-* The solver enumerates every mechanism angle that fits encoder 1 within the allowed mechanism range, predicts what encoder 2 should read, and measures modular error.
-* The best match inside your tolerance becomes the mechanism angle; near ties become `AMBIGUOUS`; no in-range match becomes `NO_SOLUTION`.
-* The iteration count stays reasonable. Typical solves are tens of iterations. Log `getLastIterations()` to view this. The gear recommender also filters gear pairs whose theoretical iterations exceed your limit.
+1. Encoder A's reading fits several shared gear angles, one for each number of whole turns the pinion could have made. `EasyCRT` lists every one inside the travel.
+2. For each candidate it predicts what encoder B should read.
+3. The candidate whose prediction is closest to encoder B's real reading wins.
 
-### Required inputs
+This is not a textbook Chinese Remainder Theorem solve. It is the same idea done as a search, which keeps working with backlash and sensor noise.
 
-* Provide two `Supplier<Angle>` values (encoder 1 and encoder 2). If a supplier returns `null`, it is treated as `NaN` and the solve will fail.
-* All other settings are configured via `EasyCRTConfig` before passing it to `EasyCRT`.
+### Before you call solve
 
-### Ratio / gearing setup
+`EasyCRT` takes the two readings as they are, so the encoders have to be set up first:
 
-Pick ONE path per encoder to define rotations per mechanism rotation.
+* **Zero both encoders with the mechanism at zero.** Use the vendor tool to set each encoder's offset. If an encoder cannot store an offset, subtract it yourself: `crt.solve(encoderA.get().minus(offsetA), encoderB.get().minus(offsetB))`.
+* **Both encoders must count up when the mechanism moves in its positive direction.** A pinion turns the opposite way to the gear it meshes with, so this usually means inverting both encoders. Set the direction on the encoder, or negate the reading before passing it in.
+* **Read while the mechanism is still.** The two readings are taken one after the other, so any motion between them looks like disagreement. Solve once at startup and seed the motor with the result. Do not use `EasyCRT` as closed loop feedback.
 
-*   **Direct ratio**: `withEncoderRatios(enc1RotPerMechRot, enc2RotPerMechRot)` when you already computed the ratios. Example:
+{% hint style="warning" %}
+Set each offset and inversion in one place only: on the encoder, or in your code before calling `solve`. Doing it in both places gives shifted or mirrored angles.
+{% endhint %}
 
-    ```java
-    easyCrt.withEncoderRatios(/* enc1 */ 50.0, /* enc2 */ 18.3333);
-    ```
-* **Shared drive gear**: `withCommonDriveGear(commonRatio, driveGearTeeth, encoder1PinionTeeth, encoder2PinionTeeth)`
-  * `commonRatio` = mechanism rotations : shared drive gear rotations (the gear that meshes with both encoder pinions).
-  * Seeds prime tooth counts, the common scale `k`, and stage 1 gear teeth + stage 2 ratio for gear recommendations.
-  *   Example: turret gearbox is 12:50 -> 10:110; encoders use 30T and 31T pinions driven by the 50t gear. `commonRatio` is 110.0 / 10.0 = 11.0; shared drive gear is 50T:
+### Choosing tooth counts
 
-      ```java
-      easyCrt.withCommonDriveGear(/* commonRatio */ 11.0,
-                              /* driveGearTeeth */ 50,
-                              /* encoder1Pinion */ 30,
-                              /* encoder2Pinion */ 31);
-      ```
-* **Gear chain (simple mesh sequence)**: `withAbsoluteEncoder1Gearing(teeth...)` / `withAbsoluteEncoder2Gearing(teeth...)`
-  *   Teeth listed from mechanism-side gear to encoder pinion. Example:
+The readings repeat together every `lcm(a, b)` teeth of the shared gear, so:
 
-      ```java
-      easyCrt.withAbsoluteEncoder1Gearing(50, 20, 40); // 50 drives 20, 20 drives 40
-      easyCrt.withAbsoluteEncoder2Gearing(60, 20);     // 60 drives 20
-      ```
-* **Explicit stages (driver, driven pairs)**: `withAbsoluteEncoder1GearingStages(driver1, driven1, driver2, driven2, ...)` / `withAbsoluteEncoder2GearingStages(...)`
-  *   Use for compound or same-shaft trains. Example:
-
-      ```java
-      easyCrt.withAbsoluteEncoder1GearingStages(12, 36, 18, 60); // 12->36, then 18->60
-      easyCrt.withAbsoluteEncoder2GearingStages(12, 60);         // single stage 12->60
-      ```
-*   **Inversion**: Configure both in one place (preferred). We reccomend that offsets be applied in the config to avoid confusion, but if your vendor's encoder supports on-device offsets, that is fine, however DO NOT set them in both places:
-
-    ```java
-    easyCrt.withAbsoluteEncoderInversions(/* enc1 inverted */ false,
-                                      /* enc2 inverted */ true);
-    ```
-
-    Leave device-side inversion at defaults; set inversion here as the single source of truth. The CTRE CANCoder configurator in YAMS resets device inversion to a known baseline, so you will not carry stale on-device inversion.
-
-Sanity checks:
-
-* Ratios must be finite and non-zero; tooth counts must be positive.
-* If neither direct ratios nor gearing are provided, the configuration throws an error.
-* When using chains or stages, verify the order (mechanism -> ... -> encoder). Reversed order yields the wrong ratio.
-
-### Offsets and limits
-
-* **Offsets before wrap**: `withAbsoluteEncoderOffsets(enc1Offset, enc2Offset)` (in rotations) shifts raw readings prior to wrapping into `[0, 1)`. Set offsets here after mechanical zeroing so both encoders read as close to 0.0 rotations as possible at your reference pose. Keep device-side offsets at defaults; the CTRE CANCoder configurator resets device offsets, so the config holds the offsets. Similar to inversion, set this where you want but DO NOT do it twice.
-* **Motion limits**: `withMechanismRange(minAngle, maxAngle)` (rotations). The solver enumerates only within this window; narrower windows shrink the candidate set.
-* **Match tolerance**: `withMatchTolerance(tolerance)` (rotations of encoder 2). Start near the expected backlash mapped through encoder 2’s ratio; too small -> `NO_SOLUTION`, too large -> risk of `AMBIGUOUS`. If you always preload the turret (or mechanism) to one side of its backlash before solving, effective backlash drops and you can run a smaller tolerance. Monitor `getLastErrorRotations()` while tuning.
-
-### Coverage (unique range) and primes
-
-* When you provide prime tooth counts and a common scale, `getUniqueCoverage()` returns the mechanism rotations you can uniquely represent.
-* Provided automatically when you use `withCommonDriveGear` (it seeds `encoder1PrimeTeeth`, `encoder2PrimeTeeth`, and `commonScaleK = commonRatio * driveGearTeeth`).
-* Formula: `coverageRot = lcm(encoder1PrimeTeeth, encoder2PrimeTeeth) / commonScaleK`.
-* `coverageSatisfiesRange()` checks whether the computed coverage is greater than or equal to your configured `maxMechanismAngle`. Use this as a guardrail when choosing pinion teeth.
-* Tip: pick pinion teeth that are coprime to maximize coverage; otherwise `lcm` shrinks and you may not cover your travel.
-
-### Gear recommender workflow
-
-Goal: find the smallest coprime-ish gear pair that yields enough unique coverage with acceptable solve iterations.
-
-* Prereqs (often auto-set by `withCommonDriveGear`):
-  * Stage 1 gear teeth (the shared drive gear for both encoders).
-  * Stage 2 ratio (mechanism : drive gear).
-* If you do NOT use `withCommonDriveGear`, you can still seed the recommender manually with `withCrtGearRecommendationInputs(stage1GearTeeth, stage2Ratio)` before calling `withCrtGearRecommendationConstraints(...)`.
-* Configure constraints: `withCrtGearRecommendationConstraints(coverageMargin, minTeeth, maxTeeth, maxIterations)` and (if needed) `withCrtGearRecommendationInputs(stage1GearTeeth, stage2Ratio)`.
-  * Runs only in simulation to avoid extra CPU on-robot.
-  * `coverageMargin` multiplies your `maxMechanismAngle` to enforce slack (for example, 1.2 adds 20 percent headroom).
-  * `maxIterations` rejects pairs that would require too many candidate checks per solve (the real count is visible via `getLastIterations()`).
-* Call `getRecommendedCrtGearPair()` in sim; it returns `Optional<CrtGearPair>` with:
-  * `gearA`, `gearB`: tooth counts.
-  * `coverage`: resulting unique mechanism coverage (rotations).
-  * `lcm`, `gcd`, and `theoreticalIterations`.
-* Use the returned pinions as `encoder1PinionTeeth` / `encoder2PinionTeeth` in `withCommonDriveGear` (or your own chain/stage builders) and re-check `coverageSatisfiesRange()`.
-
-### Practical gearing guidance
-
-* Ratio equals the total reduction to the mechanism. Ensure backlash mapped to encoder 2 does not exceed your tolerance.
-* Chain or belt stages: include every stage when you compute ratios or describe the chain; missing a stage collapses your coverage and can cause ambiguity.
-* Prime tooth choice: pick small, coprime pinions (for example, 19T + 21T) for high coverage with minimal size. Avoid sharing factors (for example, 20T + 30T) unless coverage math still clears your travel.
-
-### Calibration and bring-up
-
-1. Mechanically zero the mechanism; log both absolute readings (raw rotations in \[0, 1)).
-2. Set offsets so that the zero pose reads the desired mechanism zero after wrap (set them in the config).
-3. Set motion range to the actual usable travel (include soft stops if you have them).
-4. Compute ratios via one of the gearing helpers; confirm `coverageSatisfiesRange()` if using prime-aware inputs.
-5. Choose an initial `matchTolerance` based on backlash mapped to encoder 2: `backlash_mech_rot * ratio2`. If you preload to one side, you can shrink this.
-6. Jog through the full travel; watch `getLastStatus()` and `getLastErrorRotations()`; ensure no `AMBIGUOUS` near boundary regions.
-7. Power-cycle in multiple poses and confirm reconstructed angles stay consistent.
-
-### Seeding a motor controller with EasyCRT
-
-Use the solved mechanism angle to initialize your motor controller's encoder so it knows its absolute position after boot:
-
-```java
-var easyCrtConfig = ...; // build EasyCRTConfig as shown above
-var easyCrtSolver = new EasyCRT(easyCrtConfig);
-//If the mechanism is configured using YAMS, use setEncoderPosition
-easyCrtSolver.getAngleOptional().ifPresent(mechAngle -> {
-  motor.setEncoderPosition(mechAngle);
-});
+```
+unique range (rotations of the shared gear) = lcm(a, b) / shared
 ```
 
-Call this once at startup (after sensors are ready) before running closed-loop control.
+Pick pinions with no common factor, so the lcm is their product. Sharing a factor throws range away: 20 and 30 teeth only cover 60 teeth of the shared gear, not 600.
 
-### Troubleshooting: Common pitfalls and how to avoid them
+| Pinion A | Pinion B | Teeth covered | Range on a 100 tooth gear | Range on a 200 tooth gear |
+| -------- | -------- | ------------- | ------------------------- | ------------------------- |
+| 13 | 15 | 195 | 1.95 turns | 0.975 turns |
+| 17 | 19 | 323 | 3.23 turns | 1.615 turns |
+| 19 | 21 | 399 | 3.99 turns | 1.995 turns |
+| 20 | 21 | 420 | 4.20 turns | 2.10 turns |
+| 25 | 27 | 675 | 6.75 turns | 3.375 turns |
+| 30 | 31 | 930 | 9.30 turns | 4.65 turns |
 
-* Wrong ratio sign: mechanism turns positive but angle decreases -> set encoder inversion
-* Missing a gear stage: forgetting chain or belt stages yields too-small ratios; candidates overlap -> `AMBIGUOUS`.
-* Non-coprime pinions: shared factors shrink coverage; `coverageSatisfiesRange()` becomes false. Pick coprime counts or widen the coverage margin.
-* Zeroing at a wrap edge: offsets that place the parked pose near 0 or 1 can cause wrap flips from noise. If your zero offset lands within a few hundredths of 0 or 1 rotations, physically re-phase the encoder (pull the pinion or magnet, rotate a tooth or two, and remesh) so your zero sits closer to mid-window, then reset offsets in the config.
-* Tolerance too tight: backlash or magnet noise bigger than tolerance -> `NO_SOLUTION`. Increase tolerance or preload the mechanism to one side of backlash.
-* Tolerance too loose: two candidates inside tolerance -> `AMBIGUOUS`. Reduce tolerance or widen range margins so only one candidate survives.
-* Double inversion or offset: applying inversion or offset both on device and in config produces mirrored or shifted angles. Keep device at defaults; do inversion and offsets in the config. The CTRE CANCoder configurator resets device settings, preventing stale on-device values.
-* Skipping power-cycle tests: CRT must reconstruct after reboot; always validate cold-start behavior.
+The range has to be at least your full travel, including how far the mechanism can coast past its soft limits. `getUniqueRange()` returns it, and `solve(a, b, min, max)` throws if the travel you pass is longer.
 
-### Example configuration (encoders driven through the mechanism reduction)
+To check a pair before you build it:
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+Angle range = new EasyCRT(200, 19, 21).getUniqueRange(); // 1.995 rotations
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+wpi::units::turn_t range = yams::units::EasyCRT{200, 19, 21}.GetUniqueRange(); // 1.995 rotations
+```
+{% endtab %}
+{% endtabs %}
+
+### Travel that is not centered on zero
+
+`solve(a, b)` assumes the mechanism's zero is in the middle of its travel, and returns an angle within half the unique range either side of zero. For a turret that goes from 0 to 540 degrees, give the travel:
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+Optional<Angle> angle = crt.solve(encoderA.get(), encoderB.get(), Degrees.of(0), Degrees.of(540));
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+std::optional<wpi::units::turn_t> angle =
+    crt.Solve(encoderA, encoderB, wpi::units::turn_t{0.0}, wpi::units::turn_t{1.5});
+```
+{% endtab %}
+{% endtabs %}
+
+Give the real travel, not the whole unique range. A tighter range leaves fewer candidates, and it keeps a reading taken slightly past an end stop from wrapping to the other end.
+
+### Gear trains
+
+The solved angle is the angle of the gear both pinions mesh with. If that gear is the mechanism, you are done. If the mechanism is geared to it, convert the result yourself.
+
+Example: the pinions mesh with a 50 tooth drive gear that turns 12 times per turret rotation.
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+EasyCRT crt = new EasyCRT(50, 19, 23);
+Optional<Angle> turretAngle = crt.solve(encoderA.get(), encoderB.get()).map(driveGear -> driveGear.div(12));
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+yams::units::EasyCRT crt{50, 19, 23};
+std::optional<wpi::units::turn_t> turretAngle;
+if (auto driveGear = crt.Solve(encoderA, encoderB)) {
+  turretAngle = *driveGear / 12.0;
+}
+```
+{% endtab %}
+{% endtabs %}
+
+The unique range shrinks by the same ratio: `lcm(19, 23) / 50 = 8.74` turns of the drive gear is `8.74 / 12 = 0.73` turns of the turret.
+
+If the encoders are driven through their own extra stages, work out how many teeth of the shared gear pass per encoder rotation and use that as the pinion tooth count.
+
+### Margin: how much backlash is too much
+
+`EasyCRT` has no tolerance setting. It works the tolerance out from the gears:
+
+* Neighboring candidates predict encoder B readings `gcd(a, b) / b` of a rotation apart. For 19 and 21 teeth that is 1/21 of a rotation, about 17 degrees of encoder B.
+* A match is accepted when encoder B is within a quarter of that gap of its prediction, about 4.3 degrees here. Anything further off returns empty instead of a guess.
+
+So the backlash and noise between the two encoders, measured at encoder B, has to stay under a quarter of the gap. To measure what you actually have, log the error yourself while moving the mechanism slowly by hand through its travel:
 
 ```java
-// Suppose: mechanism : drive gear = 12:1, drive gear = 50T, encoders use 19T and 23T pinions.
-var easyCrt =
-    new EasyCRTConfig(enc1Supplier, enc2Supplier)
-        .withCommonDriveGear(
-            /* commonRatio (mech:drive) */ 12.0,
-            /* driveGearTeeth */ 50,
-            /* encoder1Pinion */ 19,
-            /* encoder2Pinion */ 23)
-        .withAbsoluteEncoderOffsets(Rotations.of(0.0), Rotations.of(0.0)) // set after mechanical zero
-        .withMechanismRange(Rotations.of(-1.0), Rotations.of(2.0)) // -360 deg to +720 deg
-        .withMatchTolerance(Rotations.of(0.06)) // ~1.08 deg at encoder2 for the example ratio
-        .withAbsoluteEncoderInversions(false, false)
-        .withCrtGearRecommendationConstraints(
-            /* coverageMargin */ 1.2,
-            /* minTeeth */ 15,
-            /* maxTeeth */ 45,
-            /* maxIterations */ 30);
-
-// you can inspect:
-easyCrt.getUniqueCoverage();          // Optional<Angle> coverage from prime counts and common scale
-easyCrt.coverageSatisfiesRange();     // Does coverage exceed maxMechanismAngle?
-easyCrt.getRecommendedCrtGearPair();  // Suggested pair within constraints
-
-// Create the solver:
-var easyCrtSolver = new EasyCRT(easyCrt);
+// Encoder B rotations per rotation of the shared gear is shared / b.
+double predictedB = solvedAngle.in(Rotations) * 100.0 / 21.0;
+double error = MathUtil.inputModulus(predictedB - encoderB.get().in(Rotations), -0.5, 0.5);
 ```
 
-### More gearing examples
+If the error gets near the limit:
 
-*   **Encoders using explicit stage definitions** (no CRT inputs set by gearing; seed the recommender manually):
+* Preload the mechanism to one side of its backlash before reading.
+* Use a larger pinion B, or pinions with a bigger tooth difference, which widens the gap.
+* Check that both encoder magnets and pinions are secure.
 
-    ```java
-    var easyCrt =
-        new EasyCRTConfig(enc1, enc2)
-            .withAbsoluteEncoder1GearingStages(14, 50, 16, 60) // compound to encoder 1
-            .withAbsoluteEncoder2GearingStages(12, 36, 18, 54) // compound to encoder 2
-            .withMechanismRange(Rotations.of(0.0), Rotations.of(2.0))
-            .withAbsoluteEncoderOffsets(Rotations.of(0.01), Rotations.of(0.0)) // align to hard stop
-            .withAbsoluteEncoderInversions(false, true)
-            // Seed recommender since common drive inputs were not provided above
-            .withCrtGearRecommendationInputs(
-                /* stage1GearTeeth (shared driver) */ 48,
-                /* stage2Ratio (mech:drive) */ 10.0)
-            .withCrtGearRecommendationConstraints(
-                /* coverageMargin */ 1.15,
-                /* minTeeth */ 15,
-                /* maxTeeth */ 55,
-                /* maxIterations */ 30);
+The accuracy of the result comes from encoder A alone: an error on encoder A shows up divided by `shared / a`.
 
-    easyCrt.getRecommendedCrtGearPair();
-    ```
-*   **Encoders using chain helpers** (no CRT inputs; coverage helpers empty):
+### Seeding a motor controller
 
-    ```java
-    var easyCrt =
-        new EasyCRTConfig(enc1, enc2)
-            .withAbsoluteEncoder1Gearing(72, 24)        // 72 drives 24
-            .withAbsoluteEncoder2Gearing(50, 20, 40)    // 50 drives 20, 20 drives 40
-            .withMechanismRange(Rotations.of(0.0), Rotations.of(1.2))
-            .withAbsoluteEncoderInversions(false, false);
-    ```
+Use the solved angle to tell the motor where the mechanism is, once, at startup:
 
-### Validation checklist
+```java
+// motor is a YAMS SmartMotorController
+crt.solve(encoderA.get(), encoderB.get()).ifPresent(motor::setEncoderPosition);
+```
 
-* Observe `getLastStatus()` while commanding moves; it should report `OK` across travel.
-* Ensure `getLastErrorRotations()` stays below your tolerance with margin.
-* Jog across theoretical wrap boundaries; verify no sudden +/-1 rotation jumps in mechanism space.
-* Run multiple power cycles in varied poses and confirm the resolved angle stays within your tolerance budget.
+{% hint style="warning" %}
+Decide what happens when the result is empty. Raising an alert and refusing to move the mechanism is safer than assuming it is at zero.
+{% endhint %}
+
+The `BroncBotz_2026` examples have a complete `Turret` class: [Commands v2](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/BroncBotz_2026/java/first/robot/subsystems/Turret.java) and [Commands v3](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/BroncBotz_2026/java/first/robot/mechanisms/Turret.java).
+
+### Troubleshooting
+
+| Symptom | Likely cause |
+| ------- | ------------ |
+| Always empty | An encoder is not zeroed at the mechanism's zero, or one encoder counts the wrong way. |
+| Empty in some positions only | Backlash or a loose pinion is using up the margin. See the margin section. |
+| Empty at the ends of travel | The mechanism is past the travel you gave, or the travel is the whole unique range. |
+| Angle is off by a fixed amount | Encoder A's zero is off. The result follows encoder A. |
+| Angle is off by a whole number of pinion turns | The readings were taken while moving, or encoder B's zero is off. |
+| Angle is mirrored | Both encoders count the wrong way. |
+| `solve(a, b, min, max)` throws | The travel is longer than the unique range. Choose different pinions. |
+
+### Checklist
+
+* [ ] Pinion tooth counts share no factor, and the unique range covers the full travel with room to spare.
+* [ ] Both encoders read zero with the mechanism at zero.
+* [ ] Both encoders count up when the mechanism moves in its positive direction.
+* [ ] The solved angle matches the real angle at several positions across the travel.
+* [ ] The error on encoder B stays well under a quarter of the gap between candidates.
+* [ ] The robot gives the right angle after a power cycle in several positions.
+* [ ] The code handles an empty result.
