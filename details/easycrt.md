@@ -225,14 +225,9 @@ The accuracy of the result comes from encoder A alone: an error on encoder A sho
 
 ### Seeding a motor controller
 
-Use the solved angle to tell the motor where the mechanism is, once, at startup:
+Use the solved angle to tell the motor where the mechanism is, once, at startup.
 
-```java
-// motor is a YAMS SmartMotorController. Give it the mechanism angle; YAMS applies the gearing.
-crt.solve(encoderA.get(), encoderB.get()).ifPresent(motor::setEncoderPosition);
-```
-
-To set the motor's own relative encoder yourself, convert the turret angle to the angle of the motor's rotor with the `MechanismGearing` between the motor and the turret. `getMechanismToRotorRatio()` is the reduction, so multiply the solved angle by it with `.times(...)`. This is the usual layout when three gears mesh with the turret gear: the two encoder pinions and the motor's pinion.
+The motor's relative encoder counts rotor rotations, which is the turret angle multiplied by the reduction between the motor and the turret. Put that reduction in a `MechanismGearing`, give it to the `SmartMotorController` config, and `setEncoderPosition(...)` does the multiplication for you. This is the usual layout when three gears mesh with the turret gear: the two encoder pinions and the motor's pinion.
 
 {% tabs %}
 {% tab title="Java" %}
@@ -242,13 +237,20 @@ To set the motor's own relative encoder yourself, convert the turret angle to th
 MechanismGearing turretGearing = new MechanismGearing(GearBox.fromReductionStages(10, 200.0 / 20));
 EasyCRT crt = new EasyCRT(200, 19, 21);
 
+SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withGearing(turretGearing)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(20, 0, 0);
+SmartMotorController motor = new SparkWrapper(sparkMax, DCMotor.getNEO(1), motorConfig);
+
 crt.solve(encoderA.get(), encoderB.get()).ifPresent(turretAngle -> {
   // The turret gear is the shared gear, so the solved angle is already the turret angle.
-  // Turret angle times the reduction is the angle of the motor's rotor.
-  Angle rotorAngle = turretAngle.times(turretGearing.getMechanismToRotorRatio());
+  // setEncoderPosition takes the mechanism angle and sets the motor's relative encoder to
+  // turretAngle.times(turretGearing.getMechanismToRotorRatio()) for you.
+  motor.setEncoderPosition(turretAngle);
 
-  sparkMax.getEncoder().setPosition(rotorAngle.in(Rotations)); // REV
-  // talonFX.setPosition(rotorAngle);                           // CTRE
+  // The same conversion, if you want the rotor angle yourself (for logging or a sanity check):
+  Angle rotorAngle = turretAngle.times(turretGearing.getMechanismToRotorRatio());
 });
 ```
 {% endtab %}
@@ -261,19 +263,23 @@ yams::gearing::MechanismGearing turretGearing{
     yams::gearing::GearBox::FromReductionStages({10.0, 200.0 / 20.0})};
 yams::units::EasyCRT crt{200, 19, 21};
 
+// motor is a yams::motorcontrollers::SmartMotorController whose config has
+// WithMotorGearing(turretGearing).
 if (auto turretAngle = crt.Solve(encoderA, encoderB)) {
   // The turret gear is the shared gear, so the solved angle is already the turret angle.
-  // Turret angle times the reduction is the angle of the motor's rotor.
-  wpi::units::turn_t rotorAngle = *turretAngle * turretGearing.GetMechanismToRotorRatio();
+  // SetEncoderPosition takes the mechanism angle and sets the motor's relative encoder to
+  // *turretAngle * turretGearing.GetMechanismToRotorRatio() for you.
+  motor.SetEncoderPosition(*turretAngle);
 
-  talonFX.SetPosition(rotorAngle);
+  // The same conversion, if you want the rotor angle yourself (for logging or a sanity check):
+  wpi::units::turn_t rotorAngle = *turretAngle * turretGearing.GetMechanismToRotorRatio();
 }
 ```
 {% endtab %}
 {% endtabs %}
 
 {% hint style="info" %}
-Use the same `MechanismGearing` you pass to `SmartMotorControllerConfig.withGearing(...)`, so the seeded position and the closed loop agree. If the pinions mesh with a gear that is not the mechanism, convert the solved angle to the mechanism angle first (see [Gear trains](#gear-trains)), then multiply.
+Pass `setEncoderPosition(...)` the mechanism angle, not the rotor angle: it applies the `MechanismGearing` from the config, so multiplying first would apply the gearing twice. `turretAngle.times(turretGearing.getMechanismToRotorRatio())` is the rotor angle it ends up setting. If the pinions mesh with a gear that is not the mechanism, convert the solved angle to the mechanism angle first (see [Gear trains](#gear-trains)).
 {% endhint %}
 
 {% hint style="warning" %}
