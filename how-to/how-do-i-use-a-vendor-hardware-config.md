@@ -20,7 +20,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
     .withClosedLoopController(4, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE);
+    .withZeroPower(MotorMode.BRAKE);
 
 TalonFX talonFX = new TalonFX(1);
 SmartMotorController smc = new TalonFXWrapper(talonFX, DCMotor.getKrakenX60(1), motorConfig);
@@ -60,7 +60,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
     .withClosedLoopController(4, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE);
+    .withZeroPower(MotorMode.BRAKE);
 
 SparkMax spark = new SparkMax(1, MotorType.kBrushless);
 SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNEO(1), motorConfig);
@@ -81,7 +81,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
     .withClosedLoopController(4, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE);
+    .withZeroPower(MotorMode.BRAKE);
 
 SparkFlex spark = new SparkFlex(1, MotorType.kBrushless);
 SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNeoVortex(1), motorConfig);
@@ -91,7 +91,7 @@ SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNeoVortex(1), moto
 
 YAMS uses your vendor config as a starting point and then writes its own settings on top of it. This means:
 
-* Any field you set in `SmartMotorControllerConfig` (PID gains, gearing, idle mode, current limits, etc.) **will overwrite** the corresponding field in your vendor config.
+* Any field you set in `SmartMotorControllerConfig` (PID gains, gearing, zero power mode, current limits, etc.) **will overwrite** the corresponding field in your vendor config.
 * Any field you set **only** in the vendor config and that YAMS doesn't touch will be preserved exactly as you set it.
 
 If you set the same option in both places, `SmartMotorControllerConfig` wins. Think of the vendor config as the floor, not the ceiling.

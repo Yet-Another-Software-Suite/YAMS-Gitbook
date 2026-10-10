@@ -919,7 +919,7 @@ public class ArmSubsystem extends SubsystemBase {
         .withTrapezoidalProfile(DegreesPerSecond.of(458), DegreesPerSecondPerSecond.of(688))
         .withFeedforward(new ArmFeedforward(-0.1, 1.2, 0, 0))
         .withGearing(new MechanismGearing(GearBox.fromReductionStages(12.5, 1)))
-        .withIdleMode(MotorMode.BRAKE)
+        .withZeroPower(MotorMode.BRAKE)
         .withStatorCurrentLimit(Amps.of(120));
 
     armSMC = new TalonFXWrapper(new TalonFX(40), DCMotor.getFalcon500(1), smcConfig);

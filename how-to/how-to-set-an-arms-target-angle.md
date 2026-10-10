@@ -58,7 +58,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.BRAKE)
+  .withZeroPower(MotorMode.BRAKE)
   .withStatorCurrentLimit(Amps.of(40))
   .withClosedLoopRampRate(Seconds.of(0.25))
   .withOpenLoopRampRate(Seconds.of(0.25));

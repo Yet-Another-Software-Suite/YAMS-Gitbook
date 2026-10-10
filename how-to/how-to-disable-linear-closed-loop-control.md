@@ -22,7 +22,7 @@ Inside of your `SmartMotorControllerConfig` you would use `withLinearClosedLoopC
 <pre class="language-java"><code class="lang-java">SmartMotorControllerConfig motorConfig        = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withWheelDiameter(Inches.of(4))
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withClosedLoopController(50,0,0,MetersPerSecond.of(3), MetersPerSecondPerSecond.of(5))
 <strong>      .withLinearClosedLoopController(false);
 </strong></code></pre>

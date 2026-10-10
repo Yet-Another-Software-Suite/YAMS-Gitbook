@@ -74,7 +74,7 @@ An example of this for an Elevator would be as follows
   .withGearing(gearing)
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(idle)
+  .withZeroPower(idle)
   .withStatorCurrentLimit(statorLimit)
   .withClosedLoopRampRate(closedLoopRampRate)
   .withOpenLoopRampRate(openLoopRampRate);
@@ -100,7 +100,7 @@ An example of this for an Elevator would be as follows
   .withGearing(gearing)
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(idle)
+  .withZeroPower(idle)
   .withStatorCurrentLimit(statorLimit)
   .withClosedLoopRampRate(closedLoopRampRate)
   .withOpenLoopRampRate(openLoopRampRate);

@@ -114,7 +114,7 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>  .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
 </strong><strong>  // Motor properties to prevent over currenting.
 </strong><strong>  .withMotorInverted(false)
-</strong><strong>  .withIdleMode(MotorMode.COAST)
+</strong><strong>  .withZeroPower(MotorMode.COAST)
 </strong><strong>  .withStatorCurrentLimit(Amps.of(40));
 </strong>
   /** Creates a new ExampleSubsystem. */
@@ -211,7 +211,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.COAST)
+  .withZeroPower(MotorMode.COAST)
   .withStatorCurrentLimit(Amps.of(40));
 
 <strong>  // Vendor motor controller object
@@ -308,7 +308,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.COAST)
+  .withZeroPower(MotorMode.COAST)
   .withStatorCurrentLimit(Amps.of(40));
 
   // Vendor motor controller object
@@ -412,7 +412,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.COAST)
+  .withZeroPower(MotorMode.COAST)
   .withStatorCurrentLimit(Amps.of(40));
 
   // Vendor motor controller object
@@ -529,7 +529,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.COAST)
+  .withZeroPower(MotorMode.COAST)
   .withStatorCurrentLimit(Amps.of(40));
 
   // Vendor motor controller object

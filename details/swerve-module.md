@@ -18,7 +18,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withLocation(Meters.of(0.3), Meters.of(0.3))
       .withOptimization(true)
       .withCosineCompensation(true)
-      .withMinimumVelocity(MetersPerSecond.of(0.05))
+      .withVelocityDeadband(MetersPerSecond.of(0.05))
       .withTelemetry("frontleft", TelemetryVerbosity.HIGH);
 
 SwerveModule fl = new SwerveModule(moduleConfig);
@@ -121,12 +121,12 @@ When optimization is enabled, WPILib's `SwerveModuleState.optimize(...)` decides
 
 `SwerveModuleConfig` deliberately compares against `lastCommandedAngle`, the angle it last actually commanded, rather than the live absolute encoder reading. Kinematics recomputes the raw desired angle from scratch every loop with no memory of a prior flip. If the flip decision were re-derived from the encoder instead, a debounced flip in progress would get pulled back toward the raw angle by the encoder's own reading before the debounce could ever confirm it, a feedback loop that could leave the module chattering between two headings. Comparing against the last commanded angle avoids that entirely.
 
-## Minimum Velocity
+## Velocity Deadband
 
-`SwerveModuleConfig.withMinimumVelocity(LinearVelocity)` sets a deadband below which `getOptimizedState(...)` zeroes the commanded speed and holds the module at its current angle instead of the kinematically-desired one. This keeps a module from spinning to face a new heading every time the requested drive speed is nearly zero, which otherwise reads as constant, pointless wheel chatter when the driver lets go of the stick.
+`SwerveModuleConfig.withVelocityDeadband(LinearVelocity)` sets a deadband below which `getOptimizedState(...)` zeroes the commanded speed and holds the module at its current angle instead of the kinematically-desired one. This keeps a module from spinning to face a new heading every time the requested drive speed is nearly zero, which otherwise reads as constant, pointless wheel chatter when the driver lets go of the stick.
 
 ```java
-moduleConfig.withMinimumVelocity(MetersPerSecond.of(0.05));
+moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
 ```
 
 {% hint style="warning" %}

@@ -20,7 +20,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
       // Configure Motor and Mechanism properties
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-      .withIdleMode(MotorMode.BRAKE)
+      .withZeroPower(MotorMode.BRAKE)
       .withMotorInverted(false)
       // Setup Telemetry
       .withTelemetry("TurretMotor", TelemetryVerbosity.HIGH)

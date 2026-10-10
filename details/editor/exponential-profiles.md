@@ -312,7 +312,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         .withFeedforward(new ElevatorFeedforward(0.1, 0.25, 0, 0))
         .withSimFeedforward(new ElevatorFeedforward(0, 0.2, 0, 0))
         .withGearing(gearing)
-        .withIdleMode(MotorMode.BRAKE)
+        .withZeroPower(MotorMode.BRAKE)
         .withStatorCurrentLimit(Amps.of(40))
         .withTelemetry("ElevatorMotor", TelemetryVerbosity.HIGH);
 

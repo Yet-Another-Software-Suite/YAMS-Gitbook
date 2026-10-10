@@ -138,7 +138,7 @@ SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), 
 | ------------------------- | ------- | -------- | ------------- |
 | Motor Inversion           | ✅       | ✅        | ✅             |
 | Encoder Inversion         | ✅       | ✅        | ✅             |
-| Idle Mode (Brake/Coast)   | ✅       | ✅        | ✅             |
+| Zero Power Mode (Brake/Coast)   | ✅       | ✅        | ✅             |
 | Reset Previous Config     | ✅       | ✅        | ✅             |
 | Vendor Config Passthrough | ✅       | ✅        | ✅             |
 | Starting Position         | ✅       | ✅        | ✅             |
@@ -317,7 +317,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withExternalEncoder(encoder)
     .withExternalEncoderZeroOffset(Degrees.of(90))
     .withUseExternalFeedbackEncoder(true)
-    .withIdleMode(MotorMode.BRAKE)
+    .withZeroPower(MotorMode.BRAKE)
     .withStatorCurrentLimit(Amps.of(40))
     .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
 
@@ -334,7 +334,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withClosedLoopController(0.5, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(4)))
     .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-    .withIdleMode(MotorMode.COAST)
+    .withZeroPower(MotorMode.COAST)
     .withStatorCurrentLimit(Amps.of(40))
     .withTelemetry("FlywheelMotor", TelemetryVerbosity.HIGH);
 
@@ -354,7 +354,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withUseExternalFeedbackEncoder(true)
     .withExternalEncoderZeroOffset(Degrees.of(45))
     .withFeedforward(new ArmFeedforward(0, 0.5, 0, 0))
-    .withIdleMode(MotorMode.BRAKE)
+    .withZeroPower(MotorMode.BRAKE)
     .withTelemetry("WristMotor", TelemetryVerbosity.HIGH);
 
 SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNEO(1), config);

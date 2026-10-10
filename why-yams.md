@@ -8,7 +8,7 @@ icon: rocket
 
 Writing a motor subsystem from scratch is repetitive and error-prone. A production-quality subsystem requires:
 
-* Motor controller configuration (PID, feedforward, gearing, current limits, idle mode, ramp rates…)
+* Motor controller configuration (PID, feedforward, gearing, current limits, zero power mode, ramp rates…)
 * A physics simulation that actually matches your hardware
 * Periodic telemetry publishing so you can see what's happening
 * `Mechanism2d` visualizations for AdvantageScope
@@ -31,7 +31,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
     .withFeedforward(new ArmFeedforward(0, 0, 0, 0))
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE)
+    .withZeroPower(MotorMode.BRAKE)
     .withStatorCurrentLimit(Amps.of(40))
     .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
 

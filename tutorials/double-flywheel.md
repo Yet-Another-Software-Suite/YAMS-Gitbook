@@ -117,7 +117,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       // Motor properties
       .withMotorInverted(false)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
@@ -132,7 +132,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       .withMotorInverted(true) // Often inverted relative to upper for proper game piece direction
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
@@ -186,7 +186,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       .withMotorInverted(false)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
@@ -201,7 +201,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       .withMotorInverted(true)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
@@ -264,7 +264,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       .withMotorInverted(false)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
@@ -279,7 +279,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       .withMotorInverted(true)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
@@ -371,7 +371,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       .withMotorInverted(false)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));
@@ -386,7 +386,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
       .withMotorInverted(true)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
       .withClosedLoopRampRate(Seconds.of(0.25))
       .withOpenLoopRampRate(Seconds.of(0.25));

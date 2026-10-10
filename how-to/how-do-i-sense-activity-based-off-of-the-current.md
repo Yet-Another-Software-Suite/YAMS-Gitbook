@@ -23,7 +23,7 @@ In this case you can sense if there is a game piece by the current on the smart 
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
     // Motor properties to prevent over currenting.
     .withMotorInverted(false)
-    .withIdleMode(MotorMode.BRAKE)
+    .withZeroPower(MotorMode.BRAKE)
     .withStatorCurrentLimit(Amps.of(40))
     .withClosedLoopRampRate(Seconds.of(0.25))
     .withOpenLoopRampRate(Seconds.of(0.25));

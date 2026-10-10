@@ -29,7 +29,7 @@ TunerX vendorsim integration is specific to **CTRE TalonFX and TalonFXS** motors
 
 <pre class="language-java"><code class="lang-java">SmartMotorControllerConfig lowerFlyWheelConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
-      .withIdleMode(MotorMode.COAST)
+      .withZeroPower(MotorMode.COAST)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withMomentOfInertia(Inches.of(4), Pounds.of(2))
       .withClosedLoopController(1,

@@ -132,7 +132,7 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>  .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
 </strong><strong>  // Motor properties to prevent over currenting.
 </strong><strong>  .withMotorInverted(false)
-</strong><strong>  .withIdleMode(MotorMode.BRAKE)
+</strong><strong>  .withZeroPower(MotorMode.BRAKE)
 </strong><strong>  .withStatorCurrentLimit(Amps.of(40))
 </strong><strong>  .withClosedLoopRampRate(Seconds.of(0.25))
 </strong><strong>  .withOpenLoopRampRate(Seconds.of(0.25));
@@ -263,7 +263,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.BRAKE)
+  .withZeroPower(MotorMode.BRAKE)
   .withStatorCurrentLimit(Amps.of(40))
   .withClosedLoopRampRate(Seconds.of(0.25))
   .withOpenLoopRampRate(Seconds.of(0.25));
@@ -366,7 +366,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.BRAKE)
+  .withZeroPower(MotorMode.BRAKE)
   .withStatorCurrentLimit(Amps.of(40))
   .withClosedLoopRampRate(Seconds.of(0.25))
   .withOpenLoopRampRate(Seconds.of(0.25));
@@ -476,7 +476,7 @@ public class ExampleSubsystem extends SubsystemBase {
   .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
   // Motor properties to prevent over currenting.
   .withMotorInverted(false)
-  .withIdleMode(MotorMode.BRAKE)
+  .withZeroPower(MotorMode.BRAKE)
   .withStatorCurrentLimit(Amps.of(40))
   .withClosedLoopRampRate(Seconds.of(0.25))
   .withOpenLoopRampRate(Seconds.of(0.25));
@@ -597,7 +597,7 @@ public class ExampleSubsystem extends SubsystemBase {
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
     // Motor properties to prevent over currenting.
     .withMotorInverted(false)
-    .withIdleMode(MotorMode.BRAKE)
+    .withZeroPower(MotorMode.BRAKE)
     .withStatorCurrentLimit(Amps.of(40))
     .withClosedLoopRampRate(Seconds.of(0.25))
     .withOpenLoopRampRate(Seconds.of(0.25));

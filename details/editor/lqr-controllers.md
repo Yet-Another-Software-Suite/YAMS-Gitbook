@@ -202,7 +202,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withMomentOfInertia(Inches.of(24), Pounds.of(12))
     .withClosedLoopController(lqrController)  // Pass the LQRController here
     .withFeedforward(new ArmFeedforward(0.1, 0.45, 1.2, 0.05))
-    .withIdleMode(MotorMode.BRAKE)
+    .withZeroPower(MotorMode.BRAKE)
     .withTelemetry("LQRArm", TelemetryVerbosity.HIGH);
 ```
 
@@ -258,7 +258,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withClosedLoopController(5.0, 0, 0.5)
     // Simulation uses LQR for validation
     .withSimClosedLoopController(simLqr)
-    .withIdleMode(MotorMode.BRAKE);
+    .withZeroPower(MotorMode.BRAKE);
 ```
 
 This is useful for:
@@ -305,7 +305,7 @@ public class LQRArmSubsystem extends SubsystemBase {
             .withFeedforward(new ArmFeedforward(0.1, 0.45, 1.2, 0.05))
             .withSoftLimits(Degrees.of(-10), Degrees.of(110))
             .withClosedLoopTolerance(Degrees.of(1))
-            .withIdleMode(MotorMode.BRAKE)
+            .withZeroPower(MotorMode.BRAKE)
             .withStatorCurrentLimit(Amps.of(40))
             .withTelemetry("LQRArm", TelemetryVerbosity.HIGH);
         

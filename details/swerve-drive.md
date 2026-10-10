@@ -193,7 +193,7 @@ What makes this different from wiring up the PID controllers yourself is the tel
 6. Copy the gains that feel right back into the drive/azimuth motors' `SmartMotorControllerConfig.withClosedLoopController(...)`/`withFeedforward(...)` calls in code, then flip both `enabled` toggles back to `false` before driving normally again.
 
 {% hint style="info" %}
-Both modes build a `SwerveModuleState[]` (one entry per module) and command it in one call via `SwerveDrive.setSwerveModuleStates(...)`, not the drive/azimuth `SmartMotorController`s directly, so the same optimization `SwerveModuleConfig.withOptimization(true)` applies during normal driving (shortest-path angle flips, minimum-velocity clamping) also applies while tuning, and the drive's desired-module-states telemetry stays consistent with what's actually commanded.
+Both modes build a `SwerveModuleState[]` (one entry per module) and command it in one call via `SwerveDrive.setSwerveModuleStates(...)`, not the drive/azimuth `SmartMotorController`s directly, so the same optimization `SwerveModuleConfig.withOptimization(true)` applies during normal driving (shortest-path angle flips, velocity deadband) also applies while tuning, and the drive's desired-module-states telemetry stays consistent with what's actually commanded.
 {% endhint %}
 
 {% hint style="warning" %}

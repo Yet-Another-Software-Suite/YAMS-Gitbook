@@ -173,7 +173,7 @@ public final class Constants {
             .withClosedLoopController(5, 0, 0.1)
             .withFeedforward(new ArmFeedforward(0.1, 0.3, 0.5, 0.01))
             .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0))
-            .withIdleMode(MotorMode.BRAKE);
+            .withZeroPower(MotorMode.BRAKE);
     
     public static final ArmConfig ARM_CONFIG = 
         new ArmConfig()
@@ -194,7 +194,7 @@ public final class Constants {
             .withClosedLoopController(10, 0, 0.5)
             .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))
             .withTrapezoidalProfile(MetersPerSecond.of(1.0), MetersPerSecondPerSecond.of(2.0))
-            .withIdleMode(MotorMode.BRAKE);
+            .withZeroPower(MotorMode.BRAKE);
     
     public static final ElevatorConfig ELEVATOR_CONFIG = 
         new ElevatorConfig()
@@ -214,7 +214,7 @@ public final class Constants {
             .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
             .withClosedLoopController(0.5, 0, 0)
             .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0.01))
-            .withIdleMode(MotorMode.COAST);
+            .withZeroPower(MotorMode.COAST);
     
     public static final FlyWheelConfig FLYWHEEL_CONFIG = 
         new FlyWheelConfig()
