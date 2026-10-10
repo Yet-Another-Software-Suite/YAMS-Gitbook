@@ -114,7 +114,7 @@ This means the value you type into a tunable field is in the tunable unit, not t
 Once conversion is applied, the graph shows the mechanism position in degrees and velocity in RPM, the same units the tunable fields expect, so you can type `180` into a tunable position field when the graph shows 180°.
 
 {% hint style="success" %}
-**Recommended setup for a tuning session:** Open AdvantageScope and configure unit conversions for `MechanismPosition` (→ degrees or inches), `MechanismVelocity` (→ deg/s, RPM, or in/s), and `ClosedLoopError` (same as position). Keep these graphs visible alongside the tunable fields in your NT dashboard. The converted read-only fields give you a real-unit view of what the mechanism is actually doing while you enter raw-unit values into the tunable fields.
+**Recommended setup for a tuning session:** Open AdvantageScope and configure unit conversions for `MechanismPosition` (→ degrees or inches), `MechanismVelocity` (→ deg/s, RPM, or in/s), and `SetpointPosition` (same as `MechanismPosition`). YAMS has no closed loop error field, so graph `SetpointPosition` and `MechanismPosition` together and read the error as the gap between them. Keep these graphs visible alongside the tunable fields in your NT dashboard. The converted read-only fields give you a real-unit view of what the mechanism is actually doing while you enter raw-unit values into the tunable fields.
 {% endhint %}
 
 ### PID Controller Parameters
@@ -223,8 +223,8 @@ Every tunable field has a corresponding read-only field you should monitor while
 
 | Tunable Field | Unit                      | What to Watch (Read-Only)                                    | Why                                                                                                      |
 | ------------- | ------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `kP`          | V/rot (or V/m for linear) | `MechanismPosition` vs `SetpointPosition`, `ClosedLoopError` | Error should shrink faster as kP rises. Oscillation means kP is too high.                                |
-| `kI`          | V/(rot·s)                 | `ClosedLoopError` over time                                  | Persistent steady-state error that won't converge, kI eliminates it. Watch for windup causing overshoot. |
+| `kP`          | V/rot (or V/m for linear) | `MechanismPosition` vs `SetpointPosition`                    | Error should shrink faster as kP rises. Oscillation means kP is too high.                                |
+| `kI`          | V/(rot·s)                 | `MechanismPosition` vs `SetpointPosition` over time          | Persistent steady-state error that won't converge, kI eliminates it. Watch for windup causing overshoot. |
 | `kD`          | V/(rot/s)                 | `MechanismVelocity`, `OutputVoltage`                         | Dampens oscillation. If voltage spikes on direction changes, kD is too high.                             |
 
 ### Feedforward Gains
@@ -248,7 +248,7 @@ Every tunable field has a corresponding read-only field you should monitor while
 
 | Tunable Field             | Unit           | What to Watch (Read-Only)              | Why                                                                                                                   |
 | ------------------------- | -------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `TunableSetpointPosition` | deg (or m)     | `MechanismPosition`, `ClosedLoopError` | Command the mechanism to a specific position without button bindings. Use to test individual setpoints during tuning. |
+| `TunableSetpointPosition` | deg (or m)     | `MechanismPosition` vs `SetpointPosition` | Command the mechanism to a specific position without button bindings. Use to test individual setpoints during tuning. |
 | `TunableSetpointVelocity` | RPM (or m/s)   | `MeasurementVelocity`, `OutputVoltage` | Command a specific velocity. Use to characterize kV without running a full motion profile.                            |
 
 ### Soft Limits
@@ -277,7 +277,7 @@ Linear mechanisms also publish `MeasurementLowerLimit` and `MeasurementUpperLimi
 {% hint style="info" %}
 **Useful read-only fields at all times during tuning:**
 
-* `Temperature`, watch for thermal throttling masking gain problems
+* `MotorTemperature`, watch for thermal throttling masking gain problems
 * `OutputVoltage`, the raw command the motor is receiving; confirms your feedforward math
 * `RotorPosition` / `RotorVelocity`, pre-gearing values; useful for verifying gearing configuration is correct
 {% endhint %}
