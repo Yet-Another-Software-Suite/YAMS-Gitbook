@@ -260,7 +260,7 @@ A stream is always in exactly one of four internal modes: `ANGULAR_VELOCITY` (th
 
 `withHeadingControl(trigger)` enables `HEADING` while `trigger` reports true, snapping to a heading derived from [`withControllerHeadingAxis(x, y)`](#withcontrollerheadingaxis) instead of rotating at a velocity. The robot stops turning while the heading stick is inside the deadband.
 
-<figure><img src="../.gitbook/assets/sis-heading.gif" alt="Animation of the right stick pointing in three directions in turn, and the robot turning to face each direction and holding it"><figcaption><p><code>HEADING</code> mode: the robot faces where the right stick points.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/sis-heading.gif" alt="Animation of the right stick moving in an arc around its edge, from straight up round to the left, back through the top and round to the right. The robot turns with it, always facing the direction the stick points, a moment behind"><figcaption><p><code>HEADING</code> mode: as the right stick moves around, the robot turns to face where it points.</p></figcaption></figure>
 
 ```java
 SwerveInputStream headingStream = input.clone()
