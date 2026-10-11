@@ -220,20 +220,60 @@ YAMS reads an absolute encoder through the motor controller, so it must be one t
 
 ## Arms with a brake
 
-Some arms have a mechanical brake: a disc or ratchet released by a solenoid, a servo or a second motor. The brake holds the arm so the motor can stop working, which saves battery and keeps the motor cool on an arm that holds a heavy load for a long time.
+Some arms have a brake module that holds the arm so the motor can stop working. That saves battery and keeps the motor cool on an arm that holds a heavy load for a long time.
 
-<figure><img src="../.gitbook/assets/mech-arm-brake.png" alt="Four steps: release the brake with the closed loop on; move with runTo; engage the brake so it holds the arm; then set the motor output to zero so it draws no current and makes no heat. A graph of motor current shows a spike while moving, a steady holding current until the brake engages, and then almost none, where an arm without a brake would draw holding current forever."><figcaption><p>Release, move, engage, then rest the motor.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/mech-arm-brake.png" alt="Four stages: when the motor drives, the brake lets go, by itself or on command; the arm moves with runTo; when the motor stops driving, the brake bites and holds the arm; then the motor output is zero, so it draws no current and makes no heat. A graph of motor current shows a spike while moving, a steady holding current until the brake bites, and then almost none, where an arm without a brake would draw holding current forever."><figcaption><p>The brake holds the arm once the motor stops driving it.</p></figcaption></figure>
 
 {% hint style="info" %}
-This is not `MotorMode.BRAKE`. [Brake mode](editor/config/motor-basics.md#withzeropower) is electrical: it resists movement but cannot hold an arm up. A mechanical brake can. YAMS has no brake class of its own, so the brake is an ordinary actuator in the same subsystem as the arm, and you sequence it around the arm's commands.
+This is not `MotorMode.BRAKE`. [Brake mode](editor/config/motor-basics.md#withzeropower) is electrical: it resists movement but cannot hold an arm up. A brake module is mechanical, and can.
 {% endhint %}
 
-The rule is to never drive the motor against an engaged brake:
+Most brake modules are **automatic**: they bite on their own when the motor stops driving and let go when it drives again, with nothing for your code to command. Some are **manual**, released by a solenoid or a servo that your code controls. Check which yours is, because it changes what you can do. YAMS has no brake class of its own for either kind.
 
-1. Release the brake, and make sure the closed loop is running.
-2. Move with `runTo`, which ends when the arm arrives.
-3. Engage the brake.
-4. Set the motor's output to zero.
+### What to aim for
+
+These are suggestions, not rules. With an automatic brake you do not control when it bites, so you cannot always follow them. Get as close as your brake allows.
+
+* **Let the brake do the holding.** Once the arm has arrived, stop driving the motor so the brake takes the load. An arm that keeps holding its setpoint against the brake gains nothing from having one.
+* **Avoid driving against the brake.** A motor pushing on an engaged brake heats up and wears the brake. With an automatic brake some of this is unavoidable at the start of each move, while the brake lets go.
+* **Avoid a default command that holds an angle.** It keeps the motor driving, which is the opposite of resting. Prefer no default command, or one that does nothing.
+* **Allow for the brake's timing.** A brake takes a moment to bite and to let go. Expect a small lurch or sag at each end of a move, and allow for it where you can.
+
+### With an automatic brake
+
+There is nothing to command. Move, then rest the motor and let the brake bite:
+
+{% tabs %}
+{% tab title="Commands v2" %}
+```java
+public Command moveTo(Angle angle)
+{
+  return runOnce(() -> arm.getMotorController().startClosedLoopController()) // driving releases the brake
+      .andThen(arm.runTo(angle, Degrees.of(2)))                               // move
+      .finallyDo(() -> arm.setDutyCycleSetpoint(0));                          // rest: the brake bites
+}
+```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+public Command moveTo(Angle angle)
+{
+  return run(coroutine -> {
+    arm.getMotorController().startClosedLoopController();  // driving releases the brake
+    coroutine.await(arm.runTo(angle, Degrees.of(2)));      // move
+    arm.setDutyCycleSetpoint(0);                           // rest: the brake bites
+  }).whenCanceled(() -> arm.setDutyCycleSetpoint(0)).named("Arm Move And Rest");
+}
+```
+{% endtab %}
+{% endtabs %}
+
+`setDutyCycleSetpoint(0)` stops the closed loop controller, which is why each move starts it again.
+
+### With a manual brake
+
+If your code controls the brake, you can order things so the motor and the brake never fight:
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -242,13 +282,13 @@ The rule is to never drive the motor against an engaged brake:
 public Command moveTo(Angle angle)
 {
   return runOnce(() -> {
-        brake.set(false);                                    // 1. release
+        brake.set(false);                                    // release
         arm.getMotorController().startClosedLoopController();
       })
-      .andThen(arm.runTo(angle, Degrees.of(2)))              // 2. move
+      .andThen(arm.runTo(angle, Degrees.of(2)))              // move
       .finallyDo(() -> {
-        brake.set(true);                                     // 3. engage, even if interrupted
-        arm.setDutyCycleSetpoint(0);                         // 4. rest the motor
+        brake.set(true);                                     // engage, even if interrupted
+        arm.setDutyCycleSetpoint(0);                         // rest the motor
       });
 }
 ```
@@ -260,28 +300,23 @@ public Command moveTo(Angle angle)
 public Command moveTo(Angle angle)
 {
   return run(coroutine -> {
-    brake.set(false);                                      // 1. release
+    brake.set(false);                                      // release
     arm.getMotorController().startClosedLoopController();
-    coroutine.await(arm.runTo(angle, Degrees.of(2)));      // 2. move
+    coroutine.await(arm.runTo(angle, Degrees.of(2)));      // move
     engageBrake();
   }).whenCanceled(this::engageBrake).named("Arm Move And Brake");
 }
 
 private void engageBrake()
 {
-  brake.set(true);                                         // 3. engage
-  arm.setDutyCycleSetpoint(0);                             // 4. rest the motor
+  brake.set(true);                                         // engage
+  arm.setDutyCycleSetpoint(0);                             // rest the motor
 }
 ```
 {% endtab %}
 {% endtabs %}
 
-Things to get right:
-
-* **No holding default command.** A default command that holds an angle would drive the motor against the brake. With a brake, the arm's resting state is braked with the motor off, so give it no default command or one that does nothing.
-* **Give the brake time.** If your brake takes a moment to release or to bite, wait that long after step 1 and before step 4, or the arm will jerk or sag.
-* **Restart the closed loop.** `setDutyCycleSetpoint(0)` stops the closed loop controller. `startClosedLoopController()` in step 1 brings it back before the next move.
-* **Soft limits still apply** while moving. The brake does not replace them.
+Soft limits still apply while the arm moves, with either kind of brake. The brake does not replace them.
 
 ## Configuring and tuning an arm, step by step
 
@@ -375,39 +410,15 @@ Test near both limits, straight up, level, and holding a game piece. If the load
 
 ### Tuning an arm with a brake
 
-Tune the arm completely with the brake released and left alone, following the steps above. Then add the brake:
+Tune the arm itself with the steps above first. If your brake can be held off, hold it off while you do. If it is automatic and cannot be, tune with it in place and expect the gains to carry a little of its drag.
 
-{% stepper %}
-{% step %}
-#### Time the brake
+Then look at how the arm and the brake work together. These are things to check and try, not steps that every brake allows:
 
-Command the brake on and off with the arm supported, and time how long it takes to bite and to let go. Those are the waits you need.
-{% endstep %}
-
-{% step %}
-#### Check the release
-
-Run a move. If the arm lurches at the start, the motor started before the brake let go: wait longer after releasing.
-{% endstep %}
-
-{% step %}
-#### Check the engage
-
-Watch `mechanism/position` as the brake goes on. If the arm sags, the motor let go before the brake held: engage the brake first, wait, then set the output to zero.
-{% endstep %}
-
-{% step %}
-#### Check the rest
-
-With the arm braked, `current/stator` should be close to zero. If it is not, something is still commanding the motor: look for a default command that holds a setpoint.
-{% endstep %}
-
-{% step %}
-#### Loosen the tolerance if it hunts
-
-A brake holds wherever it bites. If `runTo` takes a long time to finish, widen its tolerance: the last fraction of a degree is not worth the wait when the brake will hold it anyway.
-{% endstep %}
-{% endstepper %}
+* **Watch the start of a move.** A lurch or a spike in `current/stator` at the start is the motor pushing on a brake that has not let go yet. A slower start to the [profile](editor/config/motion-profiles.md#withtrapezoidalprofile) gives an automatic brake time to release. With a manual brake, release it a moment earlier.
+* **Watch the end of a move.** If `mechanism/position` sags as the brake bites, the motor let go before the brake held. With a manual brake, engage it before resting the motor. With an automatic one, a sag of a known size can be allowed for in the setpoint.
+* **Check the rest.** With the arm braked, `current/stator` should be close to zero. If it is not, something is still commanding the motor: look for a default command that holds a setpoint.
+* **Widen the tolerance if it hunts.** A brake holds wherever it bites. If `runTo` takes a long time to finish, the last fraction of a degree is not worth the wait.
+* **Keep an eye on `motor/temperature`** over a few minutes of use. If the motor still runs hot, it is working against the brake somewhere.
 
 ## ArmConfig options
 
