@@ -63,7 +63,7 @@ There are two ways to choose what a motor publishes: pick a verbosity level, or 
 
 `withTelemetry(name, TelemetryVerbosity)` is the quick way. Each level includes the one before it.
 
-<figure><img src="../.gitbook/assets/telemetry-verbosity.png" alt="Three nested boxes. LOW publishes positions and velocities. MID adds the output voltage and the stator and supply currents. HIGH adds everything tunable: gains, limits and ramp rates, the motor temperature, status booleans and the Live Tuning command"><figcaption><p>What each level adds.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/telemetry-verbosity.png" alt="Three nested boxes. The outer box is HIGH, which contains MID, which contains LOW. LOW publishes positions and velocities. MID is everything in LOW plus the output voltage and the stator and supply currents. HIGH is everything in MID plus everything tunable: gains, limits and ramp rates, the motor temperature, status booleans and the Live Tuning command"><figcaption><p>HIGH includes MID, and MID includes LOW.</p></figcaption></figure>
 
 | Level | Adds | Good for |
 | --- | --- | --- |
