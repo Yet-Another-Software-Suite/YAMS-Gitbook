@@ -186,7 +186,7 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 
 ## Asking where it is
 
-<figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with an arm at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and isNear, isBetween, isGte, isLte, isAtMax and isAtMin return the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/mech-triggers-flywheel.png" alt="A number line from 0 to 5000 RPM with a flywheel at 2960 RPM. near 3000 RPM within 100 is true. between 500 and 2000 RPM is false. gte 2500 RPM is true. lte 2500 RPM is false. A flywheel has no max or min. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
 
 | As a `Trigger` | As a boolean | True when |
 | --- | --- | --- |
@@ -194,7 +194,7 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 | `between(start, end)` | `isBetween(start, end)` | The wheel's speed is between the two. |
 | `gte(speed)`, `lte(speed)` | `isGte(speed)`, `isLte(speed)` | The wheel is at or above, or at or below, the speed. |
 
-`getSpeed()` returns the wheel's speed and `getLinearVelocity()` its surface speed. A flywheel has no `max()` or `min()`, because it has no end to its travel. The graphic above shows an arm, and a flywheel works the same way with speeds.
+`getSpeed()` returns the wheel's speed and `getLinearVelocity()` its surface speed. A flywheel has no `max()` or `min()`, because it has no end to its travel.
 
 ```java
 shooter.near(RPM.of(3000), RPM.of(50)).whileTrue(feeder.feed()); // only feed at speed

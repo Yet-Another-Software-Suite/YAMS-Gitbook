@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 314" width="760" height="314" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Asking how fast the flywheel is</title>
+<desc id="d">A number line from 0 to 5000 RPM with a flywheel at 2960 RPM. near 3000 RPM within 100 is true. between 500 and 2000 RPM is false. gte 2500 RPM is true. lte 2500 RPM is false. A flywheel has no max or min. Each is a Trigger, and the is functions such as isNear give the same answers as booleans.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="314" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="282.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Asking how fast the flywheel is</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Triggers that turn the flywheel's speed into true or false.</text>
+<rect x="60.0" y="123.0" width="640.0" height="18.0" rx="9" fill="#eef1f4" stroke="#cbd2d9" stroke-width="1.2" />
+<line x1="60.0" y1="118.0" x2="60.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="60.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >0</text>
+<line x1="188.0" y1="118.0" x2="188.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="188.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >1000 RPM</text>
+<line x1="316.0" y1="118.0" x2="316.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="316.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >2000 RPM</text>
+<line x1="444.0" y1="118.0" x2="444.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="444.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >3000 RPM</text>
+<line x1="572.0" y1="118.0" x2="572.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="572.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >4000 RPM</text>
+<line x1="700.0" y1="118.0" x2="700.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="700.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >5000 RPM</text>
+<circle cx="438.9" cy="132.0" r="8" fill="#c2630b" stroke="#ffffff" stroke-width="2" />
+<text x="438.9" y="112.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#c2630b" >the flywheel is at 2960 RPM</text>
+<rect x="431.2" y="170.0" width="25.6" height="14.0" rx="4" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.4" />
+<text x="464.8" y="181.0" font-size="9.6" font-weight="700" text-anchor="start" fill="#147d6f" font-family="Consolas, Menlo, monospace">near(RPM.of(3000), RPM.of(100))   true</text>
+<rect x="124.0" y="194.0" width="192.0" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="324.0" y="205.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">between(RPM.of(500), RPM.of(2000))   false</text>
+<rect x="380.0" y="218.0" width="320.0" height="14.0" rx="4" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.4" />
+<text x="372.0" y="229.0" font-size="9.6" font-weight="700" text-anchor="end" fill="#147d6f" font-family="Consolas, Menlo, monospace">gte(RPM.of(2500))   true</text>
+<rect x="60.0" y="242.0" width="320.0" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="388.0" y="253.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">lte(RPM.of(2500))   false</text>
+<text x="34.0" y="290.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Each is a Trigger to bind commands to. The is... functions, such as isNear, give the same answers as booleans.</text>
+</svg>

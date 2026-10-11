@@ -192,7 +192,7 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 
 ## Asking where it is
 
-<figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with an arm at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and isNear, isBetween, isGte, isLte, isAtMax and isAtMin return the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/mech-triggers-elevator.png" alt="A number line from 0 to 1.5 meters with an elevator at 1.18 meters. near 1.2 meters within 5 centimeters is true. between 0.25 and 0.75 meters is false. gte 0.5 meters is true. lte 0.5 meters is false. max and min, at the top and bottom of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
 
 | As a `Trigger` | As a boolean | True when |
 | --- | --- | --- |
@@ -201,7 +201,7 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 | `gte(height)`, `lte(height)` | `isGte(height)`, `isLte(height)` | The elevator is at or above, or at or below, the height. |
 | `max()`, `min()` | `isAtMax()`, `isAtMin()` | The elevator is at its soft limit, or its hard limit if no soft limit is set. |
 
-`getHeight()` returns the current height and `getVelocity()` its speed. The graphic above shows an arm, and an elevator works the same way with heights.
+`getHeight()` returns the current height and `getVelocity()` its speed.
 
 ```java
 elevator.near(Meters.of(1.2), Centimeters.of(2)).onTrue(intake.eject());

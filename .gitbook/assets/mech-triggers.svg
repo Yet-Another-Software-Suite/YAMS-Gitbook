@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 362" width="760" height="362" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
 <title id="t">Asking where the mechanism is</title>
-<desc id="d">A number line from minus 30 to 120 degrees with an arm at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and isNear, isBetween, isGte, isLte, isAtMax and isAtMin return the same answers as booleans.</desc>
+<desc id="d">A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans.</desc>
 <defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
 <rect width="760" height="362" fill="#f5f7fa"/>
 <rect x="16.0" y="16.0" width="728.0" height="330.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
 <text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Asking where the mechanism is</text>
-<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Triggers that turn the mechanism's position or speed into true or false.</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Triggers that turn the mechanism's position into true or false.</text>
 <rect x="60.0" y="123.0" width="640.0" height="18.0" rx="9" fill="#eef1f4" stroke="#cbd2d9" stroke-width="1.2" />
 <line x1="60.0" y1="118.0" x2="60.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
 <text x="60.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >-30</text>
@@ -20,7 +20,7 @@
 <line x1="700.0" y1="118.0" x2="700.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
 <text x="700.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >120</text>
 <circle cx="495.2" cy="132.0" r="8" fill="#c2630b" stroke="#ffffff" stroke-width="2" />
-<text x="495.2" y="112.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#c2630b" >the arm is at 72 deg</text>
+<text x="495.2" y="112.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#c2630b" >the mechanism is at 72 deg</text>
 <rect x="486.7" y="170.0" width="85.3" height="14.0" rx="4" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.4" />
 <text x="478.7" y="181.0" font-size="9.6" font-weight="700" text-anchor="end" fill="#147d6f" font-family="Consolas, Menlo, monospace">near(Degrees.of(80), Degrees.of(10))   true</text>
 <rect x="188.0" y="194.0" width="256.0" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
@@ -33,5 +33,5 @@
 <text x="649.3" y="277.0" font-size="9.6" font-weight="400" text-anchor="end" fill="#52606d" font-family="Consolas, Menlo, monospace">max()   false</text>
 <rect x="60.0" y="290.0" width="42.7" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
 <text x="110.7" y="301.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">min()   false</text>
-<text x="34.0" y="338.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Each is a Trigger to bind commands to. isNear, isBetween, isGte, isLte, isAtMax and isAtMin give the same answers as booleans.</text>
+<text x="34.0" y="338.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Each is a Trigger to bind commands to. The is... functions, such as isNear, give the same answers as booleans.</text>
 </svg>
