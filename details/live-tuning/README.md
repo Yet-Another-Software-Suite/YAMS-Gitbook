@@ -67,7 +67,7 @@ Using CTRE TalonFX or TalonFXS motors? Phoenix Tuner X can connect to your simul
 ## Use it
 
 {% hint style="danger" %}
-Live tuning can be **dangerous**. Test it in simulation before using it on the robot, and understand how it behaves first.
+Like all tuning, live tuning can be **dangerous**. It's best to practice in simulation before the real robot.
 {% endhint %}
 
 {% stepper %}
@@ -350,7 +350,7 @@ Tune the feedforward first, then the feedback, one value at a time.
 * [Tuning a vertical elevator](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-elevator.html)
 {% endhint %}
 
-<figure><img src="../../.gitbook/assets/live-tuning-order.png" alt="Flywheel order: kS, kV with kP at zero, kP, kD if it oscillates, then optionally kA. Arm order: kG, kV until the velocity tracks, kP, then kD."><figcaption><p>The order to tune in for a flywheel and for an arm.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/live-tuning-order.png" alt="Flywheel order: kS, kV with kP at zero, kP, kD if it oscillates, then optionally kA. Arm and elevator order: a slow motion profile first, kG, kV until the velocity tracks, kP and kD, then raise the motion profile limits."><figcaption><p>The order to tune in for a flywheel, an arm and an elevator.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Flywheel" %}
@@ -368,18 +368,50 @@ With `SimpleMotorFeedforward`:
 {% endtab %}
 
 {% tab title="Arm" %}
-With `ArmFeedforward`:
+With `ArmFeedforward` and a trapezoidal motion profile:
 
-1. **kG**: hold the arm level (0° from horizontal) and raise kG until it stays there.
-2. **kV**: raise until `mechanism/velocity` tracks `closedloop/setpoint/velocity` during a move. Leave kA at 0 unless the arm lags while accelerating.
-3. **kP**: raise until tracking is quick but not oscillating.
-4. **kD**: damp any oscillation that is left.
+1. **Motion profile**: start slow. Type a low `closedloop/motionprofile/maxVelocity` (RPM) and `maxAcceleration` (RPM/s), for example 15 RPM (90°/s) and 30 RPM/s.
+2. **kG**: hold the arm level (0° from horizontal) and raise kG until it stays there.
+3. **kV**: raise until `mechanism/velocity` tracks `closedloop/setpoint/velocity` during a move. Leave kA at 0 unless the arm lags while accelerating.
+4. **kP, then kD**: raise kP until tracking is quick but not oscillating, then add kD to damp any oscillation that is left.
+5. **Motion profile**: raise `maxVelocity` and `maxAcceleration` a step at a time. Stop when `mechanism/velocity` starts falling behind the setpoint or `current/stator` spikes.
 
 {% hint style="info" %}
 `kG * cos(angle)` is applied, so there is no gravity compensation when the arm is vertical (±90° from horizontal) and full kG when it is level.
 {% endhint %}
 {% endtab %}
+
+{% tab title="Elevator" %}
+With `ElevatorFeedforward` and a trapezoidal motion profile. An elevator is a linear mechanism, so you type meters and watch the `measurement/` keys:
+
+1. **Motion profile**: start slow. Type a low `closedloop/motionprofile/maxVelocity` (m/s) and `maxAcceleration` (m/s²), for example 0.5 m/s and 1 m/s².
+2. **kG**: raise until the carriage holds its height without drifting down. It is the same at every height.
+3. **kV**: raise until `measurement/velocity` tracks `closedloop/setpoint/velocity` during a move. Leave kA at 0 unless the carriage lags while accelerating.
+4. **kP, then kD**: raise kP until `measurement/position` follows `closedloop/setpoint/position` closely without oscillating, then add kD if it still rings.
+5. **Motion profile**: raise `maxVelocity` and `maxAcceleration` a step at a time. Stop when `measurement/velocity` starts falling behind the setpoint or `current/stator` spikes.
+
+{% hint style="info" %}
+Tune in the middle of the travel, away from the hard stops, and keep the soft limits (`measurement/limit/lower`, `measurement/limit/upper`) set while you do.
+{% endhint %}
+{% endtab %}
 {% endtabs %}
+
+### Motion profiles on arms and elevators
+
+Arms and elevators should move on a motion profile. Without one, a new setpoint is a sudden jump and the mechanism slams toward it. With one, the setpoint slides there at a speed and acceleration you choose.
+
+<figure><img src="../../.gitbook/assets/live-tuning-profile.png" alt="A trapezoid shaped velocity graph: the flat top is maxVelocity and the steepness of the ramps is maxAcceleration, with the measured velocity following the setpoint velocity"><figcaption><p>What the two motion profile limits change.</p></figcaption></figure>
+
+| You type (`NT:/Tuning/.../closedloop/motionprofile/`) | Arm | Elevator | Raise it when | Lower it when |
+| --- | --- | --- | --- | --- |
+| `maxVelocity` | RPM | m/s | The move is slow and the motor has voltage to spare. | The velocity never reaches the flat top of the profile. |
+| `maxAcceleration` | RPM/s | m/s² | The mechanism takes too long to get up to speed. | `current/stator` spikes, the belt or chain skips, or the mechanism lags on the ramps. |
+
+Watch `closedloop/setpoint/velocity` against `mechanism/velocity` (arm) or `measurement/velocity` (elevator). The setpoint is the profile, and the measured line should sit on top of it.
+
+{% hint style="info" %}
+The profile only exists if the config has one, for example `withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(1))` on an elevator. For an exponential profile, tune `kV`, `kA` and `maxInput` under the same `closedloop/motionprofile/` keys instead. See [Exponential profiles](../editor/exponential-profiles.md).
+{% endhint %}
 
 ## Swerve drive
 
