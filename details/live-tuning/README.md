@@ -413,6 +413,90 @@ Watch `closedloop/setpoint/velocity` against `mechanism/velocity` (arm) or `meas
 The profile only exists if the config has one, for example `withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(1))` on an elevator. For an exponential profile, tune `kV`, `kA` and `maxInput` under the same `closedloop/motionprofile/` keys instead. See [Exponential profiles](../editor/exponential-profiles.md).
 {% endhint %}
 
+### Elevators with a constant force spring
+
+A constant force spring pulls the carriage up with about the same force at every height. It does part of the motor's job, which changes what kG should be.
+
+<figure><img src="../../.gitbook/assets/live-tuning-spring.png" alt="Three elevators. With no spring the motor holds all of the weight and kG is large and positive. With a spring that matches the carriage weight, kG is close to zero. With a stronger spring the motor has to hold the carriage down and kG is negative"><figcaption><p>kG is what is left for the motor to do after the spring.</p></figcaption></figure>
+
+Do not copy kG from a calculation or from the robot before the springs went on. Measure it:
+
+<figure><img src="../../.gitbook/assets/live-tuning-spring-test.png" alt="A bar chart of two voltages: plus 1.1 volts just makes the carriage creep up and minus 0.5 volts just makes it creep down. kG is halfway between them, 0.3 volts. kS is half the gap between them, 0.8 volts"><figcaption><p>Two voltages give kG and kS. Example values.</p></figcaption></figure>
+
+{% stepper %}
+{% step %}
+#### Find the voltage that just moves it up
+
+Put the carriage in the middle of the travel and start the `Live Tuning` command. Set kP, kI, kD and `closedloop/feedforward/kS` to 0. Now `closedloop/feedforward/kG` is the only voltage reaching the motor. Raise it slowly until the carriage just creeps upward, and write the value down.
+{% endstep %}
+
+{% step %}
+#### Find the voltage that just moves it down
+
+Lower `closedloop/feedforward/kG` slowly until the carriage just creeps downward. This number is often negative on a sprung elevator. Write it down.
+{% endstep %}
+
+{% step %}
+#### Work out kG and kS
+
+`kG = (up + down) / 2` and `kS = (up - down) / 2`. Type them into `closedloop/feedforward/kG` and `closedloop/feedforward/kS`.
+{% endstep %}
+
+{% step %}
+#### Check it at the bottom, middle and top
+
+With only the feedforward, the carriage should stay where you leave it at every height. "Constant force" springs are not perfectly constant, and each stage of a multi stage elevator can have its own springs. If the carriage drifts at one end, use the kG that holds best in the range you care about most and let kP hold the rest.
+{% endstep %}
+
+{% step %}
+#### Tune kV, kP and kD as usual
+
+Follow the elevator steps in [Tuning order](#tuning-order). The spring does not change them.
+{% endstep %}
+{% endstepper %}
+
+| With a spring, expect | Why |
+| --- | --- |
+| kG near zero, or negative | The spring carries the weight. If it is stronger than the carriage, the motor has to pull down. |
+| A larger kS | The spring and its spool add friction. |
+| Different effort up and down | Check `motor/outputVoltage` in both directions. Size the motion profile's `maxAcceleration` for the direction that needs more. |
+| A drift when the load changes | A spring sized for the empty carriage is too weak with a game piece, and the other way round. Tune for the load you hold longest. |
+
+{% hint style="warning" %}
+The simulation does not know about the spring: it models the full carriage weight from `ElevatorConfig.withCarriageWeight(...)`. Keep a separate kG for simulation with `withSimFeedforward(...)`, so a sprung robot's small kG does not make the simulated elevator sag.
+{% endhint %}
+
+## When tuning does not help
+
+Some mechanisms cannot be tuned, because the motor does not have enough torque for the job. No gain fixes that, and it is worth recognizing early so you stop chasing numbers.
+
+<figure><img src="../../.gitbook/assets/live-tuning-underpowered.gif" alt="Animation of a heavy elevator trying to reach a setpoint with kP at 5, then 20, then 80. All three attempts rise slowly and stall short of the setpoint, and the motor output voltage is pinned at 12 volts each time"><figcaption><p>Sixteen times the gain, the same move. Illustrative, not a recording.</p></figcaption></figure>
+
+**How to recognize it**
+
+| Watch (`NT:/Mechanisms`) | What you see |
+| --- | --- |
+| `motor/outputVoltage` | Pinned at the maximum for most of the move, not just at the start. |
+| `current/stator` | Sitting on the stator current limit. |
+| `mechanism/position` or `measurement/position` | The same slow curve whatever you set kP to, and it may stop short of the setpoint. |
+| `mechanism/velocity` or `measurement/velocity` | Far below the profile's `closedloop/setpoint/velocity`, however the profile is set. |
+| `motor/temperature` | Climbing quickly while the mechanism holds a position. |
+
+**What to do about it**
+
+The fix is mechanical or electrical, not a gain:
+
+* **More gear reduction.** The most common fix. It trades top speed, which you are not reaching anyway, for torque.
+* **More motors**, or a stronger motor.
+* **Take load off the motor**: a lighter mechanism, a counterweight, or a [constant force spring](#elevators-with-a-constant-force-spring) on an elevator, a gas spring on an arm.
+* **Check the current limit.** A stator limit set too low makes a capable motor look underpowered. Raise `current/limit/stator` and see whether the move changes. See [Limiting power consumption](../editor/limiting-power-consumption.md).
+* **Check for binding.** Disable the robot and move the mechanism by hand through its whole travel.
+* **Ask for less.** Lower the motion profile's `maxVelocity` and `maxAcceleration` to what the motor can deliver.
+
+{% hint style="info" %}
+Check this in simulation first. With the real motor, gearing and mass in the config, an underpowered mechanism shows the same pinned voltage in simulation, before anything is built.
+{% endhint %}
+
 ## Swerve drive
 
 `SwerveDrive` has its own tuning command and its own keys. It can tune three things, one at a time:
