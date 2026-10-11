@@ -4,6 +4,8 @@ icon: elevator
 
 # Elevators
 
+Every `ElevatorConfig` option, with a graphic and an example, is on the [ElevatorConfig](mechanism-configs/elevator-config.md) page. This page walks through a complete mechanism.
+
 ## Basic Elevator Config
 
 Given the [tutorial](../tutorials/elevator.md#create-a-smartmotorcontrollerconfig) and [how to find your mechanism circumference](../how-to/how-to-find-your-mechanism-circumference.md), we have a basic config below.
@@ -84,11 +86,12 @@ new MechanismGearing(GearBox.fromReductionStages(3, 4)).div(2);
 
 ## Linear Slides and Slanted Elevators
 
-A linear slide is still an elevator! Just with an angle of 0deg! You can set the angle of an Elevator with `.withAngle`
+A linear slide is still an elevator! `.withAngle` sets the angle it is drawn at, and `.withHorizontalElevator()` turns gravity off in the simulation. The angle alone does not change the simulated gravity.
 
 ```java
 ElevatorConfig elevconfig = new ElevatorConfig()
-      .withAngle(Degrees.of(0)); // Parallel to the ground, linear slide.
+      .withAngle(Degrees.of(0)) // Drawn parallel to the ground.
+      .withHorizontalElevator(); // No gravity in simulation: a linear slide.
 ```
 
 A linear slide is guaranteed to have a [different sim PID and FF](editor/simulation-only-pid-+-feedforward.md), so be sure to set them!

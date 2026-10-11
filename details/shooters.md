@@ -4,6 +4,8 @@ icon: crosshairs-simple
 
 # Shooters
 
+Every `FlyWheelConfig` option, with a graphic and an example, is on the [FlyWheelConfig](mechanism-configs/flywheel-config.md) page. This page walks through a complete mechanism.
+
 ## Basic Shooter Config
 
 Given the [tutorial](../tutorials/shooter-flywheels.md) we have a basic shooter config below.

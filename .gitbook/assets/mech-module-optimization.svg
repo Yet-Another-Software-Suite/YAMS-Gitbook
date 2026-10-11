@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">SwerveModuleConfig: withOptimization</title>
+<desc id="d">Two panels of a wheel asked to point 160 degrees away from where it is. Without optimization it turns 160 degrees and drives forwards, which is slow. With optimization, the default, it turns 20 degrees the other way and drives backwards, and never turns more than 90 degrees.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="320" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="288.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >SwerveModuleConfig: withOptimization</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Lets a wheel reverse its drive instead of turning the long way round.</text>
+<rect x="34.0" y="84.0" width="338.0" height="186.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#c2630b" >withOptimization(false)</text>
+<g transform="translate(134.0,186.0) rotate(0.0)"><rect x="-10.0" y="-28.0" width="20.0" height="56.0" rx="4" fill="#9aa5b1" stroke="#9aa5b1" stroke-width="0" /><path d="M-4,-20.0 L0,-26.0 L4,-20.0 Z" fill="#ffffff"/></g>
+<g transform="translate(134.0,186.0) rotate(-160.0)"><rect x="-10.0" y="-28.0" width="20.0" height="56.0" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="0" /><path d="M-4,-20.0 L0,-26.0 L4,-20.0 Z" fill="#ffffff"/></g>
+<path d="M134.0,134.0 A52,52 0 0 0 116.2,234.9" fill="none" stroke="#c2630b" stroke-width="2.6" marker-end="url(#ao)"/>
+<text x="230.0" y="150.0" font-size="12" font-weight="700" text-anchor="start" fill="#c2630b" >turn 160 deg</text>
+<text x="230.0" y="170.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >and drive forwards</text>
+<text x="230.0" y="206.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >slow, and the robot waits</text>
+<text x="134.0" y="258.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >grey: where the wheel was</text>
+<rect x="388.0" y="84.0" width="338.0" height="186.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="400.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >withOptimization(true)  (the default)</text>
+<g transform="translate(488.0,186.0) rotate(0.0)"><rect x="-10.0" y="-28.0" width="20.0" height="56.0" rx="4" fill="#9aa5b1" stroke="#9aa5b1" stroke-width="0" /><path d="M-4,-20.0 L0,-26.0 L4,-20.0 Z" fill="#ffffff"/></g>
+<g transform="translate(488.0,186.0) rotate(20.0)"><rect x="-10.0" y="-28.0" width="20.0" height="56.0" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="0" /><path d="M-4,-20.0 L0,-26.0 L4,-20.0 Z" fill="#ffffff"/></g>
+<path d="M476.9,141.4 A46,46 0 0 1 506.7,144.0" fill="none" stroke="#147d6f" stroke-width="2.6" marker-end="url(#ag)"/>
+<line x1="528.0" y1="176.0" x2="540.0" y2="210.0" stroke="#d64545" stroke-width="2.4" stroke-linecap="round" marker-end="url(#ar)"/>
+<text x="546.0" y="226.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#d64545" >drive</text>
+<text x="584.0" y="150.0" font-size="12" font-weight="700" text-anchor="start" fill="#147d6f" >turn 20 deg</text>
+<text x="584.0" y="170.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >and drive backwards</text>
+<text x="584.0" y="206.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >never more than 90 deg</text>
+<text x="488.0" y="258.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >grey: where the wheel was</text>
+<text x="34.0" y="296.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >A wheel driving backwards at 20 deg goes the same way as one driving forwards at 200 deg. Leave it on.</text>
+</svg>

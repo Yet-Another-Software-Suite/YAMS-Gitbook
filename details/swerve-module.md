@@ -4,6 +4,8 @@ icon: gear
 
 # Swerve Module
 
+Every `SwerveModuleConfig` option, with a graphic and an example, is on the [SwerveModuleConfig](mechanism-configs/swerve-module-config.md) page. This page walks through a complete mechanism.
+
 See [Swerve Drive](swerve-drive.md) first for how modules fit into the drive as a whole. This page goes deeper on `SwerveModule` and `SwerveModuleConfig` themselves.
 
 Both are in `yams.core` and are shared by Commands v2 and Commands v3, so the imports are the same whichever vendordep you use:

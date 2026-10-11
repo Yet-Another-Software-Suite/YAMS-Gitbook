@@ -4,6 +4,8 @@ icon: castle
 
 # Turrets/Wrists
 
+Every `PivotConfig` option, with a graphic and an example, is on the [PivotConfig](mechanism-configs/pivot-config.md) page. This page walks through a complete mechanism.
+
 ## Why are Turrets and Wrists the same thing? Aren't they both Arms?
 
 Turrets and Wrists are known as Pivots in YAMS. They are different from Arms as they are not impacted by gravity to such a significant extent.

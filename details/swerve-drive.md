@@ -4,6 +4,8 @@ icon: car-side
 
 # Swerve Drive
 
+Every `SwerveDriveConfig` option, with a graphic and an example, is on the [SwerveDriveConfig](mechanism-configs/swerve-drive-config.md) page. This page walks through a complete mechanism.
+
 ## Why `SwerveDrive` is different from other mechanisms
 
 Every other mechanism in YAMS (`Arm`, `Elevator`, `Pivot`, `FlyWheel`) wraps a single `SmartMotorController`. `SwerveDrive` is a mechanism made of mechanisms: it owns an array of `SwerveModule`s, and each `SwerveModule` owns two `SmartMotorController`s of its own (drive and azimuth). `SwerveDriveConfig` is where the two levels meet: you build each `SwerveModule` (and its own `SwerveModuleConfig`) first, then hand the finished modules to `SwerveDriveConfig`, which derives the robot's kinematics automatically from where you told each module it physically sits.

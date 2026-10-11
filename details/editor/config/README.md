@@ -50,7 +50,7 @@ Three things are worth knowing before reading the option pages:
 ## Not every option works on every motor controller
 
 {% hint style="warning" %}
-Motor controllers differ. Some options only exist on one of them, and some only work in certain situations, for example only when the closed loop runs on the SystemCore. An option a controller cannot do throws an exception at startup.
+Motor controllers differ. Some options only exist on one of them, and some only work in certain situations, for example only when the closed loop runs on the SystemCore. An option a controller cannot do normally throws an exception at startup, but check the table for each option you rely on.
 {% endhint %}
 
 Every option on the following pages has a table showing where it works. These are the ones that are **not** supported everywhere:
@@ -65,7 +65,7 @@ Every option on the following pages has a table showing where it works. These ar
 | [Closed loop `SLOT_3`](closed-loop-control.md#slots) | ❌ | ❌ | ✅ | ✅ |
 | [`withClosedLoopControllerMaximumVoltage`](closed-loop-control.md#withclosedloopcontrollermaximumvoltage) | ✅ | ✅ | ⚠️ exponential profile or LQR only | ✅ |
 | [`withClosedLoopControlPeriod`](closed-loop-control.md#withclosedloopcontrolperiod) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
-| [`withTemperatureCutoff`](limits-and-protection.md#withtemperaturecutoff) | ❌ | ❌ | ⚠️ with a motion profile only | ⚠️ closed loop mode only |
+| [`withTemperatureCutoff`](limits-and-protection.md#withtemperaturecutoff) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
 | [`withFeedbackSynchronizationThreshold`](encoders.md#withfeedbacksynchronizationthreshold) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
 | [Separate open and closed loop ramp rates](limits-and-protection.md#ramp-rates) | ✅ | ✅ | ✅ | ❌ one shared ramp rate |
 | [`withExternalEncoderZeroOffset`](encoders.md#withexternalencoderzerooffset), [discontinuity point](encoders.md#withexternalencoderdiscontinuitypoint) | ✅ | ✅ | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |

@@ -4,6 +4,8 @@ icon: hand-fist
 
 # Arms
 
+Every `ArmConfig` option, with a graphic and an example, is on the [ArmConfig](mechanism-configs/arm-config.md) page. This page walks through a complete mechanism.
+
 ## Arm Angles
 
 In accordance with WPILib standards Arm's are at 0deg when they are parallel from the ground, this way the feedforward calculations can be done with the `cos` of the angle.

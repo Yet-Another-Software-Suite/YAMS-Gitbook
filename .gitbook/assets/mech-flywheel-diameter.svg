@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 310" width="760" height="310" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">FlyWheelConfig: withDiameter</title>
+<desc id="d">A flywheel with its diameter marked, spinning at 3000 RPM and throwing a game piece from its surface. For a 4 inch wheel the circumference is 0.319 meters, 3000 RPM is 50 rotations per second, and the surface speed is 16 meters per second. getLinearVelocity and getAngularVelocity on the config convert between the two.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="310" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="278.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >FlyWheelConfig: withDiameter</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The wheel's size turns how fast it spins into how fast its surface moves.</text>
+<circle cx="150.0" cy="174.0" r="56" fill="#d5f0ea" stroke="#147d6f" stroke-width="2.6" />
+<circle cx="150.0" cy="174.0" r="6" fill="#1f2933" stroke="none" stroke-width="1.6" />
+<line x1="94.0" y1="174.0" x2="206.0" y2="174.0" stroke="#6b46c1" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3"/>
+<text x="150.0" y="166.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#6b46c1" >withDiameter</text>
+<path d="M84.2,197.9 A70,70 0 0 0 215.8,197.9" fill="none" stroke="#c2630b" stroke-width="2.4" marker-end="url(#ao)"/>
+<text x="150.0" y="264.0" font-size="11" font-weight="700" text-anchor="middle" fill="#c2630b" >3000 RPM</text>
+<circle cx="218.0" cy="124.0" r="9" fill="#fff7d6" stroke="#b7791f" stroke-width="1.6" />
+<line x1="230.0" y1="124.0" x2="316.0" y2="124.0" stroke="#3e6da8" stroke-width="2.4" stroke-linecap="round" marker-end="url(#ab)"/>
+<text x="236.0" y="110.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >the surface, and the game piece</text>
+<rect x="410.0" y="100.0" width="316.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" />
+<text x="424.0" y="122.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >A 4 inch wheel at 3000 RPM</text>
+<text x="424.0" y="146.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >circumference = pi x 4 in = 0.319 m</text>
+<text x="424.0" y="164.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >50 rotations per second</text>
+<text x="424.0" y="188.0" font-size="12" font-weight="700" text-anchor="start" fill="#3e6da8" >surface speed = 16 m/s</text>
+<text x="424.0" y="214.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">config.getLinearVelocity(RPM.of(3000))</text>
+<text x="424.0" y="232.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">config.getAngularVelocity(MetersPerSecond.of(16))</text>
+<text x="34.0" y="286.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >With the diameter set you can ask for a surface speed in meters per second instead of working out the RPM.</text>
+</svg>

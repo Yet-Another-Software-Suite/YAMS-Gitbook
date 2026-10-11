@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 350" width="760" height="350" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Two configs make one mechanism</title>
+<desc id="d">A diagram. A mechanism config, which says what the mechanism is, such as its length, mass, hard stops and how it is drawn, and a SmartMotorControllerConfig, which says how its motor behaves, such as gearing, PID, feedforward, soft limits and current, both go into the mechanism class. The mechanism then drives the simulation's physics and Mechanism2d, and the real robot's commands and telemetry.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="350" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="318.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Two configs make one mechanism</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The mechanism config says what it is. The motor config says how it moves.</text>
+<rect x="34.0" y="100.0" width="300.0" height="92.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="184.0" y="136.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Mechanism config</text>
+<text x="184.0" y="152.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >what the mechanism is</text>
+<text x="184.0" y="167.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >length, mass, hard stops, how it is drawn</text>
+<rect x="34.0" y="208.0" width="300.0" height="92.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="184.0" y="244.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >SmartMotorControllerConfig</text>
+<text x="184.0" y="260.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >how its motor behaves</text>
+<text x="184.0" y="275.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >gearing, PID, feedforward, soft limits, current</text>
+<rect x="420.0" y="154.0" width="150.0" height="92.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="495.0" y="190.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >The mechanism</text>
+<text x="495.0" y="205.5" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >Arm, Elevator, Pivot,</text>
+<text x="495.0" y="221.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >FlyWheel</text>
+<line x1="338.0" y1="146.0" x2="416.0" y2="184.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="338.0" y1="254.0" x2="416.0" y2="216.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<rect x="616.0" y="110.0" width="110.0" height="70.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="671.0" y="135.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Simulation</text>
+<text x="671.0" y="150.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >physics and</text>
+<text x="671.0" y="165.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >Mechanism2d</text>
+<rect x="616.0" y="220.0" width="110.0" height="70.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="671.0" y="245.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Real robot</text>
+<text x="671.0" y="260.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >commands and</text>
+<text x="671.0" y="275.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >telemetry</text>
+<line x1="574.0" y1="184.0" x2="612.0" y2="152.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="574.0" y1="216.0" x2="612.0" y2="250.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<text x="34.0" y="326.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Most of a mechanism config describes the mechanism to the simulator. The motor config is what runs on the robot.</text>
+</svg>

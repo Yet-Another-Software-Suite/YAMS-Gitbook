@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 306" width="760" height="306" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withAntiTipping</title>
+<desc id="d">A robot with a tall mechanism tilted past the threshold. A correction arrow drives it toward the side it is tipping to. The three numbers are the tipping threshold, the tilt at which it starts correcting; kP, the correction speed for a given tilt; and the maximum correction speed.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="306" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="274.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withAntiTipping</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Drives the robot back under itself when it starts to tip.</text>
+<line x1="40.0" y1="214.0" x2="330.0" y2="214.0" stroke="#1f2933" stroke-width="2" stroke-linecap="round"/>
+<g transform="rotate(-16 90 214)"><rect x="90.0" y="170.0" width="120.0" height="34.0" rx="4" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2" /><rect x="170.0" y="90.0" width="16.0" height="82.0" rx="3" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" /><circle cx="106.0" cy="208.0" r="9" fill="#1f2933" stroke="none" stroke-width="1.6" /><circle cx="194.0" cy="208.0" r="9" fill="#1f2933" stroke="none" stroke-width="1.6" /></g>
+<path d="M240.0,214.0 A150,150 0 0 0 234.2,172.7" fill="none" stroke="#d64545" stroke-width="1.8" marker-end="url(#ar)"/>
+<text x="260.0" y="198.0" font-size="10" font-weight="700" text-anchor="start" fill="#d64545" >tilt past the threshold</text>
+<line x1="110.0" y1="236.0" x2="20.0" y2="236.0" stroke="#147d6f" stroke-width="3" stroke-linecap="round" marker-end="url(#ag)"/>
+<text x="64.0" y="256.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#147d6f" >correction</text>
+<text x="190.0" y="110.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >tipping this way</text>
+<line x1="184.0" y1="120.0" x2="130.0" y2="140.0" stroke="#52606d" stroke-width="1.4" stroke-linecap="round" marker-end="url(#ak)"/>
+<rect x="380.0" y="96.0" width="346.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" />
+<text x="394.0" y="118.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >The three numbers</text>
+<text x="394.0" y="142.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#d64545" font-family="Consolas, Menlo, monospace">tippingThreshold</text>
+<text x="394.0" y="158.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >tilt at which it starts correcting</text>
+<text x="394.0" y="182.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#c2630b" font-family="Consolas, Menlo, monospace">kP</text>
+<text x="394.0" y="198.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >correction speed for a given tilt</text>
+<text x="394.0" y="222.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#147d6f" font-family="Consolas, Menlo, monospace">maxCorrectionSpeed</text>
+<text x="394.0" y="238.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >the fastest the correction may drive</text>
+<text x="34.0" y="282.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >The robot drives toward the side it is falling to, which puts the wheels back under it.</text>
+</svg>

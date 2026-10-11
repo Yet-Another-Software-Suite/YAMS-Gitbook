@@ -326,7 +326,11 @@ This is every option against every motor controller. What each option does, with
 
 | Feature            | TalonFX | TalonFXS | SparkMax/Flex                              | Nova |
 | ------------------ | ------- | -------- | ------------------------------------------ | ---- |
-| Temperature Cutoff | ❌       | ❌        | ⚠️ (requires a motion profile) | ⚠️ (requires closed loop mode) |
+| Temperature Cutoff | ❌       | ❌        | ⚠️ (requires an Exponential Profile or LQR controller) | ⚠️ (requires closed loop mode) |
+
+{% hint style="warning" %}
+**Temperature Cutoff on Sparks**: the cutoff is checked by the closed loop running on the SystemCore, so on a `SparkWrapper` it only works with an Exponential Profile or an LQR controller. With a trapezoidal profile, which runs on the SPARK, it does not work.
+{% endhint %}
 
 {% hint style="info" %}
 YAMS doesn't provide a built-in SysId routine. Use `SmartMechanism.setVoltage(Voltage)` (available on every mechanism) as the voltage-consumer function for WPILib's own `SysIdRoutine`.
