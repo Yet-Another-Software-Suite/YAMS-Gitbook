@@ -64,6 +64,8 @@ This applies to **every absolute encoder, whether it is geared or mounted 1:1**.
 
 An absolute encoder only knows where it is within one turn of its own shaft. The place where its reading wraps is the **discontinuity point**. It is clearly marked on an absolute encoder, usually as a white line on the casing and another on the bearing: when the two lines line up, the encoder is at its discontinuity point. If the encoder passes it anywhere inside the mechanism's travel, two different mechanism positions give the same reading and YAMS cannot tell them apart.
 
+<figure><img src="../../../.gitbook/assets/smc-encoder-hard-stops.gif" alt="Animation of a disabled arm being pushed by hand, with an encoder that reads minus 180 to 180 degrees. With a hard stop at 150 degrees the arm stops there and YAMS keeps reporting the right angle. With only a soft limit at 150 degrees the arm is pushed past it and past 180 degrees, where the reading jumps by 360 degrees to minus 155."><figcaption><p>A hard stop keeps the arm away from the discontinuity point. A soft limit does not, because it does nothing while the robot is disabled.</p></figcaption></figure>
+
 An absolute encoder should only be used when careful installation guarantees that it never reaches its discontinuity point anywhere in the range of motion:
 
 * **Adequate hard stops.** The mechanism must be physically unable to leave the range. [Soft limits](limits-and-protection.md#withsoftlimits) are not enough: they do nothing when the robot is disabled and pushed by hand, and the encoder is read when the robot boots.
@@ -74,7 +76,9 @@ An absolute encoder should only be used when careful installation guarantees tha
 **Without gearing, a discontinuity point of 0.5 rotations should be sufficient.** [`withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))`](#withexternalencoderdiscontinuitypoint) makes the encoder read -0.5 to 0.5 rotations, which puts the wrap half a turn away from the mechanism's zero in both directions. A 1:1 mechanism that stays within 180° of its zero never reaches it.
 {% endhint %}
 
-[Gearing the encoder](#withexternalencodergearing) is where this needs real care, because the encoder then turns further than the mechanism and the discontinuity point setting alone is no longer enough.
+<figure><img src="../../../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. With 1 rotation the encoder reads 0 to 360 degrees, so the reading wraps at the arm's zero, inside the travel, and jumps by 360 degrees when the arm goes below zero. With 0.5 rotations it reads minus 180 to 180 degrees, the wrap is half a turn away from zero, and the reading follows the arm the whole way."><figcaption><p>The same 1:1 arm with both settings. With 0.5 rotations the wrap is where this arm never goes.</p></figcaption></figure>
+
+[Gearing the encoder](#withexternalencodergearing) is where this needs real care, because the encoder then turns further than the mechanism and the discontinuity point setting alone is no longer enough. [That section](#only-gear-an-absolute-encoder-if-it-cannot-wrap) has its own animation.
 
 **Supported on every motor controller.** Every controller accepts an external encoder, but only ones it can read itself. An encoder from another vendor cannot be used.
 
