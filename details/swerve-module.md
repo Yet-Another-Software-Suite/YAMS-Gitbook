@@ -79,13 +79,13 @@ Put the robot on blocks so that every wheel is clear of the blocks and of the gr
 {% step %}
 #### Tune the azimuth
 
-Step the wheel's angle and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/README.md#azimuth-motors).
+Step the wheel's angle with `NT:/Tuning/<name>/modules/azimuth/angle` and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/README.md#azimuth-motors).
 {% endstep %}
 
 {% step %}
 #### Tune the drive
 
-Find the drive's `kS` and `kV`, then add a little `kP`: see [Drive motors](live-tuning/README.md#drive-motors).
+Type the setpoint velocity into `NT:/Tuning/<name>/modules/drive/velocity`, find the drive's `kS` and `kV`, then add a little `kP`: see [Drive motors](live-tuning/README.md#drive-motors).
 {% endstep %}
 
 {% step %}

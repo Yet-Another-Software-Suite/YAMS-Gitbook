@@ -625,7 +625,7 @@ Start `NT:/Mechanisms/<name>/tuning`, type `0` into `modules/azimuth/angle`, the
 {% step %}
 #### Step the angle
 
-Type `90` into `modules/azimuth/angle`, then `0`, and keep switching. Each change is a step you can judge the gains by.
+Type `90` into `NT:/Tuning/<name>/modules/azimuth/angle`, then `0`, and keep switching. That key is the setpoint angle for every azimuth motor, in degrees. Each change is a step you can judge the gains by.
 {% endstep %}
 
 {% step %}
@@ -687,25 +687,25 @@ Set `modules/drive/feedback/p`, `i` and `d` to 0 so you can see what the feedfor
 {% step %}
 #### Find `feedforward/s`
 
-Type a very small velocity, such as `0.1`. Raise `feedforward/s` until the wheels just start to turn, then back it off slightly.
+Type a very small velocity, such as `0.1`, into `NT:/Tuning/<name>/modules/drive/velocity`. That key is the setpoint velocity for every drive motor, in meters per second. Raise `modules/drive/feedforward/s` until the wheels just start to turn, then back it off slightly.
 {% endstep %}
 
 {% step %}
 #### Find `feedforward/v`
 
-Type a normal driving speed, such as `2`. Raise `feedforward/v` until `measurement/velocity` settles on the setpoint. Check a second speed, such as `1` or `3`: it should match there too.
+Type a normal driving speed, such as `2`, into `NT:/Tuning/<name>/modules/drive/velocity`. Raise `modules/drive/feedforward/v` until the motor's `measurement/velocity` settles on its `closedloop/setpoint/velocity`. Check a second speed, such as `1` or `3`, in the same key: it should match there too.
 {% endstep %}
 
 {% step %}
 #### Add `feedback/p`
 
-Raise it until the speed reaches the setpoint quickly and holds when the wheels are loaded. If the speed starts to buzz or oscillate, it is too high. `feedback/d` is rarely needed on a drive motor.
+Raise `modules/drive/feedback/p` until the speed reaches the setpoint quickly and holds when the wheels are loaded. If the speed starts to buzz or oscillate, it is too high. `feedback/d` is rarely needed on a drive motor.
 {% endstep %}
 
 {% step %}
 #### Check it on the ground with `inplace`
 
-Take the robot off the blocks and set `modules/drive/inplace` to `true`. The modules point tangent to the robot center, so the robot spins in place instead of crossing the field. A positive velocity spins it counter-clockwise.
+Take the robot off the blocks and set `modules/drive/inplace` to `true`. The modules point tangent to the robot center, so the robot spins in place instead of crossing the field. A positive `modules/drive/velocity` spins it counter-clockwise.
 {% endstep %}
 
 {% step %}
