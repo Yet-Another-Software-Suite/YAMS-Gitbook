@@ -111,12 +111,26 @@ The command requires the mechanism and runs a `while (true)` loop that applies t
 #### Change a value
 
 The tunable values are published under `NT:/Tuning/`. Edit one, and it is applied on the next loop.
+
+{% tabs %}
+{% tab title="AdvantageScope" %}
+AdvantageScope only reads NetworkTables until you turn on **tuning mode**. Click the tuning mode button, the sliders icon beside the search box at the top of the sidebar. It is only shown while AdvantageScope is connected to a live robot or simulation.
+
+<figure><img src="../../.gitbook/assets/live-tuning-ascope.png" alt="Schematic of the AdvantageScope sidebar: step 1, click the tuning mode button, a sliders icon beside the search box; step 2, type a new value into a field under NT Tuning"><figcaption><p>Turn tuning mode on, then edit the fields under <code>NT:/Tuning</code>.</p></figcaption></figure>
+
+With tuning mode on, the fields under `NT:/Tuning` can be edited in the sidebar. If typing a value does nothing, check this button first.
+{% endtab %}
+
+{% tab title="Elastic" %}
+Drag a field from `NT:/Tuning/` onto the dashboard as a text or number widget and type the new value. Elastic can always write to NetworkTables, so there is nothing to turn on.
+{% endtab %}
+{% endtabs %}
 {% endstep %}
 
 {% step %}
 #### Watch what happens
 
-Graph the matching read-only fields under `NT:/Mechanisms/`. [What to tune and what to watch](#what-to-tune-and-what-to-watch) lists which field to watch for each value.
+Graph the matching read-only fields under `NT:/Mechanisms/`. [NetworkTables keys](#networktables-keys) shows where they are, and [What to tune and what to watch](#what-to-tune-and-what-to-watch) lists which key to watch for each value.
 {% endstep %}
 {% endstepper %}
 
@@ -128,11 +142,43 @@ The `Live Tuning` command requires the subsystem or mechanism, so the controller
 
 <figure><img src="../../.gitbook/assets/AScopeLiveTuningExample.gif" alt="Tuning a mechanism in AdvantageScope while the robot is enabled"><figcaption><p>Tuning while the robot is enabled.</p></figcaption></figure>
 
+## NetworkTables keys
+
+Everything on this page is named by its NetworkTables key, which is what you see in AdvantageScope and Elastic.
+
+| What | Where it is published |
+| --- | --- |
+| Values you type | `NT:/Tuning/<Mechanism>/<Motor>/<key>` |
+| Values you watch | `NT:/Mechanisms/<Mechanism>/<Motor>/<key>` |
+| The `Live Tuning` command | `NT:/Tuning/<Subsystem>/Live Tuning` |
+
+`<Mechanism>` and `<Motor>` are the names given to `withTelemetry(...)` on the mechanism config and on the `SmartMotorControllerConfig`. A motor controller used without a mechanism class has no `<Mechanism>` level.
+
+For example, an arm named `Arm` with a motor named `ArmMotor`:
+
+* You type kP into `NT:/Tuning/Arm/ArmMotor/closedloop/feedback/kP`.
+* You watch the arm at `NT:/Mechanisms/Arm/ArmMotor/mechanism/position`.
+
+{% hint style="info" %}
+Some keys exist in both tables. `closedloop/setpoint/position` under `NT:/Tuning` is the setpoint you type. Under `NT:/Mechanisms` it is the setpoint the controller is using right now.
+{% endhint %}
+
+### The position and velocity to watch
+
+Which keys hold the position and velocity depends on the mechanism.
+
+| Mechanism | Position | Velocity | Units |
+| --- | --- | --- | --- |
+| Rotational: arms, pivots, turrets, flywheels | `mechanism/position` | `mechanism/velocity` | Rotations, rot/s |
+| Linear: elevators, and anything with a mechanism circumference | `measurement/position` | `measurement/velocity` | Meters, m/s |
+
+The tables below write `mechanism/position` and `mechanism/velocity`. On a linear mechanism, read them as `measurement/position` and `measurement/velocity`.
+
 ## Units: what you type and what you read
 
 Tunable fields and read-only fields do not use the same units.
 
-<figure><img src="../../.gitbook/assets/live-tuning-units.png" alt="For a flywheel you type 3000 RPM and read 50 rotations per second. For an arm you type 30 degrees and read 0.0833 rotations."><figcaption><p>The value you type is in the tunable unit, not the unit of the read-only field next to it.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/live-tuning-units.png" alt="For a flywheel you type 3000 RPM into closedloop/setpoint/velocity and read 50 rotations per second at mechanism/velocity. For an arm you type 30 degrees into mechanism/limit/upper and read 0.0833 rotations at mechanism/position."><figcaption><p>The value you type is in the tunable unit, not the unit of the read-only field next to it.</p></figcaption></figure>
 
 | Quantity | You type (tunable fields) | You read (read-only fields) |
 | --- | --- | --- |
@@ -147,7 +193,7 @@ Tunable fields and read-only fields do not use the same units.
 
 AdvantageScope can convert any read-only field for display, without changing the data or your robot code.
 
-1. Drag the telemetry field, for example `NT:/Mechanisms/Arm/ArmMotor/MechanismPosition`, into a Line Graph.
+1. Drag the telemetry field, for example `NT:/Mechanisms/Arm/ArmMotor/mechanism/position`, into a Line Graph.
 2. Right-click the field in the graph legend and choose **Convert Units…**
 3. Pick the target unit: Rotations to Degrees, rot/s to RPM, Meters to Inches, and so on.
 
@@ -156,9 +202,9 @@ Now the graph shows degrees and RPM, the same units the tunable fields expect. W
 {% hint style="success" %}
 **Recommended setup for a tuning session**
 
-* Convert `MechanismPosition` and `SetpointPosition` to degrees (or inches).
-* Convert `MechanismVelocity` to RPM (or deg/s, in/s).
-* Graph `SetpointPosition` and `MechanismPosition` together. YAMS has no closed loop error field: the error is the gap between the two lines.
+* Convert `mechanism/position` and `closedloop/setpoint/position` to degrees. On a linear mechanism, convert `measurement/position` to inches if you prefer.
+* Convert `mechanism/velocity` to RPM (or deg/s).
+* Graph `closedloop/setpoint/position` and `mechanism/position` together. YAMS has no closed loop error field: the error is the gap between the two lines.
 * Keep the graphs visible next to the tunable fields.
 {% endhint %}
 
@@ -170,22 +216,24 @@ Every tunable field has a read-only field that tells you whether your change wor
 
 {% tabs %}
 {% tab title="PID" %}
-| Tunable field | Watch | Why |
+| You type (`NT:/Tuning`) | Watch (`NT:/Mechanisms`) | Why |
 | --- | --- | --- |
-| `kP` | `MechanismPosition` vs `SetpointPosition` | Error should shrink faster as kP rises. Oscillation means kP is too high. |
-| `kI` | `MechanismPosition` vs `SetpointPosition` over time | Removes a steady error that never closes. Watch for windup causing overshoot. |
-| `kD` | `MechanismVelocity`, `OutputVoltage` | Dampens oscillation. If voltage spikes on direction changes, kD is too high. |
+| `closedloop/feedback/kP` | `mechanism/position` vs `closedloop/setpoint/position` | Error should shrink faster as kP rises. Oscillation means kP is too high. |
+| `closedloop/feedback/kI` | `mechanism/position` vs `closedloop/setpoint/position` over time | Removes a steady error that never closes. Watch for windup causing overshoot. |
+| `closedloop/feedback/kD` | `mechanism/velocity`, `motor/outputVoltage` | Dampens oscillation. If voltage spikes on direction changes, kD is too high. |
+
+For a velocity mechanism such as a flywheel, compare `mechanism/velocity` with `closedloop/setpoint/velocity` instead.
 
 Gains are in volts per rotation of error (per meter for linear mechanisms). See [Gain units](#gain-units) below.
 {% endtab %}
 
 {% tab title="Feedforward" %}
-| Tunable field | Watch | Why |
+| You type (`NT:/Tuning`) | Watch (`NT:/Mechanisms`) | Why |
 | --- | --- | --- |
-| `kS` | `OutputVoltage` at rest | Voltage to overcome static friction. Raise until the mechanism just starts to move. |
-| `kV` | `MeasurementVelocity` vs `SetpointVelocity`, `OutputVoltage` | With kP = 0, adjust until measured velocity matches the setpoint at steady state. |
-| `kA` | `MeasurementVelocity` during the acceleration ramp | Improves tracking while a motion profile accelerates. |
-| `kG` (arms, elevators) | `MechanismPosition`, `OutputVoltage` | Arms: hold level and raise until the arm stays put. Elevators: a constant that fights gravity. |
+| `closedloop/feedforward/kS` | `motor/outputVoltage` at rest | Voltage to overcome static friction. Raise until the mechanism just starts to move. |
+| `closedloop/feedforward/kV` | `mechanism/velocity` vs `closedloop/setpoint/velocity`, `motor/outputVoltage` | With kP = 0, adjust until measured velocity matches the setpoint at steady state. |
+| `closedloop/feedforward/kA` | `mechanism/velocity` during the acceleration ramp | Improves tracking while a motion profile accelerates. |
+| `closedloop/feedforward/kG` (arms, elevators) | `mechanism/position`, `motor/outputVoltage` | Arms: hold level and raise until the arm stays put. Elevators: a constant that fights gravity. |
 
 {% hint style="info" %}
 For arms, `kG * cos(angle)` is applied: full kG when level (0°), none when vertical (±90°). YAMS handles the cosine for you.
@@ -193,47 +241,51 @@ For arms, `kG * cos(angle)` is applied: full kG when level (0°), none when vert
 {% endtab %}
 
 {% tab title="Motion profile" %}
-| Tunable field | You type | Watch | Why |
+All of these keys start with `closedloop/motionprofile/`.
+
+| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
 | --- | --- | --- | --- |
-| `TrapezoidalProfileMaxVelocity` | RPM (or m/s) | `MechanismVelocity` while cruising | The plateau speed. Raise to move faster; lower if the motor stalls while cruising. |
-| `TrapezoidalProfileMaxAcceleration` | RPM/s (or m/s²) | `StatorCurrent`, `MechanismVelocity` ramp | How quickly speed builds. High acceleration means a current spike at the start. |
-| `TrapezoidalProfileMaxJerk` | RPM/s² | Shape of `MechanismVelocity` | Smooths the ramp when sudden acceleration causes mechanical shock. |
-| `ExponentialProfileKV`, `ExponentialProfileKA` | Same units as kV, kA | `MechanismVelocity` | The system constants the exponential profile plans with. |
-| `ExponentialProfileMaxInput` | Volts | `OutputVoltage` | The most voltage the exponential profile will ask for. |
+| `maxVelocity` | RPM (or m/s) | `mechanism/velocity` while cruising | The plateau speed. Raise to move faster; lower if the motor stalls while cruising. |
+| `maxAcceleration` | RPM/s (or m/s²) | `current/stator`, `mechanism/velocity` ramp | How quickly speed builds. High acceleration means a current spike at the start. |
+| `maxJerk` | RPM/s² | Shape of `mechanism/velocity` | Smooths the ramp when sudden acceleration causes mechanical shock. |
+| `kV`, `kA` | Same units as the feedforward kV, kA | `mechanism/velocity` | The system constants the exponential profile plans with. |
+| `maxInput` | Volts | `motor/outputVoltage` | The most voltage the exponential profile will ask for. |
 {% endtab %}
 
 {% tab title="Setpoints" %}
-| Tunable field | You type | Watch | Why |
+| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
 | --- | --- | --- | --- |
-| `TunableSetpointPosition` | Degrees (or m) | `MechanismPosition` vs `SetpointPosition` | Send the mechanism to a position without a button binding. |
-| `TunableSetpointVelocity` | RPM (or m/s) | `MeasurementVelocity`, `OutputVoltage` | Command a speed, for example to find kV without a full profile. |
-| `TunableClosedLoopControllerSlot` | Slot number | `ActiveClosedLoopControllerSlot` | Switch which gain slot the controller uses. |
+| `closedloop/setpoint/position` | Degrees (or m) | `mechanism/position` vs `closedloop/setpoint/position` | Send the mechanism to a position without a button binding. |
+| `closedloop/setpoint/velocity` | RPM (or m/s) | `mechanism/velocity`, `motor/outputVoltage` | Command a speed, for example to find kV without a full profile. |
+| `closedloop/slot` | Slot number | `closedloop/slot` | Switch which gain slot the controller uses. |
 {% endtab %}
 
 {% tab title="Limits" %}
-| Tunable field | You type | Watch | Why |
+| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
 | --- | --- | --- | --- |
-| `MechanismLowerLimit` | Degrees | `MechanismPosition`, `MechanismLowerLimit` (boolean) | The boolean turns true at the lower soft limit. Move the limit to change where it stops. |
-| `MechanismUpperLimit` | Degrees | `MechanismPosition`, `MechanismUpperLimit` (boolean) | The same for the upper soft limit. |
-| `MeasurementLowerLimit`, `MeasurementUpperLimit` | Meters | `MeasurementPosition` | Soft limits for linear mechanisms. |
-| `StatorCurrentLimit` | Amps | `StatorCurrent`, `MechanismVelocity` | Caps torque. Watch for speed sagging when the limit is too low. |
-| `SupplyCurrentLimit` | Amps | `SupplyCurrent`, `OutputVoltage` | Prevents brownouts. Lower it if supply current spikes dip the voltage. |
+| `mechanism/limit/lower` | Degrees | `mechanism/position`, `limits/mechanism/lower` (boolean) | The boolean turns true at the lower soft limit. Move the limit to change where it stops. |
+| `mechanism/limit/upper` | Degrees | `mechanism/position`, `limits/mechanism/upper` (boolean) | The same for the upper soft limit. |
+| `measurement/limit/lower`, `measurement/limit/upper` | Meters | `measurement/position` | Soft limits for linear mechanisms. |
+| `current/limit/stator` | Amps | `current/stator`, `mechanism/velocity` | Caps torque. Watch for speed sagging when the limit is too low. |
+| `current/limit/supply` | Amps | `current/supply`, `motor/outputVoltage` | Prevents brownouts. Lower it if supply current spikes dip the voltage. |
 {% endtab %}
 
-{% tab title="Ramp rates" %}
-| Tunable field | You type | Watch | Why |
+{% tab title="Ramp rates and inversion" %}
+| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
 | --- | --- | --- | --- |
-| `OpenloopRampRate` | Seconds, 0 to 100% | `OutputVoltage` during open loop commands | Slows voltage changes in open loop. Reduces shock on `set(dutyCycle)`. |
-| `ClosedloopRampRate` | Seconds, 0 to 100% | `OutputVoltage` during closed loop moves | The same for closed loop, when a setpoint step causes a big voltage jump. |
+| `ramprate/dutycycle/openloop` | Seconds, 0 to 100% | `motor/outputVoltage` during open loop commands | Slows voltage changes in open loop. Reduces shock on `set(dutyCycle)`. |
+| `ramprate/dutycycle/closedloop` | Seconds, 0 to 100% | `motor/outputVoltage` during closed loop moves | The same for closed loop, when a setpoint step causes a big voltage jump. |
+| `motor/inverted` | Boolean | `mechanism/velocity` | Flips the motor direction. Positive voltage should give a positive velocity. |
+| `encoder/inverted` | Boolean | `mechanism/position` | Flips the encoder direction. |
 {% endtab %}
 {% endtabs %}
 
 {% hint style="info" %}
 **Worth watching the whole time**
 
-* `MotorTemperature`: a hot motor backing off can look like a gain problem.
-* `OutputVoltage`: the raw command the motor is getting. Confirms your feedforward math.
-* `RotorPosition`, `RotorVelocity`: values before gearing. Useful for checking the gearing is right.
+* `motor/temperature`: a hot motor backing off can look like a gain problem.
+* `motor/outputVoltage`: the raw command the motor is getting. Confirms your feedforward math.
+* `rotor/position`, `rotor/velocity`: values before gearing. Useful for checking the gearing is right.
 {% endhint %}
 
 Some settings are **not** tunable live and have to be changed in the config: the closed loop tolerance, voltage compensation, the closed loop maximum voltage and the temperature cutoff.
@@ -288,7 +340,17 @@ On the dashboard, the trapezoidal values are typed in RPM and RPM per second, as
 
 Tune the feedforward first, then the feedback, one value at a time.
 
-<figure><img src="../../.gitbook/assets/live-tuning-order.png" alt="Flywheel order: kS, kV with kP at zero, kP, kD if it oscillates, then optionally kA. Arm order: kG, kV and kA from SysId, kP, then kD."><figcaption><p>The order to tune in for a flywheel and for an arm.</p></figcaption></figure>
+{% hint style="success" %}
+**New to tuning?** The WPILib docs explain what each gain does and have interactive simulations to practice on. Read the one for your mechanism before tuning the real thing:
+
+* [Introduction to PID](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html) and [introduction to feedforward](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html)
+* [Tuning a flywheel velocity controller](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-flywheel.html)
+* [Tuning a turret position controller](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-turret.html)
+* [Tuning a vertical arm position controller](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-vertical-arm.html)
+* [Tuning a vertical elevator](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-elevator.html)
+{% endhint %}
+
+<figure><img src="../../.gitbook/assets/live-tuning-order.png" alt="Flywheel order: kS, kV with kP at zero, kP, kD if it oscillates, then optionally kA. Arm order: kG, kV until the velocity tracks, kP, then kD."><figcaption><p>The order to tune in for a flywheel and for an arm.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Flywheel" %}
@@ -309,7 +371,7 @@ With `SimpleMotorFeedforward`:
 With `ArmFeedforward`:
 
 1. **kG**: hold the arm level (0° from horizontal) and raise kG until it stays there.
-2. **kV and kA**: start from SysId characterization values.
+2. **kV**: raise until `mechanism/velocity` tracks `closedloop/setpoint/velocity` during a move. Leave kA at 0 unless the arm lags while accelerating.
 3. **kP**: raise until tracking is quick but not oscillating.
 4. **kD**: damp any oscillation that is left.
 
@@ -318,3 +380,117 @@ With `ArmFeedforward`:
 {% endhint %}
 {% endtab %}
 {% endtabs %}
+
+## Swerve drive
+
+`SwerveDrive` has its own tuning command and its own keys. It can tune three things, one at a time:
+
+| Mode | Turn it on with | What it does |
+| --- | --- | --- |
+| Auto-align | `autoalign/enabled` | Drives the robot to a pose you type, using the translation and rotation PID gains. |
+| Drive motors | `modules/drive/enabled` | Runs every module's drive motor at a velocity you type. |
+| Azimuth motors | `modules/azimuth/enabled` | Turns every module to an angle you type. |
+
+| What | Where it is published |
+| --- | --- |
+| Values you type | `NT:/Tuning/<name>/<key>` |
+| The tuning command | `NT:/Mechanisms/<name>/tuning` |
+| The robot pose to watch | `NT:/Mechanisms/<name>/pose` |
+
+`<name>` is the name given to `SwerveDriveConfig.withTelemetry(name, ...)`. The keys are published at `TelemetryVerbosity.HIGH`.
+
+{% hint style="warning" %}
+The tuning command is only published when both a translation and a rotation controller are set with `withTranslationController(...)` and `withRotationController(...)`. Nothing you type is applied unless the command is running.
+{% endhint %}
+
+### Start the tuning command
+
+{% tabs %}
+{% tab title="Commands v2" %}
+Drag `NT:/Mechanisms/<name>/tuning` onto your Elastic dashboard and press its button, or bind it to a controller button.
+{% endtab %}
+
+{% tab title="Commands v3" %}
+The command is published through `CommandTunable`. Set `NT:/Mechanisms/<name>/tuning/running` to `true` to start it and `false` to stop it.
+{% endtab %}
+{% endtabs %}
+
+Starting the command resets the translation and rotation PID controllers.
+
+### Pick a mode
+
+{% tabs %}
+{% tab title="Auto-align" %}
+| You type (`NT:/Tuning/<name>/`) | Units | What it is |
+| --- | --- | --- |
+| `autoalign/enabled` | Boolean | Drive to the pose while `true`. |
+| `autoalign/setpoint/x`, `autoalign/setpoint/y` | Meters | Field relative target position. |
+| `autoalign/setpoint/rot` | Degrees | Field relative target heading. |
+| `autoalign/translation/p`, `i`, `d` | PID on meters | Translation gains. |
+| `autoalign/rotation/p`, `i`, `d` | PID on radians | Rotation gains. |
+
+The gains start at the values given to `withTranslationController(...)` and `withRotationController(...)`, not `0`.
+
+1. Start the tuning command.
+2. Type the target into `autoalign/setpoint/x`, `autoalign/setpoint/y` and `autoalign/setpoint/rot`.
+3. Set `autoalign/enabled` to `true`. The robot drives to the pose with the current gains.
+4. Change a gain and watch `NT:/Mechanisms/<name>/pose` on a 2D field. Changing a gain only resets that controller when the value actually changed.
+5. Copy the gains you like into `withTranslationController(...)` and `withRotationController(...)`. Values typed on the dashboard are lost when the robot code restarts.
+6. Set `autoalign/enabled` back to `false` before handing control back to the driver.
+
+<figure><img src="../../.gitbook/assets/autoalign-tuning-setup.png" alt="AdvantageScope 2D field next to the Tuning/swerve/autoalign tree with the enabled, setpoint and gain entries"><figcaption><p>The <code>Tuning/swerve/autoalign</code> tree next to a 2D field.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/autoalign-tuning.gif" alt="The simulated robot drives to a target of x 12, y 4, rotation 90 while autoalign/enabled is true"><figcaption><p>Driving to <code>x=12</code>, <code>y=4</code>, <code>rot=90</code> in simulation.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/autoalign-tuning-converged.png" alt="The robot settled at X 11.975 m, Y 3.977 m, 90 degrees against a target of 12, 4, 90"><figcaption><p>Settled at the target pose.</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Drive motors" %}
+| You type (`NT:/Tuning/<name>/`) | Units | What it is |
+| --- | --- | --- |
+| `modules/drive/enabled` | Boolean | Run the drive motors while `true`. |
+| `modules/drive/velocity` | Meters per second | Wheel speed for every module. |
+| `modules/drive/inplace` | Boolean | `false`: every module points at 0° and the robot drives straight. `true`: the modules point tangent to the robot center and the robot spins in place. |
+| `modules/drive/feedback/p`, `i`, `d` | PID gains | Drive motor feedback gains. |
+| `modules/drive/feedforward/s`, `v`, `a` | Feedforward gains | Drive motor kS, kV, kA. |
+
+The gains start at the first module's configured values.
+
+1. Start the tuning command.
+2. Type a speed into `modules/drive/velocity`.
+3. Set `modules/drive/enabled` to `true`. Every module drives at that speed.
+4. Change the gains. Each one is sent to the motors only when its value changes.
+5. To test without the robot travelling across the field, set `modules/drive/inplace` to `true`. A positive velocity spins the robot counter-clockwise.
+6. Copy the gains into the drive motor's `withClosedLoopController(...)` and `withFeedforward(...)`, then set `modules/drive/enabled` to `false`. The drive motors are commanded to 0 m/s once it is off.
+
+<figure><img src="../../.gitbook/assets/module-drive-tuning.png" alt="AdvantageScope with modules/drive/enabled on and every module driving at minus 3 meters per second"><figcaption><p>Every module driving at the typed velocity.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/module-drive-inplace.gif" alt="With modules/drive/inplace true, raising the velocity spins the chassis faster in place"><figcaption><p>Spinning in place with <code>modules/drive/inplace</code>.</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Azimuth motors" %}
+| You type (`NT:/Tuning/<name>/`) | Units | What it is |
+| --- | --- | --- |
+| `modules/azimuth/enabled` | Boolean | Hold the angle while `true`. |
+| `modules/azimuth/angle` | Degrees | Target angle for every module. |
+| `modules/azimuth/feedback/p`, `i`, `d` | PID gains | Azimuth motor feedback gains. |
+| `modules/azimuth/feedforward/s`, `v`, `a` | Feedforward gains | Azimuth motor kS, kV, kA. |
+
+1. Start the tuning command.
+2. Type an angle into `modules/azimuth/angle`.
+3. Set `modules/azimuth/enabled` to `true`. Every module turns to that angle. The drive motors are held at 0, so the wheels only turn in place.
+4. Change the gains and type new angles to see the response.
+5. Copy the gains into the azimuth motor's `withClosedLoopController(...)` and `withFeedforward(...)`, then set `modules/azimuth/enabled` to `false`. The modules stay at the last angle; they do not return to 0°.
+
+<figure><img src="../../.gitbook/assets/module-azimuth-tuning.gif" alt="Editing modules/azimuth/angle and every module turning to the new heading"><figcaption><p>Every module following <code>modules/azimuth/angle</code>.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/module-azimuth-tuning.png" alt="The Tuning/swerve/modules tree in AdvantageScope with the azimuth and drive entries"><figcaption><p>The <code>Tuning/swerve/modules</code> tree.</p></figcaption></figure>
+{% endtab %}
+{% endtabs %}
+
+### Good to know
+
+* **One mode at a time.** If more than one `enabled` key is `true`, YAMS keeps one and sets the others back to `false`. Auto-align wins over drive tuning, and drive tuning wins over azimuth tuning.
+* **Every module shares the values.** The `modules/drive/*` and `modules/azimuth/*` keys apply to all modules at once. There are no per-module keys.
+* **Module optimization still applies.** Both module modes go through `SwerveDrive.setSwerveModuleStates(...)`, so `withOptimization(true)` behaves the same as it does while driving.
+* **No gyro needed in simulation.** The simulated drive tracks its own heading, so you can tune the drive and azimuth motors before writing any gyro code. On a real robot, `SwerveDrive` throws an `IllegalStateException` if `withGyro(...)` was never called.

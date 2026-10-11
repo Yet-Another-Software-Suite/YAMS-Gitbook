@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 334" width="760" height="334" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
 <title id="t">Tune in this order</title>
-<desc id="d">Flywheel tuning order: kS, then kV with kP at zero, then kP, then kD if it oscillates, then optionally kA. Arm tuning order: kG, then kV and kA from SysId, then kP, then kD.</desc>
+<desc id="d">Flywheel tuning order: kS, then kV with kP at zero, then kP, then kD if it oscillates, then optionally kA. Arm tuning order: kG, then kV until the velocity tracks, then kP, then kD.</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
 <rect width="760" height="334" fill="#f5f7fa"/>
 <rect x="16" y="16" width="728" height="302" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
@@ -54,9 +54,9 @@
 <rect x="211.0" y="232" width="161.0" height="74" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.5"/>
 <circle cx="228.0" cy="250" r="10" fill="#3e6da8"/>
 <text x="228.0" y="254.0" font-size="11.5" font-weight="700" text-anchor="middle" fill="#ffffff" >2</text>
-<text x="245.0" y="255.0" font-size="14.5" font-weight="700" text-anchor="start" fill="#1f2933" >kV, kA</text>
-<text x="221.0" y="278.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >start from SysId</text>
-<text x="221.0" y="293.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >values</text>
+<text x="245.0" y="255.0" font-size="14.5" font-weight="700" text-anchor="start" fill="#1f2933" >kV</text>
+<text x="221.0" y="278.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >raise until velocity</text>
+<text x="221.0" y="293.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >tracks the setpoint</text>
 <line x1="374.0" y1="269" x2="386.0" y2="269" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
 <rect x="388.0" y="232" width="161.0" height="74" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.5"/>
 <circle cx="405.0" cy="250" r="10" fill="#3e6da8"/>

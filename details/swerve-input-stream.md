@@ -165,7 +165,7 @@ A stream is always in exactly one of four internal modes: `ANGULAR_VELOCITY` (th
 `HEADING`, `AIM` and `TRANSLATION_ONLY` turn the robot with the rotation controller from `SwerveDriveConfig.withRotationController(...)`, so configure one before using them.
 
 {% hint style="info" %}
-`SwerveInputStream` used to have a `DRIVE_TO_POSE` mode and a matching `atTargetPose(...)` method; both have been removed. Use [`SwerveDrive.driveToPose(...)`](swerve-drive.md#auto-align-drivetoposesetpoint-and-live-pid-tuning) for auto-align instead.
+`SwerveInputStream` used to have a `DRIVE_TO_POSE` mode and a matching `atTargetPose(...)` method; both have been removed. Use [`SwerveDrive.driveToPose(...)`](swerve-drive.md#auto-align) for auto-align instead.
 {% endhint %}
 
 ### Heading-Snap Control

@@ -235,71 +235,23 @@ Each module's drive `SmartMotorController` converts its share of the `Force[]` i
 `SmartMotorController.setVelocity(velocity, force)` is the underlying per-motor API this builds on, and it isn't specific to swerve: any velocity-controlled `SmartMotorController` with gearing and a mechanism circumference configured can take a feedforward `Force` the same way. A `null`/unset force falls back to plain velocity control, which is what `getSetpointFeedforwardForce()` and the `SetpointForce` telemetry field then read back as empty/`0`.
 {% endhint %}
 
-## Auto-Align: `driveToPoseSetpoint` and Live PID Tuning
+## Auto-Align
 
-`SwerveDrive` includes a built-in field-relative auto-align: `driveToPoseSetpoint(Pose2d targetPose)` uses the translation and rotation `PIDController`s from `SwerveDriveConfig` to compute the `ChassisVelocities` needed to drive toward a target pose, and `driveToPose(Pose2d)` wraps that into a ready-to-schedule `Command` (a Commands v2 or Commands v3 `Command`, depending on which `SwerveDrive` you use) that runs until it is interrupted.
+`SwerveDrive` has a built-in field relative auto-align.
+
+| Method | What it does |
+| --- | --- |
+| `driveToPose(Pose2d)` | Returns a `Command` that drives to the pose until it is interrupted. |
+| `driveToPoseSetpoint(Pose2d)` | Computes the `ChassisVelocities` that drive toward the pose, for use in your own command. |
+
+Both use the translation and rotation `PIDController`s from `SwerveDriveConfig.withTranslationController(...)` and `withRotationController(...)`. The command is a Commands v2 or Commands v3 `Command`, depending on which `SwerveDrive` you use.
 
 ```java
 driver.a().whileTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO)));
 ```
 
-What makes this different from wiring up the PID controllers yourself is the telemetry integration: `SwerveDriveTelemetryConfig` publishes a live-tunable target pose (as separate `autoalign/setpoint/x`, `autoalign/setpoint/y`, `autoalign/setpoint/rot` entries, gated by an `autoalign/enabled` toggle) and the translation/rotation PID gains to NetworkTables, and `SwerveDrive` publishes a matching tuning command at `Mechanisms/<name>/tuning` (only when both the translation and rotation controllers are configured). In Commands v3 the tuning command is published through `CommandTunable`. Running that command from the dashboard reads `autoalign/enabled` every loop; while it's `true`, it also reads the tunable pose fields and PID gains and drives the real (or simulated) robot toward them, so you can tune auto-align PID gains (or drive to an arbitrary pose) live without redeploying code. Changing a gain only resets that controller's integrator if the gain actually changed, so tuning doesn't wipe accumulated state every loop.
-
-### How to Use Live Tuning
-
-1. Make sure the fields you need are enabled.
-   1. &#x20;`TranslationP/I/D`, `RotationP/I/D`, `autoalign/setpoint`, and `autoalign/enabled` are all already live-tunable at `HIGH` verbosity, so no extra opt-in is needed.
-2. Deploy the robot code, then open NetworkTables in AdvantageScope, Shuffleboard, Elastic, or a similar dashboard tool and browse to `Tuning/<name>/` (the name you passed to `withTelemetry`). You should see `autoalign/translation/p`, `i`, `d`, `autoalign/rotation/p`, `i`, `d`, `autoalign/setpoint`, and `autoalign/enabled`. The gain entries start pre-seeded with whatever you passed to `withTranslationController(...)`/`withRotationController(...)`, not `0`, the same way `SmartMotorControllerTelemetry` seeds its `kP`/`kI`/`kD` tuning entries from the motor's configured PID.
-3. On Elastic, find the command at `Mechanisms/<name>/tuning` and schedule it, either by binding it to a button or running it directly from your dashboard's command widget. Starting it resets both PID controllers; it then checks `autoalign/enabled` every loop and, while `true`, calls `driveToPoseSetpoint(...)` using whatever `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and gains currently sit in `Tuning/<name>/`.
-
-<figure><img src="../.gitbook/assets/autoalign-tuning-setup.png" alt=""><figcaption><p>AdvantageScope 2D field with the <code>driveToPose</code> command scheduled and the <code>Tuning/swerve/autoalign</code> tree expanded, showing <code>enabled</code>, <code>pose/x,y,rot</code>, and the translation/rotation gain entries.</p></figcaption></figure>
-
-4. With the tuning command running, edit `autoalign/translation/p` (and the other gain entries) live from your dashboard. Set `autoalign/setpoint/x`/`autoalign/setpoint/y` (meters) and `autoalign/setpoint/rot` (degrees) to the field-relative pose you want, then flip `autoalign/enabled` to `true`. The robot immediately drives toward the target using the current gains, no redeploy needed.
-
-<figure><img src="../.gitbook/assets/autoalign-tuning.gif" alt=""><figcaption><p>Live tuning in simulation: the robot drives from its current pose to a target of <code>autoalign/setpoint/x=12</code>, <code>autoalign/setpoint/y=4</code>, <code>autoalign/setpoint/rot=90</code> while <code>autoalign/enabled</code> is <code>true</code>.</p></figcaption></figure>
-
-5. Once a gain feels right, copy its value back into the matching `SwerveDriveConfig.withTranslationController(...)` / `withRotationController(...)` call in code. Values edited live in NetworkTables are not persisted and reset the next time the robot code restarts.
-6. Flip `autoalign/enabled` back to `false` (or unschedule the tuning command) before handing control back to the driver.
-
-<figure><img src="../.gitbook/assets/autoalign-tuning-converged.png" alt=""><figcaption><p>Robot settled at the target pose (<code>X: 11.975m, Y: 3.977m, θ: 90.00°</code> against a target of <code>12, 4, 90</code>).</p></figcaption></figure>
-
-## Module Drive/Azimuth Live PID Tuning
-
-`SwerveDriveTelemetryConfig` also exposes a shared set of tunable feedback (PID) gains, feedforward (`kS`/`kV`/`kA`) gains, and a setpoint for every module's drive motor (`modules/drive/feedback/p,i,d`, `modules/drive/feedforward/s,v,a`, `modules/drive/velocity`, `modules/drive/inplace`) and azimuth motor (`modules/azimuth/feedback/p,i,d`, `modules/azimuth/feedforward/s,v,a`, `modules/azimuth/angle`), gated by `modules/drive/enabled` and `modules/azimuth/enabled` toggles respectively. These are **shared across every module** on the drive, not per-module fields: flipping `modules/drive/enabled` to `true` commands the same velocity setpoint (and applies the same gains) to every module's drive motor simultaneously, which is the normal case for tuning a symmetric swerve chassis without repeating the same numbers four times.
-
-`SwerveDrive` reads these fields from the same `Mechanisms/<name>/tuning` command used for auto-align tuning (see above); scheduling that command is what makes both auto-align and module tuning live.
-
 {% hint style="success" %}
-**You don't need a gyro wired up yet.** In simulation, `SwerveDrive` tracks its own simulated gyro angle internally and never touches `SwerveDriveConfig.withGyro(...)`, so you can bring up and tune drive/azimuth PID with this feature before you've written any gyro-reading code at all. On a real robot, though, `SwerveDrive`'s constructor calls into the gyro supplier immediately and throws `IllegalStateException` if `withGyro(...)` was never called, so add it before you deploy to hardware. A sensible order: tune drive/azimuth PID in sim first, wire up the real gyro, then move on to auto-align and field-relative driving.
-{% endhint %}
-
-1. `modules/drive/feedback/p,i,d`, `modules/drive/feedforward/s,v,a`, `modules/drive/velocity`, `modules/drive/enabled`, `modules/drive/inplace`, `modules/azimuth/feedback/p,i,d`, `modules/azimuth/feedforward/s,v,a`, `modules/azimuth/angle`, and `modules/azimuth/enabled` are all already live-tunable at `HIGH` verbosity. The gain entries are pre-seeded from the first module's configured drive/azimuth PID and `SimpleMotorFeedforward`, not `0`.
-2. Schedule `Mechanisms/<name>/tuning` (the same command as auto-align tuning).
-3. Edit `modules/drive/feedback/p`/`i`/`d` and `modules/drive/feedforward/s`/`v`/`a` live; each gain only propagates to every module's drive motor the moment it actually changes, so tuning doesn't spam `SmartMotorController.setKp(...)`/`setKs(...)` every loop. Set `modules/drive/velocity` (meters per second) to the speed you want to test, then flip `modules/drive/enabled` to `true`, every module immediately targets that velocity at an angle of `0°`, using the current gains.
-4. To test drive tuning while spinning the chassis in place instead of driving straight, flip `modules/drive/inplace` to `true` while `modules/drive/enabled` is `true`. Each module's angle is recomputed to point tangent to its position around the robot center, so a positive `modules/drive/velocity` spins the whole robot counter-clockwise, matching WPILib's positive rotation direction. Flipping `modules/drive/inplace` back to `false` returns every module to `0°`.
-
-<figure><img src="../.gitbook/assets/module-drive-tuning.png" alt=""><figcaption><p>AdvantageScope with <code>Tuning/swerve/modules/drive/enabled</code> flipped on: the Swerve widget's <code>Module States</code> source shows every module driving at the commanded <code>-3.00 m/s</code>.</p></figcaption></figure>
-
-<figure><img src="../.gitbook/assets/module-drive-inplace.gif" alt=""><figcaption><p>Raising <code>Tuning/swerve/modules/drive/velocity</code> with <code>modules/drive/inplace</code> already <code>true</code>: every module points tangent to the robot center and the whole chassis spins faster in place as the magnitude increases.</p></figcaption></figure>
-
-<figure><img src="../.gitbook/assets/module-drive-inplace.png" alt=""><figcaption><p><code>Tuning/swerve/modules/drive/enabled</code> and <code>modules/drive/inplace</code> both <code>true</code> with <code>velocity</code> at <code>-3</code>: each module is pinwheeled 90° off its radial angle, and the Swerve widget's rotation arrow (and the field view on the left) confirm the robot is spinning cleanly about its center.</p></figcaption></figure>
-
-5. Do the same for `modules/azimuth/feedback/p`/`i`/`d`, `modules/azimuth/feedforward/s`/`v`/`a`, and `modules/azimuth/angle` (degrees) with `modules/azimuth/enabled`, to tune azimuth position control the same way. Drive velocity is always commanded to `0` while azimuth tuning is active, so the wheel only rotates in place, it never also drives.
-
-<figure><img src="../.gitbook/assets/module-azimuth-tuning.gif" alt=""><figcaption><p>Editing <code>Tuning/swerve/modules/azimuth/angle</code> and watching every module rotate to the new heading live.</p></figcaption></figure>
-
-<figure><img src="../.gitbook/assets/module-azimuth-tuning.png" alt=""><figcaption><p>The full <code>Tuning/swerve/modules</code> tree in AdvantageScope: <code>azimuth/angle</code>, <code>enabled</code>, <code>feedback/p,i,d</code>, and <code>feedforward/a,s,v</code>, with <code>drive</code>'s equivalents just below.</p></figcaption></figure>
-
-6. Copy the gains that feel right back into the drive/azimuth motors' `SmartMotorControllerConfig.withClosedLoopController(...)`/`withFeedforward(...)` calls in code, then flip both `enabled` toggles back to `false` before driving normally again.
-
-{% hint style="info" %}
-Both modes build a `SwerveModuleVelocity[]` (one entry per module) and command it in one call via `SwerveDrive.setSwerveModuleStates(...)`, not the drive/azimuth `SmartMotorController`s directly, so the same optimization `SwerveModuleConfig.withOptimization(true)` applies during normal driving (shortest-path angle flips, velocity deadband) also applies while tuning, and the drive's desired-module-states telemetry stays consistent with what's actually commanded.
-{% endhint %}
-
-{% hint style="warning" %}
-**Only one tuning mode can be active at a time.** `autoalign/enabled`, `modules/drive/enabled`, and `modules/azimuth/enabled` are mutually exclusive, if you flip on a second one while another is already `true`, `SwerveDrive` immediately forces the others back to `false` in NetworkTables (priority order: auto-align, then drive tuning, then azimuth tuning), so the dashboard reflects which mode actually won. When `modules/drive/enabled` is `false` (and auto-align isn't driving the chassis instead), every module's drive motor is continuously commanded to `0` m/s so the wheels don't keep spinning at whatever velocity was last set while it was on. `modules/drive/inplace` only changes each module's target angle while `modules/drive/enabled` is `true`: `false` (the default) points every module at `0°`, `true` points them tangent to their position for a counter-clockwise spin in place.&#x20;
-
-There's no equivalent auto-zero for azimuth, turning off `modules/azimuth/enabled` just stops commanding a new angle, it doesn't snap the wheels back to `0°`.
+The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/README.md#swerve-drive).
 {% endhint %}
 
 ## Telemetry Verbosity
