@@ -213,7 +213,7 @@ Set each module's two motors, its location, its absolute encoder and offset: see
 {% step %}
 #### Check the module order and locations
 
-With the robot on blocks, drive forward slowly. Every wheel should point forward and spin forward. Then spin in place: the wheels should form a circle. A wheel pointing the wrong way means a wrong [location](mechanism-configs/swerve-module-config.md#withlocation) or [encoder offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder).
+With the robot lifted on blocks and every wheel clear of them, drive forward slowly. Every wheel should point forward and spin forward. Then spin in place: the wheels should form a circle. A wheel pointing the wrong way means a wrong [location](mechanism-configs/swerve-module-config.md#withlocation) or [encoder offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder).
 {% endstep %}
 
 {% step %}
@@ -225,7 +225,7 @@ Turn the robot counter-clockwise by hand and watch the heading. It must go up. I
 {% step %}
 #### Tune the modules
 
-Tune the azimuth motors, then the drive motors, with the swerve tuning command: see [Tune the swerve modules](live-tuning/README.md#tune-the-swerve-modules).
+Tune the azimuth motors, then the drive motors, with the swerve tuning command: see [Tune the swerve modules](live-tuning/README.md#tune-the-swerve-modules). Always start on the real robot, lifted with its wheels clear of the blocks. Tuning in simulation first is great practice, but it is not enough by itself: do not rely on simulated gains for the first run of the real modules.
 {% endstep %}
 
 {% step %}

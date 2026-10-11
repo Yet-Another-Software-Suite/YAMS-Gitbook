@@ -71,6 +71,12 @@ Point the wheel forward with its bevel gear to the left, read the absolute encod
 {% endstep %}
 
 {% step %}
+#### Lift the robot before tuning
+
+Put the robot on blocks so that every wheel is clear of the blocks and of the ground. Always start tuning the real modules this way, even if you already tuned them in simulation. Simulation is great practice, but its gains cannot be relied on for the first run of a real module.
+{% endstep %}
+
+{% step %}
 #### Tune the azimuth
 
 Step the wheel's angle and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/README.md#azimuth-motors).

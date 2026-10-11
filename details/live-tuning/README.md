@@ -595,7 +595,11 @@ The module keys are shared. One value is applied to all four modules, which is w
 `<module>` and `<motor>` are the names given to the module's and the motor's `withTelemetry(...)`. In AdvantageScope, drag `states/desired` and `states/current` onto a **Swerve** tab to see every module's target and actual state together.
 
 {% hint style="warning" %}
-Put the robot on blocks with the wheels off the ground for the drive and azimuth steps, or do them in simulation first.
+Always start on the real robot with it lifted on blocks, and every wheel clear of the blocks and of the ground, for the azimuth and drive steps.
+{% endhint %}
+
+{% hint style="info" %}
+**Simulation is practice, not tuning.** Going through these steps in simulation first is a great way to learn them and to catch config mistakes, but gains found in simulation cannot be relied on for the first run of the real modules. Even if you tuned in simulation, tune again on the lifted robot before the wheels touch the ground.
 {% endhint %}
 
 #### Azimuth motors
@@ -745,4 +749,4 @@ The gains start at the values given to `withTranslationController(...)` and `wit
 * **One mode at a time.** If more than one `enabled` key is `true`, YAMS keeps one and sets the others back to `false`. Auto-align wins over drive tuning, and drive tuning wins over azimuth tuning.
 * **Every module shares the values.** The `modules/drive/*` and `modules/azimuth/*` keys apply to all modules at once. There are no per-module keys.
 * **Module optimization still applies.** Both module modes go through `SwerveDrive.setSwerveModuleStates(...)`, so `withOptimization(true)` behaves the same as it does while driving.
-* **No gyro needed in simulation.** The simulated drive tracks its own heading, so you can tune the drive and azimuth motors before writing any gyro code. On a real robot, `SwerveDrive` throws an `IllegalStateException` if `withGyro(...)` was never called.
+* **No gyro needed in simulation.** The simulated drive tracks its own heading, so you can practice tuning the drive and azimuth motors before writing any gyro code. On a real robot, `SwerveDrive` throws an `IllegalStateException` if `withGyro(...)` was never called.
