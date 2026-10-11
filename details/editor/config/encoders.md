@@ -62,7 +62,7 @@ The encoders each wrapper accepts are listed in the [feature matrix](../feature-
 
 This applies to **every absolute encoder, whether it is geared or mounted 1:1**.
 
-An absolute encoder only knows where it is within one turn of its own shaft. The place where its reading wraps is the **discontinuity point**. It is clearly marked on an absolute encoder, usually as a white line on the casing and another on the bearing: when the two lines line up, the encoder is at its discontinuity point. That is where it is with a discontinuity point of 1 rotation. A discontinuity point of 0.5 rotations moves it to 180° from the line on the casing. The line itself does not move. If the encoder passes it anywhere inside the mechanism's travel, two different mechanism positions give the same reading and YAMS cannot tell them apart.
+An absolute encoder only knows where it is within one turn of its own shaft. The place where its reading wraps is the **discontinuity point**. It is clearly marked on an absolute encoder, usually as a white line on the casing and another on the bearing: when the two lines line up, the encoder is at its discontinuity point. That is where it is with a discontinuity point of 1 rotation and no zero offset. A discontinuity point of 0.5 rotations moves it to 180° from the line on the casing. The line itself does not move. A zero offset moves it too: see [Zero offsets and the discontinuity point](#zero-offsets-and-the-discontinuity-point). If the encoder passes it anywhere inside the mechanism's travel, two different mechanism positions give the same reading and YAMS cannot tell them apart.
 
 <figure><img src="../../../.gitbook/assets/smc-encoder-hard-stops.gif" alt="Animation of a disabled arm being pushed by hand. Its 1:1 absolute encoder is drawn with a white line on its casing and one on its bearing. It reads minus 180 to 180 degrees, so its discontinuity point is 180 degrees from the line on the casing. With a hard stop at 150 degrees the arm stops there and YAMS keeps reporting the right angle. With only a soft limit at 150 degrees the arm is pushed past it and past the discontinuity point, where the reading jumps by 360 degrees to minus 155."><figcaption><p>A hard stop keeps the encoder away from its discontinuity point. A soft limit does not, because it does nothing while the robot is disabled.</p></figcaption></figure>
 
@@ -73,7 +73,7 @@ An absolute encoder should only be used when careful installation guarantees tha
 * **The discontinuity point outside the travel.** On a 1:1 encoder, [`withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))`](#withexternalencoderdiscontinuitypoint) should be sufficient. On a geared encoder, also install it so that the encoder never reaches its discontinuity point anywhere between the hard stops, with some margin at both ends. Move the mechanism from one hard stop to the other by hand and watch the white lines to check.
 
 {% hint style="success" %}
-**Without gearing, a discontinuity point of 0.5 rotations should be sufficient.** With [`withExternalEncoderDiscontinuityPoint(Rotations.of(1))`](#withexternalencoderdiscontinuitypoint) the reading goes from 0 to 360° and wraps at the line on the casing. With `Rotations.of(0.5)` it goes from -180° to 180° and wraps 180° from the line. The line on the casing does not move, only the discontinuity point does. A 1:1 mechanism that stays within 180° of where the lines line up never reaches it.
+**Without gearing, a discontinuity point of 0.5 rotations should be sufficient.** With [`withExternalEncoderDiscontinuityPoint(Rotations.of(1))`](#withexternalencoderdiscontinuitypoint) the reading goes from 0 to 360° and wraps at the line on the casing. With `Rotations.of(0.5)` it goes from -180° to 180° and wraps 180° from the line. The line on the casing does not move, only the discontinuity point does. With a [zero offset](#zero-offsets-and-the-discontinuity-point) set at the mechanism's zero, the discontinuity point is 180° from the mechanism's zero, so a 1:1 mechanism that stays within 180° of its zero never reaches it.
 {% endhint %}
 
 <figure><img src="../../../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm's zero in both panels. With 1 rotation the discontinuity point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. With 0.5 rotations the discontinuity point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>With 1 rotation the discontinuity point is at the line on the casing. With 0.5 rotations it is 180° from it, and the line has not moved.</p></figcaption></figure>
@@ -130,6 +130,28 @@ A negative offset is wrapped into the positive range for you. The distance versi
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
 | ✅ | ✅ | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |
+
+### Zero offsets and the discontinuity point
+
+The zero offset and the discontinuity point work together, and the order matters: **the offset is applied first, and the range is applied to the result**. So the discontinuity point is measured from the encoder's zero, not from the line on the casing.
+
+<figure><img src="../../../.gitbook/assets/smc-encoder-zero-offset-discontinuity.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its discontinuity point is opposite that, inside the arm's travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the discontinuity point have both moved a quarter turn, the discontinuity point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the discontinuity point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
+
+| Zero offset | Discontinuity point of 1 rotation | Discontinuity point of 0.5 rotations |
+| --- | --- | --- |
+| None | Wraps where the white lines line up | Wraps 180° from where the white lines line up |
+| Set at the mechanism's zero | Wraps at the mechanism's zero | Wraps 180° from the mechanism's zero |
+
+What this means in practice:
+
+* **The white lines tell you where the wrap is only when there is no zero offset.** Once an offset is set, work from the mechanism's zero instead.
+* **Set the zero offset first, then choose the discontinuity point.** With the offset at the mechanism's zero and a discontinuity point of 0.5 rotations, a 1:1 encoder wraps as far from zero as it can, however it was installed.
+* **A geared encoder is still limited to one turn.** The same rule applies to the encoder's own shaft: 180° of the encoder is `180° / gearing` of the mechanism. See [Only gear an absolute encoder if it cannot wrap](#only-gear-an-absolute-encoder-if-it-cannot-wrap).
+
+This comes from the vendors' own documentation, which YAMS passes these two settings straight to:
+
+* **CTRE** ([`MagnetSensorConfigs`](https://api.ctr-electronics.com/phoenix6/stable/java/com/ctre/phoenix6/configs/MagnetSensorConfigs.html)): the magnet offset "is added to the reported position", and the discontinuity point "determines the point at which the absolute sensor wraps around, keeping the absolute position (after offset) in the range [x-1, x)".
+* **REV** ([`AbsoluteEncoderConfig`](https://codedocs.revrobotics.com/java/com/revrobotics/spark/config/absoluteencoderconfig)): the zero offset is "the position that is reported as zero", and with zero centering "the position will be reported in the range (-0.5, 0.5], instead of the default range [0, 1)". REV does not spell out the order, but a range centered on the reported zero means the wrap is half a turn from the offset zero.
 
 ## `withExternalEncoderDiscontinuityPoint`
 
