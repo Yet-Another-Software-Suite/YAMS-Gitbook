@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 364" width="760" height="364" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">What enableDischarge adds</title>
+<desc id="d">Two graphs of the default discharge model. The first shows the resting battery voltage against state of charge, falling slowly from 12.9 volts at full to 12.0 volts at 20 percent and then steeply to 9 volts when empty. The second shows the usable capacity against sustained current, falling from 100 percent at 0.9 amps to 60 percent at 54 amps.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="364" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="332" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >What enableDischarge adds</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The default curves, plotted from the values in BatterySim.</text>
+<rect x="70" y="108" width="280" height="150" rx="6" fill="#fafbfc" stroke="#cbd2d9"/>
+<line x1="70" y1="243.0" x2="350" y2="243.0" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="64.0" y="247.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >9 V</text>
+<line x1="70" y1="213.0" x2="350" y2="213.0" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="64.0" y="217.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >10 V</text>
+<line x1="70" y1="183.0" x2="350" y2="183.0" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="64.0" y="187.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >11 V</text>
+<line x1="70" y1="153.0" x2="350" y2="153.0" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="64.0" y="157.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >12 V</text>
+<line x1="70" y1="123.0" x2="350" y2="123.0" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="64.0" y="127.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >13 V</text>
+<text x="70.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >100%</text>
+<text x="126.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >80%</text>
+<text x="182.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >60%</text>
+<text x="238.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >40%</text>
+<text x="294.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >20%</text>
+<text x="350.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >0%</text>
+<path d="M350.0,243.0 L336.0,198.0 L322.0,168.0 L294.0,153.0 L238.0,144.0 L182.0,138.0 L126.0,132.0 L98.0,129.0 L70.0,126.0" fill="none" stroke="#3e6da8" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="350.0" cy="243.0" r="3" fill="#3e6da8"/>
+<circle cx="336.0" cy="198.0" r="3" fill="#3e6da8"/>
+<circle cx="322.0" cy="168.0" r="3" fill="#3e6da8"/>
+<circle cx="294.0" cy="153.0" r="3" fill="#3e6da8"/>
+<circle cx="238.0" cy="144.0" r="3" fill="#3e6da8"/>
+<circle cx="182.0" cy="138.0" r="3" fill="#3e6da8"/>
+<circle cx="126.0" cy="132.0" r="3" fill="#3e6da8"/>
+<circle cx="98.0" cy="129.0" r="3" fill="#3e6da8"/>
+<circle cx="70.0" cy="126.0" r="3" fill="#3e6da8"/>
+<text x="210.0" y="290.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >state of charge</text>
+<text x="70.0" y="100.0" font-size="11" font-weight="700" text-anchor="start" fill="#1f2933" >Resting voltage falls as the battery empties</text>
+<rect x="440" y="108" width="280" height="150" rx="6" fill="#fafbfc" stroke="#cbd2d9"/>
+<line x1="440" y1="230.7" x2="720" y2="230.7" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="434.0" y="234.7" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >60%</text>
+<line x1="440" y1="176.2" x2="720" y2="176.2" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="434.0" y="180.2" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >80%</text>
+<line x1="440" y1="121.6" x2="720" y2="121.6" stroke="#cbd2d9" stroke-dasharray="3 4"/>
+<text x="434.0" y="125.6" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >100%</text>
+<text x="444.2" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >0.9 A</text>
+<text x="524.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >18 A</text>
+<text x="608.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >36 A</text>
+<text x="692.0" y="273.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >54 A</text>
+<path d="M444.2,121.6 L524.0,187.6 L566.0,198.5 L608.0,209.2 L650.0,220.1 L692.0,231.0" fill="none" stroke="#c2630b" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="444.2" cy="121.6" r="3" fill="#c2630b"/>
+<circle cx="524.0" cy="187.6" r="3" fill="#c2630b"/>
+<circle cx="566.0" cy="198.5" r="3" fill="#c2630b"/>
+<circle cx="608.0" cy="209.2" r="3" fill="#c2630b"/>
+<circle cx="650.0" cy="220.1" r="3" fill="#c2630b"/>
+<circle cx="692.0" cy="231.0" r="3" fill="#c2630b"/>
+<text x="580.0" y="290.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >sustained current draw</text>
+<text x="440.0" y="100.0" font-size="11" font-weight="700" text-anchor="start" fill="#1f2933" >Hard use shrinks the usable capacity</text>
+<text x="34.0" y="318.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" >Internal resistance also rises as the battery empties: 20 milliohms when full, 60 milliohms when empty.</text>
+<text x="34.0" y="337.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >So the same current sags the voltage three times as much at the end of a match as at the start.</text>
+</svg>

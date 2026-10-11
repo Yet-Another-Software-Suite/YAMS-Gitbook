@@ -10,9 +10,45 @@ YAMS models a single, shared robot battery in simulation instead of letting each
 This is automatic. You do not need to call anything for basic voltage sag under combined load, it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](../details/editor/#simulation-without-a-mechanism).
 {% endhint %}
 
+<figure><img src="../.gitbook/assets/battery-sim-shared.png" alt="An arm, an elevator, a shooter flywheel, an intake roller and a swerve drive with eight motors each send their current draw to BatterySim, which adds them to 150 amps and computes 12.0 volts minus 150 amps times 0.020 ohms equals 9.0 volts, the voltage every motor then runs from"><figcaption><p>Every simulated motor reports into one battery, and every motor runs from the result.</p></figcaption></figure>
+
 ## Why this matters
 
 Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from only their own current draw, whichever mechanism updated last would overwrite the other's contribution, so the simulated battery would never actually see the _combined_ draw of the whole robot. With a shared `BatterySim`, a flywheel spinning up while an elevator is climbing will sag the simulated bus voltage the same way a real battery would under both loads at once, which is exactly the scenario that trips brownouts on a real robot. See [Limiting Power Consumption](../details/editor/limiting-power-consumption.md) for how to guard against that on top of realistic simulation.
+
+## How each mechanism affects the battery
+
+The loaded voltage is the resting voltage minus the total current times the battery's internal resistance:
+
+`battery voltage = resting voltage - (sum of every motor's supply current) x internal resistance`
+
+With the default 12 V and 20 milliohm battery, every 50 A of total draw costs 1 V.
+
+<figure><img src="../.gitbook/assets/battery-sim-load.gif" alt="Animation of four current bars for a swerve drive, shooter, elevator and arm and a graph of battery voltage. The voltage dips when the swerve drive launches, dips again when the shooter spins up, and drops lowest, to about 8.8 volts, when the elevator and arm move while the drive is pushing"><figcaption><p>A few seconds of a match: the voltage follows the total, and it is lowest when the peaks line up.</p></figcaption></figure>
+
+Mechanisms do not load the battery evenly. Each one has moments when it draws a lot and long stretches when it draws very little.
+
+<figure><img src="../.gitbook/assets/battery-sim-mechanisms.png" alt="Six sketches of current over time. Arm: spikes when it starts and stops, then a steady draw to hold against gravity. Elevator: largest going up, steady to hold a height. Flywheel, shooter, rollers: very large while spinning up, small at speed, a bump on every shot. Pivot, turret, wrist: short bursts when starting and stopping. Swerve drive: eight motors, usually the largest draw. All together: the draws add up and overlapping peaks cause the deepest sag"><figcaption><p>When each kind of mechanism draws current.</p></figcaption></figure>
+
+| Mechanism | Motors that report | Draws the most when | What changes it |
+| --- | --- | --- | --- |
+| `Arm` | 1 or 2 | Starting and stopping a move, and holding away from vertical | Arm length and mass (MOI), gearing, motion profile acceleration |
+| `Elevator` | 1 to 4 | Accelerating upward, then a steady draw to hold a height | Carriage mass, drum radius, gearing, motion profile acceleration |
+| `FlyWheel` (shooters, rollers, intakes) | 1 to 4 | Spinning up from rest, and recovering after each shot | Wheel MOI, target speed, stator current limit |
+| `Pivot` (turrets, wrists) | 1 | Short bursts when starting and stopping | MOI, motion profile acceleration |
+| `SwerveDrive` | 8: four drive and four azimuth | Accelerating, changing direction, and pushing | Robot mass, drive gearing, drive stator current limit |
+
+### Swerve drives
+
+A swerve drive is not one load, it is eight. Each module's drive motor and azimuth motor is its own `SmartMotorController`, and each one reports its own supply current to `BatterySim` when `SwerveDrive.simIterate()` runs. Nothing extra is needed to include the drivetrain.
+
+* The **drive motors** dominate. Four of them accelerating a full weight robot is normally the largest draw on the robot.
+* The **azimuth motors** draw short bursts when the modules change heading, and little while driving straight.
+* Because the drive is the largest load, it also sets the voltage every other mechanism gets. A shooter that reaches its speed with the robot parked can fall short while the robot is accelerating.
+
+{% hint style="success" %}
+To keep the peaks from lining up, set stator and supply current limits on the biggest loads and stagger the moves that can wait. See [Limiting Power Consumption](../details/editor/limiting-power-consumption.md).
+{% endhint %}
 
 ## Accurate current draw starts with an accurate MOI
 
@@ -27,6 +63,8 @@ This is the same MOI used for PID/feedforward tuning in simulation, so getting i
 ## Realistic discharge over a match
 
 By default the simulated battery holds a constant nominal voltage and resistance (12V / 20 mΩ), enough to model voltage sag under instantaneous load, but not a battery getting weaker over the course of a match. Call `BatterySim.enableDischarge(...)` to layer state-of-charge modeling on top: as amp-hours are drawn from the battery, its open-circuit voltage droops along a discharge curve and its internal resistance rises, both becoming more pronounced as the battery empties, the same way a real lead-acid FRC battery behaves late in a match. The amp-hours drawn are also derated by discharge rate, so heavy sustained current drains the modeled capacity faster than the same amp-hours drawn slowly, see [Capacity derating](#capacity-derating) below.
+
+<figure><img src="../.gitbook/assets/battery-sim-discharge.png" alt="Two graphs of the default discharge model. Resting voltage against state of charge falls slowly from 12.9 volts at full to 12.0 volts at 20 percent, then steeply to 9 volts when empty. Usable capacity against sustained current falls from 100 percent at 0.9 amps to 60 percent at 54 amps. Internal resistance rises from 20 milliohms when full to 60 milliohms when empty"><figcaption><p>The default discharge curves.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Java" %}
