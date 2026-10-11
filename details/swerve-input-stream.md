@@ -94,6 +94,8 @@ C++ has `Of(drive, x, y)` plus constructors taking a rotation axis or two headin
 
 ## Mutations Apply Immediately
 
+<figure><img src="../.gitbook/assets/sis-mutations.gif" alt="Animation of a robot aiming at a speaker target. When the left bumper is pressed the stream's aim target is changed to the amp, and the robot turns to face the amp without the drive command being touched"><figcaption><p>Changing the aim target from a button. The drive command keeps running.</p></figcaption></figure>
+
 Every `with*()` method mutates the stream in place and returns `this`; none of them return a new copy. That matters because a `SwerveInputStream` is usually stored once and read by a long-lived drive command. Calling a mutator on that same reference later, from anywhere else in your code, changes what the already-running default command does on its very next loop; you never need to rebuild the stream or call `setDefaultCommand(...)` again.
 
 For example, auto-aim can be retargeted on the fly from a completely separate button binding, without touching the drive command at all:
@@ -134,6 +136,8 @@ The scale is applied **before** the cube. With `withScaleTranslation(0.8)` and t
 
 ## Velocity Limits
 
+<figure><img src="../.gitbook/assets/sis-velocity-limits.gif" alt="Animation of two robots with the stick fully pushed. With a maximum of 2.0 meters per second the robot moves slowly, with 4.5 meters per second it moves more than twice as fast"><figcaption><p>The same full stick with two maximum velocities.</p></figcaption></figure>
+
 `withMaximumLinearVelocity(LinearVelocity)` and `withMaximumAngularVelocity(AngularVelocity)` set the chassis speed a fully-deflected stick produces.
 
 ```java
@@ -147,6 +151,8 @@ A stream copies `SwerveDriveConfig.withMaximumChassisSpeed(...)`'s value (if set
 
 ## Controller Axes
 
+<figure><img src="../.gitbook/assets/sis-controller-axes.gif" alt="Animation of the right stick turning the robot in two ways. With a rotation axis the stick sets how fast the robot spins. With heading axes the stick points in a direction and the robot turns to face it"><figcaption><p>A rotation axis sets a turn rate. Heading axes set a direction to face.</p></figcaption></figure>
+
 `withControllerRotationAxis(DoubleSupplier)` sets or replaces the rotation axis after construction, and `withControllerHeadingAxis(DoubleSupplier, DoubleSupplier)` sets or replaces the pair of axes used to compute a target heading for `HEADING` mode. Both are useful when a stream starts out with `SwerveInputStream.of(drive, x, y)` (no rotation source at all) and gains one later.
 
 ```java
@@ -156,6 +162,8 @@ input.withControllerHeadingAxis(() -> -driver.getRightX(), () -> -driver.getRigh
 
 ## Deadband
 
+<figure><img src="../.gitbook/assets/sis-deadband.gif" alt="Animation of a stick at rest reading small non-zero values. Without a deadband the robot creeps across the field. With a 0.1 deadband it stays still"><figcaption><p>Stick drift with and without a deadband.</p></figcaption></figure>
+
 `withDeadband(double)` (an alias for `deadband(double)`) applies the same deadband to every axis before any scaling or cubing happens. `0` clears it.
 
 ```java
@@ -163,6 +171,8 @@ input.withDeadband(0.05);
 ```
 
 ## Axis Scaling
+
+<figure><img src="../.gitbook/assets/sis-scaling.gif" alt="Animation of two robots with the stick fully pushed. With no scale the robot moves at full speed, with a scale of 0.5 it moves at half speed"><figcaption><p>A scale of 0.5 as a slow mode.</p></figcaption></figure>
 
 `withScaleTranslation(double)` and `withScaleRotation(double)` multiply the translation and rotation axis output by a constant in `(0, 1]`, useful for a "slow mode" that doesn't require re-mapping the physical stick range.
 
@@ -172,6 +182,8 @@ input.withScaleTranslation(0.5)
 ```
 
 ## Non-Linear (Cubic) Response
+
+<figure><img src="../.gitbook/assets/sis-cube.gif" alt="Animation of a stick sweeping from center to full and back, with two bars and a graph. The linear output follows the stick. The cubed output stays very small until the stick is pushed far, then rises to the same maximum"><figcaption><p>Linear and cubed response to the same stick.</p></figcaption></figure>
 
 `withCubeTranslationControllerAxis()` and `withCubeRotationControllerAxis()` cube the translation magnitude and rotation axis respectively, giving finer control near the center of the stick without sacrificing full speed at the edges. Each also has a `BooleanSupplier` overload to toggle the effect live.
 
@@ -194,6 +206,8 @@ A stream is always in exactly one of four internal modes: `ANGULAR_VELOCITY` (th
 
 ### Heading-Snap Control
 
+<figure><img src="../.gitbook/assets/sis-heading.gif" alt="Animation of the right stick pointing in three directions in turn, and the robot turning to face each direction and holding it"><figcaption><p><code>HEADING</code> mode: the robot faces where the right stick points.</p></figcaption></figure>
+
 `withHeadingControl(trigger)` enables `HEADING` while `trigger` reports true, snapping to a heading derived from `withControllerHeadingAxis(x, y)` instead of rotating at a velocity. The robot stops turning while the heading stick is inside the deadband.
 
 ```java
@@ -211,6 +225,8 @@ input.withHeading(() -> Degrees.of(90))
 
 ### Aim At a Target
 
+<figure><img src="../.gitbook/assets/sis-aim.gif" alt="Animation of a robot driven left and right by the left stick while it stays facing a target on the field"><figcaption><p><code>AIM</code> mode: the left stick drives, the robot keeps facing the target.</p></figcaption></figure>
+
 `withAim(Supplier<Pose2d> targetPose, BooleanSupplier trigger)` enables `AIM` while `trigger` reports true, rotating to face `targetPose` while translation keeps working normally. See [Mutations Apply Immediately](#mutations-apply-immediately) above for an example that retargets it live.
 
 ```java
@@ -218,6 +234,8 @@ input.withAim(() -> FieldConstants.SPEAKER_POSE, driver::getRightBumperButton);
 ```
 
 ### Translation Only
+
+<figure><img src="../.gitbook/assets/sis-translation-only.gif" alt="Animation of a robot driving across the field while the right stick is wiggled. The robot's heading stays at 30 degrees the whole time"><figcaption><p><code>TRANSLATION_ONLY</code> mode: the right stick is ignored and the heading is held.</p></figcaption></figure>
 
 `withTranslationOnly(trigger)` enables `TRANSLATION_ONLY` while `trigger` reports true, locking the current heading and suppressing rotation entirely:
 
@@ -229,6 +247,8 @@ input.withTranslationOnly(driver::getStartButton);
 
 <figure><img src="../.gitbook/assets/swerve-input-stream-frames.png" alt="Three drawings of a robot facing up and to the left with the left stick pushed forward. Field relative: it moves away from your driver station. Robot relative: it moves toward its own front. On the red alliance with alliance relative control: translation is flipped 180 degrees and it still moves away from you"><figcaption><p>Field relative, robot relative and alliance relative control.</p></figcaption></figure>
 
+<figure><img src="../.gitbook/assets/sis-robot-relative.gif" alt="Animation of two robots facing up and to the left with the stick pushed forward. Field relative, the robot moves straight away from the driver station. Robot relative, it moves toward its own front"><figcaption><p>Stick forward, field relative and robot relative.</p></figcaption></figure>
+
 By default the translation axes are field relative. `withRobotRelative()` treats them as robot relative instead, so pushing the stick forward drives toward the robot's front. The stream still outputs **field-relative** `ChassisVelocities` (it converts using the current heading), so the drive command does not change. The `withRobotRelative(BooleanSupplier)` overload toggles it live, e.g. while a button is held.
 
 ```java
@@ -236,6 +256,8 @@ input.withRobotRelative(driver::getXButton); // robot-relative while X is held
 ```
 
 ## Alliance-Relative Control
+
+<figure><img src="../.gitbook/assets/sis-alliance-relative.gif" alt="Animation of a blue alliance robot and a red alliance robot, both with the stick pushed forward. Each one drives away from its own driver station, which are at opposite ends of the field"><figcaption><p>Stick forward on each alliance.</p></figcaption></figure>
 
 `withAllianceRelativeControl()` flips the field-relative translation 180 degrees on the Red alliance, so "forward" always means away from your own driver station regardless of which side you're on. `withAllianceRelativeControl(BooleanSupplier)` toggles it live.
 
@@ -249,10 +271,32 @@ input.withAllianceRelativeControl();
 
 ## Translation Heading Offset
 
+<figure><img src="../.gitbook/assets/sis-heading-offset.gif" alt="Animation of two robots with the stick pushed forward. With no offset the robot moves forward. With a 90 degree offset it moves to the left"><figcaption><p>A 90° offset turns forward into left.</p></figcaption></figure>
+
 `withTranslationHeadingOffset(Rotation2d)` rotates the translation direction by a fixed angle before it's output, useful when a secondary driver's "forward" should map to something other than the robot's own forward. `withTranslationHeadingOffset(Rotation2d, BooleanSupplier)` only applies it while the supplier is true.
 
 ```java
 input.withTranslationHeadingOffset(Rotation2d.fromDegrees(90));
+```
+
+## Center of Rotation
+
+The stream outputs a rotation rate, and the drive decides which point the robot rotates around. That point is not part of the stream: it is `SwerveDriveConfig.withCenterOfRotation(...)`. The default is the center of the robot.
+
+<figure><img src="../.gitbook/assets/swerve-center-of-rotation.gif" alt="Animation of two robots spinning with the same right stick input. The first spins around its own center. The second spins around its front left corner, so the rest of the robot swings around that corner"><figcaption><p>The same turn around two different points.</p></figcaption></figure>
+
+```java
+// 0, 0 is the center of the robot. X is forward and Y is left.
+SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
+    .withCenterOfRotation(Meters.of(0.3), Meters.of(0.3)); // the front left corner
+```
+
+Like the stream, the config is mutable, and the drive reads the center of rotation every loop. Changing it on the running drive's config takes effect on the next loop, for example to pivot around a corner while a button is held:
+
+```java
+driver.leftBumper()
+    .onTrue(Commands.runOnce(() -> drive.getConfig().withCenterOfRotation(Meters.of(0.3), Meters.of(0.3))))
+    .onFalse(Commands.runOnce(() -> drive.getConfig().withCenterOfRotation(Meters.of(0), Meters.of(0))));
 ```
 
 ## Copying a Stream

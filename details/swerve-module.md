@@ -133,7 +133,26 @@ Kinematics recomputes the raw desired angle from scratch every loop with no memo
 
 ## Velocity Deadband
 
-`SwerveModuleConfig.withVelocityDeadband(LinearVelocity)` sets a deadband below which `getOptimizedState(...)` zeroes the commanded speed and holds the module at its current angle instead of the kinematically-desired one. This keeps a module from spinning to face a new heading every time the requested drive speed is nearly zero, which otherwise reads as constant, pointless wheel chatter when the driver lets go of the stick.
+`SwerveModuleConfig.withVelocityDeadband(LinearVelocity)` sets a wheel speed at or below which the module stops and holds its current angle, instead of steering to the angle the kinematics ask for. The default is 0.1 m/s.
+
+<figure><img src="../.gitbook/assets/swerve-velocity-deadband.gif" alt="Animation of a wheel whose requested speed sweeps from 0 to 0.3 meters per second and back. While the request is inside the 0.1 meters per second deadband the commanded speed is zero and the wheel is stopped. Above it the commanded speed equals the request"><figcaption><p>Requested and commanded wheel speed with the default 0.1 m/s deadband.</p></figcaption></figure>
+
+**Why it exists.** When the driver lets go of the stick the requested speed is nearly zero, and the direction of a nearly zero velocity is mostly noise. Without the deadband every module would keep steering to chase that noise, which looks like constant, pointless wheel chatter.
+
+**What it costs.** The robot cannot move slower than the deadband:
+
+| Requested wheel speed | What the module does |
+| --- | --- |
+| Above the deadband | Drives at that speed and steers normally. |
+| At or below the deadband | Stops, and holds the angle it already has. |
+
+That matters whenever the robot is meant to creep:
+
+* **Lining up slowly by hand.** Gentle stick pushes do nothing until the request passes the deadband, then the robot starts with a small jump.
+* **The end of auto-align or a path.** As a PID closes in on its target it asks for smaller and smaller speeds. Once they drop inside the deadband the wheels stop, and the robot can settle a little short of the target.
+* **Slow turns.** Wheels closer to the center of rotation move slower, so they can fall inside the deadband while the others keep driving.
+
+If the robot stops short or will not creep, lower the deadband. If the wheels twitch at rest, raise it. Pass `null` to turn it off and always steer.
 
 ```java
 moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
