@@ -208,14 +208,95 @@ elevator.near(Meters.of(1.2), Centimeters.of(2)).onTrue(intake.eject());
 if (elevator.isAtMin()) { /* fully down */ }
 ```
 
-## Kinds of elevator
+## Which kind of elevator do you have?
 
-| Kind | What to set |
-| --- | --- |
-| Cascading: each stage lifts the next | [`withCascadingElevatorStages`](editor/config/gearing-and-units.md#withcascadingelevatorstages) on the motor config, because the carriage moves further than the first stage. |
-| Continuous: one belt or rope through every stage | Nothing extra. |
-| Linear slide: moves level with the ground | [`withHorizontalElevator()`](mechanism-configs/elevator-config.md#withhorizontalelevator), so the simulation applies no gravity. It will want [its own simulation gains](editor/simulation-only-pid-+-feedforward.md). |
-| With a constant force spring | See [Elevators with a constant force spring](live-tuning/README.md#elevators-with-a-constant-force-spring). |
+<figure><img src="../.gitbook/assets/mech-elevator-kinds.png" alt="Five kinds of elevator and what each needs. Drum, rope or cable on a spool: withDrumRadius with the radius. Chain or belt, a sprocket or pulley: withDrumRadius with the pitch and teeth. Rack and pinion, a gear on a toothed bar: withMechanismCircumference with the pinion pitch diameter times pi. Cascading, each stage lifts the next: withCascadingElevatorStages. Continuous, one rope through all stages: nothing extra."><figcaption><p>Five kinds of elevator and what each changes in the config.</p></figcaption></figure>
+
+Two questions decide the config: how the motor moves the elevator, and how the stages are rigged. Answer both.
+
+### How the motor moves it
+
+{% tabs %}
+{% tab title="Drum" %}
+A rope, cable or strap winds onto a drum. Give the drum's radius, measured to the middle of the rope where it sits on the drum.
+
+```java
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
+.withDrumRadius(Inches.of(0.75))
+```
+
+If the rope winds over itself, the radius grows as the elevator rises and the height reads short near the top. Use a drum wide enough for one layer, or measure the travel and work the circumference back from it.
+{% endtab %}
+
+{% tab title="Chain driven" %}
+A sprocket drives a chain that carries the carriage. The chain moves one pitch for every tooth, so give the chain pitch and the sprocket's tooth count and YAMS works out the rest.
+
+```java
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
+.withDrumRadius(Inches.of(0.25), 22) // #25 chain is 0.25 in pitch, #35 is 0.375 in; 22 teeth
+```
+
+A timing belt on a pulley works the same way: give the belt pitch and the pulley's tooth count.
+{% endtab %}
+
+{% tab title="Rack and pinion" %}
+A pinion gear on the motor runs along a toothed rack. One turn of the pinion moves the carriage the pinion's pitch circumference.
+
+```java
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(5)))
+.withMechanismCircumference(Inches.of(1.5).times(Math.PI)) // pitch diameter x pi
+```
+
+Use the pitch diameter from the gear's datasheet, not the outside diameter. For a metric gear the pitch diameter is the module times the tooth count.
+
+Most rack and pinion mechanisms are level linear slides. Tell the simulation there is no gravity to hold against, and expect to need [separate simulation gains](editor/simulation-only-pid-+-feedforward.md):
+
+```java
+new ElevatorConfig()
+    .withAngle(Degrees.of(0))  // drawn level
+    .withHorizontalElevator()  // no gravity in simulation
+```
+
+A level slide needs no `kG`, so its `ElevatorFeedforward` has `kG` of 0.
+{% endtab %}
+{% endtabs %}
+
+### How the stages are rigged
+
+{% tabs %}
+{% tab title="One stage" %}
+The carriage rides directly on the fixed frame. There is nothing more to set.
+{% endtab %}
+
+{% tab title="Cascading" %}
+Each stage lifts the next one, so the carriage moves further than the part the motor pulls: twice as far with two moving stages, three times with three. Tell YAMS how many, and it divides the gearing to match.
+
+```java
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
+.withDrumRadius(Inches.of(0.25), 22)
+.withCascadingElevatorStages(2)
+```
+
+Call it after `withGearing`. See [`withCascadingElevatorStages`](editor/config/gearing-and-units.md#withcascadingelevatorstages). Every height you give and read is then the carriage's height.
+{% endtab %}
+
+{% tab title="Continuous" %}
+One rope or belt runs through every stage. The stages may rise in any order, but the carriage always rises by the length of rope pulled, so a continuous elevator is configured like a single stage: nothing extra to set.
+
+```java
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
+.withDrumRadius(Inches.of(0.75))
+```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+Whatever the kind, check it the same way: command a move of a known distance and measure how far the carriage really went. If it is off by a constant factor, the circumference or the stage count is wrong.
+{% endhint %}
+
+### Elevators with a constant force spring
+
+A spring that helps lift the carriage changes what `kG` should be. See [Elevators with a constant force spring](live-tuning/README.md#elevators-with-a-constant-force-spring).
 
 ## Hard limits and soft limits
 

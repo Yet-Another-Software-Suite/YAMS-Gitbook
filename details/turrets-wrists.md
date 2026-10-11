@@ -203,13 +203,70 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 turret.near(Degrees.of(90), Degrees.of(1)).whileTrue(shooter.fire());
 ```
 
-## Turrets that spin all the way round
+## Turret or wrist?
+
+<figure><img src="../.gitbook/assets/mech-pivot-kinds.png" alt="Two panels. A turret, seen from above, turns on top of the robot with its angle measured from the robot's front; it either wraps or is limited by its wiring, tracks a target with a Supplier of Angle, and can use EasyCRT for its true angle. A wrist turns on the end of an arm with its angle measured from the arm it is mounted on; it always has soft limits, moves together with the arm in a sequence, and should be kept balanced."><figcaption><p>A turret and a wrist are both a Pivot.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Turret" %}
+A turret turns on top of the robot. Its angle is measured from the robot's front, so 0° usually means pointing forward.
+
+**Configure it** for how far it can turn:
 
 | The turret | What to set |
 | --- | --- |
-| Can spin forever (a slip ring, or nothing to wind up) | [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping) on the motor config, and no soft limits, so it takes the short way round. |
-| Is limited by its wiring | [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), and hard limits a little wider. It may have to unwind the long way. |
-| Is geared so its encoders turn more than once over its travel | [EasyCRT](easycrt.md), which works out the turret's true angle from two encoders. |
+| Can spin forever (a slip ring, or nothing to wind up) | [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping) and no soft limits, so it takes the short way round. |
+| Is limited by its wiring | [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), with hard limits a little wider. It may have to unwind the long way. |
+
+```java
+// A turret limited by its wiring to one and a bit turns
+SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(10, 4)))
+    .withClosedLoopController(20, 0, 0.5)
+    .withTrapezoidalProfile(DegreesPerSecond.of(360), DegreesPerSecondPerSecond.of(720))
+    .withSoftLimits(Degrees.of(-200), Degrees.of(200))
+    .withStartingPosition(Degrees.of(0))
+    .withMomentOfInertia(Meters.of(0.25), Pounds.of(8));
+PivotConfig config = new PivotConfig()
+    .withHardLimits(Degrees.of(-220), Degrees.of(220))
+    .withTelemetry("Turret", TelemetryVerbosity.HIGH);
+```
+
+**Use it** to track something by giving `setAngle` a supplier. To aim at a point on the field, the turret's angle is the direction to the target minus the robot's heading:
+
+```java
+public Command aimAt(Supplier<Angle> fieldAngleToTarget, Supplier<Angle> robotHeading)
+{
+  return pivot.setAngle(() -> fieldAngleToTarget.get().minus(robotHeading.get()));
+}
+```
+
+A turret geared so its encoders turn more than once over its travel cannot tell where it is from one encoder. [EasyCRT](easycrt.md) works out its true angle from two.
+{% endtab %}
+
+{% tab title="Wrist" %}
+A wrist turns on the end of another mechanism, usually an arm. Its angle is measured from the arm it is mounted on, not from the ground.
+
+**Configure it** with soft limits always, because a wrist has parts to hit at both ends of its travel, and a small moment of inertia.
+
+```java
+SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 5)))
+    .withClosedLoopController(12, 0, 0.2)
+    .withTrapezoidalProfile(DegreesPerSecond.of(360), DegreesPerSecondPerSecond.of(720))
+    .withSoftLimits(Degrees.of(-90), Degrees.of(90))
+    .withStartingPosition(Degrees.of(0))
+    .withMomentOfInertia(Inches.of(6), Pounds.of(2));
+PivotConfig config = new PivotConfig()
+    .withHardLimits(Degrees.of(-100), Degrees.of(100))
+    .withTelemetry("Wrist", TelemetryVerbosity.HIGH);
+```
+
+**Use it** together with the arm it rides on. Keep the wrist in its own subsystem, and move the two from a command that owns neither, so each keeps its own default command.
+
+A `Pivot` has no gravity term, so it suits a wrist that is balanced about its shaft. A heavy, unbalanced wrist is pulled on by gravity by an amount that depends on the arm's angle as well as its own, which neither `Pivot` nor `Arm` models. Balance the wrist if you can. If you cannot, expect to need more `kP`, and check it holds at every arm angle.
+{% endtab %}
+{% endtabs %}
 
 ## Moment of inertia
 

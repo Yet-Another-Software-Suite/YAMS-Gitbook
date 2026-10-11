@@ -218,6 +218,71 @@ YAMS reads an absolute encoder through the motor controller, so it must be one t
 
 [How do I use absolute encoders on my Arm?](../how-to/how-do-i-use-absolute-encoders-on-my-arm.md) has a complete example for each vendor, including the [zero offset](editor/config/encoders.md#withexternalencoderzerooffset) that makes the encoder read 0 when the arm is level.
 
+## Arms with a brake
+
+Some arms have a mechanical brake: a disc or ratchet released by a solenoid, a servo or a second motor. The brake holds the arm so the motor can stop working, which saves battery and keeps the motor cool on an arm that holds a heavy load for a long time.
+
+<figure><img src="../.gitbook/assets/mech-arm-brake.png" alt="Four steps: release the brake with the closed loop on; move with runTo; engage the brake so it holds the arm; then set the motor output to zero so it draws no current and makes no heat. A graph of motor current shows a spike while moving, a steady holding current until the brake engages, and then almost none, where an arm without a brake would draw holding current forever."><figcaption><p>Release, move, engage, then rest the motor.</p></figcaption></figure>
+
+{% hint style="info" %}
+This is not `MotorMode.BRAKE`. [Brake mode](editor/config/motor-basics.md#withzeropower) is electrical: it resists movement but cannot hold an arm up. A mechanical brake can. YAMS has no brake class of its own, so the brake is an ordinary actuator in the same subsystem as the arm, and you sequence it around the arm's commands.
+{% endhint %}
+
+The rule is to never drive the motor against an engaged brake:
+
+1. Release the brake, and make sure the closed loop is running.
+2. Move with `runTo`, which ends when the arm arrives.
+3. Engage the brake.
+4. Set the motor's output to zero.
+
+{% tabs %}
+{% tab title="Commands v2" %}
+```java
+// brake is your own actuator: a Solenoid, a Servo, or anything with an on and off
+public Command moveTo(Angle angle)
+{
+  return runOnce(() -> {
+        brake.set(false);                                    // 1. release
+        arm.getMotorController().startClosedLoopController();
+      })
+      .andThen(arm.runTo(angle, Degrees.of(2)))              // 2. move
+      .finallyDo(() -> {
+        brake.set(true);                                     // 3. engage, even if interrupted
+        arm.setDutyCycleSetpoint(0);                         // 4. rest the motor
+      });
+}
+```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+// brake is your own actuator: a Solenoid, a Servo, or anything with an on and off
+public Command moveTo(Angle angle)
+{
+  return run(coroutine -> {
+    brake.set(false);                                      // 1. release
+    arm.getMotorController().startClosedLoopController();
+    coroutine.await(arm.runTo(angle, Degrees.of(2)));      // 2. move
+    engageBrake();
+  }).whenCanceled(this::engageBrake).named("Arm Move And Brake");
+}
+
+private void engageBrake()
+{
+  brake.set(true);                                         // 3. engage
+  arm.setDutyCycleSetpoint(0);                             // 4. rest the motor
+}
+```
+{% endtab %}
+{% endtabs %}
+
+Things to get right:
+
+* **No holding default command.** A default command that holds an angle would drive the motor against the brake. With a brake, the arm's resting state is braked with the motor off, so give it no default command or one that does nothing.
+* **Give the brake time.** If your brake takes a moment to release or to bite, wait that long after step 1 and before step 4, or the arm will jerk or sag.
+* **Restart the closed loop.** `setDutyCycleSetpoint(0)` stops the closed loop controller. `startClosedLoopController()` in step 1 brings it back before the next move.
+* **Soft limits still apply** while moving. The brake does not replace them.
+
 ## Configuring an arm
 
 Every `ArmConfig` option is on the [ArmConfig](mechanism-configs/arm-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
