@@ -54,7 +54,7 @@ To keep the peaks from lining up, set stator and supply current limits on the bi
 
 `BatterySim` can only sag voltage as realistically as the current draw it's fed, and that current draw comes straight out of each mechanism's physics simulation (`SingleJointedArmSim`/`DCMotorSim`/`ElevatorSim`). Those models derive current from the torque needed to produce a given acceleration, so if the moment of inertia doesn't match your real mechanism, the simulated current, and therefore the simulated voltage sag, won't either. A default/guessed MOI tends to make mechanisms look artificially light, understating both acceleration current spikes and how much they actually sag the bus.
 
-Set a real MOI on the `SmartMotorControllerConfig` with `.withMomentOfInertia(Distance, Mass)` (estimated from a simple rod/arm model) or `.withMomentOfInertia(MomentOfInertia)` (a known/measured value), see [MOI](../details/turrets-wrists.md#moi) for the full explanation and an example.
+Set a real MOI on the `SmartMotorControllerConfig` with `.withMomentOfInertia(Distance, Mass)` (estimated from a simple rod/arm model) or `.withMomentOfInertia(MomentOfInertia)` (a known/measured value), see [MOI](../details/turrets-wrists.md#moment-of-inertia) for the full explanation and an example.
 
 {% hint style="info" %}
 This is the same MOI used for PID/feedforward tuning in simulation, so getting it right pays off twice: more realistic control-loop behavior _and_ more realistic battery sag under load.
@@ -211,4 +211,4 @@ yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
 * [Limiting Power Consumption](../details/editor/limiting-power-consumption.md)
 * [Simulation without a mechanism](../details/editor/#simulation-without-a-mechanism)
 * [Simulation Only PID + FeedForward](../details/editor/simulation-only-pid-+-feedforward.md)
-* [MOI](../details/turrets-wrists.md#moi)
+* [MOI](../details/turrets-wrists.md#moment-of-inertia)

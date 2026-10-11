@@ -22,7 +22,7 @@ Discharge modeling only affects simulation. On a real robot `BatterySim` is neve
 
 ## Make sure your mechanisms report accurate current draw
 
-Discharge modeling can only drain the simulated battery as realistically as the current draw it's fed, and that comes straight out of each mechanism's physics simulation. If a mechanism's moment of inertia is a default/guessed value rather than a real one, its simulated current draw, and therefore how fast it drains the modeled battery, will be too low. Set a real MOI on each `SmartMotorControllerConfig` with `.withMomentOfInertia(...)` before relying on discharge numbers; see [MOI](../details/turrets-wrists.md#moi) for how.
+Discharge modeling can only drain the simulated battery as realistically as the current draw it's fed, and that comes straight out of each mechanism's physics simulation. If a mechanism's moment of inertia is a default/guessed value rather than a real one, its simulated current draw, and therefore how fast it drains the modeled battery, will be too low. Set a real MOI on each `SmartMotorControllerConfig` with `.withMomentOfInertia(...)` before relying on discharge numbers; see [MOI](../details/turrets-wrists.md#moment-of-inertia) for how.
 
 ## Reset between runs (optional)
 
@@ -129,5 +129,5 @@ See [Battery Simulation → Capacity derating](../understanding/battery-simulati
 ## Related pages
 
 * [Battery Simulation](../understanding/battery-simulation.md), the full explanation of the shared-battery model and why it matters
-* [MOI](../details/turrets-wrists.md#moi), accurate current draw starts with an accurate moment of inertia
+* [MOI](../details/turrets-wrists.md#moment-of-inertia), accurate current draw starts with an accurate moment of inertia
 * [Limiting Power Consumption](../details/editor/limiting-power-consumption.md)
