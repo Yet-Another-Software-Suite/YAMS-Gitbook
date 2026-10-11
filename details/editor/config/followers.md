@@ -4,13 +4,22 @@ icon: people-arrows
 
 # Followers
 
-Two ways to have more than one motor move one mechanism.
+Two ways to have more than one motor move one mechanism: **tightly coupled** followers and **loosely coupled** followers.
 
-<figure><img src="../../../.gitbook/assets/smc-followers.png" alt="Two panels. With withFollowers, a leader and a follower are on one shaft and the follower copies the leader's output; it must be the same vendor, and a boolean says whether it is inverted relative to the leader. With withLooselyCoupledFollowers, two separate motors each lift one end of a cross bar; each gets the same setpoint and closes its own loop on its own encoder."><figcaption><p>Followers on one shaft, and loosely coupled followers.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-followers.png" alt="Two panels. Tightly coupled, withFollowers: a leader and a follower are on one shaft or gearbox and the follower copies the leader's output. The motors are mechanically locked, there is one closed loop and one config, the followers are the same vendor as the leader, and voltage and duty cycle reach every motor. Loosely coupled, withLooselyCoupledFollowers: two separate motors joined only by the mechanism get the same setpoint and each runs its own PID. They are not mechanically locked, each has its own closed loop and config, vendors can be mixed, and voltage and duty cycle are not forwarded, so the leader moves alone."><figcaption><p>Tightly coupled followers share a shaft. Loosely coupled followers are separate motors.</p></figcaption></figure>
+
+| | Tightly coupled: `withFollowers` | Loosely coupled: `withLooselyCoupledFollowers` |
+| --- | --- | --- |
+| The motors are | Mechanically locked on one shaft or gearbox | Separate, joined only by the mechanism |
+| Closed loop | One, on the leader. Followers copy its output | One on each motor, on its own encoder |
+| Config | Only the leader has one | Every motor has its own |
+| Vendors | Same vendor as the leader | Can be mixed |
+| Voltage and duty cycle | Reach every motor | **Not forwarded.** The leader moves alone |
+| Use it for | Two motors on one gearbox, such as an elevator or a shooter | Two actuators that must arrive together, such as a cross bar lifted at both ends |
 
 ## `withFollowers`
 
-For motors on the same shaft or gearbox. Each follower copies the leader's output, so only the leader needs a config.
+Tightly coupled followers, for motors on the same shaft or gearbox. Each follower copies the leader's output, so only the leader needs a config.
 
 ```java
 .withFollowers(Pair.of(new SparkMax(CANPorts.fromBusId(1), 4, MotorType.kBrushless), false),
@@ -27,7 +36,7 @@ Pass the vendor's motor object, not a `SmartMotorController`. The boolean is whe
 
 ## `withLooselyCoupledFollowers`
 
-For motors that are not on the same shaft but must arrive at the same place, such as two linear actuators joined by a cross bar. Each follower is a full `SmartMotorController` with its own config and its own closed loop, and is sent the leader's position and velocity setpoints.
+Loosely coupled followers, for motors that are not on the same shaft but must arrive at the same place, such as two linear actuators joined by a cross bar. Each follower is a full `SmartMotorController` with its own config and its own closed loop, and is sent the leader's position and velocity setpoints.
 
 ```java
 SmartMotorControllerConfig config = new SmartMotorControllerConfig(this) /* ... */;

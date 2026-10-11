@@ -77,7 +77,25 @@ The reduction between the mechanism and the external encoder, for an encoder tha
 .withExternalEncoderGearing(0.5)
 ```
 
-It appears on the right of the diagram at the top of this page. It throws if no external encoder is configured.
+The number is how many times the encoder turns for one turn of the mechanism: `2` means the encoder turns twice as far as the mechanism. It appears on the right of the diagram at the top of this page. It throws if no external encoder is configured.
+
+### Only gear an absolute encoder if it cannot wrap
+
+An absolute encoder only knows where it is within one turn of its own shaft. Gearing it up gives finer resolution, but it also uses up that one turn faster. If the encoder passes its wrap point anywhere inside the mechanism's travel, two different mechanism positions give the same reading and YAMS cannot tell them apart.
+
+<figure><img src="../../../.gitbook/assets/smc-encoder-gearing-wrap.gif" alt="Animation of the same arm moving between hard stops 120 degrees apart, read through two encoder gearings. With a gearing of 2 the absolute encoder turns 240 degrees, never passes its wrap point, and YAMS always reports the right angle. With a gearing of 4 the encoder needs 480 degrees, passes its wrap point when the arm reaches 90 degrees, and YAMS then reports an angle 90 degrees too low."><figcaption><p>The same arm and hard stops. A gearing of 2 never wraps. A gearing of 4 does, and the reported angle is wrong.</p></figcaption></figure>
+
+Encoder gearing can and should be used on an absolute encoder **only** when careful installation guarantees that it never wraps anywhere in the range of motion:
+
+* **Adequate hard stops.** The mechanism must be physically unable to leave the range. [Soft limits](limits-and-protection.md#withsoftlimits) are not enough: they do nothing when the robot is disabled and pushed by hand, and the encoder is read when the robot boots.
+* **Less than one encoder turn of travel.** The travel between the hard stops, multiplied by the gearing, must be less than one rotation. In the animation, 120° x 2 = 240° fits and 120° x 4 = 480° does not.
+* **The wrap point outside the travel.** Install the encoder, and set its [zero offset](#withexternalencoderzerooffset) and [discontinuity point](#withexternalencoderdiscontinuitypoint), so that the wrap falls outside the hard stops with some margin on both sides.
+
+If you cannot guarantee all three, mount the encoder 1:1 on the mechanism's output.
+
+{% hint style="warning" %}
+YAMS reports a warning when the gearing makes the encoder turn further than the mechanism. It is safe to ignore **only** when all three conditions above are met.
+{% endhint %}
 
 **Supported on:** every supported motor controller.
 

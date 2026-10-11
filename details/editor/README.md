@@ -94,7 +94,9 @@ DO **NOT** USE AN ABSOLUTE ENCODER WITH A GEAR RATIO WITH AN INPUT GREATER THAN 
 
 ## Follower motors
 
-Motors on the same shaft use [`withFollowers`](config/followers.md#withfollowers), and motors that are not directly connected but must move together use [`withLooselyCoupledFollowers`](config/followers.md#withlooselycoupledfollowers). [Followers](config/followers.md) explains the difference.
+There are two kinds of follower. **Tightly coupled** followers are motors on the same shaft or gearbox and use [`withFollowers`](config/followers.md#withfollowers). **Loosely coupled** followers are motors that are not directly connected but must move together, and use [`withLooselyCoupledFollowers`](config/followers.md#withlooselycoupledfollowers). [Followers](config/followers.md) has the full comparison.
+
+<figure><img src="../../.gitbook/assets/smc-followers.png" alt="Two panels. Tightly coupled, withFollowers: a leader and a follower are on one shaft or gearbox and the follower copies the leader's output. The motors are mechanically locked, there is one closed loop and one config, the followers are the same vendor as the leader, and voltage and duty cycle reach every motor. Loosely coupled, withLooselyCoupledFollowers: two separate motors joined only by the mechanism get the same setpoint and each runs its own PID. They are not mechanically locked, each has its own closed loop and config, vendors can be mixed, and voltage and duty cycle are not forwarded, so the leader moves alone."><figcaption><p>Tightly coupled followers share a shaft. Loosely coupled followers are separate motors.</p></figcaption></figure>
 
 ### Loosely Coupled Follower Motors
 
