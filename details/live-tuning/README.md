@@ -535,7 +535,7 @@ The fix is mechanical or electrical, not a gain:
 
 * **More gear reduction.** The most common fix. It trades top speed, which you are not reaching anyway, for torque.
 * **More motors**, or a stronger motor.
-* **Take load off the motor**: a lighter mechanism, a counterweight, or a [constant force spring](#elevators-with-a-constant-force-spring) on an elevator, a gas spring on an arm.
+* **Take load off the motor**: a lighter mechanism, a counterweight, or a [constant force spring](#elevators-with-a-constant-force-spring) on an elevator.
 * **Check the current limit.** A stator limit set too low makes a capable motor look underpowered. Raise `current/limit/stator` and see whether the move changes. See [Limiting power consumption](../editor/limiting-power-consumption.md).
 * **Check for binding.** Disable the robot and move the mechanism by hand through its whole travel.
 * **Ask for less.** Lower the motion profile's `maxVelocity` and `maxAcceleration` to what the motor can deliver.
