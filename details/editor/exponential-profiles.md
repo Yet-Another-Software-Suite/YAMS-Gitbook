@@ -16,20 +16,11 @@ Motion profiles output a series of intermediate setpoints (position and velocity
 
 ## Trapezoidal vs Exponential Profiles
 
+<figure><img src="../../.gitbook/assets/exponential-profile-compare.png" alt="Two graphs. Setpoint velocity over time: a trapezoidal profile ramps in a straight line to a flat top, an exponential profile rises quickly and curves over near top speed. Acceleration against speed: the motor's available acceleration falls to zero at top speed, the exponential profile follows it, and the trapezoidal profile asks for a constant acceleration the motor cannot give at high speed"><figcaption><p>The two profiles, and why the motor can follow one more easily than the other.</p></figcaption></figure>
+
 ### Trapezoidal Profiles
 
 Trapezoidal profiles are the most common type. The name comes from the trapezoidal shape of the velocity-time graph.
-
-```
-Velocity
-  ^
-  |      ___________
-  |     /           \
-  |    /             \
-  |   /               \
-  |  /                 \
-  |_/___________________\____> Time
-```
 
 **Key characteristics:**
 
@@ -48,17 +39,6 @@ Velocity
 
 Exponential profiles model how DC motors actually behave. Instead of assuming constant acceleration, they account for the motor's torque-speed curve and the system's physical dynamics.
 
-```
-Velocity
-  ^
-  |           __________
-  |         _/
-  |       _/
-  |     _/
-  |   _/
-  |__/____________________> Time
-```
-
 **Key characteristics:**
 
 * Acceleration naturally decreases as velocity increases (following motor physics)
@@ -69,6 +49,8 @@ Velocity
 {% hint style="info" %}
 Exponential profiles are named for the exponential approach to maximum velocity, which mirrors the natural response of a first-order system like a DC motor.
 {% endhint %}
+
+<figure><img src="../../.gitbook/assets/exponential-profile-tracking.gif" alt="Animation of a 12 volt motor following each profile. With the trapezoidal profile the measured velocity falls behind the setpoint as the speed rises and the motor saturates at 12 volts. With the exponential profile the measured velocity stays on the setpoint"><figcaption><p>A simulated 12 V motor following each profile. The trapezoidal profile asks for more than the motor has left at speed.</p></figcaption></figure>
 
 ## The Physics Behind Exponential Profiles
 
@@ -187,13 +169,86 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 
 ### Step 1: Characterize Your System
 
-The exponential profile needs accurate kV and kA values. You have two options:
+The exponential profile needs accurate kV and kA values. You have three options:
 
-1. **Use the factory methods** - They calculate kV and kA from motor specs and mechanism parameters
-2. **Run SysId** - Get experimental values from your actual mechanism
+| Option | How | Good for |
+| --- | --- | --- |
+| Factory methods | YAMS calculates kV and kA from the motor, gearing and mass | A first version, and simulation |
+| Measure them yourself | One constant voltage test and a velocity graph, see [below](#measuring-kv-and-ka-without-sysid) | Real mechanisms, with no extra tools |
+| SysId | WPILib's characterization routine | Teams that already have a SysId workflow they trust |
 
 {% hint style="warning" %}
-Factory methods use theoretical values. Real mechanisms have friction, cable drag, and other losses. SysId values are more accurate but require testing.
+Factory methods use theoretical values. Real mechanisms have friction, cable drag, and other losses, so measured values are more accurate.
+{% endhint %}
+
+### Measuring kV and kA without SysId
+
+This is optional. It needs only a button binding and a graph, and it gives you both profile constants from one test.
+
+<figure><img src="../../.gitbook/assets/exponential-profile-step-test.png" alt="A graph of velocity after a constant 6 volts is applied. It levels off at 2.9 rotations per second, so kV is 6.0 minus kS, divided by 2.9, which is 2.0. It reaches 63 percent of that speed after 0.15 seconds, so kA is kV times 0.15, which is 0.30"><figcaption><p>One voltage step gives both constants. Example values.</p></figcaption></figure>
+
+{% stepper %}
+{% step %}
+#### Find kS
+
+Raise the voltage slowly from zero until the mechanism just starts to move. That voltage is kS.
+{% endstep %}
+
+{% step %}
+#### Apply a constant voltage
+
+Bind a button to a fixed voltage, well below 12 V so the mechanism does not hit a hard stop before it reaches a steady speed:
+
+```java
+driver.a().whileTrue(flywheel.setVoltage(Volts.of(6)));
+```
+
+Graph `NT:/Mechanisms/<Mechanism>/<Motor>/mechanism/velocity` in AdvantageScope while you hold the button. Leave it in rotations per second: the profile's kV and kA are per rotation of the mechanism.
+{% endstep %}
+
+{% step %}
+#### Read the steady speed: that gives kV
+
+Once the line goes flat, read the speed.
+
+`kV = (voltage - kS) / steady speed`
+{% endstep %}
+
+{% step %}
+#### Read the time to 63%: that gives kA
+
+Find the moment the velocity reached 63% of the steady speed, and how long after the voltage was applied that was.
+
+`kA = kV x that time`
+{% endstep %}
+
+{% step %}
+#### Put them in the config
+
+```java
+.withExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(
+    10.0, // maximum voltage the profile may ask for
+    2.0,  // kV, volts per rotation per second
+    0.30  // kA, volts per rotation per second squared
+))
+```
+{% endstep %}
+
+{% step %}
+#### Refine them live
+
+At `TelemetryVerbosity.HIGH` the profile's constants are tunable under `NT:/Tuning/.../closedloop/motionprofile/` as `kV`, `kA` and `maxInput`. Run a move and compare `mechanism/velocity` with `closedloop/setpoint/velocity`:
+
+* Falls behind while speeding up: raise `kA`.
+* Falls behind at top speed, or never reaches it: raise `kV`.
+* Follows easily with voltage to spare: lower them a little, or raise `maxInput`.
+
+See [Live tuning](../live-tuning/README.md) for how to edit these.
+{% endstep %}
+{% endstepper %}
+
+{% hint style="info" %}
+**Gravity gets in the way of this test.** On an elevator, subtract kG as well: `kV = (voltage - kS - kG) / steady speed`. On an arm the pull of gravity changes with the angle, so the speed never settles: start from `createArmConstraints(...)` and use the live refinement step instead.
 {% endhint %}
 
 ### Step 2: Set Maximum Voltage
@@ -276,7 +331,7 @@ When exponential profiles run on the SystemCore, there's slightly more latency c
 
 ### Profile works in sim but not on real robot
 
-* Run SysId to get real kV and kA values
+* Measure kV and kA on the real mechanism, see [Measuring kV and kA without SysId](#measuring-kv-and-ka-without-sysid)
 * Account for friction with kS in feedforward
 * Check current limits aren't restricting torque
 

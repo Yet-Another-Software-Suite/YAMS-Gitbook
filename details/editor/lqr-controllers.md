@@ -12,6 +12,8 @@ icon: chart-line
 **Key Difference from PID**: With PID, you manually tune kP, kI, and kD through trial and error. With LQR, you specify *how much you care* about position error vs velocity error vs control effort, and the algorithm computes the optimal gains for you.
 {% endhint %}
 
+<figure><img src="../../.gitbook/assets/lqr-loop.png" alt="Before the match, your model of the motor, gearing and moment of inertia, together with your error tolerances and control effort, go into LQR, which computes feedback gains. Every 20 milliseconds on the SystemCore, the encoder reading passes through a Kalman filter, the gains multiply the error between the setpoint and the estimate, and the result is the motor voltage"><figcaption><p>You supply the model and the priorities. LQR supplies the gains.</p></figcaption></figure>
+
 ## Why Use LQR?
 
 ### Advantages
@@ -340,6 +342,10 @@ public class LQRArmSubsystem extends SubsystemBase {
 
 ## Tuning Strategy
 
+<figure><img src="../../.gitbook/assets/lqr-knobs.png" alt="Three step responses. Gentle, with a position tolerance of 0.2 radians and a control effort of 12 volts, is slow and uses little voltage. Balanced, with 0.1 radians, is quick and settles cleanly. Aggressive, with 0.02 radians and a control effort of 6 volts, is fastest and saturates the motor"><figcaption><p>The two settings you will change most. Illustrative responses.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/lqr-tuning.gif" alt="Animation of an arm making the same 90 degree move three times: gentle, where it is slow and uses little voltage; aggressive, where it overshoots and the voltage saturates; and balanced, where it is quick and settles cleanly"><figcaption><p>The same move with three sets of priorities. Illustrative, not a recording.</p></figcaption></figure>
+
 ### Starting Point
 
 1. **Begin with conservative settings**:
@@ -398,7 +404,7 @@ LQR can behave very differently with small parameter changes. Always validate in
 **Solutions**:
 - Re-measure mass and moment of inertia
 - Verify gearing ratio is correct
-- Run SysId to get accurate motor characterization
+- Measure kV and kA on the real mechanism and compare them with the model, see [Measuring kV and kA without SysId](exponential-profiles.md#measuring-kv-and-ka-without-sysid)
 - Account for friction and other losses in feedforward
 
 ## LQR vs PID Quick Reference

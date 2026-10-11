@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 314" width="760" height="314" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">What happens to a stick value</title>
+<desc id="d">A pipeline of five steps. A raw stick value of 0.60 goes through a 0.05 deadband to become 0.579, is scaled by 0.8 to 0.463, is cubed to 0.099, and is multiplied by a maximum velocity of 4.5 meters per second to give 0.45 meters per second. Because the scale is applied before the cube, full stick gives 2.30 meters per second.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="314" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="282" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >What happens to a stick value</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The order SwerveInputStream applies each step, with a 60% push as the example.</text>
+<rect x="34" y="100" width="126" height="112" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6"/>
+<text x="97.0" y="122.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Stick</text>
+<text x="97.0" y="140.0" font-size="8.6" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">raw axis</text>
+<text x="97.0" y="174.0" font-size="17" font-weight="700" text-anchor="middle" fill="#52606d" >0.60</text>
+<text x="97.0" y="198.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >-getLeftY()</text>
+<line x1="161" y1="156" x2="173" y2="156" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="174" y="100" width="126" height="112" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6"/>
+<text x="237.0" y="122.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Deadband</text>
+<text x="237.0" y="140.0" font-size="8.6" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withDeadband(0.05)</text>
+<text x="237.0" y="174.0" font-size="17" font-weight="700" text-anchor="middle" fill="#3e6da8" >0.579</text>
+<text x="237.0" y="198.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >ignore drift, rescale</text>
+<line x1="301" y1="156" x2="313" y2="156" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="314" y="100" width="126" height="112" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6"/>
+<text x="377.0" y="122.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Scale</text>
+<text x="377.0" y="140.0" font-size="8.6" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withScaleTranslation(0.8)</text>
+<text x="377.0" y="174.0" font-size="17" font-weight="700" text-anchor="middle" fill="#6b46c1" >0.463</text>
+<text x="377.0" y="198.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >multiply</text>
+<line x1="441" y1="156" x2="453" y2="156" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="454" y="100" width="126" height="112" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6"/>
+<text x="517.0" y="122.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Cube</text>
+<text x="517.0" y="140.0" font-size="8.6" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withCubeTranslation...()</text>
+<text x="517.0" y="174.0" font-size="17" font-weight="700" text-anchor="middle" fill="#c2630b" >0.099</text>
+<text x="517.0" y="198.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >raise to the 3rd power</text>
+<line x1="581" y1="156" x2="593" y2="156" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="594" y="100" width="126" height="112" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6"/>
+<text x="657.0" y="122.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Max velocity</text>
+<text x="657.0" y="140.0" font-size="8.6" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">x 4.5 m/s</text>
+<text x="657.0" y="174.0" font-size="17" font-weight="700" text-anchor="middle" fill="#147d6f" >0.45 m/s</text>
+<text x="657.0" y="198.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >becomes a speed</text>
+<text x="34.0" y="244.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Translation works on the stick's distance from center, so a diagonal push is treated the same as a straight one.</text>
+<text x="34.0" y="262.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Rotation goes through the same steps on the single rotation axis, ending at the maximum angular velocity.</text>
+<text x="34.0" y="290.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" >The scale is applied before the cube, so at full stick this example gives 0.8 cubed x 4.5 = 2.30 m/s, not 3.6 m/s.</text>
+</svg>

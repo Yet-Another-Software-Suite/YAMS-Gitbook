@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 416" width="760" height="416" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">How an LQR controller works</title>
+<desc id="d">A diagram in two rows. Before the match, your model of the motor, gearing and moment of inertia, together with your error tolerances and control effort, go into LQR, which computes feedback gains. Then every 20 milliseconds on the SystemCore, the encoder reading goes through a Kalman filter that blends the model and the encoder, the gains multiply the error between the setpoint and that estimate, and the result is the motor voltage.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="416" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="384" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >How an LQR controller works</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >You describe the mechanism and what matters to you. The gains come from the math.</text>
+<text x="34.0" y="86.0" font-size="12" font-weight="700" text-anchor="start" fill="#52606d" >Before the match: YAMS computes the gains once</text>
+<rect x="34" y="96" width="200" height="62" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6"/>
+<text x="134.0" y="117.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Your model</text>
+<text x="134.0" y="132.5" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >motor, gearing, MOI</text>
+<text x="134.0" y="147.5" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >new LQRConfig(...)</text>
+<rect x="34" y="168" width="200" height="62" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6"/>
+<text x="134.0" y="188.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >What you care about</text>
+<text x="134.0" y="204.2" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >error tolerances (qelms)</text>
+<text x="134.0" y="219.8" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >control effort (volts)</text>
+<rect x="290" y="118" width="176" height="90" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.6"/>
+<text x="378.0" y="146.2" font-size="15" font-weight="700" text-anchor="middle" fill="#1f2933" >LQR</text>
+<text x="378.0" y="161.8" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >works out the best</text>
+<text x="378.0" y="177.2" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >gains for that model</text>
+<text x="378.0" y="192.8" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >and those priorities</text>
+<line x1="238" y1="127" x2="286" y2="150" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<line x1="238" y1="199" x2="286" y2="176" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="522" y="132" width="204" height="62" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6"/>
+<text x="624.0" y="152.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Feedback gains</text>
+<text x="624.0" y="168.2" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >volts per unit of position</text>
+<text x="624.0" y="183.8" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >and velocity error</text>
+<line x1="470" y1="163" x2="518" y2="163" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<line x1="34" y1="250" x2="726" y2="250" stroke="#cbd2d9"/>
+<text x="34.0" y="272.0" font-size="12" font-weight="700" text-anchor="start" fill="#52606d" >Every 20 ms on the SystemCore</text>
+<rect x="34" y="284" width="130" height="56" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6"/>
+<text x="99.0" y="309.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Encoder</text>
+<text x="99.0" y="325.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >noisy reading</text>
+<rect x="204" y="284" width="166" height="56" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6"/>
+<text x="287.0" y="309.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Kalman filter</text>
+<text x="287.0" y="325.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >blends model and encoder</text>
+<rect x="410" y="284" width="150" height="56" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6"/>
+<text x="485.0" y="309.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Gains x error</text>
+<text x="485.0" y="325.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >setpoint - estimate</text>
+<rect x="600" y="284" width="126" height="56" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6"/>
+<text x="663.0" y="309.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Motor</text>
+<text x="663.0" y="325.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >voltage</text>
+<line x1="168" y1="312" x2="200" y2="312" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<line x1="374" y1="312" x2="406" y2="312" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<line x1="564" y1="312" x2="596" y2="312" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<path d="M663,344 V366 H99 V344" fill="none" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="380.0" y="382.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >the mechanism moves, and the encoder reads it again</text>
+</svg>

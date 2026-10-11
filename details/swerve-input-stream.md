@@ -8,6 +8,8 @@ icon: gamepad
 
 Import it from the package that matches your vendordep: `yams.commands2.swerve.SwerveInputStream` (Commands v2) or `yams.commands3.swerve.SwerveInputStream` (Commands v3). The API is the same in both. In C++ it is `yams::mechanisms::swerve::utility::SwerveInputStream<NumModules>` from `yams/mechanisms/swerve/utility/SwerveInputStream.hpp`, with the same methods in PascalCase (`Of`, `WithDeadband`, `Get`, ...).
 
+<figure><img src="../.gitbook/assets/swerve-input-stream-sticks.gif" alt="Animation of two controller sticks, the ChassisVelocities they produce, and a robot on a field. Left stick forward gives positive vx and the robot moves away from the driver station. Left stick left gives positive vy and the robot moves left. A diagonal push gives both. Right stick left gives a positive omega and the robot turns counter-clockwise"><figcaption><p>How each stick movement becomes a field relative velocity.</p></figcaption></figure>
+
 {% hint style="warning" %}
 The output is **field relative**, even with `withRobotRelative()`. Drive with it through `setFieldRelativeChassisSpeeds(...)`, not `SwerveDrive.drive(...)`, which expects robot-relative speeds. If you do want `drive(...)`, convert it first: `drive.drive(() -> input.get().toRobotRelative(drive.getGyroRotation3d().toRotation2d()))`.
 {% endhint %}
@@ -110,6 +112,26 @@ Pressing the left bumper swaps the aim target from the speaker to the amp. The d
 `clone()` is the one method here that doesn't mutate: it returns an independent copy, useful for deriving a second variant of a stream from a shared base configuration without one affecting the other. See [Copying a Stream](#copying-a-stream) below.
 {% endhint %}
 
+## From Stick to Velocity
+
+Every loop, `get()` runs the stick values through the same steps, in this order:
+
+<figure><img src="../.gitbook/assets/swerve-input-stream-pipeline.png" alt="A raw stick value of 0.60 goes through a 0.05 deadband to become 0.579, is scaled by 0.8 to 0.463, is cubed to 0.099, and is multiplied by a maximum velocity of 4.5 meters per second to give 0.45 meters per second"><figcaption><p>A 60% push, step by step.</p></figcaption></figure>
+
+| Step | Method | What it does |
+| --- | --- | --- |
+| Deadband | `withDeadband(...)` | Ignores small values near the center, then rescales the rest to the full range. |
+| Scale | `withScaleTranslation(...)`, `withScaleRotation(...)` | Multiplies by a constant. |
+| Cube | `withCubeTranslationControllerAxis()`, `withCubeRotationControllerAxis()` | Raises to the third power for finer control near the center. |
+| Alliance flip | `withAllianceRelativeControl()` | Turns translation 180 degrees on the red alliance. |
+| Maximum velocity | `withMaximumLinearVelocity(...)`, `withMaximumAngularVelocity(...)` | Turns the result into meters per second and radians per second. |
+
+{% hint style="warning" %}
+The scale is applied **before** the cube. With `withScaleTranslation(0.8)` and the cube enabled, a full stick gives `0.8³ = 0.512` of the maximum velocity, not `0.8`.
+{% endhint %}
+
+<figure><img src="../.gitbook/assets/swerve-input-stream-response.png" alt="A graph of output against stick position. No shaping is a straight line. A 0.05 deadband gives nothing until 5 percent and then rises to full. Deadband plus cube stays low near the center and rises steeply near the edge. Deadband plus a 0.5 scale tops out at half speed"><figcaption><p>What each option does to the stick's response.</p></figcaption></figure>
+
 ## Velocity Limits
 
 `withMaximumLinearVelocity(LinearVelocity)` and `withMaximumAngularVelocity(AngularVelocity)` set the chassis speed a fully-deflected stick produces.
@@ -164,6 +186,8 @@ A stream is always in exactly one of four internal modes: `ANGULAR_VELOCITY` (th
 
 `HEADING`, `AIM` and `TRANSLATION_ONLY` turn the robot with the rotation controller from `SwerveDriveConfig.withRotationController(...)`, so configure one before using them.
 
+<figure><img src="../.gitbook/assets/swerve-input-stream-modes.gif" alt="Animation of three modes. ANGULAR_VELOCITY: the right stick sets how fast the robot turns. HEADING: the right stick points where the robot should face and it turns there and holds. AIM: the robot keeps facing a target while the left stick drives it sideways"><figcaption><p>The three modes that turn the robot. <code>TRANSLATION_ONLY</code> holds the current heading instead.</p></figcaption></figure>
+
 {% hint style="info" %}
 `SwerveInputStream` used to have a `DRIVE_TO_POSE` mode and a matching `atTargetPose(...)` method; both have been removed. Use [`SwerveDrive.driveToPose(...)`](swerve-drive.md#auto-align) for auto-align instead.
 {% endhint %}
@@ -202,6 +226,8 @@ input.withTranslationOnly(driver::getStartButton);
 ```
 
 ## Robot-Relative Control
+
+<figure><img src="../.gitbook/assets/swerve-input-stream-frames.png" alt="Three drawings of a robot facing up and to the left with the left stick pushed forward. Field relative: it moves away from your driver station. Robot relative: it moves toward its own front. On the red alliance with alliance relative control: translation is flipped 180 degrees and it still moves away from you"><figcaption><p>Field relative, robot relative and alliance relative control.</p></figcaption></figure>
 
 By default the translation axes are field relative. `withRobotRelative()` treats them as robot relative instead, so pushing the stick forward drives toward the robot's front. The stream still outputs **field-relative** `ChassisVelocities` (it converts using the current heading), so the drive command does not change. The `withRobotRelative(BooleanSupplier)` overload toggles it live, e.g. while a button is held.
 

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 342" width="760" height="342" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Finding kV and kA from one voltage step</title>
+<desc id="d">A graph of velocity against time after a constant 6 volts is applied. The velocity rises quickly and levels off at 2.9 rotations per second. kV is the voltage minus kS divided by that steady speed, which gives 2.0. The velocity reaches 63 percent of the steady speed after 0.15 seconds, and kA is kV times that time, which gives 0.30.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="342" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="310" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Finding kV and kA from one voltage step</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >No SysId: a constant voltage, a velocity graph and two readings.</text>
+<rect x="40" y="96" width="400" height="190" rx="6" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="48.0" y="111.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >mechanism/velocity</text>
+<text x="432.0" y="279.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >time</text>
+<line x1="54" y1="126.0" x2="426" y2="126.0" stroke="#147d6f" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="422.0" y="120.0" font-size="11" font-weight="700" text-anchor="end" fill="#147d6f" >steady speed: 2.9 rot/s</text>
+<line x1="54" y1="179.7" x2="128.4" y2="179.7" stroke="#6b46c1" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="128.4" y1="179.7" x2="128.4" y2="272" stroke="#6b46c1" stroke-width="1.3" stroke-dasharray="3 4"/>
+<path d="M54.0,272.0 L58.6,263.2 L63.3,254.8 L68.0,247.0 L72.6,239.7 L77.2,232.8 L81.9,226.3 L86.5,220.3 L91.2,214.6 L95.8,209.2 L100.5,204.1 L105.2,199.4 L109.8,195.0 L114.5,190.8 L119.1,186.9 L123.8,183.2 L128.4,179.7 L133.1,176.5 L137.7,173.4 L142.3,170.5 L147.0,167.8 L151.7,165.3 L156.3,162.9 L160.9,160.7 L165.6,158.6 L170.2,156.6 L174.9,154.7 L179.6,153.0 L184.2,151.4 L188.8,149.8 L193.5,148.4 L198.2,147.0 L202.8,145.8 L207.4,144.6 L212.1,143.4 L216.8,142.4 L221.4,141.4 L226.1,140.5 L230.7,139.6 L235.3,138.8 L240.0,138.0 L244.6,137.3 L249.3,136.6 L253.9,135.9 L258.6,135.3 L263.2,134.8 L267.9,134.2 L272.6,133.7 L277.2,133.3 L281.9,132.8 L286.5,132.4 L291.1,132.0 L295.8,131.7 L300.4,131.3 L305.1,131.0 L309.8,130.7 L314.4,130.4 L319.1,130.1 L323.7,129.9 L328.4,129.7 L333.0,129.4 L337.6,129.2 L342.3,129.0 L346.9,128.8 L351.6,128.7 L356.2,128.5 L360.9,128.4 L365.6,128.2 L370.2,128.1 L374.9,128.0 L379.5,127.8 L384.1,127.7 L388.8,127.6 L393.4,127.5 L398.1,127.4 L402.8,127.3 L407.4,127.3 L412.1,127.2 L416.7,127.1 L421.4,127.0 L426.0,127.0" fill="none" stroke="#3e6da8" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="128.4" cy="179.7" r="4.5" fill="#6b46c1"/>
+<text x="138.4" y="195.7" font-size="11" font-weight="700" text-anchor="start" fill="#6b46c1" >63% of the steady speed</text>
+<text x="138.4" y="210.7" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >reached after 0.15 s</text>
+<text x="40.0" y="88.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" >Apply a constant 6 V and graph the velocity</text>
+<rect x="470" y="96" width="256" height="88" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.5"/>
+<text x="486.0" y="118.0" font-size="12.5" font-weight="700" text-anchor="start" fill="#1f2933" >kV from the steady speed</text>
+<text x="486.0" y="140.0" font-size="11" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">kV = (6.0 V - kS) / 2.9 rot/s</text>
+<text x="486.0" y="158.0" font-size="11" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">   = (6.0 - 0.2) / 2.9</text>
+<text x="486.0" y="176.0" font-size="11" font-weight="700" text-anchor="start" fill="#147d6f" font-family="Consolas, Menlo, monospace">   = 2.0 V per rot/s</text>
+<rect x="470" y="198" width="256" height="88" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.5"/>
+<text x="486.0" y="220.0" font-size="12.5" font-weight="700" text-anchor="start" fill="#1f2933" >kA from the time to 63%</text>
+<text x="486.0" y="242.0" font-size="11" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">kA = kV x time</text>
+<text x="486.0" y="260.0" font-size="11" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">   = 2.0 x 0.15 s</text>
+<text x="486.0" y="278.0" font-size="11" font-weight="700" text-anchor="start" fill="#6b46c1" font-family="Consolas, Menlo, monospace">   = 0.30 V per rot/s^2</text>
+<text x="34.0" y="316.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" >Two numbers off one graph give you both profile constants. Example values.</text>
+</svg>

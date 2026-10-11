@@ -14,6 +14,8 @@ This is currently a Java only feature. The C++ `SwerveDriveConfig` takes a headi
 
 `GyroAxis` lives in `yams.core.mechanisms.config.enums` and names the gyro axis that points up through the robot:
 
+<figure><img src="../.gitbook/assets/gyro-axes.png" alt="Three drawings of a gyro on a robot chassis with its X, Y and Z axes. Mounted flat, Z points up, X to the front and Y to the left: GyroAxis.YAW. Standing on its side with X pointing up, Y to the robot's left and Z to the back: GyroAxis.ROLL. Standing on its side with Y pointing up, X to the robot's front and Z to the right: GyroAxis.PITCH"><figcaption><p>Find the gyro axis that points up, and pick the matching <code>GyroAxis</code>.</p></figcaption></figure>
+
 | `GyroAxis` | Gyro mounting | Robot turning shows up as |
 |---|---|---|
 | `YAW` (default) | Flat, the gyro's Z axis points up | The gyro's yaw |
