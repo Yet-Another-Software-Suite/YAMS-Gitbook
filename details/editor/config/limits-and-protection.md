@@ -101,11 +101,11 @@ While the motor is at or above the cutoff, the closed loop output is zero, so a 
 On a SPARK MAX or SPARK Flex with a **trapezoidal** profile, the cutoff does not work: the profile runs on the SPARK, and the cutoff is only checked by the loop on the SystemCore. Use an exponential profile if you rely on the cutoff.
 {% endhint %}
 
-**Not supported everywhere.** The cutoff is enforced by the closed loop running on the SystemCore, so it only works where the loop runs there.
+**Not supported everywhere.** The cutoff is enforced by the closed loop running on the SystemCore, so it only works where the loop runs there. An LQR controller always runs there, so the cutoff works with LQR on every motor controller.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
-| ❌ | ❌ | ⚠️ only with an exponential profile or an LQR controller | ⚠️ only in closed loop mode |
+| ⚠️ only with an LQR controller | ⚠️ only with an LQR controller | ⚠️ only with an exponential profile or an LQR controller | ⚠️ only in closed loop mode |
 
 
 ## Code Reference

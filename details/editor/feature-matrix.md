@@ -326,10 +326,10 @@ This is every option against every motor controller. What each option does, with
 
 | Feature            | TalonFX | TalonFXS | SparkMax/Flex                              | Nova |
 | ------------------ | ------- | -------- | ------------------------------------------ | ---- |
-| Temperature Cutoff | ❌       | ❌        | ⚠️ (requires an Exponential Profile or LQR controller) | ⚠️ (requires closed loop mode) |
+| Temperature Cutoff | ⚠️ (requires an LQR controller) | ⚠️ (requires an LQR controller) | ⚠️ (requires an Exponential Profile or LQR controller) | ⚠️ (requires closed loop mode) |
 
 {% hint style="warning" %}
-**Temperature Cutoff on Sparks**: the cutoff is checked by the closed loop running on the SystemCore, so on a `SparkWrapper` it only works with an Exponential Profile or an LQR controller. With a trapezoidal profile, which runs on the SPARK, it does not work.
+**Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an LQR controller on any motor controller, an Exponential Profile on a `SparkWrapper`, and always on a `NovaWrapper`. With PID or a profile that runs on the motor controller, it does not work.
 {% endhint %}
 
 {% hint style="info" %}

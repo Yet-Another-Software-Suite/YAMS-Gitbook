@@ -65,7 +65,7 @@ Every option on the following pages has a table showing where it works. These ar
 | [Closed loop `SLOT_3`](closed-loop-control.md#slots) | ❌ | ❌ | ✅ | ✅ |
 | [`withClosedLoopControllerMaximumVoltage`](closed-loop-control.md#withclosedloopcontrollermaximumvoltage) | ✅ | ✅ | ⚠️ exponential profile or LQR only | ✅ |
 | [`withClosedLoopControlPeriod`](closed-loop-control.md#withclosedloopcontrolperiod) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
-| [`withTemperatureCutoff`](limits-and-protection.md#withtemperaturecutoff) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
+| [`withTemperatureCutoff`](limits-and-protection.md#withtemperaturecutoff) | ⚠️ LQR only | ⚠️ LQR only | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
 | [`withFeedbackSynchronizationThreshold`](encoders.md#withfeedbacksynchronizationthreshold) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
 | [Separate open and closed loop ramp rates](limits-and-protection.md#ramp-rates) | ✅ | ✅ | ✅ | ❌ one shared ramp rate |
 | [`withExternalEncoderZeroOffset`](encoders.md#withexternalencoderzerooffset), [discontinuity point](encoders.md#withexternalencoderdiscontinuitypoint) | ✅ | ✅ | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |
