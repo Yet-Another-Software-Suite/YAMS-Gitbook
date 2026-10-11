@@ -26,6 +26,20 @@ Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from onl
 A robot that never browns out in simulation can still brown out for these reasons. If the real robot browns out when the simulation says it should not, check the electrical system before changing current limits.
 {% endhint %}
 
+## Battery sag vs battery drain
+
+The battery voltage drops for two different reasons, and the simulation models them separately.
+
+| | Battery sag | Battery drain |
+| --- | --- | --- |
+| What it is | The voltage dropping **while current is being drawn**, because of the battery's internal resistance. | The battery **emptying** as amp-hours are used up over a match. |
+| How fast | Instant. It follows the current loop by loop. | Slow. It builds up over minutes. |
+| Does it recover? | Yes. The voltage comes back as soon as the load stops. | No. It stays until the battery is recharged. |
+| What it changes | The loaded voltage only. | The resting voltage goes down and the internal resistance goes up. |
+| In YAMS | Always on. See [How each mechanism affects the battery](#how-each-mechanism-affects-the-battery). | Off until you call `BatterySim.enableDischarge(...)`. See [Realistic discharge over a match](#realistic-discharge-over-a-match). |
+
+The two add up. A drained battery starts from a lower resting voltage and has more internal resistance, so the same current sags it further. That is why a move that is fine at the start of a match can brown out at the end of it.
+
 ## How each mechanism affects the battery
 
 The loaded voltage is the resting voltage minus the total current times the battery's internal resistance:
