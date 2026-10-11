@@ -68,13 +68,13 @@ An absolute encoder should only be used when careful installation guarantees tha
 
 * **Adequate hard stops.** The mechanism must be physically unable to leave the range. [Soft limits](limits-and-protection.md#withsoftlimits) are not enough: they do nothing when the robot is disabled and pushed by hand, and the encoder is read when the robot boots.
 * **Less than one encoder turn of travel.** The travel between the hard stops must be less than one rotation of the encoder. A 1:1 encoder on a mechanism that turns all the way round, or more, cannot meet this.
-* **The discontinuity point outside the travel.** Install the encoder so that the white lines never line up anywhere between the hard stops, with some margin at both ends. Move the mechanism from one hard stop to the other by hand and watch the lines to check. [`withExternalEncoderDiscontinuityPoint`](#withexternalencoderdiscontinuitypoint) chooses the range the reading is reported in.
+* **The discontinuity point outside the travel.** On a 1:1 encoder, [`withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))`](#withexternalencoderdiscontinuitypoint) does this for you. On a geared encoder, also install it so that the white lines never line up anywhere between the hard stops, with some margin at both ends. Move the mechanism from one hard stop to the other by hand and watch the lines to check.
 
-{% hint style="danger" %}
-A 1:1 encoder is not safe automatically. An arm that only travels 120° still reads wrongly if the encoder was installed with its discontinuity point inside those 120°.
+{% hint style="success" %}
+**Without gearing, a discontinuity point of 0.5 rotations should be sufficient.** [`withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))`](#withexternalencoderdiscontinuitypoint) makes the encoder read -0.5 to 0.5 rotations, which puts the wrap half a turn away from the mechanism's zero in both directions. A 1:1 mechanism that stays within 180° of its zero never reaches it.
 {% endhint %}
 
-[Gearing the encoder](#withexternalencodergearing) makes this harder, because the encoder then turns further than the mechanism.
+[Gearing the encoder](#withexternalencodergearing) is where this needs real care, because the encoder then turns further than the mechanism and the discontinuity point setting alone is no longer enough.
 
 **Supported on every motor controller.** Every controller accepts an external encoder, but only ones it can read itself. An encoder from another vendor cannot be used.
 
@@ -97,14 +97,14 @@ The number is how many times the encoder turns for one turn of the mechanism: `2
 
 Gearing an absolute encoder up gives finer resolution, but it also uses up the encoder's one turn faster, so it reaches its [discontinuity point](#keep-the-discontinuity-point-outside-the-travel) sooner.
 
-<figure><img src="../../../.gitbook/assets/smc-encoder-gearing-wrap.gif" alt="Animation of the same arm moving between hard stops 120 degrees apart, read through two encoder gearings. Each absolute encoder is drawn with a white line on its casing and a white line on its bearing, which line up at the discontinuity point. With a gearing of 2 the encoder turns 240 degrees, the lines never meet, and YAMS always reports the right angle. With a gearing of 4 the encoder needs 480 degrees, the lines meet partway through the travel, and YAMS then reports an angle 90 degrees too low."><figcaption><p>The same arm and hard stops. With a gearing of 2 the white lines never meet. With a gearing of 4 they do, and the reported angle is wrong. The same happens to a 1:1 encoder installed with its discontinuity point inside the travel.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-encoder-gearing-wrap.gif" alt="Animation of the same arm moving between hard stops 120 degrees apart, read through two encoder gearings. Each absolute encoder is drawn with a white line on its casing and a white line on its bearing, which line up at the discontinuity point. With a gearing of 2 the encoder turns 240 degrees, the lines never meet, and YAMS always reports the right angle. With a gearing of 4 the encoder needs 480 degrees, the lines meet partway through the travel, and YAMS then reports an angle 90 degrees too low."><figcaption><p>The same arm and hard stops. With a gearing of 2 the white lines never meet. With a gearing of 4 they do, and the reported angle is wrong.</p></figcaption></figure>
 
 Encoder gearing can and should be used on an absolute encoder **only** when careful installation guarantees that it never wraps anywhere in the range of motion. The [three conditions for every absolute encoder](#keep-the-discontinuity-point-outside-the-travel) still apply, and the second one gets stricter: the travel between the hard stops, **multiplied by the gearing**, must be less than one rotation. In the animation, 120° x 2 = 240° fits and 120° x 4 = 480° does not.
 
-If you cannot guarantee that, mount the encoder 1:1 on the mechanism's output. The conditions still apply there, but they are much easier to meet.
+If you cannot guarantee that, mount the encoder 1:1 on the mechanism's output, where a discontinuity point of 0.5 rotations should be sufficient.
 
 {% hint style="warning" %}
-YAMS reports a warning when the gearing makes the encoder turn further than the mechanism. It is safe to ignore **only** when all three conditions are met. YAMS gives no warning for a 1:1 encoder, so check that one yourself.
+YAMS reports a warning when the gearing makes the encoder turn further than the mechanism. It is safe to ignore **only** when all three conditions are met.
 {% endhint %}
 
 **Supported on:** every supported motor controller.
