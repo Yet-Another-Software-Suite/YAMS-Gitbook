@@ -199,6 +199,54 @@ These set what the drive does and return at once. They are what the commands abo
 | `getDistanceFromPose(Pose2d)`, `getAngleDifferenceFromPose(Pose2d)` | How far the robot is from a pose. |
 | `getField2d()` | The `Field2d` the drive publishes its pose to. Use this one instead of making your own. |
 
+## Configuring and tuning a swerve drive, step by step
+
+Work from the wheels outward: a drive cannot be tuned until its modules are.
+
+{% stepper %}
+{% step %}
+#### Configure each module
+
+Set each module's two motors, its location, its absolute encoder and offset: see [Swerve Module](swerve-module.md#configuring-and-tuning-a-swerve-module-step-by-step).
+{% endstep %}
+
+{% step %}
+#### Check the module order and locations
+
+With the robot on blocks, drive forward slowly. Every wheel should point forward and spin forward. Then spin in place: the wheels should form a circle. A wheel pointing the wrong way means a wrong [location](mechanism-configs/swerve-module-config.md#withlocation) or [encoder offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder).
+{% endstep %}
+
+{% step %}
+#### Check the gyro direction
+
+Turn the robot counter-clockwise by hand and watch the heading. It must go up. If it goes down, set [`withGyroInverted`](mechanism-configs/swerve-drive-config.md#the-gyro).
+{% endstep %}
+
+{% step %}
+#### Tune the modules
+
+Tune the azimuth motors, then the drive motors, with the swerve tuning command: see [Tune the swerve modules](live-tuning/README.md#tune-the-swerve-modules).
+{% endstep %}
+
+{% step %}
+#### Set the speed limits
+
+Measure the real top speed by driving flat out, and set [`withMaximumModuleSpeed` and `withMaximumChassisSpeed`](mechanism-configs/swerve-drive-config.md#speed-limits) a little below it.
+{% endstep %}
+
+{% step %}
+#### Correct the drift while spinning
+
+Drive in a straight line while spinning. If the path bends, set [`withDiscretizationTime`](mechanism-configs/swerve-drive-config.md#withdiscretizationtime) to the loop time, then adjust [`withGyroAngularVelocityScaleFactor`](mechanism-configs/swerve-drive-config.md#withgyroangularvelocityscalefactor) if some remains.
+{% endstep %}
+
+{% step %}
+#### Tune auto-align last
+
+Tune the translation and rotation controllers once the robot drives well by hand: see [Tune auto-align](live-tuning/README.md#tune-auto-align).
+{% endstep %}
+{% endstepper %}
+
 ## Module Location Drives the Kinematics
 
 `SwerveModuleConfig.withLocation(front, left)` (or `withDistanceFromCenterOfRotation`) is not just bookkeeping. `SwerveDrive` builds its `SwerveDriveKinematics` directly from the locations of every module you pass it, so the drive/rotate math is always correct for your specific chassis dimensions without you ever constructing a `SwerveDriveKinematics` yourself.

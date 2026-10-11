@@ -12,7 +12,7 @@ An `Arm` is a mechanism that swings about a pivot and has to hold itself up agai
 
 Following WPILib, an arm is at 0° when it is parallel to the ground and 90° when it points straight up. Gravity pulls hardest on a level arm and not at all on a vertical one, and [`ArmFeedforward`](editor/config/feedforward.md#withfeedforward) uses that angle to work out how much voltage holds the arm still. So the arm's encoder has to read 0 when the arm is level.
 
-If gravity does not matter to your mechanism, because it turns about a vertical axis or is balanced, use a [Pivot](turrets-wrists.md) instead.
+If your mechanism does not need gravity accounted for, because it turns about a vertical axis or is balanced, use a [Pivot](turrets-wrists.md) instead.
 
 <figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
 
@@ -283,7 +283,133 @@ Things to get right:
 * **Restart the closed loop.** `setDutyCycleSetpoint(0)` stops the closed loop controller. `startClosedLoopController()` in step 1 brings it back before the next move.
 * **Soft limits still apply** while moving. The brake does not replace them.
 
-## Configuring an arm
+## Configuring and tuning an arm, step by step
+
+Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
+
+{% hint style="danger" %}
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+{% endhint %}
+
+### Configure it
+
+{% stepper %}
+{% step %}
+#### Set the gearing
+
+Give the reduction from the motor to the arm's pivot with [`withGearing`](editor/config/gearing-and-units.md#withgearing). Check it by moving the arm a known angle by hand and reading `mechanism/position`.
+{% endstep %}
+
+{% step %}
+#### Make up positive
+
+Apply a small positive voltage with `setVoltage`. If the arm goes down, flip [`withMotorInverted`](editor/config/motor-basics.md#withmotorinverted). If the angle counts down while it goes up, an [encoder is backwards](editor/config/encoders.md#withencoderinverted).
+{% endstep %}
+
+{% step %}
+#### Make level read zero
+
+Hold the arm level. With an absolute encoder, set its [zero offset](editor/config/encoders.md#withexternalencoderzerooffset) so it reads 0 there. Without one, set a [starting position](editor/config/encoders.md#withstartingposition) for where the arm rests when the robot turns on.
+{% endstep %}
+
+{% step %}
+#### Set the limits
+
+Put [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits) where the stops are and [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits) a few degrees inside them.
+{% endstep %}
+
+{% step %}
+#### Protect the motor
+
+Set a [stator current limit](editor/config/limits-and-protection.md#current-limits), `MotorMode.BRAKE`, and a slow [trapezoidal profile](editor/config/motion-profiles.md#withtrapezoidalprofile) to start with.
+{% endstep %}
+
+{% step %}
+#### Describe it to the simulator
+
+Set [`withLength`](mechanism-configs/arm-config.md#withlength) and [`withMomentOfInertia`](editor/config/simulation.md#withmomentofinertia), run it in simulation, and check the arm moves the way you expect before enabling the real one.
+{% endstep %}
+{% endstepper %}
+
+### Tune it
+
+{% stepper %}
+{% step %}
+#### Find kG with the arm level
+
+Set kP, kI, kD and the other feedforward gains to 0. Hold the arm level and raise `closedloop/feedforward/kG` until the arm stays where you leave it. Level is where gravity pulls hardest, so a kG found there is right at every angle.
+{% endstep %}
+
+{% step %}
+#### Find kS
+
+Raise `closedloop/feedforward/kS` until the arm is just about to move, then back off a little.
+{% endstep %}
+
+{% step %}
+#### Set the profile
+
+Choose a maximum velocity and acceleration the arm can really reach. If it cannot keep up, the profile is too fast, not the gains too low.
+{% endstep %}
+
+{% step %}
+#### Find kV
+
+Run a long move and watch the setpoint velocity against `mechanism/velocity` in the middle of it. Raise kV until they match.
+{% endstep %}
+
+{% step %}
+#### Raise kP, then add kD
+
+Raise kP until the arm reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots.
+{% endstep %}
+
+{% step %}
+#### Check it everywhere
+
+Test near both limits, straight up, level, and holding a game piece. If the loaded arm needs different gains, put them in a second [slot](editor/config/closed-loop-control.md#slots).
+{% endstep %}
+{% endstepper %}
+
+[Tuning order](live-tuning/README.md#tuning-order) has the same steps with the NetworkTables keys to watch.
+
+### Tuning an arm with a brake
+
+Tune the arm completely with the brake released and left alone, following the steps above. Then add the brake:
+
+{% stepper %}
+{% step %}
+#### Time the brake
+
+Command the brake on and off with the arm supported, and time how long it takes to bite and to let go. Those are the waits you need.
+{% endstep %}
+
+{% step %}
+#### Check the release
+
+Run a move. If the arm lurches at the start, the motor started before the brake let go: wait longer after releasing.
+{% endstep %}
+
+{% step %}
+#### Check the engage
+
+Watch `mechanism/position` as the brake goes on. If the arm sags, the motor let go before the brake held: engage the brake first, wait, then set the output to zero.
+{% endstep %}
+
+{% step %}
+#### Check the rest
+
+With the arm braked, `current/stator` should be close to zero. If it is not, something is still commanding the motor: look for a default command that holds a setpoint.
+{% endstep %}
+
+{% step %}
+#### Loosen the tolerance if it hunts
+
+A brake holds wherever it bites. If `runTo` takes a long time to finish, widen its tolerance: the last fraction of a degree is not worth the wait when the brake will hold it anyway.
+{% endstep %}
+{% endstepper %}
+
+## ArmConfig options
 
 Every `ArmConfig` option is on the [ArmConfig](mechanism-configs/arm-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
 

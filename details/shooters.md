@@ -208,7 +208,86 @@ A shot is two flywheels working together: the shooter spins up, and a feeder pus
 
 A flywheel that reaches low speeds but not high ones, or that slows down more with every shot, is usually short of power and not badly tuned: see [when tuning does not help](live-tuning/README.md#when-tuning-does-not-help).
 
-## Configuring a flywheel
+## Configuring and tuning a flywheel, step by step
+
+Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
+
+{% hint style="danger" %}
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+{% endhint %}
+
+### Configure it
+
+{% stepper %}
+{% step %}
+#### Set the gearing
+
+Give the reduction from the motor to the wheel with [`withGearing`](editor/config/gearing-and-units.md#withgearing). An overdrive, where the wheel spins faster than the motor, is a number below 1.
+{% endstep %}
+
+{% step %}
+#### Choose the positive direction
+
+Positive should be the direction that shoots or intakes. Flip [`withMotorInverted`](editor/config/motor-basics.md#withmotorinverted) if it is not.
+{% endstep %}
+
+{% step %}
+#### Let it coast
+
+Use `MotorMode.COAST` so the wheel is not braked to a stop every time the command ends, and set a [stator current limit](editor/config/limits-and-protection.md#current-limits).
+{% endstep %}
+
+{% step %}
+#### Set the diameter
+
+Set [`withDiameter`](mechanism-configs/flywheel-config.md#withdiameter) if you want to ask for surface speeds.
+{% endstep %}
+
+{% step %}
+#### Describe it to the simulator
+
+Set [`withMomentOfInertia`](editor/config/simulation.md#withmomentofinertia) on the motor config.
+{% endstep %}
+{% endstepper %}
+
+### Tune it
+
+{% stepper %}
+{% step %}
+#### Find kS
+
+Set kP, kI and kD to 0. Raise `closedloop/feedforward/kS` until the wheel is just about to turn.
+{% endstep %}
+
+{% step %}
+#### Find kV
+
+Ask for a speed in the middle of your range. Raise `closedloop/feedforward/kV` until `mechanism/velocity` settles on the setpoint with no help from kP. Check it at a low and a high speed too.
+{% endstep %}
+
+{% step %}
+#### Add a little kP
+
+Raise kP until the wheel recovers quickly after a game piece goes through. Too much makes the speed ripple.
+{% endstep %}
+
+{% step %}
+#### Choose the tolerance
+
+Shoot at the edges of your `near(...)` tolerance and see whether the shots still land. Use the widest tolerance that does, so the shooter is ready sooner.
+{% endstep %}
+
+{% step %}
+#### Add a ramp only if you need one
+
+If spinning up browns out the robot, add a [velocity profile](editor/config/motion-profiles.md#a-velocity-profile) or a lower current limit, and test it against the [battery simulation](../understanding/battery-simulation.md).
+{% endstep %}
+{% endstepper %}
+
+[Tuning order](live-tuning/README.md#tuning-order) has the same steps with the NetworkTables keys to watch.
+
+
+## FlyWheelConfig options
 
 Every `FlyWheelConfig` option is on the [FlyWheelConfig](mechanism-configs/flywheel-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
 

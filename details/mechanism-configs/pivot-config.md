@@ -4,9 +4,9 @@ icon: rotate
 
 # PivotConfig
 
-A pivot is a rotating mechanism that gravity does not pull on: a turret, or a wrist that is balanced. The [Turrets/Wrists](../turrets-wrists.md) page shows a complete pivot.
+A pivot is a rotating mechanism such as a turret or a wrist. It is different from an arm because it does not account for gravity. The [Turrets/Wrists](../turrets-wrists.md) page shows a complete pivot.
 
-<figure><img src="../../.gitbook/assets/mech-pivot-vs-arm.png" alt="Two panels. An arm swings up and down, gravity pulls on it, it needs kG to hold and uses ArmFeedforward. A pivot, seen from above, turns about a vertical axis or is balanced, needs no kG and uses SimpleMotorFeedforward."><figcaption><p>Use an Arm when gravity matters and a Pivot when it does not.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mech-pivot-vs-arm.png" alt="Two panels. An Arm accounts for gravity: it swings up and down, needs kG to hold and uses ArmFeedforward. A Pivot does not account for gravity: it is for a vertical axis or a balanced wrist, has no kG and uses SimpleMotorFeedforward."><figcaption><p>An Arm accounts for gravity. A Pivot does not.</p></figcaption></figure>
 
 `PivotConfig` has only the [shared options](shared-options.md): telemetry, hard limits, color and position. Everything else about a pivot is on its motor config.
 
@@ -24,7 +24,7 @@ new PivotConfig()
 | A turret that can spin all the way round | [`withContinuousWrapping`](../editor/config/closed-loop-control.md#withcontinuouswrapping) on the motor config, and no soft limits |
 | A turret limited by its wiring | [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) on the motor config |
 | The pivot's weight in simulation | [`withMomentOfInertia`](../editor/config/simulation.md#withmomentofinertia) on the motor config |
-| Feedforward | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward): there is no gravity to hold against |
+| Feedforward | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward): a pivot has no `kG` |
 | A turret geared to turn more than once | [EasyCRT](../easycrt.md) |
 
 

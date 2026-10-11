@@ -4,15 +4,17 @@ icon: rotate
 
 # Turrets/Wrists
 
-Turrets and wrists are both a `Pivot` in YAMS: a mechanism that turns to an angle and is not pulled on by gravity.
+Turrets and wrists are both a `Pivot` in YAMS: a mechanism that turns to an angle. A `Pivot` is different from an `Arm` because it does not account for gravity.
 
 ## How a pivot works
 
-<figure><img src="../.gitbook/assets/mech-pivot-vs-arm.png" alt="Two panels. An arm swings up and down, gravity pulls on it, it needs kG to hold and uses ArmFeedforward. A pivot, seen from above, turns about a vertical axis or is balanced, needs no kG and uses SimpleMotorFeedforward."><figcaption><p>A pivot is an arm that gravity does not pull on.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/mech-pivot-vs-arm.png" alt="Two panels. An Arm accounts for gravity: it swings up and down, needs kG to hold and uses ArmFeedforward. A Pivot does not account for gravity: it is for a vertical axis or a balanced wrist, has no kG and uses SimpleMotorFeedforward."><figcaption><p>An Arm accounts for gravity. A Pivot does not.</p></figcaption></figure>
 
-A pivot is controlled exactly like an arm, with one difference: there is no gravity term. A turret turns about a vertical axis, and a balanced wrist has its weight centered on its shaft, so neither needs voltage just to stay where it is. That makes a pivot simpler to tune, and it is why a pivot uses [`SimpleMotorFeedforward`](editor/config/feedforward.md#withfeedforward) where an arm uses `ArmFeedforward`.
+A pivot is controlled exactly like an arm, with one difference: a `Pivot` does not account for gravity. It has no `kG`, its simulation applies no gravity, and it uses [`SimpleMotorFeedforward`](editor/config/feedforward.md#withfeedforward) where an arm uses `ArmFeedforward`.
 
-If the mechanism droops when the power is off, gravity does matter: use an [Arm](arms.md).
+That is the right model for a turret, which turns about a vertical axis, and for a wrist that is balanced about its shaft: neither needs voltage just to stay where it is. It also makes a pivot simpler to tune.
+
+If your mechanism needs voltage to hold itself up, it needs gravity accounted for: use an [Arm](arms.md).
 
 <figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
 
@@ -264,7 +266,7 @@ PivotConfig config = new PivotConfig()
 
 **Use it** together with the arm it rides on. Keep the wrist in its own subsystem, and move the two from a command that owns neither, so each keeps its own default command.
 
-A `Pivot` has no gravity term, so it suits a wrist that is balanced about its shaft. A heavy, unbalanced wrist is pulled on by gravity by an amount that depends on the arm's angle as well as its own, which neither `Pivot` nor `Arm` models. Balance the wrist if you can. If you cannot, expect to need more `kP`, and check it holds at every arm angle.
+A `Pivot` does not account for gravity, so it suits a wrist that is balanced about its shaft. A heavy, unbalanced wrist is pulled on by gravity by an amount that depends on the arm's angle as well as its own, which neither `Pivot` nor `Arm` models. Balance the wrist if you can. If you cannot, expect to need more `kP`, and check it holds at every arm angle.
 {% endtab %}
 {% endtabs %}
 
@@ -272,7 +274,97 @@ A `Pivot` has no gravity term, so it suits a wrist that is balanced about its sh
 
 How heavy the pivot is to turn is set on the motor config with [`withMomentOfInertia`](editor/config/simulation.md#withmomentofinertia). It only matters in simulation, where it also decides the current the pivot draws from the [battery simulation](../understanding/battery-simulation.md).
 
-## Configuring a pivot
+## Configuring and tuning a pivot, step by step
+
+Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
+
+{% hint style="danger" %}
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+{% endhint %}
+
+### Configure it
+
+{% stepper %}
+{% step %}
+#### Set the gearing
+
+Give the reduction from the motor to the pivot with [`withGearing`](editor/config/gearing-and-units.md#withgearing).
+{% endstep %}
+
+{% step %}
+#### Choose the positive direction
+
+For a turret, counter-clockwise seen from above is positive, to match the robot's heading. Apply a small positive voltage and flip [`withMotorInverted`](editor/config/motor-basics.md#withmotorinverted) if it turns the other way.
+{% endstep %}
+
+{% step %}
+#### Choose where zero is
+
+A turret's zero is usually pointing at the robot's front. A wrist's zero is usually in line with its arm. Set an absolute encoder's [zero offset](editor/config/encoders.md#withexternalencoderzerooffset), or a [starting position](editor/config/encoders.md#withstartingposition).
+{% endstep %}
+
+{% step %}
+#### Wrap it or limit it
+
+A turret that can spin forever gets [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping) and no soft limits. Everything else gets [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), inside [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits).
+{% endstep %}
+
+{% step %}
+#### Describe it to the simulator
+
+Set [`withMomentOfInertia`](editor/config/simulation.md#withmomentofinertia) on the motor config.
+{% endstep %}
+{% endstepper %}
+
+### Tune it
+
+A `Pivot` does not account for gravity, so there is no kG to find.
+
+{% stepper %}
+{% step %}
+#### Find kS
+
+Set kP, kI and kD to 0. Raise `closedloop/feedforward/kS` until the pivot is just about to move, in each direction, and use the smaller value.
+{% endstep %}
+
+{% step %}
+#### Set the profile
+
+Choose a maximum velocity and acceleration the pivot can really reach.
+{% endstep %}
+
+{% step %}
+#### Find kV
+
+Run a long move and raise kV until `mechanism/velocity` matches the setpoint velocity in the middle of it.
+{% endstep %}
+
+{% step %}
+#### Raise kP, then add kD
+
+Raise kP until it reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots.
+{% endstep %}
+{% endstepper %}
+
+### What changes for each kind
+
+{% tabs %}
+{% tab title="Turret" %}
+* **Check both directions.** Cables and hoses drag more one way than the other, and more near the end of the travel. Tune kS and kP where the drag is worst.
+* **Tune it while tracking.** A turret that aims at a target has a setpoint that never stops moving. Drive and spin the robot while it tracks, and raise kV and kP until it stays on target.
+* **Check the seam.** With continuous wrapping, command a move across the wrapping point and check it takes the short way.
+* **Check the unwind.** With soft limits, command an angle just past a limit and check the turret goes the long way round to reach it, or stops at the limit.
+{% endtab %}
+
+{% tab title="Wrist" %}
+* **Tune it at several arm angles.** Because a `Pivot` does not account for gravity, an unbalanced wrist is pushed around by it as the arm moves. Tune with the arm level, where that is worst, then check with the arm up and down.
+* **Raise kP to hold against gravity** if you cannot balance the wrist. Expect a small steady error that changes with the arm's angle.
+* **Tune it holding a game piece**, which changes both its weight and its balance.
+* **Check the limits with the arm in every position.** A wrist that clears the robot with the arm up may hit it with the arm down.
+{% endtab %}
+{% endtabs %}
+
+## PivotConfig options
 
 Every `PivotConfig` option is on the [PivotConfig](mechanism-configs/pivot-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
 

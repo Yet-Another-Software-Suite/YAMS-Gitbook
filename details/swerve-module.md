@@ -43,6 +43,52 @@ import yams.core.mechanisms.swerve.SwerveModule;
 
 Module states are WPILib 2027 `SwerveModuleVelocity`s (the 2027 name for `SwerveModuleState`).
 
+## Configuring and tuning a swerve module, step by step
+
+{% stepper %}
+{% step %}
+#### Configure the drive motor
+
+Set its gearing and wheel size, a `SimpleMotorFeedforward` and a stator current limit: see [The two motors](mechanism-configs/swerve-module-config.md#the-two-motors).
+{% endstep %}
+
+{% step %}
+#### Configure the azimuth motor
+
+Set its gearing, position gains and a stator current limit. The azimuth turns all the way round, so it usually has [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping).
+{% endstep %}
+
+{% step %}
+#### Set the location
+
+Give the module's position from the center of the robot: see [`withLocation`](mechanism-configs/swerve-module-config.md#withlocation). Front is positive X and left is positive Y.
+{% endstep %}
+
+{% step %}
+#### Find the absolute encoder offset
+
+Point the wheel forward with its bevel gear to the left, read the absolute encoder, and use that as the offset: see [The absolute encoder](mechanism-configs/swerve-module-config.md#the-absolute-encoder). Every module has its own.
+{% endstep %}
+
+{% step %}
+#### Tune the azimuth
+
+Step the wheel's angle and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/README.md#azimuth-motors).
+{% endstep %}
+
+{% step %}
+#### Tune the drive
+
+Find the drive's `kS` and `kV`, then add a little `kP`: see [Drive motors](live-tuning/README.md#drive-motors).
+{% endstep %}
+
+{% step %}
+#### Add the coupling ratio if the odometry drifts
+
+If the robot's position creeps when the wheels only steer, set [`withCouplingRatio`](mechanism-configs/swerve-module-config.md#withcouplingratio).
+{% endstep %}
+{% endstepper %}
+
 ## A Fully Configured Module
 
 Here's every `SwerveModuleConfig` option from this page in one place, the sections below explain each call:

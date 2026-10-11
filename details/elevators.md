@@ -302,7 +302,151 @@ A spring that helps lift the carriage changes what `kG` should be. See [Elevator
 
 Hard limits are where the physical stops are, and the simulated elevator cannot pass them. Soft limits are where the motor controller keeps the real elevator. Set both, with the soft limits a little inside: see [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits).
 
-## Configuring an elevator
+## Configuring and tuning an elevator, step by step
+
+Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
+
+{% hint style="danger" %}
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+{% endhint %}
+
+### Configure it
+
+{% stepper %}
+{% step %}
+#### Set the gearing
+
+Give the reduction from the motor to the drum, sprocket or pinion with [`withGearing`](editor/config/gearing-and-units.md#withgearing).
+{% endstep %}
+
+{% step %}
+#### Set how the motor moves it
+
+Give the drum radius, the chain pitch and teeth, or the pinion's pitch circumference: see [how the motor moves it](#how-the-motor-moves-it) below.
+{% endstep %}
+
+{% step %}
+#### Set how the stages are rigged
+
+Add `withCascadingElevatorStages` for a cascading elevator and nothing for a single stage or continuous one: see [how the stages are rigged](#how-the-stages-are-rigged).
+{% endstep %}
+
+{% step %}
+#### Make up positive
+
+Apply a small positive voltage. If the carriage goes down, flip [`withMotorInverted`](editor/config/motor-basics.md#withmotorinverted).
+{% endstep %}
+
+{% step %}
+#### Check the distance
+
+Command a move of a known distance, such as 0.5 m, and measure the carriage with a tape. If it is off by a constant factor, fix the circumference or the stage count before going any further.
+{% endstep %}
+
+{% step %}
+#### Set where it starts
+
+Decide what height 0 means, usually the carriage fully down, and set [`withStartingPosition`](editor/config/encoders.md#withstartingposition) to where the carriage is when the robot turns on.
+{% endstep %}
+
+{% step %}
+#### Set the limits
+
+Put [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits) at the stops and [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits) a centimeter or two inside them.
+{% endstep %}
+
+{% step %}
+#### Describe it to the simulator
+
+Set [`withCarriageWeight`](mechanism-configs/elevator-config.md#withcarriageweight), and `withHorizontalElevator()` for a level slide.
+{% endstep %}
+{% endstepper %}
+
+### Tune it
+
+{% stepper %}
+{% step %}
+#### Find kG and kS from two voltages
+
+Set kP, kI, kD and kS to 0, so kG is the only voltage reaching the motor. Raise it until the carriage just creeps up, and write it down. Lower it until the carriage just creeps down, and write that down. Then `kG = (up + down) / 2` and `kS = (up - down) / 2`.
+{% endstep %}
+
+{% step %}
+#### Check it holds
+
+With only the feedforward, the carriage should stay where you leave it at the bottom, the middle and the top.
+{% endstep %}
+
+{% step %}
+#### Set the profile
+
+Choose a maximum velocity and acceleration the elevator can really reach.
+{% endstep %}
+
+{% step %}
+#### Find kV
+
+Run a long move and raise kV until `measurement/velocity` matches the setpoint velocity in the middle of it.
+{% endstep %}
+
+{% step %}
+#### Raise kP, then add kD
+
+Raise kP until it reaches the setpoint quickly and stops cleanly. Add a little kD if it overshoots or bounces.
+{% endstep %}
+
+{% step %}
+#### Check it loaded
+
+Repeat the hold check with a game piece on the carriage.
+{% endstep %}
+{% endstepper %}
+
+[Tuning order](live-tuning/README.md#tuning-order) has the same steps with the NetworkTables keys to watch.
+
+### What changes for each kind
+
+{% tabs %}
+{% tab title="Rack and pinion" %}
+A level rack and pinion slide has no weight to hold, so it tunes differently:
+
+* **kG is 0.** Skip the two voltage test for kG. Find kS on its own: the voltage at which the slide just starts to move, in either direction.
+* **kS matters more.** A slide's resistance is nearly all friction, so a good kS does most of the work at low speed.
+* **Expect backlash.** The gap between the pinion and the rack means the carriage can move a little with the motor still. Do not raise kP to chase it, or the slide will buzz back and forth across the gap. Use a `runTo` tolerance wider than the backlash.
+* **Simulate it level.** Use `withHorizontalElevator()`, and give it [its own simulation gains](editor/simulation-only-pid-+-feedforward.md), because the simulation has no friction or backlash.
+
+A rack and pinion that lifts vertically is tuned like any other elevator, with kG.
+{% endtab %}
+
+{% tab title="Cascading" %}
+Everything is measured at the carriage, which moves several times further than the stage the motor pulls:
+
+* **Check the stage count first.** The distance check in the configuration steps is what catches a wrong `withCascadingElevatorStages`.
+* **Expect a larger kG.** The motor lifts the carriage through a mechanical disadvantage, and lifts the moving stages as well, so it needs more voltage to hold than a single stage with the same carriage.
+* **Profile limits are the carriage's.** A maximum velocity of 1.5 m/s is the carriage moving at 1.5 m/s. The first stage moves at a fraction of that.
+* **Watch the current.** Because of the disadvantage, a cascading elevator draws more current for the same load. If it cannot reach the top, see [when tuning does not help](live-tuning/README.md#when-tuning-does-not-help).
+{% endtab %}
+
+{% tab title="Continuous" %}
+A continuous elevator is configured like a single stage, but its stages rise in whatever order friction decides:
+
+* **Check kG at several heights.** The weight being lifted changes as each stage starts to move. If the carriage holds at the bottom but drifts higher up, use the kG that holds best in the range you use most and let kP hold the rest.
+* **Expect a bump** as each stage picks up or sets down. A little kD smooths it.
+{% endtab %}
+
+{% tab title="With a constant force spring" %}
+A constant force spring does part of the motor's job, so kG is whatever is left over. It can be small, zero, or negative when the spring is stronger than the carriage.
+
+* **Measure kG, do not calculate it.** Use the two voltage test in the tuning steps. With a spring, the voltage that just moves the carriage down is often negative.
+* **Check the hold at the bottom, middle and top.** The springs are not perfectly constant.
+* **Give it simulation gains.** The simulation knows nothing about the spring, so the real gains will not hold the simulated carriage. Set [simulation only gains](editor/simulation-only-pid-+-feedforward.md) for it.
+* **The spring does not change kV, kP or kD.**
+
+[Elevators with a constant force spring](live-tuning/README.md#elevators-with-a-constant-force-spring) walks through the measurement with graphics.
+{% endtab %}
+{% endtabs %}
+
+## ElevatorConfig options
 
 Every `ElevatorConfig` option is on the [ElevatorConfig](mechanism-configs/elevator-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
 

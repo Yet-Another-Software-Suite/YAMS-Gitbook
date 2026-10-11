@@ -24,7 +24,7 @@ Arm arm = new Arm(config, motor);
 | [Shared options](shared-options.md) | all four below | Telemetry, hard limits, and how the mechanism is drawn. |
 | [ArmConfig](arm-config.md) | `ArmConfig` | Arms that swing against gravity. |
 | [ElevatorConfig](elevator-config.md) | `ElevatorConfig` | Elevators and linear slides. |
-| [PivotConfig](pivot-config.md) | `PivotConfig` | Turrets and wrists that gravity does not pull on. |
+| [PivotConfig](pivot-config.md) | `PivotConfig` | Turrets and wrists. A pivot does not account for gravity. |
 | [FlyWheelConfig](flywheel-config.md) | `FlyWheelConfig` | Shooters, rollers, intakes and anything else that spins. |
 | [SwerveDriveConfig](swerve-drive-config.md) | `SwerveDriveConfig` | The whole swerve drive base. |
 | [SwerveModuleConfig](swerve-module-config.md) | `SwerveModuleConfig` | One swerve module. |
