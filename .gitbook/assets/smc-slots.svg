@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 298" width="760" height="298" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Closed loop slots</title>
+<desc id="d">Four slots, SLOT_0 to SLOT_3, each holding its own PID gains and feedforward, for example one for holding nothing, one for holding a game piece and one for climbing. SLOT_0 is in use. SLOT_3 is not available on TalonFX or TalonFXS. motor.setClosedLoopSlot switches slot at once.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="298" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="266.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Closed loop slots</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Up to four sets of gains and feedforward stored on one motor.</text>
+<rect x="34.0" y="96.0" width="164.0" height="88.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="2.2" />
+<text x="46.0" y="118.0" font-size="12" font-weight="700" text-anchor="start" fill="#c2630b" font-family="Consolas, Menlo, monospace">SLOT_0</text>
+<text x="46.0" y="138.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >holding nothing</text>
+<text x="46.0" y="160.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">kP 4  kG 0.3</text>
+<text x="46.0" y="176.0" font-size="10" font-weight="700" text-anchor="start" fill="#c2630b" >in use</text>
+<rect x="210.0" y="96.0" width="164.0" height="88.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="222.0" y="118.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">SLOT_1</text>
+<text x="222.0" y="138.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >holding a game piece</text>
+<text x="222.0" y="160.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">kP 6  kG 0.5</text>
+<text x="222.0" y="176.0" font-size="10" font-weight="700" text-anchor="start" fill="#c2630b" ></text>
+<rect x="386.0" y="96.0" width="164.0" height="88.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="398.0" y="118.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">SLOT_2</text>
+<text x="398.0" y="138.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >climbing</text>
+<text x="398.0" y="160.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">kP 12 kG 1.4</text>
+<text x="398.0" y="176.0" font-size="10" font-weight="700" text-anchor="start" fill="#c2630b" ></text>
+<rect x="562.0" y="96.0" width="164.0" height="88.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="574.0" y="118.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">SLOT_3</text>
+<text x="574.0" y="138.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >spare</text>
+<text x="574.0" y="160.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace"></text>
+<text x="574.0" y="176.0" font-size="10" font-weight="700" text-anchor="start" fill="#c2630b" ></text>
+<rect x="562.0" y="96.0" width="164.0" height="88.0" rx="8" fill="none" stroke="#d64545" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="644.0" y="202.0" font-size="10" font-weight="700" text-anchor="middle" fill="#d64545" >not on TalonFX or TalonFXS</text>
+<text x="34.0" y="228.0" font-size="11" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">motor.setClosedLoopSlot(ClosedLoopControllerSlot.SLOT_1);</text>
+<text x="34.0" y="248.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >Each slot has its own PID gains and its own feedforward. Switching slots takes effect at once.</text>
+<text x="34.0" y="274.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Use slots when one mechanism needs different gains at different times, not for different mechanisms.</text>
+</svg>

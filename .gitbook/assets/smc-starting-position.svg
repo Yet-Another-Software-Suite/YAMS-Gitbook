@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 298" width="760" height="298" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withStartingPosition</title>
+<desc id="d">Two panels with an arm that really is at 90 degrees when the robot turns on. With no starting position the encoder says 0 degrees and every angle is 90 degrees wrong. With withStartingPosition(Degrees.of(90)) the encoder says 90 degrees and angles match the real arm.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="298" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="266.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withStartingPosition</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >What the built in encoder is set to when the robot turns on.</text>
+<rect x="34.0" y="84.0" width="338.0" height="164.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#52606d" >No starting position</text>
+<line x1="90.0" y1="214.0" x2="190.0" y2="214.0" stroke="#cbd2d9" stroke-width="2" stroke-linecap="round"/>
+<line x1="130.0" y1="214.0" x2="130.0" y2="128.0" stroke="#3e6da8" stroke-width="9" stroke-linecap="round"/>
+<circle cx="130.0" cy="214.0" r="7" fill="#1f2933" stroke="none" stroke-width="1.6" />
+<text x="214.0" y="132.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >The arm really is at 90 deg</text>
+<text x="214.0" y="150.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >when the robot turns on.</text>
+<text x="214.0" y="184.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >The encoder says</text>
+<text x="214.0" y="206.0" font-size="15" font-weight="700" text-anchor="start" fill="#d64545" font-family="Consolas, Menlo, monospace">0 deg</text>
+<text x="214.0" y="226.0" font-size="10" font-weight="700" text-anchor="start" fill="#d64545" >every angle is 90 deg wrong</text>
+<rect x="388.0" y="84.0" width="338.0" height="164.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="400.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >withStartingPosition(Degrees.of(90))</text>
+<line x1="444.0" y1="214.0" x2="544.0" y2="214.0" stroke="#cbd2d9" stroke-width="2" stroke-linecap="round"/>
+<line x1="484.0" y1="214.0" x2="484.0" y2="128.0" stroke="#3e6da8" stroke-width="9" stroke-linecap="round"/>
+<circle cx="484.0" cy="214.0" r="7" fill="#1f2933" stroke="none" stroke-width="1.6" />
+<text x="568.0" y="132.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >The arm really is at 90 deg</text>
+<text x="568.0" y="150.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >when the robot turns on.</text>
+<text x="568.0" y="184.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >The encoder says</text>
+<text x="568.0" y="206.0" font-size="15" font-weight="700" text-anchor="start" fill="#147d6f" font-family="Consolas, Menlo, monospace">90 deg</text>
+<text x="568.0" y="226.0" font-size="10" font-weight="700" text-anchor="start" fill="#147d6f" >angles match the real arm</text>
+<text x="34.0" y="274.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >A relative encoder cannot know where it woke up. Tell it, and always start the robot with the mechanism there.</text>
+</svg>

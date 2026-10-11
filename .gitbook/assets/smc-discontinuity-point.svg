@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 310" width="760" height="310" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withExternalEncoderDiscontinuityPoint</title>
+<desc id="d">Two number lines. With a discontinuity point of 1 rotation the encoder reads 0 to 360 degrees, for mechanisms that only use positive angles. With 0.5 rotations it reads minus 180 to 180 degrees, for mechanisms that move either side of zero. The reading jumps from one end to the other at the ends of the range.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="310" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="278.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withExternalEncoderDiscontinuityPoint</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Where an absolute encoder's reading wraps around.</text>
+<text x="34.0" y="108.0" font-size="11" font-weight="700" text-anchor="start" fill="#3e6da8" >Rotations.of(1): reads 0 to 1 rotation</text>
+<rect x="34.0" y="122.0" width="692.0" height="18.0" rx="4" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.4" />
+<text x="34.0" y="156.0" font-size="10" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">0 deg</text>
+<text x="726.0" y="156.0" font-size="10" font-weight="400" text-anchor="end" fill="#1f2933" font-family="Consolas, Menlo, monospace">360 deg</text>
+<text x="380.0" y="156.0" font-size="10" font-weight="400" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">180 deg</text>
+<line x1="380.0" y1="122.0" x2="380.0" y2="140.0" stroke="#3e6da8" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="3 3"/>
+<text x="726.0" y="108.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >for mechanisms that only use positive angles</text>
+<line x1="34.0" y1="116.0" x2="34.0" y2="146.0" stroke="#d64545" stroke-width="2.4" stroke-linecap="round"/>
+<line x1="726.0" y1="116.0" x2="726.0" y2="146.0" stroke="#d64545" stroke-width="2.4" stroke-linecap="round"/>
+<text x="34.0" y="186.0" font-size="11" font-weight="700" text-anchor="start" fill="#147d6f" >Rotations.of(0.5): reads -0.5 to 0.5 rotation</text>
+<rect x="34.0" y="200.0" width="692.0" height="18.0" rx="4" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.4" />
+<text x="34.0" y="234.0" font-size="10" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">-180 deg</text>
+<text x="726.0" y="234.0" font-size="10" font-weight="400" text-anchor="end" fill="#1f2933" font-family="Consolas, Menlo, monospace">180 deg</text>
+<text x="380.0" y="234.0" font-size="10" font-weight="400" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">0 deg</text>
+<line x1="380.0" y1="200.0" x2="380.0" y2="218.0" stroke="#147d6f" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="3 3"/>
+<text x="726.0" y="186.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >for mechanisms that move either side of zero</text>
+<line x1="34.0" y1="194.0" x2="34.0" y2="224.0" stroke="#d64545" stroke-width="2.4" stroke-linecap="round"/>
+<line x1="726.0" y1="194.0" x2="726.0" y2="224.0" stroke="#d64545" stroke-width="2.4" stroke-linecap="round"/>
+<text x="34.0" y="262.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#d64545" >The red ends are the discontinuity: the reading jumps from one end to the other there.</text>
+<text x="34.0" y="286.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Choose the range so the jump is somewhere the mechanism never goes.</text>
+</svg>

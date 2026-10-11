@@ -156,6 +156,8 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 
 ## Feature support matrix
 
+This is every option against every motor controller. What each option does, with a graphic and an example, is on the [SmartMotorControllerConfig](config/README.md) pages.
+
 ### Legend
 
 | Symbol | Meaning                         |
@@ -171,7 +173,7 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 | Feature                   | TalonFX | TalonFXS | SparkMax/Flex | Nova |
 | ------------------------- | ------- | -------- | ------------- | ---- |
 | Motor Inversion           | ✅       | ✅        | ✅             | ✅ |
-| Encoder Inversion         | ✅       | ✅        | ✅             | ❌ |
+| Encoder Inversion         | ❌       | ✅        | ❌             | ❌ |
 | Zero Power Mode (Brake/Coast)   | ✅       | ✅        | ✅             | ✅ |
 | Reset Previous Config     | ✅       | ✅        | ✅             | ✅ |
 | Vendor Config Passthrough | ✅       | ✅        | ✅             | ✅ |
@@ -224,8 +226,9 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 | ----------------------- | ------------ | ------------ | ------------------------------------ | ---- |
 | PID Controller          | ✅               | ✅               | ✅                                                      | ⚠️ (SystemCore)                 |
 | LQR Controller          | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore)                                        | ⚠️ (SystemCore)                 |
-| Closed Loop Tolerance   | ✅               | ✅               | ✅                                                      | ✅ (not with LQR)                |
+| Closed Loop Tolerance   | ❌               | ❌               | ✅ (not with LQR)                                       | ✅ (not with LQR)                |
 | Control Period Override | ❌               | ❌               | ⚠️ (requires an Exponential Profile or LQR controller) | ⚠️ (requires closed loop mode) |
+| Closed Loop Slots       | ⚠️ (`SLOT_0` to `SLOT_2`) | ⚠️ (`SLOT_0` to `SLOT_2`) | ✅ | ✅ |
 
 {% hint style="warning" %}
 **LQR Controller Execution**: LQR is **not natively supported** by any motor controller hardware. When configured, the closed loop control runs on the **SystemCore**: the wrapper starts a `Notifier` that calls `SmartMotorController.iterateClosedLoopController()` every closed loop control period (20 ms unless you set `withClosedLoopControlPeriod`), so there is nothing to call yourself. See [LQR Controllers](lqr-controllers.md) for details.

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 316" width="760" height="316" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withSimClosedLoopController and withSimFeedforward</title>
+<desc id="d">A diagram. On the real robot the closed loop controller uses the gains from withClosedLoopController and withFeedforward to drive the real mechanism, which has friction, backlash and flex. In simulation it uses the gains from withSimClosedLoopController and withSimFeedforward to drive a simulated mechanism, an ideal motor and load.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="316" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="284.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withSimClosedLoopController and withSimFeedforward</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >A second set of gains that is only used in simulation.</text>
+<rect x="34.0" y="110.0" width="200.0" height="70.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="134.0" y="135.2" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >On the real robot</text>
+<text x="134.0" y="150.2" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withClosedLoopController</text>
+<text x="134.0" y="165.2" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withFeedforward</text>
+<rect x="34.0" y="196.0" width="200.0" height="70.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="134.0" y="221.2" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >In simulation</text>
+<text x="134.0" y="236.2" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withSimClosedLoopController</text>
+<text x="134.0" y="251.2" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withSimFeedforward</text>
+<rect x="310.0" y="153.0" width="150.0" height="70.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="385.0" y="184.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >The closed loop</text>
+<text x="385.0" y="202.0" font-size="12.5" font-weight="400" text-anchor="middle" fill="#52606d" >controller</text>
+<line x1="238.0" y1="145.0" x2="306.0" y2="176.0" stroke="#3e6da8" stroke-width="2" stroke-linecap="round" marker-end="url(#ab)"/>
+<line x1="238.0" y1="231.0" x2="306.0" y2="200.0" stroke="#6b46c1" stroke-width="2" stroke-linecap="round" marker-end="url(#ap)"/>
+<rect x="536.0" y="110.0" width="190.0" height="70.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="631.0" y="142.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Real mechanism</text>
+<text x="631.0" y="157.8" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >friction, backlash, flex</text>
+<rect x="536.0" y="196.0" width="190.0" height="70.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="631.0" y="228.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Simulated mechanism</text>
+<text x="631.0" y="243.8" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >an ideal motor and load</text>
+<line x1="464.0" y1="176.0" x2="532.0" y2="145.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="464.0" y1="200.0" x2="532.0" y2="231.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<text x="34.0" y="292.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >If you give no simulation gains, simulation uses the real ones. Give them when the two need different tuning.</text>
+</svg>

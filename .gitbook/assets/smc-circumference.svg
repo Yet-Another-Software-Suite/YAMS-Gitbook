@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 316" width="760" height="316" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withMechanismCircumference</title>
+<desc id="d">A drum with its radius marked. One mechanism rotation is one circumference of travel, two times pi times the radius. The same value can be given with withMechanismCircumference, withWheelRadius or withWheelDiameter, withDrumRadius, or withDrumRadius with a chain pitch and tooth count.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="316" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="284.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withMechanismCircumference</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >How far the mechanism travels for one rotation of its output. Only for mechanisms that move in a line.</text>
+<circle cx="130.0" cy="178.0" r="50" fill="#d5f0ea" stroke="#147d6f" stroke-width="2.4" />
+<circle cx="130.0" cy="178.0" r="5" fill="#1f2933" stroke="none" stroke-width="1.6" />
+<line x1="130.0" y1="178.0" x2="180.0" y2="178.0" stroke="#c2630b" stroke-width="2.2" stroke-linecap="round"/>
+<text x="155.0" y="170.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#c2630b" >radius</text>
+<path d="M188.3,156.8 A62,62 0 1 0 188.3,199.2" fill="none" stroke="#6b46c1" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ap)"/>
+<text x="130.0" y="262.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >one mechanism rotation</text>
+<line x1="230.0" y1="240.0" x2="449.9" y2="240.0" stroke="#6b46c1" stroke-width="3" stroke-linecap="round"/>
+<text x="230.0" y="228.0" font-size="11" font-weight="700" text-anchor="start" fill="#6b46c1" >= one circumference of travel</text>
+<text x="230.0" y="258.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >2 x pi x radius</text>
+<rect x="250.0" y="94.0" width="476.0" height="112.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" />
+<text x="264.0" y="116.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Four ways to say the same thing</text>
+<text x="264.0" y="138.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">withMechanismCircumference(Meters.of(0.25))</text>
+<text x="264.0" y="155.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">withWheelRadius(...)   withWheelDiameter(...)</text>
+<text x="264.0" y="172.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">withDrumRadius(Inches.of(1))</text>
+<text x="264.0" y="189.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">withDrumRadius(Inches.of(0.25), 22)  // chain pitch, teeth</text>
+<text x="34.0" y="292.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Setting it makes the motor a distance mechanism: positions in meters as well as rotations.</text>
+</svg>

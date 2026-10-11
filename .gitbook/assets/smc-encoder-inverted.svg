@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 284" width="760" height="284" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withEncoderInverted and withExternalEncoderInverted</title>
+<desc id="d">Two panels. When the encoder reading goes up as the motor output is positive, the PID pushes toward the setpoint. When the encoder reading goes down instead, the PID pushes away from the setpoint and the mechanism runs off.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="284" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="252.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withEncoderInverted and withExternalEncoderInverted</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >An encoder must count up when the motor drives in its positive direction.</text>
+<rect x="34.0" y="84.0" width="338.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >Encoder agrees with the motor</text>
+<text x="50.0" y="128.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >motor output</text>
+<line x1="154.0" y1="124.0" x2="254.0" y2="124.0" stroke="#c2630b" stroke-width="2.4" stroke-linecap="round" marker-end="url(#ao)"/>
+<text x="266.0" y="128.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#c2630b" >positive</text>
+<text x="50.0" y="162.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >encoder reading</text>
+<line x1="154.0" y1="158.0" x2="254.0" y2="158.0" stroke="#147d6f" stroke-width="2.4" stroke-linecap="round" marker-end="url(#ag)"/>
+<text x="266.0" y="162.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#147d6f" >goes up</text>
+<text x="203.0" y="212.0" font-size="10" font-weight="700" text-anchor="middle" fill="#147d6f" >the PID pushes toward the setpoint</text>
+<rect x="388.0" y="84.0" width="338.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="400.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#d64545" >Encoder counts the wrong way</text>
+<text x="404.0" y="128.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >motor output</text>
+<line x1="508.0" y1="124.0" x2="608.0" y2="124.0" stroke="#c2630b" stroke-width="2.4" stroke-linecap="round" marker-end="url(#ao)"/>
+<text x="620.0" y="128.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#c2630b" >positive</text>
+<text x="404.0" y="162.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >encoder reading</text>
+<line x1="608.0" y1="158.0" x2="508.0" y2="158.0" stroke="#d64545" stroke-width="2.4" stroke-linecap="round" marker-end="url(#ar)"/>
+<text x="620.0" y="162.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#d64545" >goes down</text>
+<text x="557.0" y="212.0" font-size="10" font-weight="700" text-anchor="middle" fill="#d64545" >the PID pushes away from the setpoint and runs off</text>
+<text x="34.0" y="260.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >If a mechanism runs away the moment it is enabled, an encoder is counting backwards. Invert that encoder, not the gains.</text>
+</svg>

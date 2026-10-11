@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 462" width="760" height="462" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">What a SmartMotorControllerConfig holds</title>
+<desc id="d">A grid of nine groups of SmartMotorControllerConfig options: motor basics, gearing and units, closed loop control, feedforward, motion profiles, limits and protection, encoders, followers and simulation, each listing its main methods.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="462" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="430.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >What a SmartMotorControllerConfig holds</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Nine groups of options. Everything is optional except what your mechanism needs.</text>
+<rect x="34.0" y="84.0" width="224.0" height="104.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="46.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#3e6da8" >Motor basics</text>
+<text x="46.0" y="126.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withControlMode</text>
+<text x="46.0" y="141.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withMotorInverted</text>
+<text x="46.0" y="157.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withZeroPower</text>
+<text x="46.0" y="172.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withVendorConfig</text>
+<rect x="266.0" y="84.0" width="224.0" height="104.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="278.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#147d6f" >Gearing and units</text>
+<text x="278.0" y="126.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGearing</text>
+<text x="278.0" y="141.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withMechanismCircumference</text>
+<text x="278.0" y="157.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withWheelRadius, withDrumRadius</text>
+<text x="278.0" y="172.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withCascadingElevatorStages</text>
+<rect x="498.0" y="84.0" width="224.0" height="104.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="510.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#c2630b" >Closed loop control</text>
+<text x="510.0" y="126.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withClosedLoopController</text>
+<text x="510.0" y="141.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withClosedLoopTolerance</text>
+<text x="510.0" y="157.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withContinuousWrapping</text>
+<text x="510.0" y="172.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withClosedLoopControlPeriod</text>
+<rect x="34.0" y="196.0" width="224.0" height="104.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="46.0" y="218.0" font-size="13" font-weight="700" text-anchor="start" fill="#c2630b" >Feedforward</text>
+<text x="46.0" y="238.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withFeedforward</text>
+<text x="46.0" y="253.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">SimpleMotorFeedforward</text>
+<text x="46.0" y="269.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">ArmFeedforward</text>
+<text x="46.0" y="284.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">ElevatorFeedforward</text>
+<rect x="266.0" y="196.0" width="224.0" height="104.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="278.0" y="218.0" font-size="13" font-weight="700" text-anchor="start" fill="#c2630b" >Motion profiles</text>
+<text x="278.0" y="238.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withTrapezoidalProfile</text>
+<text x="278.0" y="253.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withExponentialProfile</text>
+<text x="278.0" y="269.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withVelocityTrapezoidalProfile</text>
+<text x="278.0" y="284.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace"></text>
+<rect x="498.0" y="196.0" width="224.0" height="104.0" rx="8" fill="#fde2e2" stroke="#d64545" stroke-width="1.6" />
+<text x="510.0" y="218.0" font-size="13" font-weight="700" text-anchor="start" fill="#d64545" >Limits and protection</text>
+<text x="510.0" y="238.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withSoftLimits</text>
+<text x="510.0" y="253.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withStatorCurrentLimit</text>
+<text x="510.0" y="269.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withOpenLoopRampRate</text>
+<text x="510.0" y="284.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withTemperatureCutoff</text>
+<rect x="34.0" y="308.0" width="224.0" height="104.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="46.0" y="330.0" font-size="13" font-weight="700" text-anchor="start" fill="#6b46c1" >Encoders</text>
+<text x="46.0" y="350.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withStartingPosition</text>
+<text x="46.0" y="365.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withExternalEncoder</text>
+<text x="46.0" y="381.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withExternalEncoderZeroOffset</text>
+<text x="46.0" y="396.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withUseExternalFeedbackEncoder</text>
+<rect x="266.0" y="308.0" width="224.0" height="104.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="278.0" y="330.0" font-size="13" font-weight="700" text-anchor="start" fill="#3e6da8" >Followers</text>
+<text x="278.0" y="350.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withFollowers</text>
+<text x="278.0" y="365.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withLooselyCoupledFollowers</text>
+<text x="278.0" y="381.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace"></text>
+<text x="278.0" y="396.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace"></text>
+<rect x="498.0" y="308.0" width="224.0" height="104.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="510.0" y="330.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Simulation</text>
+<text x="510.0" y="350.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withSimClosedLoopController</text>
+<text x="510.0" y="365.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withSimFeedforward</text>
+<text x="510.0" y="381.0" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withMomentOfInertia</text>
+<text x="510.0" y="396.5" font-size="10.2" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withSimulationPeriod</text>
+<text x="34.0" y="438.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >One config object describes one motor. Each group has its own page.</text>
+</svg>

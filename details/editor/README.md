@@ -46,14 +46,17 @@ Cascading elevator **Mechanism** gearings should be divided by the stages in the
 
 An easy way to do this with YAMS is by using `GearBox.fromReductionStages`and `Sprocket.fromStages`!
 
+## Configuring a motor
+
+Everything about a motor is described by a `SmartMotorControllerConfig`: gearing, closed loop control, limits, encoders, followers and simulation. The [SmartMotorControllerConfig](config/README.md) pages explain every option with a graphic and an example, and say which motor controllers support it.
+
+{% hint style="warning" %}
+Not every option works on every motor controller. See [which options are not supported everywhere](config/README.md#not-every-option-works-on-every-motor-controller).
+{% endhint %}
+
 ## Previous Configurations
 
-YAMS does its best to prevent simple mistakes from turning into big headaches, so it will reset your previous smart motor controller configuration from other runs by default. You can configure this behavior with
-
-```java
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this) //...
-                                .withResetPreviousConfig(false);
-```
+YAMS resets the motor controller's previous configuration by default, so settings left over from another run cannot turn into a headache. [`withResetPreviousConfig`](config/motor-basics.md#withresetpreviousconfig) changes that.
 
 ## Power optimization is crucial to prevent brownouts
 
@@ -71,30 +74,17 @@ The rule of thumb is:
 3. Use [the algorithm in this whitepaper](https://www.chiefdelphi.com/t/whitepaper-trapezoidal-exponential-motion-profiling/443468/12?u=nstrike) if you’re sometimes current-limited (not implemented in YAMS, yet)
 {% endhint %}
 
-All SmartMotorControllers in YAMS support motion profiled PID's and feedforwards so you should have no limitation on your ability to tune your mechanism! Keep in mind that you can set [separate PID and Feedforward values for simulation only](simulation-only-pid-+-feedforward.md) since simulation will never exactly match real life.
+Every `SmartMotorController` in YAMS supports motion profiled PID and feedforward, though not always in the same place: see [where the loop runs](config/closed-loop-control.md#where-the-loop-runs). The options are covered in [Closed loop control](config/closed-loop-control.md), [Feedforward](config/feedforward.md) and [Motion profiles](config/motion-profiles.md), and [Live tuning](../live-tuning/README.md) shows how to find the values.
+
+Simulation never exactly matches real life, so you can set [separate PID and feedforward values for simulation only](simulation-only-pid-+-feedforward.md).
 
 You can learn how to tune PID and feedforwards from WPILib here!
 
 {% embed url="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-turret.html" %}
 
-```java
-SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(50, 0, 0)
-  .withSimClosedLoopController(50, 0, 0)
-  // Motion Profile Constraints
-  .withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
-  // Feedforward Constants
-  .withFeedforward(new ArmFeedforward(0, 0, 0))
-  .withSimFeedforward(new ArmFeedforward(0, 0, 0))
-  // Telemetry name and verbosity level
-  .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
-```
-
 ## External encoders
 
-At the moment YAMS will only accept external encoders of the same vendor as this is the only vendor-supported way of using them. See the [feature matrix](feature-matrix.md#external-encoders) for the encoders each wrapper accepts. It is possible for external encoders to not have the same gearing as the rotor to the mechanism or not be a 1:1 to the mechanism so we do provide an external encoder gearing configuration option!
+YAMS accepts external encoders that the motor controller can read itself, which means the same vendor. [Encoders](config/encoders.md) covers attaching one, its gearing, its zero offset and which encoder the closed loop follows, and the [feature matrix](feature-matrix.md#external-encoders) lists the encoders each wrapper accepts.
 
 {% hint style="danger" %}
 Absolute encoders cannot go beyond 1 rotation or 360 degrees, even less with discontinuity points!
@@ -102,38 +92,15 @@ Absolute encoders cannot go beyond 1 rotation or 360 degrees, even less with dis
 DO **NOT** USE AN ABSOLUTE ENCODER WITH A GEAR RATIO WITH AN INPUT GREATER THAN 1 UNLESS YOU KNOW WHAT YOU'RE DOING!
 {% endhint %}
 
-```java
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-      .withExternalEncoder(armMotor.getAbsoluteEncoder())
-      .withExternalEncoderInverted(true)
-      .withExternalEncoderGearing(new MechanismGearing(GearBox.fromStages("1:2")))
-      .withUseExternalFeedbackEncoder(true)
-      .withExternalEncoderZeroOffset(Degrees.of(0))
-      .withExternalEncoderDiscontinuityPoint(Degrees.of(180)); // Sets the range of the absolute encoder to [-180, 180]
-```
-
 ## Follower motors
 
-Follower motors are not always the same inversion as your main motor so we help by using `Pair`s which have the motor and the inversion relative to the master.
-
-```java
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-      .withFollowers(Pair.of(new SparkMax(CANPorts.fromBusId(1), 4, MotorType.kBrushless), false))
-```
+Motors on the same shaft use [`withFollowers`](config/followers.md#withfollowers), and motors that are not directly connected but must move together use [`withLooselyCoupledFollowers`](config/followers.md#withlooselycoupledfollowers). [Followers](config/followers.md) explains the difference.
 
 ### Loosely Coupled Follower Motors
-
-Loosely coupled followers are `SmartMotorController`s that are forwarded the velocity and position setpoints from the main motor. Loosely coupled followers are useful for motors which are not directly connected to the same shaft and where one motor just outputting the same dutycycle/voltage/current of the main motor is not sufficient control and could break the mechanism. Like 2 linear actuators with a cross bar attached at the top.
 
 {% hint style="danger" %}
 Loosely coupled followers **DO NOT** forward Voltage, or DutyCycle requests.
 {% endhint %}
-
-<pre class="language-java"><code class="lang-java">SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this);
-SmartMotorController       motor2      = new TalonFXWrapper(new TalonFX(1, new CANBus(CANPort.CAN_S0)), DCMotor.getKrakenX60(1), motorConfig.clone());
-SmartMotorController       motor1      = new SparkWrapper(new SparkMax(CANPorts.fromBusId(1), 2, MotorType.kBrushless), DCMotor.getNEO(1), 
-<strong>                                                                motorConfig.withLooselyCoupledFollowers(motor2));
-</strong></code></pre>
 
 ## You don't have to rely on YAMS to configure your SMC
 
@@ -168,18 +135,4 @@ Mechanism options like `.withSoftLimits` often will call the `SmartMotorControll
 
 ## Passing a Vendor Config
 
-`SmartMotorControllerConfig` has the ability to use a supplied vendor config as the base to overwrite with the `SmartMotorControllerConfig` options. This allows you to set vendor specific configurations easily while creating the `SmartMotorControllerConfig`.
-
-<pre class="language-java"><code class="lang-java">TalonFX                    armMotor      = new TalonFX(1, new CANBus(CANPort.CAN_S0));
-SmartMotorControllerConfig motorConfig   = new SmartMotorControllerConfig(this)
-      .withClosedLoopController(1, 0, 0)
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-      .withZeroPower(MotorMode.COAST)
-      .withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH)
-      .withStatorCurrentLimit(Amps.of(40))
-      .withMotorInverted(false)
-      .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-<strong>      .withVendorConfig(new TalonFXConfiguration().withVoltage(new VoltageConfigs().withPeakReverseVoltage(0)))
-</strong>      .withControlMode(ControlMode.CLOSED_LOOP);
-SmartMotorController       motor         = new TalonFXWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
-</code></pre>
+`SmartMotorControllerConfig` can start from a vendor config that you supply, so vendor specific settings can be set alongside the YAMS options. See [`withVendorConfig`](config/motor-basics.md#withvendorconfig).
