@@ -236,56 +236,62 @@ These are suggestions, not rules. With an automatic brake you do not control whe
 
 * **Let the brake do the holding.** Once the arm has arrived, stop driving the motor so the brake takes the load. An arm that keeps holding its setpoint against the brake gains nothing from having one.
 * **Avoid driving against the brake.** A motor pushing on an engaged brake heats up and wears the brake. With an automatic brake some of this is unavoidable at the start of each move, while the brake lets go.
-* **Avoid a default command that holds an angle.** It keeps the motor driving, which is the opposite of resting. Prefer no default command, or one that does nothing.
+* **Avoid a default command that holds an angle.** It keeps the motor driving, which is the opposite of resting. A default command that rests the motor is ideal.
 * **Allow for the brake's timing.** A brake takes a moment to bite and to let go. Expect a small lurch or sag at each end of a move, and allow for it where you can.
+
+### Resting the motor
+
+Resting means an output of zero with the closed loop controller stopped. If the closed loop kept running it would go on driving the arm to its setpoint, against the brake.
+
+The `set(0)` helper command does all of it. It stops the closed loop controller, holds the output at zero, and starts the closed loop again when another command takes over. So you can ignore the closed loop entirely: make `set(0)` the arm's default command, and the arm rests whenever nothing else is moving it.
 
 ### With an automatic brake
 
-There is nothing to command. Move, then rest the motor and let the brake bite:
+There is nothing to command on the brake. Move with `runTo`, which ends when the arm arrives, and the default command rests the motor so the brake bites:
 
 {% tabs %}
 {% tab title="Commands v2" %}
 ```java
-public Command moveTo(Angle angle)
+// In the subsystem
+public Command rest()
 {
-  return runOnce(() -> arm.getMotorController().startClosedLoopController()) // driving releases the brake
-      .andThen(arm.runTo(angle, Degrees.of(2)))                               // move
-      .finallyDo(this::rest);                                                 // rest, even if interrupted
+  return arm.set(0); // output 0, closed loop stopped; it restarts when another command takes over
 }
 
-private void rest()
+public Command moveTo(Angle angle)
 {
-  arm.setDutyCycleSetpoint(0);                             // output 0: the brake bites
-  arm.getMotorController().stopClosedLoopController();     // and make sure the closed loop stays stopped
+  return arm.runTo(angle, Degrees.of(2)); // driving releases the brake
 }
+
+// In RobotContainer
+arm.setDefaultCommand(arm.rest());
 ```
 {% endtab %}
 
 {% tab title="Commands v3" %}
 ```java
-public Command moveTo(Angle angle)
+// In the mechanism
+public Command rest()
 {
-  return run(coroutine -> {
-    arm.getMotorController().startClosedLoopController();  // driving releases the brake
-    coroutine.await(arm.runTo(angle, Degrees.of(2)));      // move
-    rest();
-  }).whenCanceled(this::rest).named("Arm Move And Rest");
+  return run(coroutine -> coroutine.await(arm.set(0))) // output 0, closed loop stopped
+      .withPriority(Command.LOWEST_PRIORITY)           // so any other command can take over
+      .named("Arm Rest");
 }
 
-private void rest()
+public Command moveTo(Angle angle)
 {
-  arm.setDutyCycleSetpoint(0);                             // output 0: the brake bites
-  arm.getMotorController().stopClosedLoopController();     // and make sure the closed loop stays stopped
+  return arm.runTo(angle, Degrees.of(2)); // driving releases the brake
 }
+
+// In Robot
+arm.setDefaultCommand(arm.rest());
 ```
 {% endtab %}
 {% endtabs %}
-
-Resting the motor means two things: an output of zero, and the closed loop controller stopped. If the closed loop kept running it would go on driving the arm to its setpoint, against the brake. `setDutyCycleSetpoint(0)` stops it before setting the output, and the explicit `stopClosedLoopController()` after it makes sure it stays stopped. That is also why each move starts the closed loop again.
 
 ### With a manual brake
 
-If your code controls the brake, you can order things so the motor and the brake never fight:
+If your code controls the brake, release it before the move and engage it after. The default command still rests the motor:
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -293,17 +299,13 @@ If your code controls the brake, you can order things so the motor and the brake
 // brake is your own actuator: a Solenoid, a Servo, or anything with an on and off
 public Command moveTo(Angle angle)
 {
-  return runOnce(() -> {
-        brake.set(false);                                    // release
-        arm.getMotorController().startClosedLoopController();
-      })
-      .andThen(arm.runTo(angle, Degrees.of(2)))              // move
-      .finallyDo(() -> {
-        brake.set(true);                                     // engage, even if interrupted
-        arm.setDutyCycleSetpoint(0);                         // rest the motor
-        arm.getMotorController().stopClosedLoopController();
-      });
+  return runOnce(() -> brake.set(false))         // release
+      .andThen(arm.runTo(angle, Degrees.of(2)))  // move
+      .finallyDo(() -> brake.set(true));         // engage, even if interrupted
 }
+
+// In RobotContainer
+arm.setDefaultCommand(arm.rest());               // then the motor rests
 ```
 {% endtab %}
 
@@ -313,22 +315,21 @@ public Command moveTo(Angle angle)
 public Command moveTo(Angle angle)
 {
   return run(coroutine -> {
-    brake.set(false);                                      // release
-    arm.getMotorController().startClosedLoopController();
-    coroutine.await(arm.runTo(angle, Degrees.of(2)));      // move
-    engageBrake();
-  }).whenCanceled(this::engageBrake).named("Arm Move And Brake");
+    brake.set(false);                                  // release
+    coroutine.await(arm.runTo(angle, Degrees.of(2)));  // move
+    brake.set(true);                                   // engage
+  }).whenCanceled(() -> brake.set(true)).named("Arm Move And Brake");
 }
 
-private void engageBrake()
-{
-  brake.set(true);                                         // engage
-  arm.setDutyCycleSetpoint(0);                             // rest the motor
-  arm.getMotorController().stopClosedLoopController();
-}
+// In Robot
+arm.setDefaultCommand(arm.rest());                     // then the motor rests
 ```
 {% endtab %}
 {% endtabs %}
+
+{% hint style="info" %}
+If you rest the motor yourself with `arm.setDutyCycleSetpoint(0)` instead of the `set(0)` command, nothing starts the closed loop controller again for you. Call `arm.getMotorController().startClosedLoopController()` before the next move.
+{% endhint %}
 
 Soft limits still apply while the arm moves, with either kind of brake. The brake does not replace them.
 
