@@ -332,10 +332,6 @@ This is every option against every motor controller. What each option does, with
 **Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an LQR controller on any motor controller, an Exponential Profile on a `SparkWrapper`, and always on a `NovaWrapper`. With PID or a profile that runs on the motor controller, it does not work.
 {% endhint %}
 
-{% hint style="info" %}
-YAMS doesn't provide a built-in SysId routine. Use `SmartMechanism.setVoltage(Voltage)` (available on every mechanism) as the voltage-consumer function for WPILib's own `SysIdRoutine`.
-{% endhint %}
-
 ***
 
 ## Motor type support by wrapper

@@ -307,7 +307,7 @@ Hard limits are where the physical stops are, and the simulated elevator cannot 
 Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
-Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
 {% endhint %}
 
 ### Configure it
@@ -378,21 +378,21 @@ With only the feedforward, the carriage should stay where you leave it at the bo
 {% endstep %}
 
 {% step %}
-#### Set the profile
-
-Choose a maximum velocity and acceleration the elevator can really reach.
-{% endstep %}
-
-{% step %}
-#### Find kV
-
-Run a long move and raise kV until `measurement/velocity` matches the setpoint velocity in the middle of it.
-{% endstep %}
-
-{% step %}
 #### Raise kP, then add kD
 
-Raise kP until it reaches the setpoint quickly and stops cleanly. Add a little kD if it overshoots or bounces.
+Raise kP until it reaches the setpoint quickly and stops cleanly. Add a little kD if it overshoots or bounces. Without a profile a new setpoint is a sudden jump, so tune with small moves, a few degrees or centimeters at a time.
+{% endstep %}
+
+{% step %}
+#### Add the motion profile last
+
+Once the elevator holds and reaches small setpoints cleanly, set a maximum velocity and acceleration it can really reach, and raise them a step at a time.
+{% endstep %}
+
+{% step %}
+#### Find kV with the profile
+
+kV only acts while the setpoint is moving, so it is tuned with the profile. Run a long move and raise kV until `measurement/velocity` matches the setpoint velocity in the middle of it.
 {% endstep %}
 
 {% step %}

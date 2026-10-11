@@ -404,7 +404,7 @@ LQR can behave very differently with small parameter changes. Always validate in
 **Solutions**:
 - Re-measure mass and moment of inertia
 - Verify gearing ratio is correct
-- Measure kV and kA on the real mechanism and compare them with the model, see [Measuring kV and kA without SysId](exponential-profiles.md#measuring-kv-and-ka-without-sysid)
+- Measure kV and kA on the real mechanism and compare them with the model, see [Measuring kV and kA](exponential-profiles.md#measuring-kv-and-ka)
 - Account for friction and other losses in feedforward
 
 ## LQR vs PID Quick Reference

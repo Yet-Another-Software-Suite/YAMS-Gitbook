@@ -213,7 +213,7 @@ A flywheel that reaches low speeds but not high ones, or that slows down more wi
 Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
-Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
 {% endhint %}
 
 ### Configure it

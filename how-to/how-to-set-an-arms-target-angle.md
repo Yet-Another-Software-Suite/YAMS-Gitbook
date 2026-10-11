@@ -110,7 +110,7 @@ public class ExampleSubsystem extends SubsystemBase {
 </strong><strong>  public Command set(double dutycycle) { return arm.set(dutycycle);}
 </strong>
 <strong>  /**
-</strong><strong>   * Set the voltage of the arm, useful for feeding a WPILib {@link org.wpilib.command2.sysid.SysIdRoutine}.
+</strong><strong>   * Set the voltage of the arm, useful for finding its feedforward gains.
 </strong><strong>   * @param volts Voltage to apply.
 </strong><strong>   */
 </strong><strong>  public Command setVoltage(Voltage volts) { return arm.setVoltage(volts);}

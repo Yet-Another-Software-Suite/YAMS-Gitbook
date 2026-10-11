@@ -338,7 +338,7 @@ Soft limits still apply while the arm moves, with either kind of brake. The brak
 Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
-Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
 {% endhint %}
 
 ### Configure it
@@ -371,7 +371,7 @@ Put [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits) where
 {% step %}
 #### Protect the motor
 
-Set a [stator current limit](editor/config/limits-and-protection.md#current-limits), `MotorMode.BRAKE`, and a slow [trapezoidal profile](editor/config/motion-profiles.md#withtrapezoidalprofile) to start with.
+Set a low [stator current limit](editor/config/limits-and-protection.md#current-limits) to start with, and `MotorMode.BRAKE`.
 {% endstep %}
 
 {% step %}
@@ -397,21 +397,21 @@ Raise `closedloop/feedforward/kS` until the arm is just about to move, then back
 {% endstep %}
 
 {% step %}
-#### Set the profile
-
-Choose a maximum velocity and acceleration the arm can really reach. If it cannot keep up, the profile is too fast, not the gains too low.
-{% endstep %}
-
-{% step %}
-#### Find kV
-
-Run a long move and watch the setpoint velocity against `mechanism/velocity` in the middle of it. Raise kV until they match.
-{% endstep %}
-
-{% step %}
 #### Raise kP, then add kD
 
-Raise kP until the arm reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots.
+Raise kP until the arm reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots. Without a profile a new setpoint is a sudden jump, so tune with small moves, a few degrees or centimeters at a time.
+{% endstep %}
+
+{% step %}
+#### Add the motion profile last
+
+Once the arm holds and reaches small setpoints cleanly, set a maximum velocity and acceleration the arm can really reach, and raise them a step at a time. If the arm cannot keep up, the profile is too fast, not the gains too low.
+{% endstep %}
+
+{% step %}
+#### Find kV with the profile
+
+kV only acts while the setpoint is moving, so it is tuned with the profile. Run a long move and watch the setpoint velocity against `mechanism/velocity` in the middle of it. Raise kV until they match.
 {% endstep %}
 
 {% step %}

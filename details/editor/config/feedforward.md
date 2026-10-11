@@ -29,7 +29,7 @@ Takes one of WPILib's three feedforward classes.
 
 `ArmFeedforward` and `SimpleMotorFeedforward` gains are per rotation of the mechanism. `ElevatorFeedforward` gains are per meter, and giving one makes the controller [distance based](closed-loop-control.md#withlinearclosedloopcontroller).
 
-[Live tuning](../../live-tuning/README.md) has the full order for finding these, and [Exponential profiles](../exponential-profiles.md#measuring-kv-and-ka-without-sysid) shows how to measure `kV` and `kA` from one voltage step.
+[Live tuning](../../live-tuning/README.md) has the full order for finding these, and [Exponential profiles](../exponential-profiles.md#measuring-kv-and-ka) shows how to measure `kV` and `kA` from one voltage step.
 
 ### Slots
 

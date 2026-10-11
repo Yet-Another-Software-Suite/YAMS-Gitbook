@@ -279,7 +279,7 @@ How heavy the pivot is to turn is set on the motor config with [`withMomentOfIne
 Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
-Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and slow profiles, and practice in simulation first.
+Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
 {% endhint %}
 
 ### Configure it
@@ -328,21 +328,21 @@ Set kP, kI and kD to 0. Raise `closedloop/feedforward/kS` until the pivot is jus
 {% endstep %}
 
 {% step %}
-#### Set the profile
-
-Choose a maximum velocity and acceleration the pivot can really reach.
-{% endstep %}
-
-{% step %}
-#### Find kV
-
-Run a long move and raise kV until `mechanism/velocity` matches the setpoint velocity in the middle of it.
-{% endstep %}
-
-{% step %}
 #### Raise kP, then add kD
 
-Raise kP until it reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots.
+Raise kP until it reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots. Without a profile a new setpoint is a sudden jump, so tune with small moves, a few degrees or centimeters at a time.
+{% endstep %}
+
+{% step %}
+#### Add the motion profile last
+
+Once the pivot reaches small setpoints cleanly, set a maximum velocity and acceleration it can really reach, and raise them a step at a time.
+{% endstep %}
+
+{% step %}
+#### Find kV with the profile
+
+kV only acts while the setpoint is moving, so it is tuned with the profile. Run a long move and raise kV until `mechanism/velocity` matches the setpoint velocity in the middle of it.
 {% endstep %}
 {% endstepper %}
 

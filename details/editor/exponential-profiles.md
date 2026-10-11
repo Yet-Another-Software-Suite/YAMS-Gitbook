@@ -167,23 +167,22 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 
 ## Tuning Exponential Profiles
 
-### Step 1: Characterize Your System
+### Step 1: Find kV and kA
 
-The exponential profile needs accurate kV and kA values. You have three options:
+The exponential profile needs accurate kV and kA values. You have two options:
 
 | Option | How | Good for |
 | --- | --- | --- |
 | Factory methods | YAMS calculates kV and kA from the motor, gearing and mass | A first version, and simulation |
-| Measure them yourself | One constant voltage test and a velocity graph, see [below](#measuring-kv-and-ka-without-sysid) | Real mechanisms, with no extra tools |
-| SysId | WPILib's characterization routine | Teams that already have a SysId workflow they trust |
+| Measure them yourself | One constant voltage test and a velocity graph, see [below](#measuring-kv-and-ka) | Real mechanisms, with no extra tools |
 
 {% hint style="warning" %}
 Factory methods use theoretical values. Real mechanisms have friction, cable drag, and other losses, so measured values are more accurate.
 {% endhint %}
 
-### Measuring kV and kA without SysId
+### Measuring kV and kA
 
-This is optional. It needs only a button binding and a graph, and it gives you both profile constants from one test.
+It needs only a button binding and a graph, and it gives you both profile constants from one test.
 
 <figure><img src="../../.gitbook/assets/exponential-profile-step-test.png" alt="A graph of velocity after a constant 6 volts is applied. It levels off at 2.9 rotations per second, so kV is 6.0 minus kS, divided by 2.9, which is 2.0. It reaches 63 percent of that speed after 0.15 seconds, so kA is kV times 0.15, which is 0.30"><figcaption><p>One voltage step gives both constants. Example values.</p></figcaption></figure>
 
@@ -331,7 +330,7 @@ When exponential profiles run on the SystemCore, there's slightly more latency c
 
 ### Profile works in sim but not on real robot
 
-* Measure kV and kA on the real mechanism, see [Measuring kV and kA without SysId](#measuring-kv-and-ka-without-sysid)
+* Measure kV and kA on the real mechanism, see [Measuring kV and kA](#measuring-kv-and-ka)
 * Account for friction with kS in feedforward
 * Check current limits aren't restricting torque
 
