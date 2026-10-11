@@ -182,7 +182,8 @@ The commands above are built on plain functions that set the setpoint and return
 | `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
 | `setVoltageSetpoint(Voltage)` | Output this voltage. Stops the closed loop. |
 | `setDutyCycleSetpoint(double)` | Output this duty cycle, from -1 to 1. Stops the closed loop. |
-| `getMechanismSetpoint()` | The current position setpoint, if there is one. |
+| `getMechanismSetpoint()` | The current position setpoint as an angle, if there is one. |
+| `getMeasurementSetpoint()` | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
 
 ```java
 elevator.setMeasurementPositionSetpoint(Meters.of(0.8));
