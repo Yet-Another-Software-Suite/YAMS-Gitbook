@@ -36,9 +36,9 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
 Ramp rates is the minimum time it takes for a motor to go from 0% to 100% power to the motor.
 
 {% hint style="info" %}
-If the ramp rate is omitted from configurations you will commonly see mechanisms taking up a majority of power whenever they go from rest to moving with a closed loop controller.
+A ramp rate is the last thing to reach for. It delays everything the motor does, which makes the robot seem "slow" or "delayed".
 
-Whenever possible use current limits instead of ramp rates. Ramp rates delay input response and make the robot seem "slow" or "delayed".
+A mechanism that takes too much power when it starts moving is better fixed, in this order, with a [motion profile](config/motion-profiles.md) if one suits it, then a supply current limit where the motor controller has one, then a stator current limit where it does not. Use a ramp rate only if none of those is enough.
 {% endhint %}
 
 <figure><img src="../../.gitbook/assets/power-ramp-rate.png" alt="Without a ramp rate the motor output jumps to full at once and the current spikes. With a 0.25 second ramp rate the output climbs over 0.25 seconds and the current is a lower, wider bump, with a slower start"><figcaption><p>A ramp rate trades the current spike for a slower start.</p></figcaption></figure>
