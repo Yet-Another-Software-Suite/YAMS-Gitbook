@@ -180,7 +180,7 @@ input.withControllerRotationAxis(() -> -driver.getRightX());
 
 `withControllerHeadingAxis(DoubleSupplier, DoubleSupplier)` sets the pair of axes whose direction becomes a target heading. It does nothing on its own: the heading is used by [`withHeadingControl`](#withheadingcontrol) in `HEADING` mode.
 
-<figure><img src="../.gitbook/assets/sis-heading-axis.gif" alt="Animation of the right stick moving around its edge while a dial shows the heading it asks for. Stick up is 0 degrees, stick left is 90 degrees, stick down is 180 degrees and stick right is minus 90 degrees"><figcaption><p>Two axes set a direction to face.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/sis-heading-axis.gif" alt="Animation of the right stick moving all the way around its edge while a robot on the field turns to face the same direction. Stick up is 0 degrees, stick left is 90 degrees, stick down is 180 degrees and stick right is minus 90 degrees"><figcaption><p>Two axes set a direction, and the robot turns to face it.</p></figcaption></figure>
 
 ```java
 input.withControllerHeadingAxis(() -> -driver.getRightX(), () -> -driver.getRightY());
