@@ -419,9 +419,9 @@ The profile only exists if the config has one, for example `withTrapezoidalProfi
 
 | Mode | Turn it on with | What it does |
 | --- | --- | --- |
+| Module azimuth motors | `modules/azimuth/enabled` | Turns every module to an angle you type. |
+| Module drive motors | `modules/drive/enabled` | Runs every module's drive motor at a velocity you type. |
 | Auto-align | `autoalign/enabled` | Drives the robot to a pose you type, using the translation and rotation PID gains. |
-| Drive motors | `modules/drive/enabled` | Runs every module's drive motor at a velocity you type. |
-| Azimuth motors | `modules/azimuth/enabled` | Turns every module to an angle you type. |
 
 | What | Where it is published |
 | --- | --- |
@@ -449,10 +449,143 @@ The command is published through `CommandTunable`. Set `NT:/Mechanisms/<name>/tu
 
 Starting the command resets the translation and rotation PID controllers.
 
-### Pick a mode
+### Tune the swerve modules
 
-{% tabs %}
-{% tab title="Auto-align" %}
+Tune the modules before auto-align: auto-align can only be as good as the modules under it. Do the azimuth motors first, so the wheels point where they are told while you tune the drive motors.
+
+The module keys are shared. One value is applied to all four modules, which is what you want when the modules are built the same.
+
+| What | Where it is published |
+| --- | --- |
+| Values you type | `NT:/Tuning/<name>/modules/azimuth/...` and `NT:/Tuning/<name>/modules/drive/...` |
+| One motor's telemetry | `NT:/Mechanisms/<name>/modules/<module>/<motor>/...` |
+| All four modules at once | `NT:/Mechanisms/<name>/states/desired` and `states/current` |
+
+`<module>` and `<motor>` are the names given to the module's and the motor's `withTelemetry(...)`. In AdvantageScope, drag `states/desired` and `states/current` onto a **Swerve** tab to see every module's target and actual state together.
+
+{% hint style="warning" %}
+Put the robot on blocks with the wheels off the ground for the drive and azimuth steps, or do them in simulation first.
+{% endhint %}
+
+#### Azimuth motors
+
+<figure><img src="../../.gitbook/assets/live-tuning-swerve-azimuth.gif" alt="Animation: with feedback/p too low the modules turn slowly and stop short of 90 degrees, with it too high they overshoot and shake, and with a little less p plus some d they turn quickly and settle"><figcaption><p>What each azimuth gain change looks like.</p></figcaption></figure>
+
+| You type (`NT:/Tuning/<name>/`) | Units | What it is |
+| --- | --- | --- |
+| `modules/azimuth/enabled` | Boolean | Hold the angle while `true`. |
+| `modules/azimuth/angle` | Degrees | Target angle for every module. |
+| `modules/azimuth/feedback/p`, `i`, `d` | PID gains | Azimuth motor feedback gains. |
+| `modules/azimuth/feedforward/s`, `v`, `a` | Feedforward gains | Azimuth motor kS, kV, kA. |
+
+Watch one azimuth motor's `mechanism/position` against its `closedloop/setpoint/position`, or the module arrows on the Swerve tab.
+
+{% stepper %}
+{% step %}
+#### Start the tuning command and turn the mode on
+
+Start `NT:/Mechanisms/<name>/tuning`, type `0` into `modules/azimuth/angle`, then set `modules/azimuth/enabled` to `true`. The drive motors are held at 0, so the wheels only turn in place.
+{% endstep %}
+
+{% step %}
+#### Step the angle
+
+Type `90` into `modules/azimuth/angle`, then `0`, and keep switching. Each change is a step you can judge the gains by.
+{% endstep %}
+
+{% step %}
+#### Raise `feedback/p`
+
+Raise it until the modules snap to the angle quickly. If they stop short or turn lazily, it is too low. If they overshoot and shake, it is too high: back it off.
+{% endstep %}
+
+{% step %}
+#### Add `feedback/d` if it still overshoots
+
+A small amount takes out the last of the overshoot. Leave `feedback/i` at 0.
+{% endstep %}
+
+{% step %}
+#### Add `feedforward/s` if the modules stop just short
+
+If they settle a degree or two away from the angle, a little kS overcomes the friction.
+{% endstep %}
+
+{% step %}
+#### Save the gains and turn the mode off
+
+Copy the gains into the azimuth motor's `withClosedLoopController(...)` and `withFeedforward(...)`. Values typed on the dashboard are lost when the robot code restarts. Set `modules/azimuth/enabled` to `false`. The modules stay at the last angle; they do not return to 0°.
+{% endstep %}
+{% endstepper %}
+
+<figure><img src="../../.gitbook/assets/module-azimuth-tuning.gif" alt="Editing modules/azimuth/angle in AdvantageScope and every module turning to the new heading"><figcaption><p>In AdvantageScope: every module following <code>modules/azimuth/angle</code>.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/module-azimuth-tuning.png" alt="The Tuning/swerve/modules tree in AdvantageScope with the azimuth and drive entries"><figcaption><p>The <code>Tuning/swerve/modules</code> tree.</p></figcaption></figure>
+
+#### Drive motors
+
+<figure><img src="../../.gitbook/assets/live-tuning-swerve-drive.gif" alt="Animation: with feedforward/v too low the wheel speed settles well below the 2 meters per second setpoint, raising it brings the speed up to the setpoint, and adding feedback/p makes it arrive sooner and hold"><figcaption><p>What each drive gain change looks like.</p></figcaption></figure>
+
+| You type (`NT:/Tuning/<name>/`) | Units | What it is |
+| --- | --- | --- |
+| `modules/drive/enabled` | Boolean | Run the drive motors while `true`. |
+| `modules/drive/velocity` | Meters per second | Wheel speed for every module. |
+| `modules/drive/inplace` | Boolean | `false`: every module points at 0° and the robot drives straight. `true`: the modules point tangent to the robot center and the robot spins in place. |
+| `modules/drive/feedback/p`, `i`, `d` | PID gains | Drive motor feedback gains. |
+| `modules/drive/feedforward/s`, `v`, `a` | Feedforward gains | Drive motor kS, kV, kA. |
+
+Watch one drive motor's `measurement/velocity` against its `closedloop/setpoint/velocity`. The gains start at the first module's configured values.
+
+{% stepper %}
+{% step %}
+#### Start the tuning command and turn the mode on
+
+Start `NT:/Mechanisms/<name>/tuning`, type `0` into `modules/drive/velocity`, then set `modules/drive/enabled` to `true`.
+{% endstep %}
+
+{% step %}
+#### Zero the feedback
+
+Set `modules/drive/feedback/p`, `i` and `d` to 0 so you can see what the feedforward does on its own.
+{% endstep %}
+
+{% step %}
+#### Find `feedforward/s`
+
+Type a very small velocity, such as `0.1`. Raise `feedforward/s` until the wheels just start to turn, then back it off slightly.
+{% endstep %}
+
+{% step %}
+#### Find `feedforward/v`
+
+Type a normal driving speed, such as `2`. Raise `feedforward/v` until `measurement/velocity` settles on the setpoint. Check a second speed, such as `1` or `3`: it should match there too.
+{% endstep %}
+
+{% step %}
+#### Add `feedback/p`
+
+Raise it until the speed reaches the setpoint quickly and holds when the wheels are loaded. If the speed starts to buzz or oscillate, it is too high. `feedback/d` is rarely needed on a drive motor.
+{% endstep %}
+
+{% step %}
+#### Check it on the ground with `inplace`
+
+Take the robot off the blocks and set `modules/drive/inplace` to `true`. The modules point tangent to the robot center, so the robot spins in place instead of crossing the field. A positive velocity spins it counter-clockwise.
+{% endstep %}
+
+{% step %}
+#### Save the gains and turn the mode off
+
+Copy the gains into the drive motor's `withClosedLoopController(...)` and `withFeedforward(...)`, then set `modules/drive/enabled` to `false`. The drive motors are commanded to 0 m/s once it is off.
+{% endstep %}
+{% endstepper %}
+
+<figure><img src="../../.gitbook/assets/module-drive-tuning.png" alt="AdvantageScope with modules/drive/enabled on and every module driving at minus 3 meters per second"><figcaption><p>In AdvantageScope: every module driving at the typed velocity.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/module-drive-inplace.gif" alt="With modules/drive/inplace true, raising the velocity spins the chassis faster in place"><figcaption><p>In AdvantageScope: spinning in place with <code>modules/drive/inplace</code>.</p></figcaption></figure>
+
+### Tune auto-align
+
 | You type (`NT:/Tuning/<name>/`) | Units | What it is |
 | --- | --- | --- |
 | `autoalign/enabled` | Boolean | Drive to the pose while `true`. |
@@ -475,50 +608,6 @@ The gains start at the values given to `withTranslationController(...)` and `wit
 <figure><img src="../../.gitbook/assets/autoalign-tuning.gif" alt="The simulated robot drives to a target of x 12, y 4, rotation 90 while autoalign/enabled is true"><figcaption><p>Driving to <code>x=12</code>, <code>y=4</code>, <code>rot=90</code> in simulation.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/autoalign-tuning-converged.png" alt="The robot settled at X 11.975 m, Y 3.977 m, 90 degrees against a target of 12, 4, 90"><figcaption><p>Settled at the target pose.</p></figcaption></figure>
-{% endtab %}
-
-{% tab title="Drive motors" %}
-| You type (`NT:/Tuning/<name>/`) | Units | What it is |
-| --- | --- | --- |
-| `modules/drive/enabled` | Boolean | Run the drive motors while `true`. |
-| `modules/drive/velocity` | Meters per second | Wheel speed for every module. |
-| `modules/drive/inplace` | Boolean | `false`: every module points at 0° and the robot drives straight. `true`: the modules point tangent to the robot center and the robot spins in place. |
-| `modules/drive/feedback/p`, `i`, `d` | PID gains | Drive motor feedback gains. |
-| `modules/drive/feedforward/s`, `v`, `a` | Feedforward gains | Drive motor kS, kV, kA. |
-
-The gains start at the first module's configured values.
-
-1. Start the tuning command.
-2. Type a speed into `modules/drive/velocity`.
-3. Set `modules/drive/enabled` to `true`. Every module drives at that speed.
-4. Change the gains. Each one is sent to the motors only when its value changes.
-5. To test without the robot travelling across the field, set `modules/drive/inplace` to `true`. A positive velocity spins the robot counter-clockwise.
-6. Copy the gains into the drive motor's `withClosedLoopController(...)` and `withFeedforward(...)`, then set `modules/drive/enabled` to `false`. The drive motors are commanded to 0 m/s once it is off.
-
-<figure><img src="../../.gitbook/assets/module-drive-tuning.png" alt="AdvantageScope with modules/drive/enabled on and every module driving at minus 3 meters per second"><figcaption><p>Every module driving at the typed velocity.</p></figcaption></figure>
-
-<figure><img src="../../.gitbook/assets/module-drive-inplace.gif" alt="With modules/drive/inplace true, raising the velocity spins the chassis faster in place"><figcaption><p>Spinning in place with <code>modules/drive/inplace</code>.</p></figcaption></figure>
-{% endtab %}
-
-{% tab title="Azimuth motors" %}
-| You type (`NT:/Tuning/<name>/`) | Units | What it is |
-| --- | --- | --- |
-| `modules/azimuth/enabled` | Boolean | Hold the angle while `true`. |
-| `modules/azimuth/angle` | Degrees | Target angle for every module. |
-| `modules/azimuth/feedback/p`, `i`, `d` | PID gains | Azimuth motor feedback gains. |
-| `modules/azimuth/feedforward/s`, `v`, `a` | Feedforward gains | Azimuth motor kS, kV, kA. |
-
-1. Start the tuning command.
-2. Type an angle into `modules/azimuth/angle`.
-3. Set `modules/azimuth/enabled` to `true`. Every module turns to that angle. The drive motors are held at 0, so the wheels only turn in place.
-4. Change the gains and type new angles to see the response.
-5. Copy the gains into the azimuth motor's `withClosedLoopController(...)` and `withFeedforward(...)`, then set `modules/azimuth/enabled` to `false`. The modules stay at the last angle; they do not return to 0°.
-
-<figure><img src="../../.gitbook/assets/module-azimuth-tuning.gif" alt="Editing modules/azimuth/angle and every module turning to the new heading"><figcaption><p>Every module following <code>modules/azimuth/angle</code>.</p></figcaption></figure>
-
-<figure><img src="../../.gitbook/assets/module-azimuth-tuning.png" alt="The Tuning/swerve/modules tree in AdvantageScope with the azimuth and drive entries"><figcaption><p>The <code>Tuning/swerve/modules</code> tree.</p></figcaption></figure>
-{% endtab %}
-{% endtabs %}
 
 ### Good to know
 
