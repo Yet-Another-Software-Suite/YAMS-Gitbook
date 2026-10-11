@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 312" width="760" height="312" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Where telemetry goes</title>
+<desc id="d">A diagram. Your mechanism feeds MechanismTelemetry, which publishes the same values to two places: NetworkTables, which is live and on by default and read by dashboards such as Elastic and AdvantageScope, and a DataLog file, enabled with withDataLogName, which is opened in AdvantageScope after the match.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="312" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="280" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Where telemetry goes</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Every mechanism publishes to NetworkTables. Give it a DataLog name and the same values are written to a file too.</text>
+<rect x="34" y="132" width="150" height="84" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6"/>
+<text x="109.0" y="164.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Your mechanism</text>
+<text x="109.0" y="179.5" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >Arm, Elevator,</text>
+<text x="109.0" y="195.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >FlyWheel, SwerveDrive</text>
+<rect x="226" y="132" width="150" height="84" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.6"/>
+<text x="301.0" y="163.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >MechanismTelemetry</text>
+<text x="301.0" y="179.2" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >publishes the same</text>
+<text x="301.0" y="194.8" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >values to both</text>
+<line x1="188" y1="174" x2="222" y2="174" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="424" y="92" width="150" height="66" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6"/>
+<text x="499.0" y="122.8" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >NetworkTables</text>
+<text x="499.0" y="138.2" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >live, on by default</text>
+<rect x="424" y="190" width="150" height="66" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6"/>
+<text x="499.0" y="221.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >DataLog file</text>
+<text x="499.0" y="236.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >withDataLogName(...)</text>
+<line x1="380" y1="160" x2="420" y2="130" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<line x1="380" y1="188" x2="420" y2="218" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<rect x="612" y="92" width="114" height="66" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6"/>
+<text x="669.0" y="122.8" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Dashboards</text>
+<text x="669.0" y="137.2" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >Elastic, AdvantageScope</text>
+<rect x="612" y="190" width="114" height="66" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6"/>
+<text x="669.0" y="220.5" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >After the match</text>
+<text x="669.0" y="235.5" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >AdvantageScope</text>
+<line x1="578" y1="125" x2="608" y2="125" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<line x1="578" y1="223" x2="608" y2="223" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="499.0" y="176.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >withoutNetworkTables() turns the live side off</text>
+<text x="34.0" y="288.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >NetworkTables is for watching and tuning live. A DataLog is for finding out afterwards what happened in a match.</text>
+</svg>

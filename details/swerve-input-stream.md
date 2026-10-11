@@ -294,7 +294,7 @@ SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
 Like the stream, the config is mutable, and the drive reads the center of rotation every loop. Changing it on the running drive's config takes effect on the next loop, for example to pivot around a corner while a button is held:
 
 ```java
-driver.leftBumper()
+new Trigger(driver::getLeftBumperButton)
     .onTrue(Commands.runOnce(() -> drive.getConfig().withCenterOfRotation(Meters.of(0.3), Meters.of(0.3))))
     .onFalse(Commands.runOnce(() -> drive.getConfig().withCenterOfRotation(Meters.of(0), Meters.of(0))));
 ```

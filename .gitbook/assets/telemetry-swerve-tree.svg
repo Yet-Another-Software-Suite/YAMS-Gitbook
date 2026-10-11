@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 444" width="760" height="444" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">The swerve drive's NetworkTables tree</title>
+<desc id="d">The NetworkTables tree for a swerve drive named swerve under NT Mechanisms: pose and gyro at LOW verbosity, chassis/current, chassis/field and states/current at MID, chassis/desired and states/desired at HIGH, the tuning command, and a modules table with one entry per module containing its absolute encoder, its state and its drive and azimuth motors.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="444" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="412" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >The swerve drive's NetworkTables tree</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Struct values show up in AdvantageScope as poses, velocities and module states, not as loose numbers.</text>
+<rect x="34" y="88" width="692" height="316" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="48.0" y="112.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#3e6da8" font-family="Consolas, Menlo, monospace">Mechanisms</text>
+<text x="64.0" y="132.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">swerve</text>
+<text x="714.0" y="132.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >the name given to withTelemetry</text>
+<text x="80.0" y="152.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">pose</text>
+<text x="714.0" y="152.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >Pose2d  ·  LOW</text>
+<text x="80.0" y="172.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">gyro</text>
+<text x="714.0" y="172.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >LOW</text>
+<text x="80.0" y="192.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">chassis/current</text>
+<text x="714.0" y="192.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >ChassisVelocities  ·  MID</text>
+<text x="80.0" y="212.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">chassis/field</text>
+<text x="714.0" y="212.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >ChassisVelocities  ·  MID</text>
+<text x="80.0" y="232.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">states/current</text>
+<text x="714.0" y="232.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >SwerveModuleVelocity[]  ·  MID</text>
+<text x="80.0" y="252.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">chassis/desired</text>
+<text x="714.0" y="252.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >ChassisVelocities  ·  HIGH</text>
+<text x="80.0" y="272.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">states/desired</text>
+<text x="714.0" y="272.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >SwerveModuleVelocity[]  ·  HIGH</text>
+<text x="80.0" y="292.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">tuning</text>
+<text x="714.0" y="292.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >the tuning command</text>
+<text x="80.0" y="312.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">modules</text>
+<text x="96.0" y="332.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">frontleft</text>
+<text x="714.0" y="332.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >one per module</text>
+<text x="112.0" y="352.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">encoder</text>
+<text x="714.0" y="352.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >absolute encoder, degrees</text>
+<text x="112.0" y="372.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">state</text>
+<text x="714.0" y="372.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >SwerveModuleVelocity  ·  HIGH</text>
+<text x="112.0" y="392.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">drive / azimuth motor</text>
+<text x="714.0" y="392.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >the same keys as any motor</text>
+<text x="34.0" y="420.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Drag pose onto a 2D field and states/desired with states/current onto a Swerve tab in AdvantageScope.</text>
+</svg>
