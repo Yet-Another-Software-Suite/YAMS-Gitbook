@@ -16,6 +16,16 @@ This is automatic. You do not need to call anything for basic voltage sag under 
 
 Before, if two mechanisms each computed `RoboRioSim.setVInVoltage(...)` from only their own current draw, whichever mechanism updated last would overwrite the other's contribution, so the simulated battery would never actually see the _combined_ draw of the whole robot. With a shared `BatterySim`, a flywheel spinning up while an elevator is climbing will sag the simulated bus voltage the same way a real battery would under both loads at once, which is exactly the scenario that trips brownouts on a real robot. See [Limiting Power Consumption](../details/editor/limiting-power-consumption.md) for how to guard against that on top of realistic simulation.
 
+{% hint style="warning" %}
+**Power consumption is not the only thing that causes brownouts.** The battery simulation only models the current your mechanisms draw. Electrical issues can also cause brownouts and excessive power draw on a real robot, and the simulation cannot see any of them. They include, and are not limited to:
+
+* **Shorts**, such as a pinched wire or a frame short.
+* **Incorrect wiring**, such as loose or badly crimped connections, loose battery terminals, or the wrong breaker.
+* **Wire limitations**, such as wire that is too thin or too long for the current it carries.
+
+A robot that never browns out in simulation can still brown out for these reasons. If the real robot browns out when the simulation says it should not, check the electrical system before changing current limits.
+{% endhint %}
+
 ## How each mechanism affects the battery
 
 The loaded voltage is the resting voltage minus the total current times the battery's internal resistance:
