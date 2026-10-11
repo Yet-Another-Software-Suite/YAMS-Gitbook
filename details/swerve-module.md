@@ -4,7 +4,33 @@ icon: gear
 
 # Swerve Module
 
-Every `SwerveModuleConfig` option, with a graphic and an example, is on the [SwerveModuleConfig](mechanism-configs/swerve-module-config.md) page. This page walks through a complete mechanism.
+Every `SwerveModuleConfig` option, with a graphic and an example, is on the [SwerveModuleConfig](mechanism-configs/swerve-module-config.md) page under this one.
+
+## How a swerve module works
+
+<figure><img src="../.gitbook/assets/mech-module-how.png" alt="A swerve module seen from above, with its speed along the wheel and its angle. The drive motor uses velocity control to set how fast the wheel rolls. The azimuth motor uses position control with wrapping to set which way the wheel points. An absolute encoder tells the azimuth where the wheel is at startup. The module's state is a SwerveModuleVelocity, a speed and an angle."><figcaption><p>One module is a drive motor, an azimuth motor and an absolute encoder.</p></figcaption></figure>
+
+A module has one job: make its wheel roll at a speed, pointing at an angle. The drive motor runs velocity control for the speed, and the azimuth motor runs position control for the angle. An absolute encoder tells the azimuth which way the wheel points when the robot turns on, because the azimuth motor's own encoder starts at zero wherever the wheel happens to be.
+
+Both motors are ordinary [`SmartMotorController`s](editor/README.md), each with its own [`SmartMotorControllerConfig`](editor/config/README.md), so everything about gearing, gains and current limits applies to them unchanged.
+
+## Commands v2, Commands v3 and functions
+
+A `SwerveModule` has no commands of its own, and is the same class in Commands v2 and Commands v3: `yams.core.mechanisms.swerve.SwerveModule`. The only difference is the package its two motor configs come from, `yams.commands2.config` or `yams.commands3.config`. The [`SwerveDrive`](swerve-drive.md#commands) is what you command, and it sets each module for you.
+
+You rarely call a module directly, but these are the functions it has:
+
+| Function | What it does |
+| --- | --- |
+| `setSwerveModuleState(SwerveModuleVelocity)` | Set the wheel's speed and angle. The [optimization, cosine compensation and velocity deadband](mechanism-configs/swerve-module-config.md) are applied first. An overload adds a drive feedforward force. |
+| `lock(Rotation2d)` | Turn the wheel to an angle without driving it. |
+| `getState()` | The wheel's current speed and angle, and how fast the azimuth is turning. |
+| `getPosition()` | How far the wheel has rolled, and its angle. Used for odometry. |
+| `seedAzimuthEncoder()` | Set the azimuth motor's encoder from the absolute encoder. |
+| `getRawAbsoluteEncoderAngle()` | The absolute encoder's reading with no offset, for [finding the offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder). |
+| `getDriveMotorController()`, `getAzimuthMotorController()` | The two motors, for anything YAMS does not wrap. |
+
+`SwerveDrive.updateTelemetry()` and `SwerveDrive.simIterate()` update every module, so you do not call those on a module yourself.
 
 See [Swerve Drive](swerve-drive.md) first for how modules fit into the drive as a whole. This page goes deeper on `SwerveModule` and `SwerveModuleConfig` themselves.
 

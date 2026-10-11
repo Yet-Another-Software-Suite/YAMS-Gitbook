@@ -1,66 +1,218 @@
 ---
-icon: crosshairs-simple
+icon: fan
 ---
 
 # Shooters
 
-Every `FlyWheelConfig` option, with a graphic and an example, is on the [FlyWheelConfig](mechanism-configs/flywheel-config.md) page. This page walks through a complete mechanism.
+A shooter is a `FlyWheel` in YAMS, and so is anything else that spins: rollers, intakes, feeders and indexers.
 
-## Basic Shooter Config
+## How a flywheel works
 
-Given the [tutorial](../tutorials/shooter-flywheels.md) we have a basic shooter config below.
+<figure><img src="../.gitbook/assets/mech-flywheel-how.png" alt="A graph of flywheel speed against time. It spins up to the speed you asked for, sits inside a tolerance band where it is ready to shoot, drops when a game piece goes through, and recovers back into the band."><figcaption><p>A flywheel holds a speed.</p></figcaption></figure>
+
+Where an arm or an elevator goes to a position, a flywheel goes to a speed. Most of the voltage comes from the `kV` term of [`SimpleMotorFeedforward`](editor/config/feedforward.md#withfeedforward), which is the voltage that speed needs, and a small `kP` corrects what is left and brings the wheel back after a game piece slows it.
+
+A roller that only ever needs a voltage is still a `FlyWheel`: put its motor in [`ControlMode.OPEN_LOOP`](editor/config/motor-basics.md#withcontrolmode) and drive it with `set` or `setVoltage`.
+
+<figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
+
+A YAMS `FlyWheel` is a thin layer over one [`SmartMotorController`](editor/README.md). The `FlyWheel` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
+
+## Creating a flywheel
+
+The code is the same for Commands v2 and Commands v3 except for the package you import from and the class that owns the mechanism.
+
+{% tabs %}
+{% tab title="Commands v2" %}
+```java
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.commands2.mechanisms.FlyWheel;
+
+public class FlyWheelSubsystem extends SubsystemBase
+{
+  private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+      .withControlMode(ControlMode.CLOSED_LOOP)
+      .withGearing(new MechanismGearing(1))
+      .withClosedLoopController(0.1, 0, 0)
+      .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0.01))
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withStatorCurrentLimit(Amps.of(40))
+      .withZeroPower(MotorMode.COAST)
+      .withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH);
+  private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), motorConfig);
+  private final FlyWheelConfig config = new FlyWheelConfig()
+      .withDiameter(Inches.of(4))
+      .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
+  private final FlyWheel flywheel = new FlyWheel(config, motor);
+
+  @Override
+  public void periodic()
+  {
+    flywheel.updateTelemetry(); // every loop
+  }
+
+  @Override
+  public void simulationPeriodic()
+  {
+    flywheel.simIterate(); // every loop, in simulation
+  }
+}
+```
+
+`this` is the `Subsystem`. The scheduler calls `periodic()` and `simulationPeriodic()` for you.
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+import yams.commands3.config.SmartMotorControllerConfig;
+import yams.commands3.mechanisms.FlyWheel;
+
+public class FlyWheelMechanism implements Mechanism
+{
+  private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+      .withControlMode(ControlMode.CLOSED_LOOP)
+      .withGearing(new MechanismGearing(1))
+      .withClosedLoopController(0.1, 0, 0)
+      .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0.01))
+      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withStatorCurrentLimit(Amps.of(40))
+      .withZeroPower(MotorMode.COAST)
+      .withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH);
+  private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), motorConfig);
+  private final FlyWheelConfig config = new FlyWheelConfig()
+      .withDiameter(Inches.of(4))
+      .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
+  private final FlyWheel flywheel = new FlyWheel(config, motor);
+
+  public void periodic()
+  {
+    flywheel.updateTelemetry(); // every loop
+  }
+
+  public void simulationPeriodic()
+  {
+    flywheel.simIterate(); // every loop, in simulation
+  }
+}
+```
+
+`this` is the Commands v3 `Mechanism`. A `Mechanism` has no periodic hook, so call `periodic()` and `simulationPeriodic()` yourself from `Robot.robotPeriodic()`.
+{% endtab %}
+{% endtabs %}
+
+The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/README.md), and the options in `config` in [FlyWheelConfig](mechanism-configs/flywheel-config.md).
+
+## Commands
+
+Every command below exists with the same name in Commands v2 and Commands v3.
+
+<figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
+
+| Command | What it does | Ends |
+| --- | --- | --- |
+| `run(AngularVelocity)` | Spin at this speed and hold it. | Never, until interrupted. |
+| `run(LinearVelocity)` | Spin so the wheel's surface moves at this speed. Needs [`withDiameter`](mechanism-configs/flywheel-config.md#withdiameter). | Never, until interrupted. |
+| `runTo(AngularVelocity, AngularVelocity tolerance)` | Spin up to this speed. | When the wheel is within the tolerance. |
+| `runTo(LinearVelocity, LinearVelocity tolerance)` | The same, as a surface speed. | When the wheel is within the tolerance. |
+| `set(double)` | Output a duty cycle, with the closed loop off. | Never, until interrupted. |
+| `setVoltage(Voltage)` | Output a voltage, with the closed loop off. | Never, until interrupted. |
+
+`run` and `runTo` also take suppliers, for a speed that changes while the command runs, such as one that depends on the distance to the target. A flywheel has no `setAngle` or `setHeight`: `run` is the command that holds.
+
+{% tabs %}
+{% tab title="Commands v2" %}
+```java
+// In the subsystem
+public Command hold(AngularVelocity speed)
+{
+  return flywheel.run(speed); // never ends: a good default command
+}
+
+public Command moveTo(AngularVelocity speed)
+{
+  return flywheel.runTo(speed, RPM.of(50)); // ends when it gets there
+}
+
+// In RobotContainer
+shooter.setDefaultCommand(shooter.hold(RPM.of(0)));
+Command score = shooter.moveTo(RPM.of(3000)).andThen(intake.eject());
+```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+// In the mechanism
+public Command hold(AngularVelocity speed)
+{
+  return run(coroutine -> coroutine.await(flywheel.run(speed)))
+      .withPriority(Command.LOWEST_PRIORITY) // so any other command can take over
+      .named("FlyWheel Hold");
+}
+
+public Command moveTo(AngularVelocity speed)
+{
+  return flywheel.runTo(speed, RPM.of(50)); // ends when it gets there
+}
+
+// In Robot
+shooter.setDefaultCommand(shooter.hold(RPM.of(0)));
+Command score = Command.noRequirements(coroutine -> {
+  coroutine.await(shooter.moveTo(RPM.of(3000)));
+  coroutine.await(intake.eject());
+}).named("Score");
+```
+{% endtab %}
+{% endtabs %}
+
+When a command ends the motor keeps its last request, so a mechanism that reached its goal stays there until another command, usually the default one, gives it something else. [run() vs runTo() Commands](run-vs-runto.md) covers the pitfalls, including a default command undoing a `runTo()`.
+
+## Setpoint functions
+
+The commands above are built on plain functions that set the setpoint and return at once. Use them when you write your own command, or when something other than a command decides the setpoint, such as an AdvantageKit IO layer.
+
+| Function | What it does |
+| --- | --- |
+| `setMechanismVelocitySetpoint(AngularVelocity)` | Spin at this speed with closed loop control. |
+| `setMeasurementVelocitySetpoint(LinearVelocity)` | Spin so the surface moves at this speed. Needs [`withDiameter`](mechanism-configs/flywheel-config.md#withdiameter). |
+| `setVoltageSetpoint(Voltage)` | Output this voltage. Stops the closed loop. |
+| `setDutyCycleSetpoint(double)` | Output this duty cycle, from -1 to 1. Stops the closed loop. |
+| `getMechanismSetpointVelocity()` | The current speed setpoint, if there is one. |
 
 ```java
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.util.CANPorts;
-import org.wpilib.math.controller.SimpleMotorFeedforward;
-import org.wpilib.math.system.DCMotor;
-import yams.commands2.config.SmartMotorControllerConfig; // yams.commands3.config for Commands v3
-import yams.commands2.mechanisms.FlyWheel;               // yams.commands3.mechanisms for Commands v3
-import yams.core.gearing.GearBox;
-import yams.core.gearing.MechanismGearing;
-import yams.core.mechanisms.config.FlyWheelConfig;
-import yams.core.motorcontrollers.SmartMotorController;
-import yams.core.motorcontrollers.enums.ControlMode;
-import yams.core.motorcontrollers.enums.MotorMode;
-import yams.core.motorcontrollers.local.SparkWrapper;
-import yams.core.telemetry.enums.TelemetryVerbosity;
-
-SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(50, 0, 0)
-  .withSimClosedLoopController(50, 0, 0)
-  // Feedforward Constants
-  .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-  .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-  // Telemetry name and verbosity level
-  .withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH)
-  // Gearing from the motor rotor to final shaft.
-  // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-  // Motor properties to prevent over currenting.
-  .withMotorInverted(false)
-  .withZeroPower(MotorMode.COAST)
-  .withStatorCurrentLimit(Amps.of(40))
-  .withClosedLoopRampRate(Seconds.of(0.25))
-  .withOpenLoopRampRate(Seconds.of(0.25))
-  .withMomentOfInertia(Inches.of(4), Pounds.of(1));
-
-// Vendor motor controller object
-SparkMax spark = new SparkMax(CANPorts.fromBusId(1), 4, MotorType.kBrushless);
-
-// Create our SmartMotorController from our Spark and config with the NEO.
-SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
-
-FlyWheelConfig shooterConfig = new FlyWheelConfig()
-  // Telemetry name and verbosity for the shooter.
-  .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
-
-// Shooter Mechanism
-FlyWheel shooter = new FlyWheel(shooterConfig, sparkSmartMotorController);
+flywheel.setMechanismVelocitySetpoint(RPM.of(3000));
 ```
+
+These do not require the subsystem or mechanism, so nothing stops two callers fighting over the setpoint. Prefer the commands unless you need these. [Setpoint Methods vs Command Helpers](setpoint-methods.md) compares the two in detail.
+
+## Asking where it is
+
+<figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with an arm at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and isNear, isBetween, isGte, isLte, isAtMax and isAtMin return the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
+
+| As a `Trigger` | As a boolean | True when |
+| --- | --- | --- |
+| `near(speed, within)` | `isNear(speed, within)` | The wheel is within `within` of `speed`. |
+| `between(start, end)` | `isBetween(start, end)` | The wheel's speed is between the two. |
+| `gte(speed)`, `lte(speed)` | `isGte(speed)`, `isLte(speed)` | The wheel is at or above, or at or below, the speed. |
+
+`getSpeed()` returns the wheel's speed and `getLinearVelocity()` its surface speed. A flywheel has no `max()` or `min()`, because it has no end to its travel. The graphic above shows an arm, and a flywheel works the same way with speeds.
+
+```java
+shooter.near(RPM.of(3000), RPM.of(50)).whileTrue(feeder.feed()); // only feed at speed
+```
+
+## Shooting
+
+A shot is two flywheels working together: the shooter spins up, and a feeder pushes the game piece in once the shooter is at speed. Use `near(...)` on the shooter to gate the feeder, as above. [How to shoot with a Shooter?](../how-to/how-to-shoot-with-a-shooter.md) walks through it, and [Double FlyWheel](../tutorials/double-flywheel.md) covers two wheels spinning at different speeds.
+
+## When a flywheel will not reach its speed
+
+A flywheel that reaches low speeds but not high ones, or that slows down more with every shot, is usually short of power and not badly tuned: see [when tuning does not help](live-tuning/README.md#when-tuning-does-not-help).
+
+## Configuring a flywheel
+
+Every `FlyWheelConfig` option is on the [FlyWheelConfig](mechanism-configs/flywheel-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
+
+A `FlyWheel` needs nothing on its config to be simulated. Its [moment of inertia](editor/config/simulation.md#withmomentofinertia) is on the motor config.
 
 ## Code Reference
 
