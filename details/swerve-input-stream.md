@@ -182,6 +182,10 @@ input.withControllerRotationAxis(() -> -driver.getRightX());
 
 <figure><img src="../.gitbook/assets/sis-heading-axis.gif" alt="Animation of the right stick moving all the way around its edge while a robot on the field turns to face the same direction. Stick up is 0 degrees, stick left is 90 degrees, stick down is 180 degrees and stick right is minus 90 degrees"><figcaption><p>Two axes set a direction, and the robot turns to face it.</p></figcaption></figure>
 
+The heading axes only replace rotation. The left stick keeps driving the robot, so it can move one way while facing another:
+
+<figure><img src="../.gitbook/assets/sis-heading-axis-driving.gif" alt="Animation of a robot driving across the field along a curved path set by the left stick. While it drives, the right stick swings from left to right and the robot turns to face where the right stick points, without changing the path it drives"><figcaption><p>Driving with the left stick while the right stick sets the heading.</p></figcaption></figure>
+
 ```java
 input.withControllerHeadingAxis(() -> -driver.getRightX(), () -> -driver.getRightY());
 ```
