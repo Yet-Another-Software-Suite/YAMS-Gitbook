@@ -61,7 +61,7 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 .withClosedLoopRampRate(Seconds.of(0.1))
 ```
 
-[Limiting power consumption](../limiting-power-consumption.md#ramp-rates) covers when to use them. A closed loop ramp rate also slows the controller's reactions, so prefer a [motion profile](motion-profiles.md) for position control.
+A ramp rate is the last thing to reach for. It slows everything the motor does, including the closed loop controller's reactions. To cut a mechanism's power draw, try these first, in order: a [motion profile](motion-profiles.md) if one suits the mechanism, then a [supply current limit](#current-limits) where the motor controller has one, then a [stator current limit](#current-limits) where it does not. Use a ramp rate only if none of those is enough. [Limiting power consumption](../limiting-power-consumption.md#ramp-rates) explains how they behave.
 
 **Not supported everywhere.**
 

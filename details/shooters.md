@@ -278,9 +278,16 @@ Shoot at the edges of your `near(...)` tolerance and see whether the shots still
 {% endstep %}
 
 {% step %}
-#### Add a ramp only if you need one
+#### If it browns out the robot
 
-If spinning up browns out the robot, add a [velocity profile](editor/config/motion-profiles.md#a-velocity-profile) or a lower current limit, and test it against the [battery simulation](../understanding/battery-simulation.md).
+If spinning up browns out the robot, work down this list and stop at the first thing that fixes it:
+
+1. A [velocity profile](editor/config/motion-profiles.md#a-velocity-profile), if one suits the mechanism, so it asks for less at the start.
+2. A [supply current limit](editor/config/limits-and-protection.md#current-limits), where the motor controller has one.
+3. A [stator current limit](editor/config/limits-and-protection.md#current-limits), where it does not.
+4. A [ramp rate](editor/config/limits-and-protection.md#ramp-rates), only if nothing else works.
+
+Test each against the [battery simulation](../understanding/battery-simulation.md).
 {% endstep %}
 {% endstepper %}
 

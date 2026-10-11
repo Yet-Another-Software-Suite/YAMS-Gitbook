@@ -76,9 +76,20 @@ In simulation, do the things that happen together in a match: accelerate the dri
 {% endstep %}
 
 {% step %}
-#### Limit the biggest load first
+#### Start with the biggest load
 
-The drive is usually the largest draw, so a supply limit there does the most. Then the next largest.
+The drive is usually the largest draw, so limiting it does the most. Then the next largest.
+{% endstep %}
+
+{% step %}
+#### Limit each load in this order
+
+Stop at the first thing that brings the dip under control:
+
+1. A [motion profile](config/motion-profiles.md), if one suits the mechanism, so it asks for less current in the first place.
+2. A supply current limit, where the motor controller has one.
+3. A stator current limit, where it does not. SPARK MAX and SPARK Flex have no supply limit.
+4. A ramp rate, only if nothing else works. It slows everything the motor does.
 {% endstep %}
 
 {% step %}
