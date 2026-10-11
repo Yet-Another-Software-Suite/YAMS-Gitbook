@@ -250,7 +250,13 @@ public Command moveTo(Angle angle)
 {
   return runOnce(() -> arm.getMotorController().startClosedLoopController()) // driving releases the brake
       .andThen(arm.runTo(angle, Degrees.of(2)))                               // move
-      .finallyDo(() -> arm.setDutyCycleSetpoint(0));                          // rest: the brake bites
+      .finallyDo(this::rest);                                                 // rest, even if interrupted
+}
+
+private void rest()
+{
+  arm.setDutyCycleSetpoint(0);                             // output 0: the brake bites
+  arm.getMotorController().stopClosedLoopController();     // and make sure the closed loop stays stopped
 }
 ```
 {% endtab %}
@@ -262,14 +268,20 @@ public Command moveTo(Angle angle)
   return run(coroutine -> {
     arm.getMotorController().startClosedLoopController();  // driving releases the brake
     coroutine.await(arm.runTo(angle, Degrees.of(2)));      // move
-    arm.setDutyCycleSetpoint(0);                           // rest: the brake bites
-  }).whenCanceled(() -> arm.setDutyCycleSetpoint(0)).named("Arm Move And Rest");
+    rest();
+  }).whenCanceled(this::rest).named("Arm Move And Rest");
+}
+
+private void rest()
+{
+  arm.setDutyCycleSetpoint(0);                             // output 0: the brake bites
+  arm.getMotorController().stopClosedLoopController();     // and make sure the closed loop stays stopped
 }
 ```
 {% endtab %}
 {% endtabs %}
 
-`setDutyCycleSetpoint(0)` stops the closed loop controller, which is why each move starts it again.
+Resting the motor means two things: an output of zero, and the closed loop controller stopped. If the closed loop kept running it would go on driving the arm to its setpoint, against the brake. `setDutyCycleSetpoint(0)` stops it before setting the output, and the explicit `stopClosedLoopController()` after it makes sure it stays stopped. That is also why each move starts the closed loop again.
 
 ### With a manual brake
 
@@ -289,6 +301,7 @@ public Command moveTo(Angle angle)
       .finallyDo(() -> {
         brake.set(true);                                     // engage, even if interrupted
         arm.setDutyCycleSetpoint(0);                         // rest the motor
+        arm.getMotorController().stopClosedLoopController();
       });
 }
 ```
@@ -311,6 +324,7 @@ private void engageBrake()
 {
   brake.set(true);                                         // engage
   arm.setDutyCycleSetpoint(0);                             // rest the motor
+  arm.getMotorController().stopClosedLoopController();
 }
 ```
 {% endtab %}
