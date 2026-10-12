@@ -65,6 +65,13 @@ What that looks like on a mechanism once the output is zero:
 
 With nothing pulling on it, a mechanism in brake mode does not move while it is not powered, and the same mechanism in coast mode does. Gravity is something pulling on it, so most arms and elevators still sink in brake mode, only slower than they fall in coast mode.
 
+An arm or an elevator can stay up in brake mode, but only when it was built to:
+
+* **An elevator with a constant force spring** that carries the weight of the carriage has nothing left pulling it down.
+* **An arm whose motor resists harder than gravity pulls**, through enough gearing or a light enough arm, stays where it stopped.
+
+Both are mechanical, decided when the mechanism is designed, and nothing in your code makes them happen. Treat it as something to strive for when you design a mechanism, not something to expect from one.
+
 {% hint style="info" %}
 **Brake mode is an option, not a requirement, and it is not how a mechanism holds its position.** An arm or an elevator does not need brake mode to hold: the closed loop controller and [`kG`](feedforward.md) hold it, in either mode, for as long as it is powered. Brake mode only changes what happens when it is not, such as when the robot is disabled.
 {% endhint %}
