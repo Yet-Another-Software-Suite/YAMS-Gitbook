@@ -200,6 +200,88 @@ public Command complexArmCommand(Supplier<Angle> targetSupplier) {
 }
 ```
 
+### Starting and stopping the SystemCore closed loop
+
+Some closed loops run on the motor controller and some run on the SystemCore. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) lists which is which. A loop on the SystemCore is a piece of YAMS code that runs every control period and writes an output to the motor, and it keeps doing that until it is stopped. So with the direct setpoint methods, **you** have to start and stop it to match the kind of control you want:
+
+| You want | The SystemCore closed loop must be | Why |
+| --- | --- | --- |
+| Position or velocity control (`setMechanismPositionSetpoint`, `setMechanismVelocitySetpoint` and the measurement versions) | Running | A stopped loop does nothing with the setpoint, so the mechanism does not move to it |
+| Voltage or duty cycle control (`setVoltageSetpoint`, `setDutyCycleSetpoint`) | Stopped | A running loop writes its own output on its next run and overrides yours |
+
+```java
+arm.getMotorController().startClosedLoopController(); // before position or velocity control
+arm.getMotorController().stopClosedLoopController();  // before voltage or duty cycle control
+```
+
+{% hint style="info" %}
+The [command helpers](#command-helper-methods) already do this. `set(...)` and `setVoltage(...)` stop the closed loop while they run and start it again when they end. You only need to do it yourself when you use the direct setpoint methods.
+{% endhint %}
+
+The pattern is always the same: put the loop in the state your command needs when the command starts, and put it back when the command ends, however it ends.
+
+{% tabs %}
+{% tab title="Commands v2" %}
+Use `startRun` to set the loop up once and then run every loop, and `finallyDo` to put it back whether the command finishes or is interrupted.
+
+```java
+/** Drive the arm by voltage, for example from a joystick. */
+public Command manual(Supplier<Voltage> volts) {
+  return startRun(
+          () -> arm.getMotorController().stopClosedLoopController(),   // once, at the start
+          () -> arm.setVoltageSetpoint(volts.get()))                    // every loop
+      .finallyDo(() -> arm.getMotorController().startClosedLoopController()) // at the end, always
+      .withName("Arm Manual");
+}
+
+/** Hold an angle that can change while the command runs. */
+public Command track(Supplier<Angle> angle) {
+  return startRun(
+          () -> arm.getMotorController().startClosedLoopController(),  // once, at the start
+          () -> arm.setMechanismPositionSetpoint(angle.get()))          // every loop
+      .withName("Arm Track");
+}
+```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+Set the loop up before the `while (true)` loop, and use `whenCanceled` to put it back.
+
+```java
+/** Drive the arm by voltage, for example from a joystick. */
+public Command manual(Supplier<Voltage> volts) {
+  return run(coroutine -> {
+    arm.getMotorController().stopClosedLoopController();                // once, at the start
+    while (true) {
+      arm.setVoltageSetpoint(volts.get());                              // every loop
+      coroutine.yield();
+    }
+  }).whenCanceled(() -> arm.getMotorController().startClosedLoopController()) // at the end
+    .named("Arm Manual");
+}
+
+/** Hold an angle that can change while the command runs. */
+public Command track(Supplier<Angle> angle) {
+  return run(coroutine -> {
+    arm.getMotorController().startClosedLoopController();               // once, at the start
+    while (true) {
+      arm.setMechanismPositionSetpoint(angle.get());                    // every loop
+      coroutine.yield();
+    }
+  }).named("Arm Track");
+}
+```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="warning" %}
+**Starting the loop resets it.** `startClosedLoopController()` resets the PID controller and starts the motion profile again from where the mechanism is now. Call it once when a command starts, as above, and not every loop, or the profile never gets going.
+{% endhint %}
+
+{% hint style="success" %}
+**The same code is safe on every motor controller.** When the closed loop runs on the motor controller itself, there is no SystemCore loop, and both calls do nothing. So you can write commands this way without knowing where the loop runs, and they keep working if you change motor controller or profile later.
+{% endhint %}
+
 ## Setpoint Method Support Matrix
 
 Every Mechanism class inherits all of these methods, but not all of them make sense for every mechanism. "No" below means the method does not apply to that mechanism.
