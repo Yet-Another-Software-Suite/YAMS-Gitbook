@@ -28,11 +28,11 @@ Tightly coupled followers, for motors on the same shaft or gearbox. Each followe
 
 Pass the vendor's motor object, not a `SmartMotorController`. The boolean is whether that follower is inverted relative to the leader: motors facing each other across a gearbox usually are.
 
-**Supported on every motor controller.** Followers must be the same vendor as the leader.
+**Supported on every motor controller.** Followers must be the same vendor as the leader. A TalonFX and a TalonFXS are both CTRE, so either can follow the other.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
-| ✅ TalonFX followers only | ✅ TalonFXS followers only | ✅ SPARK followers only | ✅ Nova followers only |
+| ✅ TalonFX and TalonFXS followers | ✅ TalonFXS and TalonFX followers | ✅ SPARK followers only | ✅ Nova followers only |
 
 ## `withLooselyCoupledFollowers`
 
