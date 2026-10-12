@@ -267,21 +267,62 @@ Find the moment the velocity reached 63% of the steady speed, and how long after
 
 ### Refining the profile live
 
-This is where the profile is actually tuned, by changing kV and kA directly. However you got the starting values, YAMS stores the profile as a maximum voltage, a kV and a kA. At `TelemetryVerbosity.HIGH` they are tunable under `NT:/Tuning/.../closedloop/motionprofile/` as `maxInput`, `kV` and `kA`. Run a move and compare `mechanism/velocity` with `closedloop/setpoint/velocity`:
+This is where the profile is actually tuned, by changing kV and kA directly. However you got the starting values, YAMS stores the profile as a maximum voltage, a kV and a kA, and all three can be changed while the robot is running.
 
-* Falls behind while speeding up: raise `kA`, which lowers the profile's acceleration.
-* Falls behind at top speed, or never reaches it: raise `kV`, which lowers the profile's top speed.
-* Follows easily with voltage to spare: lower them a little, or raise `maxInput`.
+{% stepper %}
+{% step %}
+#### Turn on live tuning
 
-See [Live tuning](../live-tuning/README.md) for how to edit these. When you are happy with them, put the tuned values in the config so they survive a restart:
+Give the motor `TelemetryVerbosity.HIGH` and start the `Live Tuning` command. [Live tuning](../live-tuning/README.md) covers both.
+{% endstep %}
+
+{% step %}
+#### Graph the profile against the mechanism
+
+In AdvantageScope, put these two on one graph:
+
+* `NT:/Mechanisms/<Mechanism>/<Motor>/closedloop/setpoint/velocity`: what the profile asks for.
+* `NT:/Mechanisms/<Mechanism>/<Motor>/mechanism/velocity`: what the mechanism does.
+{% endstep %}
+
+{% step %}
+#### Run a move
+
+Command a move long enough for the mechanism to reach its top speed, and watch how closely the second line follows the first.
+{% endstep %}
+
+{% step %}
+#### Tune `kA` on the way up
+
+Look at the start of the move, while the mechanism is speeding up. If it falls behind the profile, raise `NT:/Tuning/<Mechanism>/<Motor>/closedloop/motionprofile/kA`. A higher `kA` lowers the profile's acceleration. Run the move again and repeat until it keeps up.
+{% endstep %}
+
+{% step %}
+#### Tune `kV` at top speed
+
+Look at the fastest part of the move. If the mechanism falls behind there, or never reaches the profile's top speed, raise `NT:/Tuning/<Mechanism>/<Motor>/closedloop/motionprofile/kV`. A higher `kV` lowers the profile's top speed.
+{% endstep %}
+
+{% step %}
+#### Speed it up if there is room
+
+If the mechanism follows the whole move easily with voltage to spare on `NT:/Mechanisms/<Mechanism>/<Motor>/motor/outputVoltage`, lower `kV` and `kA` a little at a time, or raise `NT:/Tuning/<Mechanism>/<Motor>/closedloop/motionprofile/maxInput`. Stop as soon as it starts to fall behind again, and go back one step.
+{% endstep %}
+
+{% step %}
+#### Put the tuned values in the config
+
+Live values are lost when the robot code restarts, so copy them into the config:
 
 ```java
 .withExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(
-    10.0, // maximum voltage the profile may ask for
+    10.0, // maxInput: maximum voltage the profile may ask for
     2.2,  // kV, tuned
     0.35  // kA, tuned
 ))
 ```
+{% endstep %}
+{% endstepper %}
 
 ### Step 2: Set Maximum Voltage
 
