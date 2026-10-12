@@ -171,7 +171,7 @@ An offset you apply yourself is different. If you leave the encoder's zero offse
 The order comes from the vendors' own documentation:
 
 * **CTRE** ([`MagnetSensorConfigs`](https://api.ctr-electronics.com/phoenix6/stable/java/com/ctre/phoenix6/configs/MagnetSensorConfigs.html)): the magnet offset "is added to the reported position", and the discontinuity point "determines the point at which the absolute sensor wraps around, keeping the absolute position (after offset) in the range [x-1, x)".
-* **REV** ([`AbsoluteEncoderConfig`](https://codedocs.revrobotics.com/java/com/revrobotics/spark/config/absoluteencoderconfig)): the zero offset is "the position that is reported as zero", and with zero centering "the position will be reported in the range (-0.5, 0.5], instead of the default range [0, 1)". REV does not spell out the order, but a range centered on the reported zero means the wrap is half a turn from the offset zero.
+* **REV** ([`AbsoluteEncoderConfig`](https://codedocs.revrobotics.com/java/com/revrobotics/spark/config/absoluteencoderconfig)): the zero offset is "the position that is reported as zero", and with zero centering "the position will be reported in the range (-0.5, 0.5], instead of the default range [0, 1)". REV does not spell out the order, but a range centered on the reported zero means the wrap is half a turn from the offset zero. REVLib deprecates zero centering in 2027 in favor of `rangeOffset`, which is what YAMS gives a SPARK's absolute encoder: "Set the offset of the range about zero of the absolute encoder."
 
 ## `withExternalEncoderDiscontinuityPoint`
 
