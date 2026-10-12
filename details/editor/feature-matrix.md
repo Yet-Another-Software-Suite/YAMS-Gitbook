@@ -302,7 +302,7 @@ This is every option against every motor controller. What each option does, with
 | Loosely Coupled Followers | ✅       | ✅        | ✅             | ✅ |
 
 {% hint style="warning" %}
-**Follower Compatibility**: Followers must be the same brand as the leader motor controller. You cannot mix vendors for hardware followers. Within a vendor the models can be mixed: a TalonFX can follow a TalonFXS and a TalonFXS can follow a TalonFX, and a SPARK MAX and a SPARK Flex can follow each other.
+**Follower Compatibility**: Followers must be the same brand as the leader motor controller. You cannot mix vendors for hardware followers. Within a vendor the models can be mixed: a TalonFX can follow a TalonFXS and a TalonFXS can follow a TalonFX, and a SPARK MAX and a SPARK Flex can follow each other. Loosely coupled followers are different: each one runs its own closed loop, so you can mix brands freely, such as a SPARK leading a TalonFX.
 {% endhint %}
 
 ### Telemetry

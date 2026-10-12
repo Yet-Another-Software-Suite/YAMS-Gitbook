@@ -28,7 +28,7 @@ Tightly coupled followers, for motors on the same shaft or gearbox. Each followe
 
 Pass the vendor's motor object, not a `SmartMotorController`. The boolean is whether that follower is inverted relative to the leader: motors facing each other across a gearbox usually are.
 
-**Supported on every motor controller.** Followers must be the same vendor as the leader. A TalonFX and a TalonFXS are both CTRE, so either can follow the other.
+**Supported on every motor controller.** Followers must be the same vendor as the leader. A TalonFX and a TalonFXS are both CTRE, so either can follow the other. To mix brands, use [`withLooselyCoupledFollowers`](#withlooselycoupledfollowers).
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -45,7 +45,7 @@ SmartMotorController left  = new SparkWrapper(leftSpark, DCMotor.getNEO(1),
                                               config.withLooselyCoupledFollowers(right));
 ```
 
-Because each motor closes its own loop, loosely coupled followers can be different vendors.
+**You can mix brands.** Because each motor closes its own loop, a loosely coupled follower can be any supported motor controller, whatever the leader is. The example above has a SPARK leading a TalonFX.
 
 **Supported on:** every supported motor controller.
 
