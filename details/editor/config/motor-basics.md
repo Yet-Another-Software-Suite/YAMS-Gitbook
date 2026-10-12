@@ -43,13 +43,31 @@ Decide it once, with the mechanism free to move and a small voltage, before tuni
 
 Chooses what the motor does when the output is zero: `MotorMode.BRAKE` or `MotorMode.COAST`.
 
-<figure><img src="../../../.gitbook/assets/smc-zero-power.png" alt="A graph of speed against time. When the output goes to zero, a motor in BRAKE mode stops quickly and resists being pushed, and a motor in COAST mode spins down on its own."><figcaption><p>Brake and coast after the output goes to zero.</p></figcaption></figure>
+* **`MotorMode.BRAKE`**: a motor that is not powered resists being moved. It stops quickly, and it is hard to turn by hand.
+* **`MotorMode.COAST`**: a motor that is not powered moves freely. It keeps going until friction stops it, and it turns easily by hand.
+
+<figure><img src="../../../.gitbook/assets/smc-zero-power.png" alt="A graph of speed against time. When the output goes to zero, a motor in BRAKE mode stops quickly and then resists being moved, and a motor in COAST mode keeps moving and is free to be moved. Either mode is your choice. BRAKE resists movement but does not hold an arm or elevator up, and COAST suits flywheels."><figcaption><p>Brake and coast after the output goes to zero.</p></figcaption></figure>
 
 ```java
 .withZeroPower(MotorMode.BRAKE)
 ```
 
-Brake mode resists movement but does not hold a position against gravity: that is the job of the closed loop controller and [`kG`](feedforward.md).
+What that looks like on a mechanism once the output is zero:
+
+<figure><img src="../../../.gitbook/assets/smc-zero-power-mechanisms.gif" alt="Animation of an elevator, an arm, a pivot and a flywheel, each shown in brake mode and in coast mode. All are driven and then the output goes to zero. In brake mode the pivot stops and stays, the flywheel stops quickly, and the elevator and the arm sink slowly. In coast mode the elevator falls to the bottom, the arm falls onto its hard stop, the pivot keeps turning and the flywheel keeps spinning."><figcaption><p>Not powered, a mechanism in brake mode resists movement and a mechanism in coast mode moves freely.</p></figcaption></figure>
+
+| Mechanism | Not powered in `BRAKE` | Not powered in `COAST` |
+| --- | --- | --- |
+| Elevator | Sinks slowly | Falls |
+| Arm | Sinks slowly | Falls |
+| Pivot (turret or wrist) | Stops and stays where it is | Keeps turning, and moves when bumped |
+| Flywheel | Stops quickly | Keeps spinning and slows down on its own |
+
+With nothing pulling on it, a mechanism in brake mode does not move while it is not powered, and the same mechanism in coast mode does. Gravity is something pulling on it, so most arms and elevators still sink in brake mode, only slower than they fall in coast mode.
+
+{% hint style="info" %}
+**Brake mode is an option, not a requirement, and it is not how a mechanism holds its position.** An arm or an elevator does not need brake mode to hold: the closed loop controller and [`kG`](feedforward.md) hold it, in either mode, for as long as it is powered. Brake mode only changes what happens when it is not, such as when the robot is disabled.
+{% endhint %}
 
 **Supported on:** every supported motor controller.
 
