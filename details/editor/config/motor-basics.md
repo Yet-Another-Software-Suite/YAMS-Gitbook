@@ -109,21 +109,54 @@ Each wrapper accepts only its own vendor's root config class. The classes and an
 
 ## `withVendorControlRequest`
 
-Replaces the control request YAMS would send for position or velocity control with one of the vendor's own, for example to use FOC torque control on a TalonFX.
+Replaces the control request YAMS would send for position or velocity control with one of the vendor's own.
 
+By default YAMS picks the request for you: a plain position or velocity request, or a Motion Magic one when you set a [motion profile](motion-profiles.md). This option is for when you want a different one, most often:
+
+* **Torque control**, with a `TorqueCurrentFOC` request, so the closed loop commands current instead of voltage.
+* **Duty cycle output**, with a `DutyCycle` request, instead of YAMS's voltage requests.
+* **A request with your own settings on it**, such as `withUpdateFreqHz`, `withOverrideBrakeDurNeutral` or the limit switch options.
+
+### How to use it
+
+Build the request once and give it to the config. YAMS keeps your object and fills in the setpoint every time it commands the motor, so every other setting on it stays as you made it. The value you construct it with is a placeholder: `0` is fine.
+
+{% code title="ArmSubsystem.java" %}
 ```java
-.withVendorControlRequest(new MotionMagicTorqueCurrentFOC(0))
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+
+private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(60, 0, 4)
+    .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+    .withZeroPower(MotorMode.BRAKE)
+    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
+    // Motion Magic on torque current instead of voltage.
+    .withVendorControlRequest(new MotionMagicTorqueCurrentFOC(0));
 ```
+{% endcode %}
 
-**Not supported everywhere.** A request that does not match the configured profile throws.
+Nothing else changes. `arm.runTo(Degrees.of(45))` and every other command work as before, and now send your request.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ Phoenix 6 position, velocity and Motion Magic requests | ✅ Phoenix 6 position, velocity and Motion Magic requests | ❌ | ❌ |
+### Rules
 
-{% hint style="info" %}
-This option has no graphic: it changes which message is sent to the motor controller, not how the mechanism behaves.
-{% endhint %}
+* **One request per config.** A position request replaces the one used for positions, and a velocity request replaces the one used for velocities. The other kind keeps YAMS's default.
+* **Match it to your profile.** YAMS only sets up Motion Magic when the config has a motion profile, so use a `MotionMagic` request with a profile and a `Position` or `Velocity` request without one.
+* **A `TorqueCurrentFOC` request changes what your gains mean.** The closed loop output is current in amps, not volts, so gains tuned for a voltage request do not carry over. Tune them again from the start.
+* **A `TorqueCurrentFOC` request cannot have FOC switched on or off.** It is always FOC, so the FOC toggles on the wrapper throw with one.
+
+### Supported requests
+
+**Not supported everywhere.** Anything that is not on this list throws when the config is applied.
+
+| Motor controller | Position requests | Velocity requests |
+| --- | --- | --- |
+| TalonFX, TalonFXS | `PositionVoltage`, `PositionDutyCycle`, `PositionTorqueCurrentFOC`, `MotionMagicVoltage`, `MotionMagicDutyCycle`, `MotionMagicTorqueCurrentFOC`, `MotionMagicExpoVoltage`, `MotionMagicExpoDutyCycle` | `VelocityVoltage`, `VelocityDutyCycle`, `VelocityTorqueCurrentFOC`, `MotionMagicVelocityVoltage`, `MotionMagicVelocityDutyCycle`, `MotionMagicVelocityTorqueCurrentFOC` |
+| SPARK MAX / Flex | ❌ Throws | ❌ Throws |
+| Thrifty Nova | ❌ Throws | ❌ Throws |
+
+On a SPARK, YAMS chooses the REV `ControlType` itself: MAXMotion when the config has a trapezoidal profile, plain position or velocity otherwise.
 
 ## `withTelemetry`
 
