@@ -25,6 +25,20 @@ What the built in encoder is set to when the robot turns on.
 
 Without it, wherever the mechanism happens to be at startup is called zero. [`withSimStartingPosition`](simulation.md#withsimstartingposition) sets a different value for simulation only.
 
+### Why it matters for an arm with `kG`
+
+A wrong angle is more than a wrong number on the dashboard. An [`ArmFeedforward`](feedforward.md) multiplies `kG` by the cosine of the arm's angle, so it gives the most voltage when the arm is level and none when it is straight up. It uses the angle YAMS thinks the arm is at. If the arm does not start at 0° and you do not say so, that angle is wrong, and a `kG` you tuned carefully is applied in the wrong places.
+
+<figure><img src="../../../.gitbook/assets/smc-starting-position-kg.gif" alt="Animation of the same arm with the same tuned kG of 0.60 volts, moving from straight up at 90 degrees down past level and back. The arm is straight up when the robot turns on. With no starting position YAMS thinks the arm is 90 degrees below where it really is, so kG gives its full voltage when the arm is straight up and needs none, gives almost none when the arm is level and needs the most, and pushes the arm down once it is below level. With withStartingPosition of 90 degrees, the voltage kG gives matches the voltage needed to hold the arm at every angle."><figcaption><p>The same tuned <code>kG</code>. Without the starting position it is applied at the wrong angles.</p></figcaption></figure>
+
+| The arm is really | Needed to hold it | `kG` gives, with no starting position | What happens |
+| --- | --- | --- | --- |
+| Straight up, 90° | Nothing | All of `kG` | The arm is pushed away from where it should rest |
+| Level, 0° | All of `kG` | Nothing | The arm sags, and the PID has to make up the whole difference |
+| Below level, -20° | Most of `kG` | A negative voltage | The arm is pushed down, the wrong way |
+
+So set the starting position before you tune `kG`. A `kG` tuned on an arm with the wrong zero only looks right at the one angle it was tuned at.
+
 **Supported on:** every supported motor controller.
 
 ## `withEncoderInverted`
