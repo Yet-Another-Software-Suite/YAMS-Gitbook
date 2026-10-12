@@ -42,7 +42,7 @@ Exponential profiles model how DC motors actually behave. Instead of assuming co
 **Key characteristics:**
 
 * Acceleration naturally decreases as velocity increases (following motor physics)
-* Uses motor kV (velocity constant) and kA (acceleration constant) to model behavior
+* Models the mechanism with a kV (velocity constant) and a kA (acceleration constant), which YAMS works out for you
 * More accurately represents what the motor can actually achieve
 * Better disturbance rejection
 
@@ -94,6 +94,25 @@ This shows that as velocity (ω) increases, the available acceleration (α) decr
 ## Exponential Profiles in YAMS
 
 YAMS provides `ExponentialProfilePIDController` (`yams.core.math.ExponentialProfilePIDController`), which combines an exponential motion profile with a PID controller and has factory methods for the profile's constraints. In a `SmartMotorControllerConfig` you set the PID gains with `withClosedLoopController(kP, kI, kD)` and the profile with `withExponentialProfile(constraints)`, instead of a trapezoidal profile (`withTrapezoidalProfile`) or no profile at all.
+
+### What you set
+
+You do not normally set the profile's kV and kA yourself. You give YAMS the **maximum voltage** and one of two descriptions of the mechanism, and YAMS works out kV and kA from them:
+
+| You give | YAMS works out kV and kA from |
+| --- | --- |
+| Maximum voltage, the motor, and the mechanism's moment of inertia (or its mass and drum radius) | The motor and the load it has to move |
+| Maximum voltage, a maximum velocity and a maximum acceleration | `kV = maximum voltage / maximum velocity` and `kA = maximum voltage / maximum acceleration` |
+
+The second row is the same relationship [CTRE's Motion Magic Expo documentation](https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo) gives: dividing the voltage by kV gives the maximum velocity of the profile, and dividing it by kA gives its maximum acceleration from a standstill. CTRE's page is the best description of exponential profiles there is, and this page is meant to agree with it. If the two ever differ, CTRE's is right.
+
+`SmartMotorControllerConfig` takes all of these directly:
+
+```java
+.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.5))  // arm or flywheel
+.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(2), Kilograms.of(8), Inches.of(1)) // elevator
+.withExponentialProfile(Volts.of(10), RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(8))
+```
 
 ### Creating Constraints
 
@@ -167,22 +186,27 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 
 ## Tuning Exponential Profiles
 
-### Step 1: Find kV and kA
+### Step 1: Describe the mechanism
 
-The exponential profile needs accurate kV and kA values. You have two options:
+Start with the maximum voltage and a description of the mechanism, and let YAMS work out kV and kA:
 
 | Option | How | Good for |
 | --- | --- | --- |
-| Factory methods | YAMS calculates kV and kA from the motor, gearing and mass | A first version, and simulation |
-| Measure them yourself | One constant voltage test and a velocity graph, see [below](#measuring-kv-and-ka) | Real mechanisms, with no extra tools |
+| The mechanism | The motor, with the moment of inertia or the mass and drum radius | A first version, and simulation |
+| A maximum velocity and acceleration | The fastest you want the profile to go, and the hardest you want it to accelerate | Real mechanisms: both numbers are easy to see on a graph and to adjust |
+| kV and kA, measured | One constant voltage test, see [Measuring kV and kA](#measuring-kv-and-ka-optional) | When you want the profile to match the mechanism as closely as possible |
 
-{% hint style="warning" %}
-Factory methods use theoretical values. Real mechanisms have friction, cable drag, and other losses, so measured values are more accurate.
+{% hint style="info" %}
+**Start slower than you think the mechanism can go.** CTRE's advice for Motion Magic Expo is that it is safer to start from a higher kV and kA than ideal, which is a profile with a lower maximum velocity and acceleration. In YAMS terms: start with a lower maximum velocity and acceleration, or a heavier mechanism, than the real one, and speed the profile up once it follows well.
 {% endhint %}
 
-### Measuring kV and kA
+{% hint style="warning" %}
+A description from the motor and the mass is theoretical. Real mechanisms have friction, cable drag and other losses, so expect to slow the profile down a little from what the numbers say.
+{% endhint %}
 
-It needs only a button binding and a graph, and it gives you both profile constants from one test.
+### Measuring kV and kA (optional)
+
+Most mechanisms do not need this. If you want to give the profile kV and kA directly, this test needs only a button binding and a graph, and it gives you both from one run.
 
 <figure><img src="../../.gitbook/assets/exponential-profile-step-test.png" alt="A graph of velocity after a constant 6 volts is applied. It levels off at 2.9 rotations per second, so kV is 6.0 minus kS, divided by 2.9, which is 2.0. It reaches 63 percent of that speed after 0.15 seconds, so kA is kV times 0.15, which is 0.30"><figcaption><p>One voltage step gives both constants. Example values.</p></figcaption></figure>
 
@@ -233,22 +257,21 @@ Find the moment the velocity reached 63% of the steady speed, and how long after
 ```
 {% endstep %}
 
-{% step %}
-#### Refine them live
-
-At `TelemetryVerbosity.HIGH` the profile's constants are tunable under `NT:/Tuning/.../closedloop/motionprofile/` as `kV`, `kA` and `maxInput`. Run a move and compare `mechanism/velocity` with `closedloop/setpoint/velocity`:
-
-* Falls behind while speeding up: raise `kA`.
-* Falls behind at top speed, or never reaches it: raise `kV`.
-* Follows easily with voltage to spare: lower them a little, or raise `maxInput`.
-
-See [Live tuning](../live-tuning/README.md) for how to edit these.
-{% endstep %}
 {% endstepper %}
 
 {% hint style="info" %}
-**Gravity gets in the way of this test.** On an elevator, subtract kG as well: `kV = (voltage - kS - kG) / steady speed`. On an arm the pull of gravity changes with the angle, so the speed never settles: start from `createArmConstraints(...)` and use the live refinement step instead.
+**Gravity gets in the way of this test.** On an elevator, subtract kG as well: `kV = (voltage - kS - kG) / steady speed`. On an arm the pull of gravity changes with the angle, so the speed never settles: start from `createArmConstraints(...)` and refine it live instead.
 {% endhint %}
+
+### Refining the profile live
+
+However you described the mechanism, YAMS stores the profile as a maximum voltage, a kV and a kA. At `TelemetryVerbosity.HIGH` they are tunable under `NT:/Tuning/.../closedloop/motionprofile/` as `maxInput`, `kV` and `kA`. Run a move and compare `mechanism/velocity` with `closedloop/setpoint/velocity`:
+
+* Falls behind while speeding up: raise `kA`, which lowers the profile's acceleration.
+* Falls behind at top speed, or never reaches it: raise `kV`, which lowers the profile's top speed.
+* Follows easily with voltage to spare: lower them a little, or raise `maxInput`.
+
+See [Live tuning](../live-tuning/README.md) for how to edit these.
 
 ### Step 2: Set Maximum Voltage
 
@@ -260,7 +283,7 @@ The maximum voltage determines how aggressively the profile will command the mec
 
 ### Step 3: Tune PID Gains
 
-With exponential profiles, the feedforward does most of the work. The PID handles:
+With a good feedforward ([Step 4](#step-4-add-feedforward)), the feedforward does most of the work. The PID handles:
 
 * **kP** - Corrects position error. Start low (1-5) and increase until responsive
 * **kI** - Usually not needed with good feedforward. Use only if steady-state error persists
@@ -268,31 +291,32 @@ With exponential profiles, the feedforward does most of the work. The PID handle
 
 ### Step 4: Add Feedforward
 
-Even with exponential profiles, you still need feedforward for:
+The profile only plans the move. It does not drive the motor: the voltage that follows the plan comes from the feedforward and the PID. So an exponential profile still needs a full feedforward:
 
-* **Gravity compensation** (arms, elevators) - The profile doesn't know about gravity
-* **Friction compensation** (kS) - Helps overcome stiction
+* **kS** for friction.
+* **kG** for gravity, on arms and elevators. The profile does not know about gravity.
+* **kV and kA** for the speed and acceleration the profile asks for.
 
 ```java
 // For an arm
 .withFeedforward(new ArmFeedforward(
     0.1,  // kS - voltage to overcome friction
     0.3,  // kG - voltage to hold horizontal
-    0,    // kV - usually 0 since profile handles this
-    0     // kA - usually 0 since profile handles this
+    1.2,  // kV - voltage per unit of speed
+    0.05  // kA - voltage per unit of acceleration
 ))
 
 // For an elevator
 .withFeedforward(new ElevatorFeedforward(
     0.1,  // kS - voltage to overcome friction
     0.2,  // kG - voltage to counteract gravity
-    0,    // kV - usually 0 since profile handles this
-    0     // kA - usually 0 since profile handles this
+    3.0,  // kV - voltage per unit of speed
+    0.1   // kA - voltage per unit of acceleration
 ))
 ```
 
 {% hint style="info" %}
-When using exponential profiles, the profile itself handles the velocity and acceleration feedforward. You typically only need kS (static friction) and kG (gravity) in your feedforward object.
+**The profile's kV and kA are not the feedforward's kV and kA.** The profile's pair only shape the plan. The feedforward's pair turn that plan into voltage. CTRE's Motion Magic Expo example sets both, the gain slot's `kV` and `kA` and the profile's `MotionMagicExpo_kV` and `MotionMagicExpo_kA`, and YAMS keeps them separate in the same way. [Feedforward](config/feedforward.md) covers finding the feedforward's values.
 {% endhint %}
 
 ## Motor Controller Support
@@ -320,7 +344,7 @@ When exponential profiles run on the SystemCore, there's slightly more latency c
 
 * Decrease kP
 * Add kD for damping
-* Check that kV and kA values aren't underestimated
+* Slow the profile down: a profile that asks for more than the mechanism can do overshoots
 
 ### Mechanism can't keep up with profile
 
@@ -330,7 +354,7 @@ When exponential profiles run on the SystemCore, there's slightly more latency c
 
 ### Profile works in sim but not on real robot
 
-* Measure kV and kA on the real mechanism, see [Measuring kV and kA](#measuring-kv-and-ka)
+* Slow the profile down: lower the maximum velocity and acceleration, or see [Refining the profile live](#refining-the-profile-live)
 * Account for friction with kS in feedforward
 * Check current limits aren't restricting torque
 
