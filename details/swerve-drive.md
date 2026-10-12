@@ -98,17 +98,15 @@ SwerveDrive drive = new SwerveDrive(config);
 
 ## Commands
 
-`SwerveDrive` has the same commands in Commands v2 and Commands v3, and Commands v3 adds a few more.
+`SwerveDrive` has the same commands and functions in Commands v2 and Commands v3.
 
 | Command or function | Commands v2 | Commands v3 | What it does |
 | --- | --- | --- | --- |
 | `drive(Supplier<ChassisVelocities>)` | ✅ | ✅ | Drives with **robot relative** speeds until interrupted. |
-| `driveToPose(Pose2d)` | ✅ | ✅ | Drives to a pose with the [auto-align controllers](mechanism-configs/swerve-drive-config.md#auto-align-controllers) until interrupted. |
-| `driveToPose(Pose2d, Distance, Angle)` | ❌ | ✅ | The same, ending once the robot is within the tolerances. |
-| `isNear(Pose2d, Distance, Angle)` | ❌ | ✅ | Whether the robot is within the tolerances of a pose. |
-| `stop()` | ❌ | ✅ | Commands zero speed. |
-
-In Commands v2, use `getDistanceFromPose` and `getAngleDifferenceFromPose` to decide when a `driveToPose` has arrived.
+| `driveToPose(Pose2d)` | ✅ | ✅ | Drives to a pose with the [auto-align controllers](mechanism-configs/swerve-drive-config.md#auto-align-controllers) until interrupted, then stops the drive. |
+| `driveToPose(Pose2d, Distance, Angle)` | ✅ | ✅ | The same, ending once the robot is within the tolerances. |
+| `isNear(Pose2d, Distance, Angle)` | ✅ | ✅ | Whether the robot is within the tolerances of a pose. |
+| `stop()` | ✅ | ✅ | Commands zero speed. |
 
 Field relative driving from a controller is a command you write around a [`SwerveInputStream`](swerve-input-stream.md):
 
@@ -402,14 +400,22 @@ Each module's drive `SmartMotorController` converts its share of the `Force[]` i
 
 | Method | What it does |
 | --- | --- |
-| `driveToPose(Pose2d)` | Returns a `Command` that drives to the pose until it is interrupted. |
+| `driveToPose(Pose2d)` | Returns a `Command` that drives to the pose until it is interrupted, then stops the drive. |
+| `driveToPose(Pose2d, Distance, Angle)` | Returns a `Command` that drives to the pose and ends once the robot is within the distance and heading tolerances, then stops the drive. |
+| `isNear(Pose2d, Distance, Angle)` | Whether the robot is within the distance and heading tolerances of the pose. |
 | `driveToPoseSetpoint(Pose2d)` | Computes the `ChassisVelocities` that drive toward the pose, for use in your own command. |
 
-Both use the translation and rotation `PIDController`s from `SwerveDriveConfig.withTranslationController(...)` and `withRotationController(...)`. The command is a Commands v2 or Commands v3 `Command`, depending on which `SwerveDrive` you use.
+The commands and `driveToPoseSetpoint` use the translation and rotation `PIDController`s from `SwerveDriveConfig.withTranslationController(...)` and `withRotationController(...)`. Each command is a Commands v2 or Commands v3 `Command`, depending on which `SwerveDrive` you use, and all of them exist in both.
 
 ```java
+// Hold to align: drives to the pose for as long as the button is held.
 driver.a().whileTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO)));
+
+// Press to align: ends by itself within 5 cm and 3 degrees, so it can be used in a sequence or an auto.
+driver.b().onTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO), Centimeters.of(5), Degrees.of(3)));
 ```
+
+Use the version with tolerances whenever something has to happen after the robot arrives. The version without them never ends on its own.
 
 {% hint style="success" %}
 The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/README.md#swerve-drive).
