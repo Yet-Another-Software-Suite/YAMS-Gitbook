@@ -42,7 +42,7 @@ Exponential profiles model how DC motors actually behave. Instead of assuming co
 **Key characteristics:**
 
 * Acceleration naturally decreases as velocity increases (following motor physics)
-* Models the mechanism with a kV (velocity constant) and a kA (acceleration constant), which YAMS works out for you
+* Models the mechanism with a kV (velocity constant) and a kA (acceleration constant)
 * More accurately represents what the motor can actually achieve
 * Better disturbance rejection
 
@@ -97,14 +97,16 @@ YAMS provides `ExponentialProfilePIDController` (`yams.core.math.ExponentialProf
 
 ### What you set
 
-You do not normally set the profile's kV and kA yourself. You give YAMS the **maximum voltage** and one of two descriptions of the mechanism, and YAMS works out kV and kA from them:
+An exponential profile is defined by a kV and a kA, and those are what you tune, exactly as CTRE's documentation describes. What YAMS adds is a way to get **starting values** for them without measuring anything: you give the **maximum voltage** and one of two descriptions of the mechanism, and YAMS works out a kV and a kA to start from:
 
-| You give | YAMS works out kV and kA from |
+| You give | YAMS works out the starting kV and kA from |
 | --- | --- |
 | Maximum voltage, the motor, and the mechanism's moment of inertia (or its mass and drum radius) | The motor and the load it has to move |
 | Maximum voltage, a maximum velocity and a maximum acceleration | `kV = maximum voltage / maximum velocity` and `kA = maximum voltage / maximum acceleration` |
 
 The second row is the same relationship [CTRE's Motion Magic Expo documentation](https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo) gives: dividing the voltage by kV gives the maximum velocity of the profile, and dividing it by kA gives its maximum acceleration from a standstill. CTRE's page is the best description of exponential profiles there is, and this page is meant to agree with it. If the two ever differ, CTRE's is right.
+
+From there you adjust kV and kA directly, either [live](#refining-the-profile-live) or by passing your own with `ExponentialProfile.Constraints.fromCharacteristics(maxVoltage, kV, kA)`.
 
 `SmartMotorControllerConfig` takes all of these directly:
 
@@ -186,18 +188,18 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 
 ## Tuning Exponential Profiles
 
-### Step 1: Describe the mechanism
+### Step 1: Get a starting kV and kA
 
-Start with the maximum voltage and a description of the mechanism, and let YAMS work out kV and kA:
+Start with the maximum voltage and a description of the mechanism, and let YAMS work out a kV and a kA to begin with. Then tune them directly in [Refining the profile live](#refining-the-profile-live):
 
 | Option | How | Good for |
 | --- | --- | --- |
 | The mechanism | The motor, with the moment of inertia or the mass and drum radius | A first version, and simulation |
 | A maximum velocity and acceleration | The fastest you want the profile to go, and the hardest you want it to accelerate | Real mechanisms: both numbers are easy to see on a graph and to adjust |
-| kV and kA, measured | One constant voltage test, see [Measuring kV and kA](#measuring-kv-and-ka-optional) | When you want the profile to match the mechanism as closely as possible |
+| kV and kA, measured | One constant voltage test, see [Measuring kV and kA](#measuring-kv-and-ka-optional) | Starting closer to the real mechanism, so there is less to tune |
 
 {% hint style="info" %}
-**Start slower than you think the mechanism can go.** CTRE's advice for Motion Magic Expo is that it is safer to start from a higher kV and kA than ideal, which is a profile with a lower maximum velocity and acceleration. In YAMS terms: start with a lower maximum velocity and acceleration, or a heavier mechanism, than the real one, and speed the profile up once it follows well.
+**Start slower than you think the mechanism can go.** CTRE's advice for Motion Magic Expo is that it is safer to start from a higher kV and kA than ideal, which is a profile with a lower maximum velocity and acceleration. So if the starting values are in doubt, raise kV and kA, or start from a lower maximum velocity and acceleration, and bring them down once the mechanism follows the profile well.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -206,7 +208,7 @@ A description from the motor and the mass is theoretical. Real mechanisms have f
 
 ### Measuring kV and kA (optional)
 
-Most mechanisms do not need this. If you want to give the profile kV and kA directly, this test needs only a button binding and a graph, and it gives you both from one run.
+This is another way to get starting values, from the real mechanism instead of from a calculation. It needs only a button binding and a graph, and it gives you both from one run.
 
 <figure><img src="../../.gitbook/assets/exponential-profile-step-test.png" alt="A graph of velocity after a constant 6 volts is applied. It levels off at 2.9 rotations per second, so kV is 6.0 minus kS, divided by 2.9, which is 2.0. It reaches 63 percent of that speed after 0.15 seconds, so kA is kV times 0.15, which is 0.30"><figcaption><p>One voltage step gives both constants. Example values.</p></figcaption></figure>
 
@@ -265,13 +267,21 @@ Find the moment the velocity reached 63% of the steady speed, and how long after
 
 ### Refining the profile live
 
-However you described the mechanism, YAMS stores the profile as a maximum voltage, a kV and a kA. At `TelemetryVerbosity.HIGH` they are tunable under `NT:/Tuning/.../closedloop/motionprofile/` as `maxInput`, `kV` and `kA`. Run a move and compare `mechanism/velocity` with `closedloop/setpoint/velocity`:
+This is where the profile is actually tuned, by changing kV and kA directly. However you got the starting values, YAMS stores the profile as a maximum voltage, a kV and a kA. At `TelemetryVerbosity.HIGH` they are tunable under `NT:/Tuning/.../closedloop/motionprofile/` as `maxInput`, `kV` and `kA`. Run a move and compare `mechanism/velocity` with `closedloop/setpoint/velocity`:
 
 * Falls behind while speeding up: raise `kA`, which lowers the profile's acceleration.
 * Falls behind at top speed, or never reaches it: raise `kV`, which lowers the profile's top speed.
 * Follows easily with voltage to spare: lower them a little, or raise `maxInput`.
 
-See [Live tuning](../live-tuning/README.md) for how to edit these.
+See [Live tuning](../live-tuning/README.md) for how to edit these. When you are happy with them, put the tuned values in the config so they survive a restart:
+
+```java
+.withExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(
+    10.0, // maximum voltage the profile may ask for
+    2.2,  // kV, tuned
+    0.35  // kA, tuned
+))
+```
 
 ### Step 2: Set Maximum Voltage
 

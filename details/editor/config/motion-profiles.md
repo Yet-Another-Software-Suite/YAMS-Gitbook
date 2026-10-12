@@ -46,7 +46,7 @@ An exponential profile follows what a DC motor can actually do: hard acceleratio
 .withExponentialProfile(Volts.of(10), RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(8))
 ```
 
-You give it a maximum voltage and either the mechanism (its motor and its moment of inertia, or its mass and drum radius) or a maximum velocity and acceleration. YAMS works out the profile's kV and kA from those, so you do not normally set them yourself.
+You give it a maximum voltage and either the mechanism (its motor and its moment of inertia, or its mass and drum radius) or a maximum velocity and acceleration. YAMS works out starting values of the profile's kV and kA from those. Tune kV and kA directly from there, as CTRE's Motion Magic Expo documentation describes, and pass your tuned values with `ExponentialProfile.Constraints.fromCharacteristics(maxVoltage, kV, kA)`.
 
 [Exponential profiles](../exponential-profiles.md) explains when to use one and how to tune it.
 
