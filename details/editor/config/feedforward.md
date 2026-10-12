@@ -35,6 +35,8 @@ Takes one of WPILib's three feedforward classes.
 
 A feedforward can be given a slot, so it switches together with the [PID gains in that slot](closed-loop-control.md#slots).
 
+<figure><img src="../../../.gitbook/assets/smc-slots.png" alt="Four slots, SLOT_0 to SLOT_3, each holding its own PID gains and feedforward, for example one for holding nothing, one for holding a game piece and one for climbing. SLOT_0 is in use. SLOT_3 is not available on TalonFX or TalonFXS. motor.setClosedLoopSlot switches slot at once."><figcaption><p>Each slot holds a feedforward alongside its PID gains, and both switch together.</p></figcaption></figure>
+
 ```java
 .withFeedforward(new ArmFeedforward(0.1, 0.35, 1.2), ClosedLoopControllerSlot.SLOT_0)
 .withFeedforward(new ArmFeedforward(0.1, 0.60, 1.2), ClosedLoopControllerSlot.SLOT_1) // holding a game piece
