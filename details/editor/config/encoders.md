@@ -148,7 +148,27 @@ What this means in practice:
 * **Set the zero offset first, then choose the discontinuity point.** With the offset at the mechanism's zero and a discontinuity point of 0.5 rotations, a 1:1 encoder wraps as far from zero as it can, however it was installed.
 * **A geared encoder is still limited to one turn.** The same rule applies to the encoder's own shaft: 180° of the encoder is `180° / gearing` of the mechanism. See [Only gear an absolute encoder if it cannot wrap](#only-gear-an-absolute-encoder-if-it-cannot-wrap).
 
-This comes from the vendors' own documentation, which YAMS passes these two settings straight to:
+#### Where each motor controller applies them
+
+The discontinuity point only moves with the zero offset because the offset is applied first. That is the case on every encoder YAMS supports:
+
+| Encoder | Zero offset applied | Discontinuity point applied |
+| --- | --- | --- |
+| `CANcoder`, `CANdi` (TalonFX, TalonFXS) | On the encoder | On the encoder, after the offset |
+| SPARK absolute encoder, REV CAN encoder | On the SPARK or the encoder | On the SPARK or the encoder, after the offset |
+| Nova data port absolute encoder, Thrifty CAN encoder | On the Nova or the encoder | By YAMS, on the reading the device has already offset |
+
+YAMS has a unit test for this, `ZeroOffsetDiscontinuityPointTest`. With a zero offset of 90° it checks, for every one of these encoders in simulation, that 120° reads 120° with a discontinuity point of 0.5 rotations and that 300° reads 300° with 1 rotation. Neither would hold if the discontinuity point had stayed where it was.
+
+{% hint style="warning" %}
+**Gearing does not move the discontinuity point.** The zero offset is given in mechanism angle and converted for you, but the discontinuity point is always 0.5 or 1 rotation of the **encoder's own shaft**. On a geared encoder that is `180° / gearing` or `360° / gearing` of the mechanism from zero, not 180° or 360°. A SPARK raises an alert when gearing and a discontinuity point are set together, to say that the discontinuity point is not moved by the gearing and the wrapping will not be uniform. Take that alert seriously: see [Only gear an absolute encoder if it cannot wrap](#only-gear-an-absolute-encoder-if-it-cannot-wrap).
+{% endhint %}
+
+{% hint style="info" %}
+An offset you apply yourself is different. If you leave the encoder's zero offset unset and subtract an angle from the reading in your own code, the encoder's range has already been applied, so the discontinuity point stays where it was and only the numbers shift.
+{% endhint %}
+
+The order comes from the vendors' own documentation:
 
 * **CTRE** ([`MagnetSensorConfigs`](https://api.ctr-electronics.com/phoenix6/stable/java/com/ctre/phoenix6/configs/MagnetSensorConfigs.html)): the magnet offset "is added to the reported position", and the discontinuity point "determines the point at which the absolute sensor wraps around, keeping the absolute position (after offset) in the range [x-1, x)".
 * **REV** ([`AbsoluteEncoderConfig`](https://codedocs.revrobotics.com/java/com/revrobotics/spark/config/absoluteencoderconfig)): the zero offset is "the position that is reported as zero", and with zero centering "the position will be reported in the range (-0.5, 0.5], instead of the default range [0, 1)". REV does not spell out the order, but a range centered on the reported zero means the wrap is half a turn from the offset zero.
