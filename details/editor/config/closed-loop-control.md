@@ -108,6 +108,21 @@ Some combinations run on the motor controller and some on the SystemCore. It mat
 
 <figure><img src="../../../.gitbook/assets/smc-where-it-runs.png" alt="A table of where the closed loop runs. TalonFX and TalonFXS run PID and profiles on the controller and LQR on the SystemCore. SPARK MAX and SPARK Flex run PID and trapezoidal profiles on the controller, and exponential profiles and LQR on the SystemCore. The Thrifty Nova runs everything on the SystemCore. withClosedLoopControlPeriod only changes the SystemCore loop, 20 milliseconds by default."><figcaption><p>Where the closed loop runs, and what the control period changes.</p></figcaption></figure>
 
+### PID gains do not carry over between the two
+
+PID gains tuned with the loop on the motor controller will never be the same as gains tuned with the loop on the SystemCore, even on the same mechanism. The reason is the closed loop control period:
+
+* **On the motor controller** the loop runs many times faster than the robot code does, right next to the motor and its encoder.
+* **On the SystemCore** the loop runs once every control period, 20 ms by default, and each measurement and each output also has to cross the CAN bus.
+
+A slower loop reacts later to every error, so it cannot use gains as high as a fast one before it starts to oscillate. `kD` and `kI` are affected the most, because they depend directly on the time between two runs of the loop.
+
+What this means in practice:
+
+* **Tune again whenever the loop moves.** On a SPARK that happens when you switch between a trapezoidal profile, which runs on the controller, and an exponential profile or an LQR controller, which run on the SystemCore. Moving a mechanism to a different brand of motor controller can move the loop too.
+* **Tune again after changing [`withClosedLoopControlPeriod`](#withclosedloopcontrolperiod).** A different period is a different loop.
+* **Do not copy gains from another team or another robot** without checking where their loop ran and how fast.
+
 ### `withClosedLoopControlPeriod`
 
 Changes how often the SystemCore loop runs. The default is 20 ms.
