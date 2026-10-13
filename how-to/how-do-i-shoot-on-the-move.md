@@ -76,7 +76,9 @@ This applies the sources to the [Swerve Drive](../tutorials/swerve-drive.md) and
 The code is shown for Java with Commands v2 and Commands v3. The C++ `SwerveInputStream` has the same options, so the same approach works there. Every snippet compiles against YAMS, but none of it has been run on a robot: the numbers in the tables are placeholders for your own measurements.
 {% endhint %}
 
-### 1. Let the calculator read the drive
+{% stepper %}
+{% step %}
+### Let the calculator read the drive
 
 Add these to the drive class from the swerve tutorial.
 
@@ -113,8 +115,10 @@ public ChassisVelocities getFieldVelocity() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
 
-### 2. Let the flywheel follow a changing speed
+{% step %}
+### Let the flywheel follow a changing speed
 
 Add this to the shooter class from the shooter tutorial, along with an import of `java.util.function.Supplier`.
 
@@ -141,8 +145,10 @@ public Command track(Supplier<AngularVelocity> speed) {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
 
-### 3. The lookup tables
+{% step %}
+### The lookup tables
 
 **Read first:** [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html), and Eeshwar's [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), which describes how to measure the table with a tape measure and a phone.
 
@@ -197,12 +203,18 @@ public final class ShotCalculator {
 {% endcode %}
 
 **For your robot:** set `TARGET`, fill both tables with your own measurements, and flip the target for the red alliance.
+{% endstep %}
 
-### 4. Pick a firing strategy
+{% step %}
+### Pick a firing strategy
 
-Each of these is one method to add to `ShotCalculator`. They are the three strategies of the WPILib fire control pages, written against the tables above.
+Each tab is one method to add to `ShotCalculator`. They are the three strategies of the WPILib fire control pages, written against the tables above.
 
-**Standing still.** Read [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html). Aim at the real target, and read the flywheel speed for the distance.
+{% tabs %}
+{% tab title="Standing still" %}
+**Read first:** [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html).
+
+Aim at the real target, and read the flywheel speed for the distance. Only right while the robot is not moving.
 
 {% code title="ShotCalculator.java" %}
 ```java
@@ -212,8 +224,12 @@ public static Shot standing(Pose2d robotPose) {
 }
 ```
 {% endcode %}
+{% endtab %}
 
-**Time of flight recursion.** Read [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html). This is the virtual target that most teams use.
+{% tab title="Time of flight recursion" %}
+**Read first:** [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html).
+
+This is the virtual target that most teams use.
 
 {% code title="ShotCalculator.java" %}
 ```java
@@ -232,8 +248,12 @@ public static Shot recursive(Pose2d robotPose, ChassisVelocities fieldVelocity) 
 }
 ```
 {% endcode %}
+{% endtab %}
 
-**Newton's method.** Read [Newton's Method for Dynamic Shooting](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html). It finds the same time of flight in fewer passes, which helps when driving fast toward or away from the target.
+{% tab title="Newton's method" %}
+**Read first:** [Newton's Method for Dynamic Shooting](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html).
+
+It finds the same time of flight in fewer passes, which helps when driving fast toward or away from the target.
 
 {% code title="ShotCalculator.java" %}
 ```java
@@ -265,10 +285,14 @@ public static Shot newton(Pose2d robotPose, ChassisVelocities fieldVelocity) {
 }
 ```
 {% endcode %}
+{% endtab %}
+{% endtabs %}
 
 Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) reaches the lead a fourth way, by subtracting the robot's velocity from the shot's velocity. It is not written out here: his posts have the code, and the table above says where its outputs go in YAMS.
+{% endstep %}
 
-### 5. Aim and spin up together
+{% step %}
+### Aim and spin up together
 
 While the driver holds the right bumper, the stream turns the robot toward the shot's target and the shooter follows the shot's speed. `shot()` calls the strategy you picked, and swapping strategies only changes that one line.
 
@@ -360,10 +384,14 @@ Trigger aimed = input.aimLock(Degrees.of(2));
 {% endtabs %}
 
 The new imports are `org.wpilib.units.Units.Degrees` (static), `org.wpilib.units.Units.Seconds` (static), `yams.commands2.swerve.SwerveInputStream` for Commands v2, and `org.wpilib.units.Units.Degrees` (static), `org.wpilib.units.Units.Seconds` (static), `org.wpilib.command3.Trigger`, `yams.commands3.swerve.SwerveInputStream` for Commands v3.
+{% endstep %}
 
-### 6. Feed only when the shot is ready
+{% step %}
+### Feed only when the shot is ready
 
 Do not feed until the robot faces the aim heading and the flywheel is at the shot's speed. `aimed` from the last step is the first half. [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md) shows how to gate a feeder on the flywheel's speed with a debounce, which is the second half. Combine the two with `aimed.and(...)`.
+{% endstep %}
+{% endstepper %}
 
 ## Tuning the YAMS side
 
