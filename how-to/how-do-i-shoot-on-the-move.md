@@ -46,7 +46,11 @@ Before you pick a firing strategy, it helps to see the lead as one subtraction, 
 3. Subtract the robot's velocity. What is left is the velocity the shooter has to give the game piece.
 4. The direction of that vector is where to aim, and its length is the speed the shot needs.
 
+<figure><img src="../.gitbook/assets/howto-sotm-vector-subtraction.gif" alt="Animation of a robot driving to the right with a target ahead and to its right, built up in four steps. A purple arrow from the robot points at the target: the velocity the game piece needs over the ground. A green arrow points right: the robot's velocity. A dashed green arrow of the same length runs backwards from the tip of the purple arrow: the subtraction. An orange arrow from the robot to the end of the dashed arrow is the velocity the shooter has to give, and the robot turns to face along it."><figcaption><p>The orange arrow is what the shooter has to give: the purple arrow minus the green one.</p></figcaption></figure>
+
 Two things follow from this, and every firing strategy below has to deal with both. The **aim** changes when the robot moves, and so does the **speed** of the shot: drive toward the target and the shooter needs less, drive away and it needs more. The strategies below are different ways of working out that same lead from the time of flight in your table.
+
+<figure><img src="../.gitbook/assets/howto-sotm-vector-sweep.gif" alt="Animation of a robot with a target straight ahead, driving at 2 meters per second in every direction in turn. The velocity needed over the ground stays at 4.3 meters per second toward the target. Driving toward the target, the velocity the shooter gives shrinks to 2.3 meters per second. Driving away, it grows to 6.3 meters per second. Driving across, it stays near 4.7 meters per second and swings about 25 degrees back against the motion."><figcaption><p>Toward the target the shot needs less speed, away it needs more, and across it the aim swings back.</p></figcaption></figure>
 
 ## How the sources' ideas apply to YAMS
 
