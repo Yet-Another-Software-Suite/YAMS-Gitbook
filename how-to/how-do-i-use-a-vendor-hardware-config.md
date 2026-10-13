@@ -103,7 +103,7 @@ Nova nova = new Nova(0, 1, MotorType.NEO); // CAN bus 0, CAN ID 1
 SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), motorConfig);
 ```
 
-Any other vendor config type throws a `SmartMotorControllerConfigurationException`. See [How do I use a Thrifty Nova?](how-do-i-use-a-thrifty-nova.md) for more.
+Any other vendor config type throws a `SmartMotorControllerConfigurationException`.
 
 ## How precedence works
 
