@@ -882,7 +882,3 @@ If your gyro is mounted so that the robot turning shows up as its roll or pitch 
 ## Read more
 
 [Swerve Drive](../../details/swerve-drive.md), [SwerveDriveConfig](../../details/mechanism-configs/swerve-drive-config.md), [Swerve Module](../../details/swerve-module.md) and [SwerveModuleConfig](../../details/mechanism-configs/swerve-module-config.md) cover everything the drive and its modules can do.
-
-Previous: [Step 1: The module motors](module-motors.md)
-
-Next: [Step 3: Driving](driving.md)

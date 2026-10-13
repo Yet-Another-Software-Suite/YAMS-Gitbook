@@ -370,7 +370,3 @@ SwerveSubsystem::SwerveSubsystem() {
 {% hint style="info" %}
 The gains here are a place to start. [Live tuning](../../details/live-tuning/README.md) has a section on tuning the drive and azimuth motors of a swerve module.
 {% endhint %}
-
-Previous: [Swerve Drive](../swerve-drive.md)
-
-Next: [Step 2: The modules and the drive](modules-and-drive.md)

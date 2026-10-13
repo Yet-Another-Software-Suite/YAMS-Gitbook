@@ -518,7 +518,3 @@ ElevatorSubsystem::ElevatorSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
-
-Previous: [Step 1: The motor controller](motor-controller.md)
-
-Next: [Step 3: Commands and buttons](commands.md)

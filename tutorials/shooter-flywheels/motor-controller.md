@@ -533,7 +533,3 @@ Every option used here has its own section in the `SmartMotorControllerConfig` p
 * [Simulation](../../details/editor/config/simulation.md): the simulation only gains
 
 The PID and feedforward numbers on this page are a place to start, not tuned values. Tune them on your own mechanism with [Live tuning](../../details/live-tuning/README.md).
-
-Previous: [Shooter/FlyWheels](../shooter-flywheels.md)
-
-Next: [Step 2: The flywheel](mechanism.md)

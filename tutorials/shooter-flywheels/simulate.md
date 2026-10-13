@@ -48,7 +48,3 @@ Congratulations on successfully programming your Shooter! :tada::tada:
 * See everything the mechanism can do: [Shooters](../../details/shooters.md) and [FlyWheelConfig](../../details/mechanism-configs/flywheel-config.md)
 * Look at what the mechanism publishes: [Telemetry](../../understanding/telemetry.md)
 * Keep your configs tidy as the robot grows: [Organizing configs in constants](../../details/config-organization.md)
-
-Previous: [Step 3: Commands and buttons](commands.md)
-
-Next: [Shooter/FlyWheels](../shooter-flywheels.md)

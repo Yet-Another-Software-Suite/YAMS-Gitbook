@@ -868,7 +868,3 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 </code></pre>
 {% endtab %}
 {% endtabs %}
-
-Previous: [Step 1: Two motor controllers](motor-controllers.md)
-
-Next: [Step 3: Spin control and followers](spin-and-followers.md)

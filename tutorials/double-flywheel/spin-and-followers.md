@@ -633,7 +633,3 @@ The differences from a single flywheel are:
 1. Two `SmartMotorControllerConfig`s and two `SmartMotorController`s, controlled directly instead of through a `FlyWheel` mechanism
 2. The subsystem calls `setupTelemetry()`, `updateTelemetry()` and `simIterate()` on each `SmartMotorController` itself
 3. One command sets both velocity setpoints
-
-Previous: [Step 2: Commands and buttons](commands.md)
-
-Next: [Double FlyWheel](../double-flywheel.md)

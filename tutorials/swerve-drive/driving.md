@@ -1077,7 +1077,3 @@ Run **WPILib: Simulate Robot Code**, connect a controller, and enable teleop. Th
 
 * [Swerve Input Stream](../../details/swerve-input-stream.md): everything the stream can do, including heading control and aiming
 * [Swerve Drive](../../details/swerve-drive.md): vision measurements, odometry, auto-align and more
-
-Previous: [Step 2: The modules and the drive](modules-and-drive.md)
-
-Next: [Swerve Drive](../swerve-drive.md)
