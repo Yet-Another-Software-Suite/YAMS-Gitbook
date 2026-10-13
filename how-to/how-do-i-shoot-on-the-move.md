@@ -21,6 +21,8 @@ A game piece keeps the robot's velocity when it leaves the shooter. If the robot
 3. Move the target the opposite way by that much. This is the **virtual target**.
 4. Aim at the virtual target, and work the shot out again for its distance. Repeat two or three times, because the new distance changes the time of flight a little.
 
+<figure><img src="../.gitbook/assets/howto-sotm-virtual-target.gif" alt="Animation of two robots seen from above, both driving to the right at the same speed and shooting at a target. The first aims straight at the target, and every shot drifts to the right of it and misses. The second aims at a virtual target to the left of the real one, and every shot drifts into the real target."><figcaption><p>The shot keeps the robot's velocity. Aiming at the virtual target cancels the drift.</p></figcaption></figure>
+
 ## What you need first
 
 * A swerve drive that knows where it is. The pose comes from the drive's odometry, and a moving shot is only as good as that pose. WPILib's [Pose Estimators](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html) page explains how vision corrects it.
@@ -34,9 +36,13 @@ With the robot standing still, find the flywheel speed that scores from a few di
 
 WPILib's [`InterpolatingDoubleTreeMap`](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/interpolation/InterpolatingDoubleTreeMap.html) fills in the distances between your measurements.
 
+<figure><img src="../.gitbook/assets/howto-sotm-tables.gif" alt="Animation of two charts against distance to the target: flywheel speed in RPM and time of flight in seconds. Each has three measured points joined by straight lines. A marker slides along both lines as the distance changes, and the flywheel speed and time of flight are read off."><figcaption><p>Measure a few distances. The table fills in the rest.</p></figcaption></figure>
+
 ## 2. Calculate the shot
 
 This class is plain WPILib, so it is the same in Commands v2 and Commands v3. It is the four steps from [The idea](#the-idea) in code. [Translation, Rotation, and Pose](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/pose.html) covers the geometry classes it uses, and [Introduction to Kinematics and The ChassisSpeeds Class](https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/intro-and-chassis-speeds.html) covers the velocity (`ChassisSpeeds` is called `ChassisVelocities` in WPILib 2027).
+
+<figure><img src="../.gitbook/assets/howto-sotm-iterate.gif" alt="Animation of a robot driving right at 2 meters per second with a target 3 meters straight ahead. Standing still the distance is 3.00 meters and the time of flight is 0.70 seconds, which gives a drift of 1.40 meters. The virtual target moves 1.40 meters back. The next pass gives 3.31 meters, 0.75 seconds and 1.50 meters. The pass after gives 3.36 meters, 0.76 seconds and 1.52 meters, and the last pass barely changes it."><figcaption><p>Each pass uses the distance from the pass before. After three it has settled.</p></figcaption></figure>
 
 {% code title="ShotCalculator.java" %}
 ```java
@@ -174,6 +180,8 @@ Two things happen while the driver holds the right bumper:
 
 * [`withAim`](../details/swerve-input-stream.md#aim-at-a-target) on the [Swerve Input Stream](../details/swerve-input-stream.md) turns the robot toward the virtual target. It takes a supplier, so it follows the target as it moves every loop. The left stick keeps driving.
 * The shooter follows the speed the shot needs.
+
+<figure><img src="../.gitbook/assets/sis-aim.gif" alt="Animation of a robot driven left and right by the left stick while it stays facing a target on the field"><figcaption><p><code>withAim</code>: the left stick drives, and the robot keeps facing the target it is given.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
