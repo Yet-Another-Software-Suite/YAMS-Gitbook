@@ -37,6 +37,9 @@
 * [How to set an Elevator's target Height?](how-to/how-to-set-an-elevators-target-height.md)
 * [How to shoot with a Shooter?](how-to/how-to-shoot-with-a-shooter.md)
 * [How do I shoot on the move?](how-to/how-do-i-shoot-on-the-move.md)
+  * [Strategy 1: A lookup table, standing still](how-to/shoot-on-the-move/lookup-table.md)
+  * [Strategy 2: Time of flight recursion](how-to/shoot-on-the-move/time-of-flight-recursion.md)
+  * [Strategy 3: Newton's method](how-to/shoot-on-the-move/newtons-method.md)
 * [How do I use absolute encoders on my Arm?](how-to/how-do-i-use-absolute-encoders-on-my-arm.md)
 * [How do I control a Mechanism without a Mechanism Class?](how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md)
 

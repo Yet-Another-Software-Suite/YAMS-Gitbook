@@ -293,6 +293,64 @@ input.withHeading(() -> Degrees.of(90))
 input.withAim(() -> FieldConstants.SPEAKER_POSE, driver::getRightBumperButton);
 ```
 
+`withAim` points the front of the robot at the pose it is given. The options below refine that. They are the same in Commands v2 and Commands v3, and C++ has each one in PascalCase.
+
+{% hint style="info" %}
+Aiming at a target is not the same as shooting on the move. The stream turns the robot, and it knows nothing about your shooter or how long a shot is in the air. [How do I shoot on the move?](../how-to/how-do-i-shoot-on-the-move.md) explains what these options cover and what you still have to work out yourself.
+{% endhint %}
+
+#### Aim lookahead
+
+`withAimLookahead(Time)` aims from where the robot will be after a delay, instead of where it is now. The pose is moved along the robot's field relative velocity by that time before the direction to the target is worked out.
+
+<figure><img src="../.gitbook/assets/sis-aim-lookahead.gif" alt="Animation of a robot driving to the right with a faded copy of itself a short way ahead along its velocity. A grey dashed line runs from the robot to the target, and an orange dashed line runs from the faded copy to the target. The robot turns to the direction of the orange line."><figcaption><p>The robot turns to the direction it will need a moment from now.</p></figcaption></figure>
+
+A game piece leaves the robot a moment after the aim was calculated: the camera, the loop, the motors and the feed all take time, and the robot keeps moving through all of it. Add those delays together for a starting value, then tune it. It is often 100 to 200 milliseconds.
+
+```java
+input.withAimLookahead(Milliseconds.of(150));
+```
+
+The lookahead assumes the robot keeps its current velocity, so it works best while driving in a straight line.
+
+#### Aim feedforward
+
+`withAimFeedforward(SimpleMotorFeedforward)` adds a feedforward to the aim rotation. The rotation controller only reacts to heading error, so while the robot drives past a target it trails a little behind. The feedforward is calculated from the robot's current angular velocity to the angular velocity the controller asks for, and its result is added to that angular velocity.
+
+```java
+input.withAimFeedforward(new SimpleMotorFeedforward(0, 0.1));
+```
+
+Start with a small `kV` and raise it until the robot stops trailing the target. Too much makes the heading overshoot.
+
+#### Aim heading offset
+
+`withAimHeadingOffset(Rotation2d)` rotates the aim heading, for a shooter that does not point out of the front of the robot. The offset is counter-clockwise positive. `withAimHeadingOffset(Rotation2d, BooleanSupplier)` only applies it while the supplier is true.
+
+```java
+// The shooter points out of the back of the robot.
+input.withAimHeadingOffset(Rotation2d.fromDegrees(180));
+```
+
+#### Aim lock
+
+`aimLock(Angle)` returns a `Trigger` that is true while the robot is aiming and its heading is within the tolerance of the aim heading. `isAimLocked(Angle)` gives the same answer as a plain `boolean`. Use them to decide when to feed a game piece.
+
+```java
+Trigger aimed = input.aimLock(Degrees.of(2));
+```
+
+The lock only updates while the stream is being read, and it is false whenever aiming is not enabled. C++ has `IsAimLocked(tolerance)` and no trigger version.
+
+#### Building your own aim
+
+Two methods expose the pieces the aim mode is made of:
+
+| Method | Returns |
+| ------ | ------- |
+| `getTargetVector(Pose2d)` | The field relative vector from the robot to a target, from the looked ahead position if a lookahead is set. |
+| `calculateAngularVelocity(Angle)` | The angular velocity that turns the robot to a heading, from the rotation controller and the aim feedforward. |
+
 ### Translation Only
 
 `withTranslationOnly(trigger)` enables `TRANSLATION_ONLY` while `trigger` reports true, locking the current heading and suppressing rotation entirely:
