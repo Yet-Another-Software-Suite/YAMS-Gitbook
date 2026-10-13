@@ -15,6 +15,8 @@ YAMS integrates seamlessly with [AdvantageKit](https://docs.advantagekit.org/), 
 * Test code changes against real match data
 * Debug issues that only occurred on the real robot
 
+<figure><img src="../.gitbook/assets/akit-loop-live-and-replay.gif" alt="Animation of one loop of the robot shown twice. On the real robot and in simulation, the IO class reads the YAMS arm into the inputs, the inputs are written to the log, the subsystem logic runs on them, and its setpoint goes back through the IO class to the YAMS arm. In log replay the inputs come from the log file, the same subsystem logic runs on them, and the outputs go to an empty replay IO class that drops them."><figcaption><p>The subsystem only sees the inputs, so replaying the logged inputs replays its decisions.</p></figcaption></figure>
+
 {% hint style="info" %}
 AdvantageKit is optional. YAMS works perfectly without it using its built-in telemetry system. Consider AdvantageKit if you want deterministic log replay capabilities.
 {% endhint %}
@@ -23,46 +25,13 @@ AdvantageKit is optional. YAMS works perfectly without it using its built-in tel
 
 AdvantageKit uses an [IO interface pattern](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces) to separate hardware interaction from business logic. Traditionally, this requires separate IO implementations for real hardware and simulation:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Traditional AdvantageKit Pattern (without YAMS)            │
-│                                                             │
-│                      Subsystem                              │
-│                          │                                  │
-│                    IO Interface                             │
-│                    /           \                            │
-│              IO Real           IO Sim                       │
-│         (Real hardware)    (Physics sim)                    │
-│          - Manual motor     - DCMotorSim                    │
-│          - Manual encoders  - Manual state                  │
-└─────────────────────────────────────────────────────────────┘
-```
+<figure><img src="../.gitbook/assets/akit-io-classes.png" alt="Two diagrams of a subsystem, its IO interface and the classes that implement it. Traditional AdvantageKit needs three IO classes for each mechanism: one with your motor and encoder code for the real robot, one with your physics simulation, and an empty one for log replay. With YAMS there are two: one class used on the real robot and in simulation, because the YAMS mechanism under it simulates itself, and the empty one for log replay."><figcaption><p>Traditional AdvantageKit needs three IO classes for each mechanism. With YAMS it is two.</p></figcaption></figure>
 
 ## YAMS Simplification: One IO Class for Real and Sim
 
 **With YAMS, you don't need separate Real and Sim IO implementations.** Every `SmartMotorController` wrapper (TalonFXWrapper, SparkWrapper, etc.) and every Mechanism class (Arm, Elevator, FlyWheel, SwerveModule, SwerveDrive, etc.) includes **passive simulation** that runs automatically when `Robot.isSimulation()` returns true.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  YAMS Pattern: Single IO Implementation                     │
-│                                                             │
-│                      Subsystem                              │
-│                          │                                  │
-│                    IO Interface                             │
-│                          │                                  │
-│                    IO (Single!)  ◄── Same class for both!   │
-│                          │                                  │
-│               SmartMotorController                          │
-│                    or Mechanism                             │
-│                          │                                  │
-│          ┌───────────────┴───────────────┐                  │
-│          │                               │                  │
-│    Real Hardware              Passive Simulation            │
-│    (when deployed)            (when in sim)                 │
-│                                                             │
-│    Automatically selected based on Robot.isSimulation()    │
-└─────────────────────────────────────────────────────────────┘
-```
+The YAMS mechanism under the IO class picks real hardware or its own simulation by itself, based on `Robot.isSimulation()`.
 
 This means:
 

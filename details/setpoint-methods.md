@@ -15,6 +15,10 @@ The command helpers come from the mechanism classes in `yams.commands2.mechanism
 | **Command Helpers** | `arm.run(Degrees.of(45))` | `Command` | Button bindings, autonomous sequences |
 | **Direct Setpoint Methods** | `arm.setMechanismPositionSetpoint(Degrees.of(45))` | `void` | Custom commands, AdvantageKit IO, low-level control |
 
+<figure><img src="../.gitbook/assets/setpoint-two-ways.png" alt="Two paths to the same SmartMotorController. A command helper such as arm.run returns a Command that requires the subsystem; a button binding or auto sequence schedules it, and the scheduler stops it when another command needs the mechanism. A direct setpoint method such as arm.setMechanismPositionSetpoint returns nothing and sets the target at once; it is called from your own code, such as a custom command, an IO class or a state machine, and nothing is scheduled."><figcaption><p>Both paths end at the same motor controller.</p></figcaption></figure>
+
+<figure><img src="../.gitbook/assets/setpoint-helper-vs-direct.gif" alt="Animation of the same arm moving to 45 degrees two ways. With the command helper arm.run, a command stays scheduled and owns the arm for as long as it runs. With the direct setpoint method there is one call that returns at once and nothing is scheduled. The arm moves and holds the same way in both."><figcaption><p>A helper gives you a <code>Command</code> that stays scheduled. A setpoint method is one call.</p></figcaption></figure>
+
 ## Command Helper Methods
 
 Command helpers are methods on Mechanism classes that return `Command` objects. These are the **recommended approach** for most use cases.
@@ -26,6 +30,8 @@ Command helpers are methods on Mechanism classes that return `Command` objects. 
 3. **Composability** - Easy to chain with `.andThen()`, `.alongWith()`, etc. in Commands v2, or to `await` inside a coroutine in Commands v3
 4. **Trigger Integration** - Work directly with button triggers like `controller.a().onTrue()`
 5. **Naming** - Commands are automatically named for debugging
+
+<figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
 
 ### Available Command Helpers by Mechanism
 
@@ -165,6 +171,8 @@ public class ArmIOYAMS implements ArmIO {
 
 ### Example: Custom Command
 
+{% tabs %}
+{% tab title="Commands v2" %}
 ```java
 public class ComplexArmCommand extends Command {
   private final Arm arm;
@@ -181,8 +189,10 @@ public class ComplexArmCommand extends Command {
   }
 }
 ```
+{% endtab %}
 
-In Commands v3 there are no command classes with `execute()`. Write the same logic as a `while (true)` coroutine on your mechanism:
+{% tab title="Commands v3" %}
+Commands v3 has no command classes with `execute()`. Write the same logic as a `while (true)` coroutine on your mechanism:
 
 ```java
 public Command complexArmCommand(Supplier<Angle> targetSupplier) {
@@ -199,6 +209,8 @@ public Command complexArmCommand(Supplier<Angle> targetSupplier) {
   }).named("Complex Arm Command");
 }
 ```
+{% endtab %}
+{% endtabs %}
 
 ### Starting and stopping the SystemCore closed loop
 
@@ -334,6 +346,8 @@ These methods use WPILib's built-in `isNear()` function on the `Angle`, `Distanc
 The `Trigger` factory used to be called `isNear()` and was renamed to `near()` to match the other Trigger factories (`gte()`, `lte()`, `between()`, `max()`, `min()`). `isNear()` with the same arguments still exists and returns a plain `boolean`, for use outside a `Command` or `Trigger`.
 {% endhint %}
 
+<figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
+
 ### Using near() in Commands
 
 {% tabs %}
@@ -371,31 +385,7 @@ if (arm.isNear(targetAngle, tolerance)) {
 
 ## Decision Guide
 
-```
-                    ┌─────────────────────────┐
-                    │ How are you controlling │
-                    │    the mechanism?       │
-                    └───────────┬─────────────┘
-                                │
-              ┌─────────────────┴─────────────────┐
-              │                                   │
-              ▼                                   ▼
-    ┌─────────────────┐                ┌─────────────────┐
-    │ Button binding  │                │ Custom command  │
-    │ or autonomous   │                │ or IO class     │
-    │ sequence?       │                │                 │
-    └────────┬────────┘                └────────┬────────┘
-             │                                  │
-             ▼                                  ▼
-    ┌─────────────────┐                ┌─────────────────┐
-    │ Use Command     │                │ Use Direct      │
-    │ Helpers         │                │ Setpoint        │
-    │                 │                │ Methods         │
-    │ arm.run()       │                │                 │
-    │ arm.runTo()     │                │ arm.setMechanism│
-    │ arm.setAngle()  │                │ PositionSetpoint│
-    └─────────────────┘                └─────────────────┘
-```
+<figure><img src="../.gitbook/assets/setpoint-decision.png" alt="A decision diagram. If the mechanism is controlled by a button binding or an autonomous sequence, use a command helper such as arm.run, arm.runTo or arm.setAngle. If it is controlled by a custom command, an IO class or a state machine, use a direct setpoint method such as arm.setMechanismPositionSetpoint, elevator.setMeasurementPositionSetpoint or arm.setVoltageSetpoint."><figcaption><p>Start from what is making the call.</p></figcaption></figure>
 
 ## Best Practices
 

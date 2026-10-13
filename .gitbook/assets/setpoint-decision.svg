@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 344" width="760" height="344" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Which one to use</title>
+<desc id="d">A decision diagram. If the mechanism is controlled by a button binding or an autonomous sequence, use a command helper such as arm.run, arm.runTo or arm.setAngle. If it is controlled by a custom command, an IO class or a state machine, use a direct setpoint method such as arm.setMechanismPositionSetpoint, elevator.setMeasurementPositionSetpoint or arm.setVoltageSetpoint.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="344" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="312.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Which one to use</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Start from what is making the call.</text>
+<rect x="250.0" y="78.0" width="260.0" height="40.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="380.0" y="103.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >How is the mechanism being controlled?</text>
+<line x1="330.0" y1="120.0" x2="202.0" y2="150.0" stroke="#147d6f" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ag)"/>
+<line x1="430.0" y1="120.0" x2="558.0" y2="150.0" stroke="#c2630b" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ao)"/>
+<rect x="54.0" y="154.0" width="296.0" height="46.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="202.0" y="173.5" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >A button binding or</text>
+<text x="202.0" y="190.5" font-size="12" font-weight="400" text-anchor="middle" fill="#52606d" >an autonomous sequence</text>
+<rect x="410.0" y="154.0" width="296.0" height="46.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="558.0" y="173.5" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >A custom command, an IO class</text>
+<text x="558.0" y="190.5" font-size="12" font-weight="400" text-anchor="middle" fill="#52606d" >or a state machine</text>
+<line x1="202.0" y1="202.0" x2="202.0" y2="222.0" stroke="#147d6f" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ag)"/>
+<line x1="558.0" y1="202.0" x2="558.0" y2="222.0" stroke="#c2630b" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ao)"/>
+<rect x="54.0" y="226.0" width="296.0" height="86.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="202.0" y="250.2" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Use a command helper</text>
+<text x="202.0" y="266.2" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">arm.run(angle)</text>
+<text x="202.0" y="282.2" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">arm.runTo(angle, tolerance)</text>
+<text x="202.0" y="298.2" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">arm.setAngle(angle)</text>
+<rect x="410.0" y="226.0" width="296.0" height="86.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="558.0" y="251.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Use a direct setpoint method</text>
+<text x="558.0" y="266.5" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">arm.setMechanismPositionSetpoint(angle)</text>
+<text x="558.0" y="282.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">elevator.setMeasurementPositionSetpoint(height)</text>
+<text x="558.0" y="297.5" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">arm.setVoltageSetpoint(volts)</text>
+</svg>

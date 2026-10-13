@@ -4,6 +4,8 @@
 
 For [log replay](https://docs.advantagekit.org/getting-started/what-is-advantagekit), AdvantageKit provides a "replay" mode where inputs are read from a log file instead of hardware. This is the **one case** where you need a separate IO implementation: an empty one that does nothing.
 
+<figure><img src="../../.gitbook/assets/akit-loop-live-and-replay.gif" alt="Animation of one loop of the robot shown twice. On the real robot and in simulation, the IO class reads the YAMS arm into the inputs, the inputs are written to the log, the subsystem logic runs on them, and its setpoint goes back through the IO class to the YAMS arm. In log replay the inputs come from the log file, the same subsystem logic runs on them, and the outputs go to an empty replay IO class that drops them."><figcaption><p>In replay the inputs come from the log, and the empty IO class drops the outputs.</p></figcaption></figure>
+
 ```java
 package first.robot.subsystems.akit;
 
