@@ -104,15 +104,15 @@ Caps the voltage the closed loop controller may ask for.
 
 ## Where the loop runs
 
-Some combinations run on the motor controller and some on the SystemCore. It matters for a few options, and YAMS raises an alert when the loop is on the SystemCore.
+Some combinations run on the motor controller, at 1 kHz, and some on the SystemCore, every 20 ms by default. It matters for a few options, and YAMS raises an alert when the loop is on the SystemCore.
 
-<figure><img src="../../../.gitbook/assets/smc-where-it-runs.png" alt="A table of where the closed loop runs. TalonFX and TalonFXS run PID and profiles on the controller and LQR on the SystemCore. SPARK MAX and SPARK Flex run PID and trapezoidal profiles on the controller, and exponential profiles and LQR on the SystemCore. The Thrifty Nova runs everything on the SystemCore. withClosedLoopControlPeriod only changes the SystemCore loop, 20 milliseconds by default."><figcaption><p>Where the closed loop runs, and what the control period changes.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-where-it-runs.png" alt="A table of where the closed loop runs. TalonFX and TalonFXS run PID and profiles on the controller and LQR on the SystemCore. SPARK MAX and SPARK Flex run PID and trapezoidal profiles on the controller, and exponential profiles and LQR on the SystemCore. The Thrifty Nova runs everything on the SystemCore. Below it, three timelines over 240 milliseconds show how often each loop runs: on the controller every 1 millisecond, which is 1 kilohertz and 240 runs; on the SystemCore every 20 milliseconds by default, which is 12 runs; and on the SystemCore at 10 milliseconds, which is 24 runs. withClosedLoopControlPeriod only changes the SystemCore loop. The period of the loop on the controller cannot be changed."><figcaption><p>Where the closed loop runs, and how often.</p></figcaption></figure>
 
 ### PID gains do not carry over between the two
 
 PID gains tuned with the loop on the motor controller will never be the same as gains tuned with the loop on the SystemCore, even on the same mechanism. The reason is the closed loop control period:
 
-* **On the motor controller** the loop runs many times faster than the robot code does, right next to the motor and its encoder.
+* **On the motor controller** the loop runs at 1 kHz, once every millisecond, right next to the motor and its encoder. That is 20 runs for every one run of the SystemCore loop at its default period. This period is fixed by the motor controller and cannot be changed.
 * **On the SystemCore** the loop runs once every control period, 20 ms by default, and each measurement and each output also has to cross the CAN bus.
 
 A slower loop reacts later to every error, so it cannot use gains as high as a fast one before it starts to oscillate. `kD` and `kI` are affected the most, because they depend directly on the time between two runs of the loop.
@@ -125,7 +125,7 @@ What this means in practice:
 
 ### `withClosedLoopControlPeriod`
 
-Changes how often the SystemCore loop runs. The default is 20 ms.
+Changes how often the SystemCore loop runs. The default is 20 ms. It does not change a loop that runs on the motor controller: that period is fixed at 1 ms (1 kHz).
 
 ```java
 .withClosedLoopControlPeriod(Milliseconds.of(10))
