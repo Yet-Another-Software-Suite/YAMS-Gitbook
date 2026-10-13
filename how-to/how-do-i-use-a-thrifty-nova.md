@@ -15,7 +15,7 @@ https://software.thethriftybot.com/frcvendor/ThriftyLib-2027.json
 A `Nova` is constructed with its CAN bus number, CAN ID and the type of motor plugged into it. Hand it to `NovaWrapper` with the matching `DCMotor` and your `SmartMotorControllerConfig`.
 
 {% tabs %}
-{% tab title="Java" %}
+{% tab title="Java (Commands v2)" %}
 ```java
 package first.robot.subsystems;
 
@@ -81,7 +81,75 @@ public class ArmSubsystem extends SubsystemBase {
 }
 ```
 
-For Commands v3, import `SmartMotorControllerConfig` and `Arm` from `yams.commands3` and implement `org.wpilib.command3.Mechanism` instead. `NovaWrapper` itself is the same class for both.
+`NovaWrapper` itself is the same class for Commands v2 and Commands v3.
+{% endtab %}
+
+{% tab title="Java (Commands v3)" %}
+```java
+package first.robot.mechanisms;
+
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.DegreesPerSecond;
+import static org.wpilib.units.Units.DegreesPerSecondPerSecond;
+import static org.wpilib.units.Units.Feet;
+import static org.wpilib.units.Units.Pounds;
+
+import com.thrifty.core.Motor.MotorType;
+import com.thrifty.nova.Nova;
+import org.wpilib.command3.Command;
+import org.wpilib.command3.Mechanism;
+import org.wpilib.math.controller.ArmFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.Angle;
+import yams.commands3.config.SmartMotorControllerConfig;
+import yams.commands3.mechanisms.Arm;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ArmConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.NovaWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+
+public class ArmMechanism implements Mechanism {
+
+  private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+      .withControlMode(ControlMode.CLOSED_LOOP)
+      .withClosedLoopController(4, 0, 0)
+      .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
+      .withFeedforward(new ArmFeedforward(0, 0, 0))
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+      .withSoftLimits(Degrees.of(-20), Degrees.of(100))
+      .withStartingPosition(Degrees.of(0))
+      .withMomentOfInertia(Feet.of(2), Pounds.of(5))
+      .withZeroPower(MotorMode.BRAKE)
+      .withStatorCurrentLimit(Amps.of(40))
+      .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
+
+  // Nova on CAN bus 0, CAN ID 3, driving a NEO.
+  private final Nova nova = new Nova(0, 3, MotorType.NEO);
+
+  private final SmartMotorController motor = new NovaWrapper(nova, DCMotor.getNEO(1), smcConfig);
+
+  private final ArmConfig armConfig = new ArmConfig()
+      .withLength(Feet.of(2))
+      .withHardLimits(Degrees.of(-30), Degrees.of(110))
+      .withTelemetry("Arm", TelemetryVerbosity.HIGH);
+
+  private final Arm arm = new Arm(armConfig, motor);
+
+  public Command setAngle(Angle angle) { return arm.setAngle(angle); }
+
+  // A Commands v3 Mechanism has no periodic hook: call these from Robot.robotPeriodic()
+  public void periodic() { arm.updateTelemetry(); }
+
+  public void simulationPeriodic() { arm.simIterate(); }
+}
+```
+
+The imports come from `yams.commands3`, and the class implements `org.wpilib.command3.Mechanism`. `NovaWrapper` itself is the same class for Commands v2 and Commands v3.
 {% endtab %}
 
 {% tab title="C++" %}
