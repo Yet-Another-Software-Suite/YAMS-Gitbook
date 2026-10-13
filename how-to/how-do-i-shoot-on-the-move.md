@@ -1,57 +1,53 @@
 ---
-description: Aim a swerve drive and set a flywheel so that shots land, standing still or while driving.
+description: Where to learn shooting on the move, and how the ideas in those sources apply to YAMS.
 ---
 
 # How do I shoot on the move?
 
-Shooting on the move means scoring while the robot is still driving, instead of stopping to line up first. YAMS gives you the pieces: a swerve drive that knows its pose and velocity, a [Swerve Input Stream](../details/swerve-input-stream.md) that turns the robot to face a point while the driver keeps driving, and a flywheel that follows a changing speed. The part you write is a small calculator that decides where to aim and how fast to spin.
+Shooting on the move means scoring while the robot is still driving, instead of stopping to line up first.
 
-This guide builds that on top of the [Swerve Drive](../tutorials/swerve-drive.md) and [Shooter](../tutorials/shooter-flywheels.md) tutorials. It follows the three strategies of the fire control section being written for the WPILib documentation, and each has its own page here.
+This page does not try to teach it. People in the FRC community have already explained it well, and their work is where you should learn it. What this page adds is the YAMS side: which YAMS call supplies each thing those sources ask for, what the [Swerve Input Stream](../details/swerve-input-stream.md) does for you and what it does not, and a worked example on top of the [Swerve Drive](../tutorials/swerve-drive.md) and [Shooter](../tutorials/shooter-flywheels.md) tutorials.
 
-{% hint style="info" %}
-The code is shown for Java with Commands v2 and Commands v3. The C++ `SwerveInputStream` has the same options, so the same approach works there. Every snippet compiles against YAMS, but none of it has been run on a robot: the numbers in the tables are placeholders for your own measurements.
-{% endhint %}
+## Read these first
 
-## The idea
-
-A game piece keeps the robot's velocity when it leaves the shooter. If the robot is moving sideways, the shot drifts sideways and misses. The fix is to **lead** the shot: aim at a **virtual target** that is moved against the robot's motion by exactly as far as the shot will drift.
-
-Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) puts it this way: throw a ball at a target while you run past it, and you have to aim backwards to cancel your own movement.
-
-<figure><img src="../.gitbook/assets/howto-sotm-virtual-target.gif" alt="Animation of two robots seen from above, both driving to the right at the same speed and shooting at a target. The first aims straight at the target, and every shot drifts to the right of it and misses. The second aims at a virtual target to the left of the real one, and every shot drifts into the real target."><figcaption><p>The shot keeps the robot's velocity. Aiming at the virtual target cancels the drift.</p></figcaption></figure>
-
-The drift is the robot's velocity multiplied by the **time of flight**. The time of flight depends on the distance, and the distance changes once you aim at the virtual target, so the strategies differ in how they settle on it.
-
-{% hint style="success" %}
-**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), is the best companion to these pages. Part 1 explains the idea as plain vector math and then covers what goes wrong on a real robot: latency, a flywheel that slows and slips, spin and drag, and a turret that is moving. Part 2 is the practical side: building the lookup table, getting the shot's speed from the time of flight, what to do with a hood, and how to tune the latency.
-{% endhint %}
-
-## The three strategies
-
-| Strategy | What it does | Use it when |
-| -------- | ------------ | ----------- |
-| [1. A lookup table, standing still](shoot-on-the-move/lookup-table.md) | Reads the flywheel speed for the distance from a table, and aims at the real target. | You stop to shoot. Every other strategy is built on this table, so start here. |
-| [2. Time of flight recursion](shoot-on-the-move/time-of-flight-recursion.md) | Leads the target by the time of flight, and repeats until the time stops changing. | You want to shoot while driving. This is what most teams use. |
-| [3. Newton's method](shoot-on-the-move/newtons-method.md) | Finds the same time of flight with a smarter step, in fewer passes. | You shoot while driving fast toward or away from the target, where the recursion is slow to settle. |
-
-These are the strategies of WPILib's [Fire Control](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/index.html) pages: [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html), [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html) and [Newton's Method for Dynamic Shooting](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html). Each page here links to the one it follows.
+| Source | Read it for |
+| ------ | ----------- |
+| [Shooting on the Fly](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [Shooting on the Fly, Part 2: The LUT Approach](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), by Eeshwar | The best place to start. Part 1 explains the idea as plain vector math, then covers what goes wrong on a real robot: latency, a flywheel that slows and slips, spin and drag, lobbed shots, and a shooter that is itself moving. Part 2 is the practical side: building the lookup table, getting the shot's speed from the time of flight, shooters with a hood, and tuning the latency. |
+| WPILib's [Fire Control](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/index.html) pages: [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html), [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html), [Newton's Method for Dynamic Shooting](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html) and [Linear Drag (First-Order Air Friction)](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html) | Three firing strategies and a drag correction, with interactive simulations that show where each one converges and where it does not. |
+| [Shoot on the move from the code perspective](https://www.chiefdelphi.com/t/shoot-on-the-move-from-the-code-perspective/511815) (Chief Delphi) | A short explanation of the virtual target, with links to much of the rest. |
+| [Time of Flight Determination](https://www.chiefdelphi.com/t/time-of-flight-determination/512542) (Chief Delphi) | The different ways teams measure or calculate the time of flight. |
+| [Shoot While Move Code (1706)](https://www.chiefdelphi.com/t/shoot-while-move-code-1706/410494) (Chief Delphi) | Team 1706 walking through its 2022 code. |
+| [Orbit 1690 Online Software Sessions](https://www.chiefdelphi.com/t/orbit-1690-online-software-sessions/467221) (Chief Delphi) | Recorded sessions from Team 1690 on their swerve and system control software. |
+| [Mechanical Advantage 6328's `LaunchCalculator.java`](https://github.com/Mechanical-Advantage/RobotCode2026Public/blob/main/src/main/java/org/littletonrobotics/frc2026/subsystems/launcher/LaunchCalculator.java) | A complete launch calculator from a 2026 robot. |
+| [Hammerheads 5000's `TurretCalculator.java`](https://github.com/hammerheads5000/2026Rebuilt/blob/main/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java), with a [build thread post](https://www.chiefdelphi.com/t/frc-5000-hammerheads-2026-build-thread-open-alliance/507502/129) that walks through it | A complete shot calculator for a turret from a 2026 robot. |
 
 {% hint style="info" %}
-The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](https://github.com/wpilibsuite/wpilib-docs/pull/3242). They have not been merged, so the links go to the pull request's preview and may move.
+The WPILib fire control pages are a work in progress in [wpilib-docs #3242](https://github.com/wpilibsuite/wpilib-docs/pull/3242). They have not been merged, so the links go to the pull request's preview and may move.
 {% endhint %}
 
-### Another way to lead: subtract the robot's velocity
+## The idea in one picture
 
-Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) reach the lead a different way, with no repeated passes:
+A game piece keeps the robot's velocity when it leaves the shooter, so a robot that aims straight at the target while driving sideways misses. The sources above all solve the same problem: work out a **lead** that cancels the robot's motion.
 
-1. The table gives the time of flight for the distance, so the shot's horizontal speed is simply the distance divided by the time of flight.
-2. Point a velocity of that speed straight at the target. This is the velocity the game piece needs over the ground.
-3. Subtract the robot's field relative velocity from it. What is left is the velocity the shooter has to give the game piece.
-4. The direction of that vector is where to aim. Its length is the horizontal speed you need, and the table read in reverse turns that speed back into a flywheel speed.
+<figure><img src="../.gitbook/assets/howto-sotm-virtual-target.gif" alt="Animation of two robots seen from above, both driving to the right at the same speed and shooting at a target. The first aims straight at the target, and every shot drifts to the right of it and misses. The second aims at a virtual target to the left of the real one, and every shot drifts into the real target."><figcaption><p>The shot keeps the robot's velocity, so the aim has to lead it.</p></figcaption></figure>
 
-Part 1 writes the whole idea as one line: the velocity the shooter gives the game piece is the velocity it needs over the ground, minus the robot's velocity. It also points out something that surprises people the first time: the **speed** of the shot changes as well as its direction. Drive toward the target and the robot helps the game piece along, so the shooter needs less. Drive away and it needs more.
+## How the sources' ideas apply to YAMS
 
-It suits a turret well, because the result is an angle and a speed. It works in the **horizontal** speed of the shot, which matters for a lobbed shot: at a 60 degree exit angle the horizontal speed is only half of the total. With YAMS, give the direction to [`withHeading`](../details/swerve-input-stream.md#heading-snap-control) on the stream, or to a turret, and the speed to the flywheel.
+Each row is a concept from the sources, where to read about it, and the YAMS piece that does that job.
+
+| Concept | Read about it in | In YAMS |
+| ------- | ---------------- | ------- |
+| The robot's position and field velocity | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Prerequisites" | `drive.getPose()` and `drive.getFieldRelativeSpeed()` on the [Swerve Drive](../details/swerve-drive.md) |
+| A lookup table of shots that score, measured standing still | [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html), and Eeshwar's [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) | WPILib's [`InterpolatingDoubleTreeMap`](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/interpolation/InterpolatingDoubleTreeMap.html), with the result sent to a [FlyWheel](../details/shooters.md) |
+| A flywheel speed that changes every loop | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Wait, The Shooter Speed Changed?" | `FlyWheel.run(Supplier)`, which reads the supplier every loop |
+| Turning to face a point while the driver keeps driving | Every source | [`withAim`](../details/swerve-input-stream.md#aim-at-a-target), which takes a supplier so the point can move every loop |
+| A virtual target, led by the time of flight | [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html), and [Shoot on the move from the code perspective](https://www.chiefdelphi.com/t/shoot-on-the-move-from-the-code-perspective/511815) | You calculate it. Give the result to `withAim` |
+| A shot vector with the robot's velocity subtracted | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Math Implementation" | You calculate it. Give its direction to [`withHeading`](../details/swerve-input-stream.md#heading-snap-control) or to a turret, and its speed to the flywheel |
+| Latency compensation: aim from where the robot will be | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Latency Compensation", and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), "The Latency Constant" | [`withAimLookahead`](../details/swerve-input-stream.md#aim-lookahead) |
+| A heading that keeps up with a moving aim point | [Orbit 1690 Online Software Sessions](https://www.chiefdelphi.com/t/orbit-1690-online-software-sessions/467221) | [`withAimFeedforward`](../details/swerve-input-stream.md#aim-feedforward), and the rotation controller in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md) |
+| A shooter that does not point out of the front, or a small aim correction for spin | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Magnus Effect and Air Resistance" | [`withAimHeadingOffset`](../details/swerve-input-stream.md#aim-heading-offset) |
+| Only shooting when the shot is trustworthy | [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html), "Shot Quality in Practice", and Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Shooter Wheel Dynamics" | [`aimLock`](../details/swerve-input-stream.md#aim-lock) for the heading, and the flywheel's `near` trigger for the speed: see [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md) |
+| A hood, or a turret | Eeshwar's [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), the hood variants, and the two team calculators | An [Arm](../details/arms.md) or a [Pivot](../details/turrets-wrists.md), each in its own subsystem |
 
 ## What `SwerveInputStream` does, and what it leaves to you
 
@@ -59,43 +55,30 @@ The stream's aim mode uses the simplest method there is, **point at the pose**. 
 
 <figure><img src="../.gitbook/assets/sis-aim.gif" alt="Animation of a robot driven left and right by the left stick while it stays facing a target on the field"><figcaption><p><code>withAim</code>: the left stick drives, and the robot keeps facing the target it is given.</p></figcaption></figure>
 
-Four options refine it:
-
-| Option | What it adds |
-| ------ | ------------ |
-| [`withAimLookahead(time)`](../details/swerve-input-stream.md#aim-lookahead) | Aims from where the robot will be after a fixed time, instead of where it is now. |
-| [`withAimFeedforward(feedforward)`](../details/swerve-input-stream.md#aim-feedforward) | Adds a feedforward to the rotation, so the robot keeps up with a target whose direction keeps changing. |
-| [`withAimHeadingOffset(angle)`](../details/swerve-input-stream.md#aim-heading-offset) | Rotates the aim heading, for a shooter that does not point out of the front of the robot. |
-| [`aimLock(tolerance)`](../details/swerve-input-stream.md#aim-lock) | A trigger that is true while the robot is aiming and facing its aim heading. |
+Four options refine it: [`withAimLookahead`](../details/swerve-input-stream.md#aim-lookahead), [`withAimFeedforward`](../details/swerve-input-stream.md#aim-feedforward), [`withAimHeadingOffset`](../details/swerve-input-stream.md#aim-heading-offset) and [`aimLock`](../details/swerve-input-stream.md#aim-lock). The [Swerve Input Stream](../details/swerve-input-stream.md#aim-at-a-target) page explains each one.
 
 <figure><img src="../.gitbook/assets/sis-aim-lookahead.gif" alt="Animation of a robot driving to the right with a faded copy of itself a short way ahead along its velocity. A grey dashed line runs from the robot to the target, and an orange dashed line runs from the faded copy to the target. The robot turns to the direction of the orange line."><figcaption><p><code>withAimLookahead</code>: the robot turns to the direction it will need a moment from now.</p></figcaption></figure>
 
 Even with all four, the stream on its own does **not** shoot on the move the way you might expect:
 
-* **The lookahead is one fixed time.** Aiming from where the robot will be in 0.3 seconds is the same as leading the target by 0.3 seconds of travel. That is only the right lead when the time of flight is 0.3 seconds, which is true at one distance. A real time of flight changes with distance, so a fixed lookahead is right in one place and wrong everywhere else. Use it for what it is good at: the short, constant delay between the calculation and the game piece leaving the robot.
+* **The lookahead is one fixed time.** Aiming from where the robot will be in 0.3 seconds is the same as leading the target by 0.3 seconds of travel. That is only the right lead when the time of flight is 0.3 seconds, which is true at one distance. Use the lookahead for what the sources call latency: the short, constant delay before the game piece leaves the robot.
 * **It only turns the robot.** A lead changes the distance of the shot as well as its direction. The stream knows nothing about your flywheel, your hood or your tables, so it cannot change the shot to match.
-* **It assumes a straight line.** The lookahead takes the robot's velocity right now and assumes it stays the same. It is at its best while driving straight, and at its worst in a tight curve.
-* **Without a feedforward, the rotation lags.** The PID controller only reacts to error, so while the robot drives past the target it trails a little behind. `withAimFeedforward` reduces this, and `aimLock` tells you when the robot has caught up.
+* **It assumes a straight line.** The lookahead takes the robot's velocity right now and assumes it stays the same.
+* **Without a feedforward, the rotation lags.** The PID controller only reacts to error, so while the robot drives past the target it trails a little behind.
 
-So let the stream do the turning, and give it the right thing to turn to. In this guide the calculator works out the virtual target from the real time of flight, `withAim` faces it, `withAimLookahead` covers the release delay, and `aimLock` decides when to feed.
+So let the stream do the turning, and give it the right thing to turn to. The lead itself comes from one of the methods in the sources, which is the part you write.
 
-## What you need first
+## A worked example
 
-Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) names three things to have before you start, and they are worth taking seriously:
+This applies the sources to the [Swerve Drive](../tutorials/swerve-drive.md) and [Shooter](../tutorials/shooter-flywheels.md) tutorials. Read the source named in each step before you copy its code: the code is short because the explanation lives there.
 
-* **A consistent shooter.** If the flywheel speed varies by 10 percent from shot to shot while the robot is standing still, no math will save it while moving.
-* **Reliable odometry.** The calculation needs the robot's velocity on the field, as well as its position.
-* **Knowing where the target is**, from vision or from a pose you trust.
+{% hint style="info" %}
+The code is shown for Java with Commands v2 and Commands v3. The C++ `SwerveInputStream` has the same options, so the same approach works there. Every snippet compiles against YAMS, but none of it has been run on a robot: the numbers in the tables are placeholders for your own measurements.
+{% endhint %}
 
-In YAMS terms:
+### 1. Let the calculator read the drive
 
-* A swerve drive that knows where it is. A moving shot is only as good as the pose it starts from. WPILib's [Pose Estimators](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html) page explains how vision corrects the pose.
-* A rotation controller on the drive. `withAim` uses the one you gave [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md), which the swerve tutorial already sets.
-* A flywheel that reaches its speed quickly and holds it. See [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md) and WPILib's [Tuning a Flywheel Velocity Controller](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-flywheel.html).
-
-## 1. Let the calculator read the drive
-
-Every strategy needs to know where the robot is, and the moving ones need to know how fast it is moving on the field. Add these to the drive class from the [Swerve Drive](../tutorials/swerve-drive.md) tutorial.
+Add these to the drive class from the swerve tutorial.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -131,9 +114,9 @@ public ChassisVelocities getFieldVelocity() {
 {% endtab %}
 {% endtabs %}
 
-## 2. Let the flywheel follow a changing speed
+### 2. Let the flywheel follow a changing speed
 
-The shot's flywheel speed changes as the robot moves, so the shooter needs a command that takes a supplier. `FlyWheel.run(Supplier)` reads it every loop. Add this to the shooter class from the [Shooter](../tutorials/shooter-flywheels.md) tutorial, along with an import of `java.util.function.Supplier`.
+Add this to the shooter class from the shooter tutorial, along with an import of `java.util.function.Supplier`.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -159,17 +142,135 @@ public Command track(Supplier<AngularVelocity> speed) {
 {% endtab %}
 {% endtabs %}
 
-## 3. Pick a strategy and write the calculator
+### 3. The lookup tables
 
-Each strategy page adds one method to a `ShotCalculator` class. Start with the first, because the other two reuse its tables.
+**Read first:** [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html), and Eeshwar's [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), which describes how to measure the table with a tape measure and a phone.
 
-* [Strategy 1: A lookup table, standing still](shoot-on-the-move/lookup-table.md)
-* [Strategy 2: Time of flight recursion](shoot-on-the-move/time-of-flight-recursion.md)
-* [Strategy 3: Newton's method](shoot-on-the-move/newtons-method.md)
+The tables hold what you measured standing still: the flywheel speed that scores from each distance, and how long that shot is in the air. WPILib's [`InterpolatingDoubleTreeMap`](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/interpolation/InterpolatingDoubleTreeMap.html) fills in the distances in between.
 
-## 4. Aim and spin up together
+{% code title="ShotCalculator.java" %}
+```java
+package first.robot;
 
-While the driver holds the right bumper, the stream turns the robot toward the shot's target and the shooter follows the shot's speed. `shot()` calls the strategy you picked: this one uses the recursion. Swapping strategies only changes that one line.
+import static org.wpilib.units.Units.RPM;
+
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.interpolation.InterpolatingDoubleTreeMap;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.units.measure.AngularVelocity;
+
+/** Works out where to aim and how fast to spin the flywheel. */
+public final class ShotCalculator {
+  /** Where to aim, and the flywheel speed that reaches it. */
+  public record Shot(Pose2d target, AngularVelocity flywheelSpeed) {}
+
+  // Where the real target is on the field, in meters.
+  private static final Translation2d TARGET = new Translation2d(4.6, 4.0);
+
+  // Distance to the target in meters, to flywheel speed in RPM.
+  private static final InterpolatingDoubleTreeMap FLYWHEEL_RPM = new InterpolatingDoubleTreeMap();
+  // Distance to the target in meters, to how long the shot is in the air in seconds.
+  private static final InterpolatingDoubleTreeMap TIME_OF_FLIGHT = new InterpolatingDoubleTreeMap();
+
+  static {
+    // Measure these on your own robot, standing still.
+    FLYWHEEL_RPM.put(1.5, 2400.0);
+    FLYWHEEL_RPM.put(3.0, 3000.0);
+    FLYWHEEL_RPM.put(4.5, 3700.0);
+
+    TIME_OF_FLIGHT.put(1.5, 0.45);
+    TIME_OF_FLIGHT.put(3.0, 0.70);
+    TIME_OF_FLIGHT.put(4.5, 0.95);
+  }
+
+  private ShotCalculator() {}
+
+  /** The shot that reaches a point on the field from where the robot is. */
+  private static Shot shotAt(Pose2d robotPose, Translation2d aimPoint) {
+    double distance = robotPose.getTranslation().getDistance(aimPoint);
+    return new Shot(new Pose2d(aimPoint, new Rotation2d()), RPM.of(FLYWHEEL_RPM.get(distance)));
+  }
+}
+```
+{% endcode %}
+
+**For your robot:** set `TARGET`, fill both tables with your own measurements, and flip the target for the red alliance.
+
+### 4. Pick a firing strategy
+
+Each of these is one method to add to `ShotCalculator`. They are the three strategies of the WPILib fire control pages, written against the tables above.
+
+**Standing still.** Read [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html). Aim at the real target, and read the flywheel speed for the distance.
+
+{% code title="ShotCalculator.java" %}
+```java
+/** Strategy 1: aim at the real target. Only right while the robot is standing still. */
+public static Shot standing(Pose2d robotPose) {
+  return shotAt(robotPose, TARGET);
+}
+```
+{% endcode %}
+
+**Time of flight recursion.** Read [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html). This is the virtual target that most teams use.
+
+{% code title="ShotCalculator.java" %}
+```java
+/** Strategy 2: lead the target by the time of flight, and repeat until the time settles. */
+public static Shot recursive(Pose2d robotPose, ChassisVelocities fieldVelocity) {
+  Translation2d virtualTarget = TARGET;
+  // Each pass uses the distance from the pass before, so the answer settles after a few.
+  for (int i = 0; i < 3; i++) {
+    double distance = robotPose.getTranslation().getDistance(virtualTarget);
+    double timeOfFlight = TIME_OF_FLIGHT.get(distance);
+    // The shot drifts by the robot's velocity times the time of flight, so aim that far the other way.
+    virtualTarget = TARGET.minus(
+        new Translation2d(fieldVelocity.vx * timeOfFlight, fieldVelocity.vy * timeOfFlight));
+  }
+  return shotAt(robotPose, virtualTarget);
+}
+```
+{% endcode %}
+
+**Newton's method.** Read [Newton's Method for Dynamic Shooting](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html). It finds the same time of flight in fewer passes, which helps when driving fast toward or away from the target.
+
+{% code title="ShotCalculator.java" %}
+```java
+/** Strategy 3: find the same time of flight with Newton's method, which needs fewer passes. */
+public static Shot newton(Pose2d robotPose, ChassisVelocities fieldVelocity) {
+  Translation2d toTarget = TARGET.minus(robotPose.getTranslation());
+  double distance = toTarget.getNorm();
+  // How fast the game piece covers ground, from the standing shot at this distance.
+  double projectileSpeed = distance / TIME_OF_FLIGHT.get(distance);
+  // How fast the robot is closing on the target. Negative while it drives away.
+  double closingSpeed = (toTarget.getX() * fieldVelocity.vx + toTarget.getY() * fieldVelocity.vy) / distance;
+
+  // A first guess that already allows for the robot's motion toward or away from the target.
+  double timeOfFlight = distance / (projectileSpeed + closingSpeed);
+  for (int i = 0; i < 3; i++) {
+    // The virtual target for this guess.
+    double dx = toTarget.getX() - fieldVelocity.vx * timeOfFlight;
+    double dy = toTarget.getY() - fieldVelocity.vy * timeOfFlight;
+    double virtualDistance = Math.hypot(dx, dy);
+    // How far the guess is from what the table says for that distance.
+    double error = timeOfFlight - TIME_OF_FLIGHT.get(virtualDistance);
+    // How fast that error changes as the guess changes.
+    double slope = 1 + (dx * fieldVelocity.vx + dy * fieldVelocity.vy) / (projectileSpeed * virtualDistance);
+    timeOfFlight -= error / slope;
+  }
+  Translation2d virtualTarget = TARGET.minus(
+      new Translation2d(fieldVelocity.vx * timeOfFlight, fieldVelocity.vy * timeOfFlight));
+  return shotAt(robotPose, virtualTarget);
+}
+```
+{% endcode %}
+
+Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) reaches the lead a fourth way, by subtracting the robot's velocity from the shot's velocity. It is not written out here: his posts have the code, and the table above says where its outputs go in YAMS.
+
+### 5. Aim and spin up together
+
+While the driver holds the right bumper, the stream turns the robot toward the shot's target and the shooter follows the shot's speed. `shot()` calls the strategy you picked, and swapping strategies only changes that one line.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -260,70 +361,29 @@ Trigger aimed = input.aimLock(Degrees.of(2));
 
 The new imports are `org.wpilib.units.Units.Degrees` (static), `org.wpilib.units.Units.Seconds` (static), `yams.commands2.swerve.SwerveInputStream` for Commands v2, and `org.wpilib.units.Units.Degrees` (static), `org.wpilib.units.Units.Seconds` (static), `org.wpilib.command3.Trigger`, `yams.commands3.swerve.SwerveInputStream` for Commands v3.
 
-**For your robot:** start the lookahead at the delay you can measure, from the calculation to the game piece leaving the shooter, and tune from there. It is often 100 to 200 milliseconds. If your shooter does not point out of the front of the robot, add [`withAimHeadingOffset`](../details/swerve-input-stream.md#aim-heading-offset).
+### 6. Feed only when the shot is ready
 
-## 5. Feed only when the shot is ready
+Do not feed until the robot faces the aim heading and the flywheel is at the shot's speed. `aimed` from the last step is the first half. [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md) shows how to gate a feeder on the flywheel's speed with a debounce, which is the second half. Combine the two with `aimed.and(...)`.
 
-Do not feed a game piece until the robot faces the aim heading and the flywheel is at the shot's speed. `aimed` from the last step is the first half. [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md) shows how to gate a feeder on the flywheel's speed with a debounce, which is the second half. Combine the two with `aimed.and(...)`.
+## Tuning the YAMS side
 
-## Tuning it
+The sources cover how to tune the shot itself. These are the YAMS settings that go with their advice:
 
-* Get the standing shot right first. If shots miss while the robot is still, moving will not fix them.
-* Then drive slowly sideways past the target. If shots land behind the robot's direction of travel, your times of flight are too short. If they land ahead of it, they are too long.
-* Watch `aimed` while you drive past. If the robot trails the aim heading, raise the rotation controller's gains in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md), or add a [`withAimFeedforward`](../details/swerve-input-stream.md#aim-feedforward).
-* Driving straight at the target or straight away from it is the hardest case. WPILib's [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html) page shows why, and how to tell a trustworthy shot from a fragile one.
-* Tune the lookahead last, with the test from [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) of Eeshwar's series: drive in a straight line across the front of the target at a steady speed. If the shots land behind where you are aiming, raise the lookahead. If they land ahead, lower it. Start at 0.1 seconds.
+| Their advice | The YAMS setting |
+| ------------ | ---------------- |
+| Get the standing shot consistent before anything else (Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Prerequisites") | The flywheel's gains: see WPILib's [Tuning a Flywheel Velocity Controller](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-flywheel.html) and [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md) |
+| Tune the latency constant by driving straight across the front of the target (Eeshwar's [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), "The Latency Constant") | The time you give [`withAimLookahead`](../details/swerve-input-stream.md#aim-lookahead). Start at 0.1 seconds |
+| A moving shot is only as good as the pose it starts from | Vision measurements into the drive's pose estimate: see WPILib's [Pose Estimators](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html) |
+| Watch whether the heading keeps up as you drive past | The rotation controller in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md), then [`withAimFeedforward`](../details/swerve-input-stream.md#aim-feedforward) |
+| Hold fire when the shot is not trustworthy ([Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html), "Shot Quality in Practice") | The tolerance you give [`aimLock`](../details/swerve-input-stream.md#aim-lock), and the flywheel's `near` tolerance |
 
-## When the math is right and the shots still miss
+## WPILib building blocks
 
-A correct calculation gets you close. Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) lists what the math leaves out, and the list is a good order to check things in:
-
-| Effect | What happens | What to do about it |
-| ------ | ------------ | ------------------- |
-| Latency | The camera, the loop, the motors and the feed all take time. By the time the game piece leaves, the robot is somewhere else. | [`withAimLookahead`](../details/swerve-input-stream.md#aim-lookahead) projects the robot forward. It is often 100 to 200 milliseconds, and more than you expect. |
-| The flywheel slows and slips | Each game piece takes speed out of the wheel, and a wheel grips less at higher speed. A stream of shots falls shorter and shorter. | Give the flywheel a strong feedforward, and do not feed until it has recovered. See [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md). |
-| Spin and air drag | Moving sideways puts sideways spin on a foam ball, which makes it curve. Driving toward the target adds drag. | Add a small correction to the aim that grows with the robot's sideways speed, and tune it until shots go straight. [`withAimHeadingOffset`](../details/swerve-input-stream.md#aim-heading-offset) is one place to put it. WPILib's [Linear Drag (First-Order Air Friction)](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html) page covers drag. |
-| A shooter that is itself moving | A shooter away from the center of a spinning robot has its own sideways speed. At 180 degrees per second, a shooter 10 inches from the center moves at about 30 inches per second. | Add that speed to the robot's velocity before you calculate the shot, or avoid spinning while you shoot. |
-| A lobbed shot | Only the horizontal part of the shot's speed matters to the lead. At a steep exit angle that is much less than the total, so using the total gives the wrong lead. | The time of flight tables here already work in horizontal terms, because distance divided by time is horizontal speed. Be careful if you add a hood. |
-
-## Further reading
-
-### WPILib documentation
-
-{% hint style="info" %}
-The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](https://github.com/wpilibsuite/wpilib-docs/pull/3242). They have not been merged, so the links go to the pull request's preview and may move.
-{% endhint %}
-
-| Page | What it covers |
-| ---- | -------------- |
-| [Fire Control](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/index.html) | The start of the section, and the idea of leading and adjusting. |
-| [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html) | Strategy 1: building and using a firing table. |
-| [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html) | Strategy 2: the recursion, with an interactive simulation of where it converges. |
-| [Newton's Method for Dynamic Shooting](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html) | Strategy 3: Newton's method, with the math step by step. |
-| [Linear Drag (First-Order Air Friction)](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html) | A correction for air drag at high robot speeds, which works with strategies 2 and 3. |
-
-The released WPILib documentation covers the building blocks. These pages are written for WPILib 2026. The ideas are the same in 2027, though some classes were renamed: `ChassisSpeeds`, for example, is `ChassisVelocities`.
+The released WPILib documentation covers the classes the example uses. These pages are written for WPILib 2026. The ideas are the same in 2027, though some classes were renamed: `ChassisSpeeds`, for example, is `ChassisVelocities`.
 
 | Page | Why it matters here |
 | ---- | ------------------- |
-| [Coordinate System](https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html) | Which way X, Y and a positive rotation point. Get this wrong and the virtual target moves the wrong way. |
+| [Coordinate System](https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html) | Which way X, Y and a positive rotation point. |
 | [Translation, Rotation, and Pose](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/pose.html) | The classes that the distance and direction to the target are calculated with. |
 | [Transformations](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/transformations.html) | Getting from the center of the robot to where the shooter really is. |
 | [Introduction to Kinematics and The ChassisSpeeds Class](https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/intro-and-chassis-speeds.html) | Robot relative and field relative velocity. |
-| [Pose Estimators](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html) | Combining odometry with vision for a pose you can trust. |
-| [Tuning a Flywheel Velocity Controller](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-flywheel.html) | Getting the flywheel to its speed quickly. |
-| [`InterpolatingDoubleTreeMap`](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/interpolation/InterpolatingDoubleTreeMap.html) (API) | The lookup table used by `ShotCalculator`. |
-
-### FRC write-ups and code
-
-| Resource | What you get from it |
-| -------- | -------------------- |
-| [Shoot on the move from the code perspective](https://www.chiefdelphi.com/t/shoot-on-the-move-from-the-code-perspective/511815) (Chief Delphi) | A good place to start. It explains the virtual target and links to most of the resources below. |
-| [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) (Eeshwar) | Part 1 is the vector math, lobbed shots, and the real world effects that make a correct calculation still miss. Part 2 builds the lookup table, gets the horizontal speed of the shot from the time of flight, covers shooters with a hood, and tunes the latency. |
-| [Time of Flight Determination](https://www.chiefdelphi.com/t/time-of-flight-determination/512542) (Chief Delphi) | The different ways teams find the time of flight. |
-| [Shoot While Move Code (1706)](https://www.chiefdelphi.com/t/shoot-while-move-code-1706/410494) (Chief Delphi) | Team 1706 walks through its 2022 code: a table of time of flight against distance, a virtual goal, and a few repeats of the calculation. |
-| [Orbit 1690 Online Software Sessions](https://www.chiefdelphi.com/t/orbit-1690-online-software-sessions/467221) (Chief Delphi) | Recorded sessions from Team 1690 on their swerve and system control software, which other teams point to for the shoot on the move math. |
-| [Mechanical Advantage 6328's `LaunchCalculator.java`](https://github.com/Mechanical-Advantage/RobotCode2026Public/blob/main/src/main/java/org/littletonrobotics/frc2026/subsystems/launcher/LaunchCalculator.java) | The launch calculation from their 2026 robot code. |
-| [Hammerheads 5000's `TurretCalculator.java`](https://github.com/hammerheads5000/2026Rebuilt/blob/main/src/main/java/frc/robot/subsystems/turret/TurretCalculator.java) | The shot calculation for a turret from their 2026 robot code, with a [build thread post](https://www.chiefdelphi.com/t/frc-5000-hammerheads-2026-build-thread-open-alliance/507502/129) that walks through it. |
-
-None of the team code uses YAMS, so the class and method names differ from yours. Read it for the math, and use the steps above to find the YAMS call that supplies each input.
