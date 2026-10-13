@@ -6,6 +6,10 @@ description: Where to learn shooting on the move, and how the ideas in those sou
 
 Shooting on the move means scoring while the robot is still driving, instead of stopping to line up first.
 
+We covered this in a YASS Weekly Workshop, **How To Program Target Tracking And Shooting On The Fly for FRC**. Watch it first:
+
+{% embed url="https://www.youtube.com/watch?v=pa-HMLTHYvo" %}
+
 This page does not try to teach it. People in the FRC community have already explained it well, and their work is where you should learn it. What this page adds is the YAMS side: which YAMS call supplies each thing those sources ask for, what the [Swerve Input Stream](../details/swerve-input-stream.md) does for you and what it does not, and a worked example on top of the [Swerve Drive](../tutorials/swerve-drive.md) and [Shooter](../tutorials/shooter-flywheels.md) tutorials.
 
 ## Read these first
