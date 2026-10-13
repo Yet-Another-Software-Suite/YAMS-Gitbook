@@ -8,6 +8,8 @@ YAMS defaults to closed-loop position or velocity control expressed in linear un
 
 Linear closed loop control is when the closed loop controller operate in `meters` and `meters per second` instead of `rotations` and `rotations per second`. This directly affects your PID gains.
 
+<figure><img src="../.gitbook/assets/smc-linear-units.png" alt="Two panels. Angle based, the default: error is measured in rotations, kP is in volts per rotation and profile limits are in rotations per second, for arms, pivots, turrets and flywheels. Distance based: error in meters, kP in volts per meter and profile limits in meters per second, for elevators and other linear mechanisms."><figcaption><p>The units the gains and limits are in.</p></figcaption></figure>
+
 ## When would I want to disable it?
 
 Sometimes you would like to get `Measurement` (like `SmartMotorController.getMeasurementPosition` and `SmartMotorController.getMeasurementVelocity`) data without enabling linear closed loop control.

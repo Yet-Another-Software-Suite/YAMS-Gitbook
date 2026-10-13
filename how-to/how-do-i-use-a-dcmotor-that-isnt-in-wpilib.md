@@ -40,6 +40,8 @@ public DCMotor(
 
 Torque is in newton-meters, current in amps and free speed in radians per second.
 
+<figure><img src="../.gitbook/assets/howto-dcmotor-curve.png" alt="A graph of torque and current against motor speed for a Minion at 12 volts. Torque falls in a straight line from the stall torque of 3.1 newton meters at zero speed to zero at the free speed of 7200 RPM. Current falls from the stall current of 200.46 amps to the free current of 1.43 amps. Beside it, the DCMotor constructor takes the nominal voltage, stall torque, stall current, free current, free speed and number of motors, in that order."><figcaption><p>The four datasheet values and where each goes in the constructor.</p></figcaption></figure>
+
 For example, before WPILib added `DCMotor.getMinion()`, a [Minion motor](https://store.ctr-electronics.com/products/minion-brushless-motor) could be created with:
 
 ```java

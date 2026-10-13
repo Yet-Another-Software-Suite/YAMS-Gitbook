@@ -228,6 +228,8 @@ public class ExampleSubsystem extends SubsystemBase {
 
 </code></pre>
 
+<figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
+
 ## Bind buttons to our `Elevator`
 
 We bind buttons to use the `Commands` from our `Elevator`

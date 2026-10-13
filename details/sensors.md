@@ -11,6 +11,8 @@ A `Sensor` is a wrapper around what would be a real sensor on your robot, like a
 
 Sensors essentially report back primitive values. Sometimes we know the sensor should trip at a certain time during the match, like autonomous, or under certain conditions like game piece trade offs or intaking for a second or more. Sometimes we want to trigger the sensor ourselves too!
 
+<figure><img src="../.gitbook/assets/sensor-value-source.png" alt="Two panels. On the real robot, getAsBoolean returns the real sensor reading from the supplier you gave, and simulated values are ignored. In simulation, the first simulated value whose condition is true is returned. Otherwise the value shown in the Sim GUI is returned, which starts as the default and can be changed by hand or with getField and set."><figcaption><p>Your code makes the same call on the real robot and in simulation.</p></figcaption></figure>
+
 ## How do I create a `Sensor`?
 
 {% hint style="info" %}
@@ -47,6 +49,8 @@ private final Sensor coralSensor = new SensorConfig("CoralDetectorBeamBreak") //
 ...
 <strong>coralSensor.addSimTrigger("Beam", HALValue.makeBoolean(true), ()->arm.isNear(Degrees.of(40), Degrees.of(2))); // Change "Beam" field to true when the arm is near 40deg +- 2deg
 </strong></code></pre>
+
+<figure><img src="../.gitbook/assets/sensor-sim-values.gif" alt="Animation of the Beam field of a beam break sensor in simulation, false by default. It turns true while the arm is within 2 degrees of 40 degrees, turns false when the arm moves on, turns true again while the match time is between 3 and 4 seconds, and then goes back to false."><figcaption><p>The field reads true while either simulated value is true, and goes back to what it was when neither is.</p></figcaption></figure>
 
 ## What does this look like?
 

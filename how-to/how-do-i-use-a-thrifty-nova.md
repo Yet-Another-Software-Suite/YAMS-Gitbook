@@ -114,6 +114,8 @@ The `thrifty::Nova` and the `SmartMotorControllerConfig` must outlive the `NovaW
 
 The Nova's closed loop controller runs on the SystemCore, and YAMS commands the Nova with voltage. ThriftyLib's simulation ignores the Nova's onboard PID gains, so running the loop on the SystemCore keeps simulation and the real robot behaving the same. YAMS raises a medium level alert saying the closed loop controller is running on the SystemCore, this is expected for a Nova.
 
+<figure><img src="../.gitbook/assets/smc-where-it-runs.png" alt="A table of where the closed loop runs. TalonFX and TalonFXS run PID and profiles on the controller and LQR on the SystemCore. SPARK MAX and SPARK Flex run PID and trapezoidal profiles on the controller, and exponential profiles and LQR on the SystemCore. The Thrifty Nova runs everything on the SystemCore. withClosedLoopControlPeriod only changes the SystemCore loop, 20 milliseconds by default."><figcaption><p>Where the closed loop runs, and what the control period changes.</p></figcaption></figure>
+
 ## External encoders
 
 Pass one of these to `withExternalEncoder(...)`:
