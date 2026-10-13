@@ -25,6 +25,22 @@ WPILib is writing its own explanation of this, with simulations you can play wit
 
 <figure><img src="../.gitbook/assets/howto-sotm-virtual-target.gif" alt="Animation of two robots seen from above, both driving to the right at the same speed and shooting at a target. The first aims straight at the target, and every shot drifts to the right of it and misses. The second aims at a virtual target to the left of the real one, and every shot drifts into the real target."><figcaption><p>The shot keeps the robot's velocity. Aiming at the virtual target cancels the drift.</p></figcaption></figure>
 
+## What `withAim` does, and why it is not enough on the move
+
+[`withAim`](../details/swerve-input-stream.md#aim-at-a-target) on the [Swerve Input Stream](../details/swerve-input-stream.md) uses the simplest method there is, **point at the pose**:
+
+1. It takes the target pose you gave it and the robot's pose right now.
+2. It works out the direction from the robot to that pose.
+3. The drive's rotation PID controller turns the front of the robot toward that direction. The left stick still translates the robot.
+
+That is exactly right for a robot that is standing still, and for lining up before a shot. It does not work as you would expect while the robot is driving, for three reasons:
+
+* **It does not lead the shot.** `withAim` knows nothing about the robot's velocity or the time of flight. Give it the real target and the robot points straight at it, which is the left half of the animation above: every shot drifts and misses. The lead has to come from you. That is why this guide gives `withAim` the virtual target, and not the real one.
+* **It reacts, so it lags.** The rotation comes from a PID controller on the heading error alone. There is no feedforward for how fast the direction to the target is changing. While the robot drives past the target that direction changes all the time, and a controller that only reacts to error is always a little behind. The faster you drive and the closer you are, the larger the lag.
+* **It uses the pose from this loop.** The game piece leaves the shooter a moment after the calculation, once the robot has moved on. Nothing in `withAim` looks ahead to cover that delay.
+
+So treat `withAim` as the part that turns the robot, and not as the whole solution. Steps 1 to 5 add the lead. The lag is the reason step 6 checks the robot's heading before it feeds, and the reason teams who shoot at high speed move the aiming to a turret with its own feedforward, as the Mechanical Advantage and Hammerheads code under [Further reading](#further-reading) does.
+
 ## What you need first
 
 * A swerve drive that knows where it is. The pose comes from the drive's odometry, and a moving shot is only as good as that pose. WPILib's [Pose Estimators](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html) page explains how vision corrects it.
@@ -270,7 +286,7 @@ Do not feed a game piece until the flywheel is at the shot's speed and the robot
 
 * Get the standing shot right first. If shots miss while the robot is still, moving will not fix them.
 * Then drive slowly sideways past the target. If shots land behind the robot's direction of travel, your times of flight are too short. If they land ahead of it, they are too long.
-* Check the aim before the shot. If the robot lags behind the virtual target, raise the rotation controller's gains in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md).
+* Check the aim before the shot. `withAim` has no feedforward, so the robot always trails the virtual target a little while it drives past. If it trails too far, raise the rotation controller's gains in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md).
 * [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) of the shooting on the fly series is about tuning on a real robot.
 
 ## Further reading
