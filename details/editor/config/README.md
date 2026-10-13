@@ -61,12 +61,12 @@ Every option on the following pages has a table showing where it works. These ar
 | [`withVendorControlRequest`](motor-basics.md#withvendorcontrolrequest) | ✅ | ✅ | ❌ | ❌ |
 | [`withSupplyCurrentLimit`](limits-and-protection.md#current-limits) | ✅ | ✅ | ❌ | ✅ |
 | [`withVoltageCompensation`](limits-and-protection.md#withvoltagecompensation) | ❌ | ❌ | ✅ | ✅ |
-| [`withClosedLoopTolerance`](closed-loop-control.md#withclosedlooptolerance) | ❌ | ❌ | ⚠️ not with LQR | ⚠️ not with LQR |
+| [`withClosedLoopTolerance`](closed-loop-control.md#withclosedlooptolerance) | ❌ | ❌ | ⚠️ not with [LQR](../lqr-controllers.md) | ⚠️ not with [LQR](../lqr-controllers.md) |
 | [Closed loop `SLOT_3`](closed-loop-control.md#slots) | ❌ | ❌ | ✅ | ✅ |
-| [`withClosedLoopControllerMaximumVoltage`](closed-loop-control.md#withclosedloopcontrollermaximumvoltage) | ✅ | ✅ | ⚠️ exponential profile or LQR only | ✅ |
-| [`withClosedLoopControlPeriod`](closed-loop-control.md#withclosedloopcontrolperiod) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
-| [`withTemperatureCutoff`](limits-and-protection.md#withtemperaturecutoff) | ⚠️ LQR only | ⚠️ LQR only | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
-| [`withFeedbackSynchronizationThreshold`](encoders.md#withfeedbacksynchronizationthreshold) | ❌ | ❌ | ⚠️ exponential profile or LQR only | ⚠️ closed loop mode only |
+| [`withClosedLoopControllerMaximumVoltage`](closed-loop-control.md#withclosedloopcontrollermaximumvoltage) | ✅ | ✅ | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ✅ |
+| [`withClosedLoopControlPeriod`](closed-loop-control.md#withclosedloopcontrolperiod) | ❌ | ❌ | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ⚠️ closed loop mode only |
+| [`withTemperatureCutoff`](limits-and-protection.md#withtemperaturecutoff) | ⚠️ [LQR](../lqr-controllers.md) only | ⚠️ [LQR](../lqr-controllers.md) only | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ⚠️ closed loop mode only |
+| [`withFeedbackSynchronizationThreshold`](encoders.md#withfeedbacksynchronizationthreshold) | ❌ | ❌ | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ⚠️ closed loop mode only |
 | [Separate open and closed loop ramp rates](limits-and-protection.md#ramp-rates) | ✅ | ✅ | ✅ | ❌ one shared ramp rate |
 | [`withExternalEncoderZeroOffset`](encoders.md#withexternalencoderzerooffset), [discontinuity point](encoders.md#withexternalencoderdiscontinuitypoint) | ✅ | ✅ | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |
 | [`withSoftLimits`](limits-and-protection.md#withsoftlimits) | ✅ | ✅ | ⚠️ closed loop mode only | ✅ |

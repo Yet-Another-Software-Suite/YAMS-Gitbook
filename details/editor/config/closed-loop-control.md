@@ -27,7 +27,7 @@ The gains work in rotations and volts, or meters and volts for a [distance based
 
 Passing an `LQRController` instead replaces the PID with an LQR: see [LQR controllers](../lqr-controllers.md).
 
-**Supported on every motor controller.** Every controller accepts PID gains. An LQR controller always runs on the SystemCore, on every controller.
+**Supported on every motor controller.** Every controller accepts PID gains. An [LQR controller](../lqr-controllers.md) always runs on the SystemCore, on every controller.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -69,7 +69,7 @@ Call it after `withClosedLoopController`: it is set on the PID controllers that 
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
-| ❌ | ❌ | ⚠️ not with an LQR controller | ⚠️ not with an LQR controller |
+| ❌ | ❌ | ⚠️ not with an [LQR controller](../lqr-controllers.md) | ⚠️ not with an [LQR controller](../lqr-controllers.md) |
 
 ## `withContinuousWrapping`
 
@@ -100,7 +100,7 @@ Caps the voltage the closed loop controller may ask for.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
-| ✅ | ✅ | ⚠️ only with an exponential profile or an LQR controller | ✅ |
+| ✅ | ✅ | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ✅ |
 
 ## Where the loop runs
 
@@ -119,7 +119,7 @@ A slower loop reacts later to every error, so it cannot use gains as high as a f
 
 What this means in practice:
 
-* **Tune again whenever the loop moves.** On a SPARK that happens when you switch between a trapezoidal profile, which runs on the controller, and an exponential profile or an LQR controller, which run on the SystemCore. Moving a mechanism to a different brand of motor controller can move the loop too.
+* **Tune again whenever the loop moves.** On a SPARK that happens when you switch between a trapezoidal profile, which runs on the controller, and an exponential profile or an [LQR controller](../lqr-controllers.md), which run on the SystemCore. Moving a mechanism to a different brand of motor controller can move the loop too.
 * **Tune again after changing [`withClosedLoopControlPeriod`](#withclosedloopcontrolperiod).** A different period is a different loop.
 * **Do not copy gains from another team or another robot** without checking where their loop ran and how fast.
 
@@ -135,7 +135,7 @@ Changes how often the SystemCore loop runs. The default is 20 ms.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
-| ❌ | ❌ | ⚠️ only with an exponential profile or an LQR controller | ⚠️ only in closed loop mode |
+| ❌ | ❌ | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
 
 ## `withLinearClosedLoopController`
 

@@ -191,14 +191,14 @@ This is every option against every motor controller. What each option does, with
 | Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova |
 | ----------------------- | ------- | -------- | ------------- | ---- |
 | Voltage Compensation    | ❌       | ❌        | ✅             | ✅ |
-| Closed Loop Max Voltage | ✅       | ✅        | ⚠️ (requires an Exponential Profile or LQR controller) | ✅ |
+| Closed Loop Max Voltage | ✅       | ✅        | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ✅ |
 
 {% hint style="warning" %}
 **Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an `IllegalArgumentException` if voltage compensation is configured; it's supported on `SparkWrapper` and `NovaWrapper`.
 {% endhint %}
 
 {% hint style="warning" %}
-**Closed Loop Max Voltage on Sparks**: `SparkWrapper` only supports `withClosedLoopControllerMaximumVoltage` when the closed loop controller runs on the SystemCore (an Exponential Profile or LQR controller); otherwise it throws a `SmartMotorControllerConfigurationException`.
+**Closed Loop Max Voltage on Sparks**: `SparkWrapper` only supports `withClosedLoopControllerMaximumVoltage` when the closed loop controller runs on the SystemCore (an Exponential Profile or [LQR controller](lqr-controllers.md)); otherwise it throws a `SmartMotorControllerConfigurationException`.
 {% endhint %}
 
 ### Ramp rates
@@ -225,9 +225,9 @@ This is every option against every motor controller. What each option does, with
 | Feature                 | TalonFX      | TalonFXS     | SparkMax/Flex                        | Nova |
 | ----------------------- | ------------ | ------------ | ------------------------------------ | ---- |
 | PID Controller          | ✅               | ✅               | ✅                                                      | ⚠️ (SystemCore)                 |
-| LQR Controller          | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore)                                        | ⚠️ (SystemCore)                 |
-| Closed Loop Tolerance   | ❌               | ❌               | ✅ (not with LQR)                                       | ✅ (not with LQR)                |
-| Control Period Override | ❌               | ❌               | ⚠️ (requires an Exponential Profile or LQR controller) | ⚠️ (requires closed loop mode) |
+| [LQR Controller](lqr-controllers.md)          | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore)                                        | ⚠️ (SystemCore)                 |
+| Closed Loop Tolerance   | ❌               | ❌               | ✅ (not with [LQR](lqr-controllers.md))                                       | ✅ (not with [LQR](lqr-controllers.md))                |
+| Control Period Override | ❌               | ❌               | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 | Closed Loop Slots       | ⚠️ (`SLOT_0` to `SLOT_2`) | ⚠️ (`SLOT_0` to `SLOT_2`) | ✅ | ✅ |
 
 {% hint style="warning" %}
@@ -235,7 +235,7 @@ This is every option against every motor controller. What each option does, with
 {% endhint %}
 
 {% hint style="info" %}
-**Nova Closed Loop Execution**: `NovaWrapper` always runs its closed loop controller (PID or LQR, motion profiles and feedforwards) on the SystemCore and commands the Nova with voltage. ThriftyLib's simulation ignores the Nova's onboard PID gains, so this keeps simulation and the real robot the same. A YAMS alert reports that the closed loop controller is running on the SystemCore.
+**Nova Closed Loop Execution**: `NovaWrapper` always runs its closed loop controller (PID or [LQR](lqr-controllers.md), motion profiles and feedforwards) on the SystemCore and commands the Nova with voltage. ThriftyLib's simulation ignores the Nova's onboard PID gains, so this keeps simulation and the real robot the same. A YAMS alert reports that the closed loop controller is running on the SystemCore.
 {% endhint %}
 
 ### Motion profiles
@@ -278,7 +278,7 @@ This is every option against every motor controller. What each option does, with
 | External Encoder Inversion   | ✅       | ✅        | ✅                                                      | ✅ |
 | External Encoder Zero Offset | ✅       | ✅        | ✅                                                      | ⚠️ (absolute and CAN encoders only) |
 | Use External for Feedback    | ✅       | ✅        | ✅                                                      | ✅ |
-| Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an Exponential Profile or LQR controller) | ⚠️ (requires closed loop mode) |
+| Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 
 **Supported External Encoder Types:**
 
@@ -326,10 +326,10 @@ This is every option against every motor controller. What each option does, with
 
 | Feature            | TalonFX | TalonFXS | SparkMax/Flex                              | Nova |
 | ------------------ | ------- | -------- | ------------------------------------------ | ---- |
-| Temperature Cutoff | ⚠️ (requires an LQR controller) | ⚠️ (requires an LQR controller) | ⚠️ (requires an Exponential Profile or LQR controller) | ⚠️ (requires closed loop mode) |
+| Temperature Cutoff | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 
 {% hint style="warning" %}
-**Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an LQR controller on any motor controller, an Exponential Profile on a `SparkWrapper`, and always on a `NovaWrapper`. With PID or a profile that runs on the motor controller, it does not work.
+**Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an [LQR controller](lqr-controllers.md) on any motor controller, an Exponential Profile on a `SparkWrapper`, and always on a `NovaWrapper`. With PID or a profile that runs on the motor controller, it does not work.
 {% endhint %}
 
 ***
