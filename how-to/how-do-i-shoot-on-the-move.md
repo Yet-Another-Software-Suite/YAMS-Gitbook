@@ -21,6 +21,8 @@ A game piece keeps the robot's velocity when it leaves the shooter. If the robot
 3. Move the target the opposite way by that much. This is the **virtual target**.
 4. Aim at the virtual target, and work the shot out again for its distance. Repeat two or three times, because the new distance changes the time of flight a little.
 
+WPILib is writing its own explanation of this, with simulations you can play with: [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html). It is a preview of a page that is not finished yet.
+
 <figure><img src="../.gitbook/assets/howto-sotm-virtual-target.gif" alt="Animation of two robots seen from above, both driving to the right at the same speed and shooting at a target. The first aims straight at the target, and every shot drifts to the right of it and misses. The second aims at a virtual target to the left of the real one, and every shot drifts into the real target."><figcaption><p>The shot keeps the robot's velocity. Aiming at the virtual target cancels the drift.</p></figcaption></figure>
 
 ## What you need first
@@ -275,7 +277,14 @@ Do not feed a game piece until the flywheel is at the shot's speed and the robot
 
 ### WPILib documentation
 
-WPILib does not have a page on shooting on the move, but it documents every building block. These pages are written for WPILib 2026. The ideas are the same in 2027, though some classes were renamed.
+A **Fire Control** section is being written for the WPILib documentation in [wpilib-docs #3242](https://github.com/wpilibsuite/wpilib-docs/pull/3242). It is a work in progress and has not been merged, so these links go to the pull request's preview and may move:
+
+| Page | What it covers |
+| ---- | -------------- |
+| [Fire Control](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/index.html) | The start of the section, which also has pages on shooting while standing still, a Newton's method solver and drag. |
+| [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html) | Shooting on the move: the same repeated time of flight calculation as this guide, with an interactive simulation. |
+
+Until that is published, the released WPILib documentation covers every building block. These pages are written for WPILib 2026. The ideas are the same in 2027, though some classes were renamed.
 
 | Page | Why it matters here |
 | ---- | ------------------- |
