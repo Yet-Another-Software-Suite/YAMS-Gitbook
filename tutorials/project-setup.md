@@ -112,17 +112,20 @@ The template gives you `Robot.java`, `ExampleTeleop.java` and a `mechanisms` fol
 
 A Commands v3 mechanism `implements Mechanism`. Nothing calls a periodic method on it for you, so each tutorial gives the class a `periodic()` and a `simulationPeriodic()`, and `Robot.java` calls them:
 
-* `Robot.robotPeriodic()` runs every loop, on the robot and in simulation. It calls each mechanism's `periodic()`, and then runs the scheduler.
+* `Robot.robotPeriodic()` runs every loop, on the robot and in simulation. It calls each mechanism's `periodic()`, runs the scheduler, and then publishes the scheduler so that a dashboard shows which commands are running.
 * `Robot.simulationPeriodic()` runs every loop in simulation only. It calls each mechanism's `simulationPeriodic()`.
 
 With an arm and an elevator on the robot, `Robot.java` ends up with this:
 
 ```java
+private final Scheduler scheduler = Scheduler.getDefault();
+
 @Override
 public void robotPeriodic() {
   arm.periodic();
   elevator.periodic();
-  Scheduler.getDefault().run();
+  scheduler.run();
+  Telemetry.log("Scheduler", scheduler, Scheduler.proto);
 }
 
 @Override

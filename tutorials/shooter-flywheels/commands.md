@@ -487,6 +487,7 @@ public class ShooterMechanism implements Mechanism {
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
+import org.wpilib.telemetry.Telemetry;
 import first.robot.constants.DriverConstants;
 import first.robot.mechanisms.ShooterMechanism;
 import first.robot.mechanisms.ExampleMechanism;
@@ -496,6 +497,9 @@ public class Robot extends OpModeRobot {
   final ShooterMechanism shooter = new ShooterMechanism();
   final CommandGamepad exampleController =
       new CommandGamepad(DriverConstants.DRIVER_CONTROLLER_PORT);
+
+  // The scheduler that runs every command.
+  private final Scheduler scheduler = Scheduler.getDefault();
 
 <strong>  public Robot() {
 </strong><strong>    // When no other command is using the shooter, let the flywheel coast.
@@ -507,7 +511,9 @@ public class Robot extends OpModeRobot {
     // Runs every loop, on the robot and in simulation.
     // Update the mechanism before the scheduler runs its commands.
     shooter.periodic();
-    Scheduler.getDefault().run();
+    scheduler.run();
+    // Publish the scheduler, so that a dashboard shows which commands are running.
+    Telemetry.log("Scheduler", scheduler, Scheduler.proto);
   }
 
   @Override

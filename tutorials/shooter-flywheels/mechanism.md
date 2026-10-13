@@ -109,10 +109,12 @@ In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for yo
 
 In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it. `Robot.java` has the two functions you need:
 
-* **`robotPeriodic()`** runs every loop, on the robot and in simulation. Call the mechanism's `periodic()` here, before `Scheduler.getDefault().run()`, so that the commands see fresh values.
+* **`robotPeriodic()`** runs every loop, on the robot and in simulation. Call the mechanism's `periodic()` here, before `scheduler.run()`, so that the commands see fresh values.
 * **`simulationPeriodic()`** runs every loop in simulation only, right after `robotPeriodic()`. The template does not have it yet, so add it, and call the mechanism's `simulationPeriodic()` here.
 
 Every mechanism you add to the robot gets one line in each of the two.
+
+Two smaller changes tidy up the template while you are here. Keep `Scheduler.getDefault()` in a `scheduler` attribute instead of asking for it every loop, and publish the scheduler with `Telemetry.log(...)` after it runs, so that a dashboard shows which commands are running and which mechanisms they hold.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -152,16 +154,23 @@ public void simulationPeriodic() {
 
 {% code title="Robot.java" %}
 ```java
+import org.wpilib.telemetry.Telemetry;
+
 import first.robot.mechanisms.ShooterMechanism;
 
 final ShooterMechanism shooter = new ShooterMechanism();
+
+// The scheduler that runs every command.
+private final Scheduler scheduler = Scheduler.getDefault();
 
 @Override
 public void robotPeriodic() {
   // Runs every loop, on the robot and in simulation.
   // Update the mechanism before the scheduler runs its commands.
   shooter.periodic();
-  Scheduler.getDefault().run();
+  scheduler.run();
+  // Publish the scheduler, so that a dashboard shows which commands are running.
+  Telemetry.log("Scheduler", scheduler, Scheduler.proto);
 }
 
 @Override
@@ -360,7 +369,8 @@ public class ShooterMechanism implements Mechanism {
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
-import first.robot.constants.DriverConstants;
+<strong>import org.wpilib.telemetry.Telemetry;
+</strong>import first.robot.constants.DriverConstants;
 <strong>import first.robot.mechanisms.ShooterMechanism;
 </strong>import first.robot.mechanisms.ExampleMechanism;
 
@@ -370,6 +380,9 @@ public class Robot extends OpModeRobot {
 </strong>  final CommandGamepad exampleController =
       new CommandGamepad(DriverConstants.DRIVER_CONTROLLER_PORT);
 
+<strong>  // The scheduler that runs every command.
+</strong><strong>  private final Scheduler scheduler = Scheduler.getDefault();
+</strong>
   public Robot() {}
 
   @Override
@@ -377,8 +390,10 @@ public class Robot extends OpModeRobot {
 <strong>    // Runs every loop, on the robot and in simulation.
 </strong><strong>    // Update the mechanism before the scheduler runs its commands.
 </strong><strong>    shooter.periodic();
-</strong>    Scheduler.getDefault().run();
-<strong>  }
+</strong><strong>    scheduler.run();
+</strong><strong>    // Publish the scheduler, so that a dashboard shows which commands are running.
+</strong><strong>    Telemetry.log("Scheduler", scheduler, Scheduler.proto);
+</strong><strong>  }
 </strong>
 <strong>  @Override
 </strong><strong>  public void simulationPeriodic() {
