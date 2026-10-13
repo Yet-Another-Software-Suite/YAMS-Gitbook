@@ -46,7 +46,7 @@ Each row is a concept from the sources, where to read about it, and the YAMS pie
 | A flywheel speed that changes every loop | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Wait, The Shooter Speed Changed?" | `FlyWheel.run(Supplier)`, which reads the supplier every loop |
 | Turning to face a point while the driver keeps driving | Every source | [`withAim`](../details/swerve-input-stream.md#aim-at-a-target), which takes a supplier so the point can move every loop |
 | A virtual target, led by the time of flight | [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html), and [Shoot on the move from the code perspective](https://www.chiefdelphi.com/t/shoot-on-the-move-from-the-code-perspective/511815) | You calculate it. Give the result to `withAim` |
-| A shot vector with the robot's velocity subtracted | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Math Implementation" | You calculate it. Give its direction to [`withHeading`](../details/swerve-input-stream.md#heading-snap-control) or to a turret, and its speed to the flywheel |
+| A shot vector with the robot's velocity subtracted | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Math Implementation" | You calculate it. Give its direction to `withAim`, [`withHeading`](../details/swerve-input-stream.md#heading-snap-control) or a turret, and its speed to the flywheel |
 | Latency compensation: aim from where the robot will be | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Latency Compensation", and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), "The Latency Constant" | [`withAimLookahead`](../details/swerve-input-stream.md#aim-lookahead) |
 | A heading that keeps up with a moving aim point | Specific to turning the whole robot. The sources mostly aim a turret | [`withAimFeedforward`](../details/swerve-input-stream.md#aim-feedforward), and the rotation controller in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md) |
 | A shooter that does not point out of the front, or a small aim correction for spin | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Magnus Effect and Air Resistance" | [`withAimHeadingOffset`](../details/swerve-input-stream.md#aim-heading-offset) |
@@ -124,7 +124,7 @@ public ChassisVelocities getFieldVelocity() {
 {% step %}
 ### Let the flywheel follow a changing speed
 
-Add this to the shooter class from the shooter tutorial, along with an import of `java.util.function.Supplier`.
+Add this to the shooter class from the shooter tutorial.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -212,7 +212,7 @@ public final class ShotCalculator {
 {% step %}
 ### Pick a firing strategy
 
-Each tab is one method to add to `ShotCalculator`. They are the three strategies of the WPILib fire control pages, written against the tables above.
+Each tab is one method to add to `ShotCalculator`. The first three are the strategies of the WPILib fire control pages, and the fourth is the one from Eeshwar's blog. All four are written against the tables above.
 
 {% tabs %}
 {% tab title="Standing still" %}
@@ -290,9 +290,50 @@ public static Shot newton(Pose2d robotPose, ChassisVelocities fieldVelocity) {
 ```
 {% endcode %}
 {% endtab %}
+
+{% tab title="Vector Subtraction" %}
+**Read first:** Eeshwar's [Shooting on the Fly](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [Shooting on the Fly, Part 2: The LUT Approach](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2).
+
+The velocity the shooter gives the game piece is the velocity it needs over the ground, minus the robot's velocity. The direction of what is left is where to aim, and its length is the speed the shot needs. There are no repeated passes.
+
+{% code title="ShotCalculator.java" %}
+```java
+/** Vector subtraction: take the robot's velocity out of the velocity the shot needs over the ground. */
+public static Shot vectorSubtraction(Pose2d robotPose, ChassisVelocities fieldVelocity) {
+  Translation2d toTarget = TARGET.minus(robotPose.getTranslation());
+  double distance = toTarget.getNorm();
+  // The horizontal speed of the standing shot from here.
+  double speed = distance / TIME_OF_FLIGHT.get(distance);
+  // The velocity the game piece needs over the ground, minus the robot's own velocity.
+  Translation2d shotVelocity = toTarget.div(distance).times(speed)
+      .minus(new Translation2d(fieldVelocity.vx, fieldVelocity.vy));
+  double requiredSpeed = shotVelocity.getNorm();
+
+  // Read the table in reverse: find the distance whose standing shot has that speed.
+  // This assumes shots from farther away are faster, and searches between the ends of the table.
+  double near = 1.5;
+  double far = 4.5;
+  for (int i = 0; i < 20; i++) {
+    double middle = (near + far) / 2;
+    if (middle / TIME_OF_FLIGHT.get(middle) < requiredSpeed) {
+      near = middle;
+    } else {
+      far = middle;
+    }
+  }
+  double effectiveDistance = (near + far) / 2;
+
+  // A point in the direction of the shot, for the drive to face.
+  Translation2d aimPoint = robotPose.getTranslation().plus(shotVelocity.div(requiredSpeed).times(distance));
+  return new Shot(new Pose2d(aimPoint, new Rotation2d()), RPM.of(FLYWHEEL_RPM.get(effectiveDistance)));
+}
+```
+{% endcode %}
+
+The blog aims a turret with the angle of the shot. This example turns the whole robot, so it hands `withAim` a point in that direction instead. The speeds here are horizontal: if your shot is lobbed, read the blog's section on lobbed shots before you trust them.
+{% endtab %}
 {% endtabs %}
 
-Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) reaches the lead a fourth way, by subtracting the robot's velocity from the shot's velocity. It is not written out here: his posts have the code, and the table above says where its outputs go in YAMS.
 {% endstep %}
 
 {% step %}
@@ -387,7 +428,6 @@ Trigger aimed = input.aimLock(Degrees.of(2));
 {% endtab %}
 {% endtabs %}
 
-The new imports are `org.wpilib.units.Units.Degrees` (static), `org.wpilib.units.Units.Seconds` (static), `yams.commands2.swerve.SwerveInputStream` for Commands v2, and `org.wpilib.units.Units.Degrees` (static), `org.wpilib.units.Units.Seconds` (static), `org.wpilib.command3.Trigger`, `yams.commands3.swerve.SwerveInputStream` for Commands v3.
 {% endstep %}
 
 {% step %}
