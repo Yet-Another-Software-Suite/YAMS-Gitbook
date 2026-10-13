@@ -212,7 +212,7 @@ public final class ShotCalculator {
 {% step %}
 ### Pick a firing strategy
 
-Each tab is one method to add to `ShotCalculator`. The first three are the strategies of the WPILib fire control pages, and the fourth is the one from Eeshwar's blog. All four are written against the tables above, and the three for a moving robot are all **time of flight** methods: they get the lead from the time of flight you measured, and differ in how they use it.
+Each tab is one method to add to `ShotCalculator`. They are the three strategies of the WPILib fire control pages, written against the tables above. The two for a moving robot are **time of flight** methods: they get the lead from the time of flight you measured.
 
 {% tabs %}
 {% tab title="Standing still" %}
@@ -231,9 +231,11 @@ public static Shot standing(Pose2d robotPose) {
 {% endtab %}
 
 {% tab title="Time of flight recursion" %}
-**Read first:** [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html).
+**Read first:** Eeshwar's [Shooting on the Fly](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [Shooting on the Fly, Part 2: The LUT Approach](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) as a primer, then [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html).
 
-A time of flight method. It uses the time of flight to move the target, and repeats until the time stops changing.
+**The primer: vector subtraction.** Eeshwar's posts explain the lead as one subtraction. The time of flight in your table gives the horizontal speed of the standing shot: the distance divided by the time. Point a velocity of that speed at the target, subtract the robot's velocity, and what is left is the velocity the shooter has to give the game piece. Its direction is where to aim, and its length is the speed the shot needs. Read this first, because it makes clear why the aim and the shot speed both change when the robot moves.
+
+**The recursion.** WPILib's page reaches the same lead by moving the target instead. It moves the target against the robot's velocity by the time of flight, which changes the distance and so the time of flight, and repeats until the time stops changing. This is the virtual target that most teams use, and it is what the method below does.
 
 {% code title="ShotCalculator.java" %}
 ```java
@@ -289,48 +291,6 @@ public static Shot newton(Pose2d robotPose, ChassisVelocities fieldVelocity) {
 }
 ```
 {% endcode %}
-{% endtab %}
-
-{% tab title="Vector Subtraction" %}
-**Read first:** Eeshwar's [Shooting on the Fly](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [Shooting on the Fly, Part 2: The LUT Approach](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2).
-
-A time of flight method. The time of flight in the table gives the horizontal speed of the standing shot: the distance divided by the time. Point a velocity of that speed at the target, and subtract the robot's velocity from it. The direction of what is left is where to aim, and its length is the speed the shot needs.
-
-{% code title="ShotCalculator.java" %}
-```java
-/** Vector subtraction: take the robot's velocity out of the velocity the shot needs over the ground. */
-public static Shot vectorSubtraction(Pose2d robotPose, ChassisVelocities fieldVelocity) {
-  Translation2d toTarget = TARGET.minus(robotPose.getTranslation());
-  double distance = toTarget.getNorm();
-  // The horizontal speed of the standing shot from here.
-  double speed = distance / TIME_OF_FLIGHT.get(distance);
-  // The velocity the game piece needs over the ground, minus the robot's own velocity.
-  Translation2d shotVelocity = toTarget.div(distance).times(speed)
-      .minus(new Translation2d(fieldVelocity.vx, fieldVelocity.vy));
-  double requiredSpeed = shotVelocity.getNorm();
-
-  // Read the table in reverse: find the distance whose standing shot has that speed.
-  // This assumes shots from farther away are faster, and searches between the ends of the table.
-  double near = 1.5;
-  double far = 4.5;
-  for (int i = 0; i < 20; i++) {
-    double middle = (near + far) / 2;
-    if (middle / TIME_OF_FLIGHT.get(middle) < requiredSpeed) {
-      near = middle;
-    } else {
-      far = middle;
-    }
-  }
-  double effectiveDistance = (near + far) / 2;
-
-  // A point in the direction of the shot, for the drive to face.
-  Translation2d aimPoint = robotPose.getTranslation().plus(shotVelocity.div(requiredSpeed).times(distance));
-  return new Shot(new Pose2d(aimPoint, new Rotation2d()), RPM.of(FLYWHEEL_RPM.get(effectiveDistance)));
-}
-```
-{% endcode %}
-
-The blog aims a turret with the angle of the shot. This example turns the whole robot, so it hands `withAim` a point in that direction instead. The speeds here are horizontal: if your shot is lobbed, read the blog's section on lobbed shots before you trust them.
 {% endtab %}
 {% endtabs %}
 
