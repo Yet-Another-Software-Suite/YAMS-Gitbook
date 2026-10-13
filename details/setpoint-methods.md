@@ -212,6 +212,115 @@ public Command complexArmCommand(Supplier<Angle> targetSupplier) {
 {% endtab %}
 {% endtabs %}
 
+### Example: State machine (Commands v3)
+
+A state machine keeps one variable for what the mechanism should be doing, and one command that reads it every loop. Buttons and other commands only ask for a state. The direct setpoint methods fit this well, because the state machine is the only thing that ever commands the motor.
+
+```java
+public class ArmMechanism implements Mechanism {
+  /** Every state the arm can be in, and the angle it holds there. */
+  public enum ArmState {
+    STOWED(Degrees.of(0)),
+    INTAKING(Degrees.of(-20)),
+    SCORING(Degrees.of(80));
+
+    public final Angle angle;
+
+    ArmState(Angle angle) {
+      this.angle = angle;
+    }
+  }
+
+  private static final Angle TOLERANCE = Degrees.of(2);
+
+  private final Arm arm;
+  private final BooleanSupplier hasGamePiece;
+  private ArmState state = ArmState.STOWED;
+
+  public ArmMechanism(BooleanSupplier hasGamePiece) {
+    this.hasGamePiece = hasGamePiece;
+    // createArm() stands for the usual setup: the SmartMotorControllerConfig, the SmartMotorController and the Arm.
+    arm = createArm();
+  }
+
+  /** Ask for a state. A plain call: it does not schedule or interrupt anything. */
+  public void request(ArmState next) {
+    state = next;
+  }
+
+  /** The same request as a command, for button bindings. It requires nothing, so it never interrupts the state machine. */
+  public Command requestCommand(ArmState next) {
+    return Command.noRequirements(coroutine -> request(next)).named("Arm request " + next);
+  }
+
+  public ArmState getState() {
+    return state;
+  }
+
+  /** True once the arm has reached the angle of its current state. */
+  public boolean atState() {
+    return arm.isNear(state.angle, TOLERANCE);
+  }
+
+  /**
+   * The one command that owns the arm. Each loop it applies the transitions, then sends the
+   * current state's angle with a direct setpoint method. Use it as the default command.
+   */
+  public Command runStateMachine() {
+    return run(coroutine -> {
+      while (true) {
+        switch (state) {
+          // Once a game piece is in, stow by itself.
+          case INTAKING -> {
+            if (hasGamePiece.getAsBoolean()) {
+              state = ArmState.STOWED;
+            }
+          }
+          // Once the game piece has left, stow by itself.
+          case SCORING -> {
+            if (atState() && !hasGamePiece.getAsBoolean()) {
+              state = ArmState.STOWED;
+            }
+          }
+          case STOWED -> {
+            // Nothing to do: wait for a request.
+          }
+        }
+        arm.setMechanismPositionSetpoint(state.angle);
+        coroutine.yield();
+      }
+    }).named("Arm State Machine");
+  }
+
+  public void periodic() {
+    arm.updateTelemetry();
+  }
+
+  public void simulationPeriodic() {
+    arm.simIterate();
+  }
+}
+```
+
+Make the state machine the default command, and have the bindings request states:
+
+```java
+// In Robot: the state machine is the arm's default command, so it always runs.
+arm.setDefaultCommand(arm.runStateMachine());
+
+// In an opmode: buttons only ask for a state.
+controller.a().onTrue(arm.requestCommand(ArmState.INTAKING));
+controller.b().onTrue(arm.requestCommand(ArmState.SCORING));
+controller.x().onTrue(arm.requestCommand(ArmState.STOWED));
+```
+
+How it fits together:
+
+* **One owner.** `runStateMachine()` is the only command that requires the arm, so nothing can interrupt it by accident.
+* **Requests are plain calls.** `request(...)` just changes a variable. `requestCommand(...)` wraps it in a command that requires nothing, so pressing a button never interrupts the state machine.
+* **Transitions live in one place.** The `switch` decides when the arm leaves a state by itself, such as stowing once a game piece is in.
+* **`setMechanismPositionSetpoint(...)` runs every loop** with the current state's angle, inside a `while (true)` loop that ends each pass with `coroutine.yield()`.
+
 ### Starting and stopping the SystemCore closed loop
 
 Some closed loops run on the motor controller and some run on the SystemCore. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) lists which is which. A loop on the SystemCore is a piece of YAMS code that runs every control period and writes an output to the motor, and it keeps doing that until it is stopped. So with the direct setpoint methods, **you** have to start and stop it to match the kind of control you want:
