@@ -45,8 +45,8 @@ Each row is a concept from the sources, where to read about it, and the YAMS pie
 | A lookup table of shots that score, measured standing still | [Static Shooting via Look-Up Table](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/static-shooting.html), and Eeshwar's [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) | WPILib's [`InterpolatingDoubleTreeMap`](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/interpolation/InterpolatingDoubleTreeMap.html), with the result sent to a [FlyWheel](../details/shooters.md) |
 | A flywheel speed that changes every loop | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Wait, The Shooter Speed Changed?" | `FlyWheel.run(Supplier)`, which reads the supplier every loop |
 | Turning to face a point while the driver keeps driving | Every source | [`withAim`](../details/swerve-input-stream.md#aim-at-a-target), which takes a supplier so the point can move every loop |
-| A virtual target, led by the time of flight | [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html), and [Shoot on the move from the code perspective](https://www.chiefdelphi.com/t/shoot-on-the-move-from-the-code-perspective/511815) | You calculate it. Give the result to `withAim` |
-| A shot vector with the robot's velocity subtracted | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Math Implementation" | You calculate it. Give its direction to `withAim`, [`withHeading`](../details/swerve-input-stream.md#heading-snap-control) or a turret, and its speed to the flywheel |
+| A time of flight lead, as a virtual target | [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html), and [Shoot on the move from the code perspective](https://www.chiefdelphi.com/t/shoot-on-the-move-from-the-code-perspective/511815) | You calculate it. Give the result to `withAim` |
+| A time of flight lead, as a shot vector with the robot's velocity subtracted | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Math Implementation", and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), "Getting Horizontal Velocity from ToF" | You calculate it. Give its direction to `withAim`, [`withHeading`](../details/swerve-input-stream.md#heading-snap-control) or a turret, and its speed to the flywheel |
 | Latency compensation: aim from where the robot will be | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "Latency Compensation", and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), "The Latency Constant" | [`withAimLookahead`](../details/swerve-input-stream.md#aim-lookahead) |
 | A heading that keeps up with a moving aim point | Specific to turning the whole robot. The sources mostly aim a turret | [`withAimFeedforward`](../details/swerve-input-stream.md#aim-feedforward), and the rotation controller in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md) |
 | A shooter that does not point out of the front, or a small aim correction for spin | Eeshwar's [part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly), "The Magnus Effect and Air Resistance" | [`withAimHeadingOffset`](../details/swerve-input-stream.md#aim-heading-offset) |
@@ -212,7 +212,7 @@ public final class ShotCalculator {
 {% step %}
 ### Pick a firing strategy
 
-Each tab is one method to add to `ShotCalculator`. The first three are the strategies of the WPILib fire control pages, and the fourth is the one from Eeshwar's blog. All four are written against the tables above.
+Each tab is one method to add to `ShotCalculator`. The first three are the strategies of the WPILib fire control pages, and the fourth is the one from Eeshwar's blog. All four are written against the tables above, and the three for a moving robot are all **time of flight** methods: they get the lead from the time of flight you measured, and differ in how they use it.
 
 {% tabs %}
 {% tab title="Standing still" %}
@@ -233,7 +233,7 @@ public static Shot standing(Pose2d robotPose) {
 {% tab title="Time of flight recursion" %}
 **Read first:** [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html).
 
-This is the virtual target that most teams use.
+A time of flight method. It uses the time of flight to move the target, and repeats until the time stops changing.
 
 {% code title="ShotCalculator.java" %}
 ```java
@@ -257,7 +257,7 @@ public static Shot recursive(Pose2d robotPose, ChassisVelocities fieldVelocity) 
 {% tab title="Newton's method" %}
 **Read first:** [Newton's Method for Dynamic Shooting](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html).
 
-It finds the same time of flight in fewer passes, which helps when driving fast toward or away from the target.
+A time of flight method. It finds the same time of flight as the recursion in fewer passes, which helps when driving fast toward or away from the target.
 
 {% code title="ShotCalculator.java" %}
 ```java
@@ -294,7 +294,7 @@ public static Shot newton(Pose2d robotPose, ChassisVelocities fieldVelocity) {
 {% tab title="Vector Subtraction" %}
 **Read first:** Eeshwar's [Shooting on the Fly](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [Shooting on the Fly, Part 2: The LUT Approach](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2).
 
-The velocity the shooter gives the game piece is the velocity it needs over the ground, minus the robot's velocity. The direction of what is left is where to aim, and its length is the speed the shot needs. There are no repeated passes.
+A time of flight method. The time of flight in the table gives the horizontal speed of the standing shot: the distance divided by the time. Point a velocity of that speed at the target, and subtract the robot's velocity from it. The direction of what is left is where to aim, and its length is the speed the shot needs.
 
 {% code title="ShotCalculator.java" %}
 ```java
