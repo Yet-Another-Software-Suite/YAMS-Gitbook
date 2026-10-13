@@ -24,6 +24,8 @@ The answer is the time of flight that agrees with itself: lead the target by tha
 
 The error always comes from your measured table, so the answer is as accurate as the recursion's. The slope uses a simpler model, in which the game piece covers ground at a steady speed. An approximate slope only changes how quickly the method settles, and not where it ends up.
 
+If the virtual target itself is new to you, read Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) before this page. Newton's method is a faster way to reach the same answer they describe.
+
 ## The calculator
 
 Add this method to the `ShotCalculator` from [Strategy 1](lookup-table.md).

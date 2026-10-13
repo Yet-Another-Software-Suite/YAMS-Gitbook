@@ -22,6 +22,10 @@ The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](h
 
 Only the time of flight is repeated. The flywheel speed is read from the table once, at the end, for the distance to the final virtual target. That is why you measured the time of flight in [Strategy 1](lookup-table.md): with it in the table, the code never needs a physics model of the shot.
 
+{% hint style="success" %}
+**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), explains shooting on the move from the ground up, with the reasoning behind each step and what it takes to tune it on a real robot. It is the best companion to these pages.
+{% endhint %}
+
 ## The calculator
 
 Add this method to the `ShotCalculator` from [Strategy 1](lookup-table.md). WPILib's [Translation, Rotation, and Pose](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/pose.html) covers the geometry classes it uses, and [Introduction to Kinematics and The ChassisSpeeds Class](https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/intro-and-chassis-speeds.html) covers the velocity.

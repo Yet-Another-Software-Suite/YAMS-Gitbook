@@ -20,6 +20,10 @@ A game piece keeps the robot's velocity when it leaves the shooter. If the robot
 
 The drift is the robot's velocity multiplied by the **time of flight**. The time of flight depends on the distance, and the distance changes once you aim at the virtual target, so the strategies differ in how they settle on it.
 
+{% hint style="success" %}
+**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), explains shooting on the move from the ground up, with the reasoning behind each step and what it takes to tune it on a real robot. It is the best companion to these pages.
+{% endhint %}
+
 ## The three strategies
 
 | Strategy | What it does | Use it when |

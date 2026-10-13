@@ -22,7 +22,7 @@ The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](h
 
 With the robot standing still, pick a few distances that cover where you shoot from. At each one, adjust the flywheel speed until the shot scores every time, and write the distance and the speed down.
 
-While you are there, **measure the time of flight** for each distance as well. Strategy 1 does not use it, but strategies 2 and 3 are built on it, and it is far easier to measure now than later. A slow motion phone video is enough. [Time of Flight Determination](https://www.chiefdelphi.com/t/time-of-flight-determination/512542) on Chief Delphi compares the ways teams find it.
+While you are there, **measure the time of flight** for each distance as well. Strategy 1 does not use it, but strategies 2 and 3 are built on it, and it is far easier to measure now than later. A slow motion phone video is enough. [Time of Flight Determination](https://www.chiefdelphi.com/t/time-of-flight-determination/512542) on Chief Delphi compares the ways teams find it, and Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) covers what to measure and why.
 
 {% hint style="warning" %}
 If the shooter does not put the game piece in the same place twice from the same spot, no software will fix it. Get the mechanism consistent first.
