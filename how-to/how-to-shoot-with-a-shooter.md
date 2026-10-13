@@ -2,7 +2,7 @@
 
 A flywheel shooter's effectiveness depends on reaching a stable velocity setpoint before the game piece enters the shooter. `FlyWheel` exposes a velocity trigger (`near`) so you can gate game piece injection on whether the wheel has spun up, rather than using a fixed time delay.
 
-<figure><img src="../.gitbook/assets/howto-shooter-at-speed.gif" alt="Animation of a flywheel spinning up to 3000 RPM, with a band of 100 RPM around the setpoint. A feeder started by a fixed delay of 0.5 seconds feeds at 2252 RPM, before the wheel is ready. A feeder started by the near trigger feeds at 2900 RPM, once the wheel is inside the band."><figcaption><p>A fixed delay feeds whether or not the wheel is ready. The trigger waits for the wheel.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/howto-shooter-at-speed.gif" alt="Animation of a flywheel spinning up to 3000 RPM and shooting two balls, with a band of 100 RPM around the setpoint. Each shot drops the speed by several hundred RPM, and it overshoots and rings as it recovers. A lane for the at speed trigger is true inside the band, including for an instant each time the speed passes through it. A lane for the feeder, which uses the trigger with a 0.1 second debounce, is only true once the speed has stayed in the band, so the second ball is not fed until the wheel has settled."><figcaption><p>Each shot slows the wheel and it rings as it recovers. The tolerance band and a debounce keep the feeder off until it has settled.</p></figcaption></figure>
 
 ## Create `Command`s with our `Shooter`
 
@@ -414,7 +414,9 @@ public class ExampleTeleop implements OpMode {
 {% endtab %}
 {% endtabs %}
 
-To feed a game piece only once the wheel is up to speed, bind your feeder to the `atSpeed` trigger, for example `m_exampleSubsystem.atSpeed(RPM.of(300), RPM.of(10)).and(m_driverController.rightTrigger()).whileTrue(feeder.set(0.5));`. For a plain boolean check outside of a `Trigger`, `FlyWheel` also has `isNear(speed, tolerance)`.
+To feed a game piece only once the wheel is up to speed, bind your feeder to the `atSpeed` trigger, for example `m_exampleSubsystem.atSpeed(RPM.of(300), RPM.of(10)).debounce(0.1).and(m_driverController.rightTrigger()).whileTrue(feeder.set(0.5));`.
+
+Every shot takes speed out of the wheel, and the speed overshoots and rings as the closed loop brings it back. The tolerance keeps the trigger false while the wheel is too slow or too fast. The speed still passes through the tolerance for an instant on each swing, and `.debounce(0.1)` ignores that: the trigger only turns true once the speed has stayed inside the tolerance for 0.1 seconds. Without the debounce the feeder can pulse while the wheel is still ringing. For a plain boolean check outside of a `Trigger`, `FlyWheel` also has `isNear(speed, tolerance)`.
 
 <figure><img src="../.gitbook/assets/mech-triggers-flywheel.png" alt="A number line from 0 to 5000 RPM with a flywheel at 2960 RPM. near 3000 RPM within 100 is true. between 500 and 2000 RPM is false. gte 2500 RPM is true. lte 2500 RPM is false. A flywheel has no max or min. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
 
