@@ -33,6 +33,12 @@
 ## Understanding
 
 * [AdvantageKit Integration](details/advantagekit-integration.md)
+  * [Step 1: Define the IO interface](details/advantagekit/io-interface.md)
+  * [Step 2: Implement the IO class](details/advantagekit/io-implementation.md)
+  * [Steps 3 and 4: The subsystem and RobotContainer](details/advantagekit/subsystem-and-robotcontainer.md)
+  * [Log replay](details/advantagekit/log-replay.md)
+  * [Swerve drive with AdvantageKit](details/advantagekit/swerve-drive.md)
+  * [Without an IO layer](details/advantagekit/direct-subsystem.md)
 * [Organizing configs in constants](details/config-organization.md)
 * [Battery simulation](understanding/battery-simulation.md)
 * [Smart motor controllers](details/editor/README.md)
