@@ -21,7 +21,7 @@ A game piece keeps the robot's velocity when it leaves the shooter. If the robot
 The drift is the robot's velocity multiplied by the **time of flight**. The time of flight depends on the distance, and the distance changes once you aim at the virtual target, so the strategies differ in how they settle on it.
 
 {% hint style="success" %}
-**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), explains shooting on the move from the ground up, with the reasoning behind each step and what it takes to tune it on a real robot. It is the best companion to these pages.
+**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), is the best companion to these pages. Part 1 covers the vector math. Part 2 is the practical side: building the lookup table, getting the shot's speed from the time of flight, what to do with a hood, and how to tune the latency.
 {% endhint %}
 
 ## The three strategies
@@ -37,6 +37,17 @@ These are the strategies of WPILib's [Fire Control](https://frc-docs--3242.org.r
 {% hint style="info" %}
 The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](https://github.com/wpilibsuite/wpilib-docs/pull/3242). They have not been merged, so the links go to the pull request's preview and may move.
 {% endhint %}
+
+### Another way to lead: subtract the robot's velocity
+
+Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) reach the lead a different way, with no repeated passes:
+
+1. The table gives the time of flight for the distance, so the shot's horizontal speed is simply the distance divided by the time of flight.
+2. Point a velocity of that speed straight at the target. This is the velocity the game piece needs over the ground.
+3. Subtract the robot's field relative velocity from it. What is left is the velocity the shooter has to give the game piece.
+4. The direction of that vector is where to aim. Its length is the horizontal speed you need, and the table read in reverse turns that speed back into a flywheel speed.
+
+It suits a turret well, because the result is an angle and a speed. It works in the **horizontal** speed of the shot, which matters for a lobbed shot: at a 60 degree exit angle the horizontal speed is only half of the total. With YAMS, give the direction to [`withHeading`](../details/swerve-input-stream.md#heading-snap-control) on the stream, or to a turret, and the speed to the flywheel.
 
 ## What `SwerveInputStream` does, and what it leaves to you
 
@@ -249,7 +260,7 @@ Do not feed a game piece until the robot faces the aim heading and the flywheel 
 * Then drive slowly sideways past the target. If shots land behind the robot's direction of travel, your times of flight are too short. If they land ahead of it, they are too long.
 * Watch `aimed` while you drive past. If the robot trails the aim heading, raise the rotation controller's gains in [`SwerveDriveConfig`](../details/mechanism-configs/swerve-drive-config.md), or add a [`withAimFeedforward`](../details/swerve-input-stream.md#aim-feedforward).
 * Driving straight at the target or straight away from it is the hardest case. WPILib's [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html) page shows why, and how to tell a trustworthy shot from a fragile one.
-* [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) of the shooting on the fly series is about tuning on a real robot.
+* Tune the lookahead last, with the test from [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) of Eeshwar's series: drive in a straight line across the front of the target at a steady speed. If the shots land behind where you are aiming, raise the lookahead. If they land ahead, lower it. Start at 0.1 seconds.
 
 ## Further reading
 
@@ -284,7 +295,7 @@ The released WPILib documentation covers the building blocks. These pages are wr
 | Resource | What you get from it |
 | -------- | -------------------- |
 | [Shoot on the move from the code perspective](https://www.chiefdelphi.com/t/shoot-on-the-move-from-the-code-perspective/511815) (Chief Delphi) | A good place to start. It explains the virtual target and links to most of the resources below. |
-| [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) (Eeshwar) | A blog series on the technique. Part 2 covers tuning it and using it on a real robot. |
+| [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) (Eeshwar) | Part 1 is the vector math. Part 2 builds the lookup table, gets the horizontal speed of the shot from the time of flight, covers shooters with a hood, and tunes the latency. |
 | [Time of Flight Determination](https://www.chiefdelphi.com/t/time-of-flight-determination/512542) (Chief Delphi) | The different ways teams find the time of flight. |
 | [Shoot While Move Code (1706)](https://www.chiefdelphi.com/t/shoot-while-move-code-1706/410494) (Chief Delphi) | Team 1706 walks through its 2022 code: a table of time of flight against distance, a virtual goal, and a few repeats of the calculation. |
 | [Orbit 1690 Online Software Sessions](https://www.chiefdelphi.com/t/orbit-1690-online-software-sessions/467221) (Chief Delphi) | Recorded sessions from Team 1690 on their swerve and system control software, which other teams point to for the shoot on the move math. |

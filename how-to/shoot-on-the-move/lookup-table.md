@@ -22,7 +22,15 @@ The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](h
 
 With the robot standing still, pick a few distances that cover where you shoot from. At each one, adjust the flywheel speed until the shot scores every time, and write the distance and the speed down.
 
-While you are there, **measure the time of flight** for each distance as well. Strategy 1 does not use it, but strategies 2 and 3 are built on it, and it is far easier to measure now than later. A slow motion phone video is enough. [Time of Flight Determination](https://www.chiefdelphi.com/t/time-of-flight-determination/512542) on Chief Delphi compares the ways teams find it, and Eeshwar's [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) covers what to measure and why.
+Eeshwar's [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) describes a routine that needs only a tape measure and some tape on the floor:
+
+* Mark the floor at regular steps from the target. Every half meter from 1.5 m to 6 m is usually enough.
+* Park on each mark and tune until the shots go in. No math is needed.
+* Aim for 8 to 12 points across the range you shoot from. More is not better: one bad point bends the line on both sides of it. If the values in between look wrong, check the neighboring entries for a typo.
+
+While you are there, **measure the time of flight** for each distance as well. Strategy 1 does not use it, but strategies 2 and 3 are built on it, and it is far easier to measure now than later. A phone recording at 60 frames per second is enough: count the frames from release to the target and divide by 60. [Time of Flight Determination](https://www.chiefdelphi.com/t/time-of-flight-determination/512542) on Chief Delphi compares other ways teams find it.
+
+The time of flight also tells you the horizontal speed of the shot for free, with no model of the shooter: it is the distance divided by the time. [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) of Eeshwar's series builds its whole method on that.
 
 {% hint style="warning" %}
 If the shooter does not put the game piece in the same place twice from the same spot, no software will fix it. Get the mechanism consistent first.
@@ -86,6 +94,8 @@ public final class ShotCalculator {
 {% endcode %}
 
 **For your robot:** set `TARGET` to your game's target, fill both tables with your own measurements, and flip the target for the red alliance. WPILib's [Coordinate System](https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html) page explains the field coordinates. If your shooter is not at the center of the robot, measure the distance from where the shooter is: see [Transformations](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/transformations.html).
+
+**If you have a hood:** the table can hold a hood angle next to the flywheel speed, measured the same way. Add a third table and a third field to `Shot`. [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) of Eeshwar's series covers a fixed flywheel with a moving hood, and a shooter with both, including which of the two to adjust while moving.
 
 ## 3. Use it
 

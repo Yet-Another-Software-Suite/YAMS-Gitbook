@@ -23,7 +23,7 @@ The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](h
 Only the time of flight is repeated. The flywheel speed is read from the table once, at the end, for the distance to the final virtual target. That is why you measured the time of flight in [Strategy 1](lookup-table.md): with it in the table, the code never needs a physics model of the shot.
 
 {% hint style="success" %}
-**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), explains shooting on the move from the ground up, with the reasoning behind each step and what it takes to tune it on a real robot. It is the best companion to these pages.
+**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), is the best companion to these pages. Part 1 covers the vector math. Part 2 is the practical side: building the lookup table, getting the shot's speed from the time of flight, what to do with a hood, and how to tune the latency.
 {% endhint %}
 
 ## The calculator
@@ -83,6 +83,7 @@ ShotCalculator.Shot shot() {
 * **Driving straight at the target, or straight away from it.** The time of flight is most sensitive to the robot's speed in these directions, and the recursion takes the most passes to settle. Driving past at a diagonal is the most stable approach. The simulation on WPILib's [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html) page lets you see this for any velocity.
 * **Driving fast.** A faster robot turns a small error in the time of flight into a larger miss, and its measured velocity is less certain too. Slowing down to shoot is a legitimate strategy.
 * **Driving faster than the shot.** If the robot closes on the target faster than the game piece travels, there is no sensible answer.
+* **A shot the shooter cannot make.** If the virtual target is beyond the far end of your table, the table just returns its last entry and the shot falls short. Check the distance against the range you measured, and slow the robot down or hold fire when it is outside. [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) of Eeshwar's series discusses the options.
 * **Air drag at high speed.** The table already includes the drag on a standing shot. It does not include the extra drag from the robot's own motion. WPILib's [Linear Drag (First-Order Air Friction)](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html) page gives a one line correction: use `(1 - Math.exp(-k * timeOfFlight)) / k` in place of `timeOfFlight` when you move the target, where `k` is a drag constant you tune.
 
 If the recursion is slow to settle for the way your robot drives, [Strategy 3: Newton's method](newtons-method.md) finds the same answer in fewer passes.
