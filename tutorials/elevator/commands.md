@@ -494,7 +494,7 @@ public class ElevatorMechanism implements Mechanism {
     elevator.updateTelemetry();
   }
 
-  /** Call this from Robot.robotPeriodic() in simulation. */
+  /** Call this from Robot.simulationPeriodic(). */
   public void simulationPeriodic() {
     // Runs the elevator's physics simulation.
     elevator.simIterate();
@@ -509,7 +509,6 @@ public class ElevatorMechanism implements Mechanism {
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
-import org.wpilib.framework.RobotBase;
 import first.robot.constants.DriverConstants;
 import first.robot.mechanisms.ElevatorMechanism;
 import first.robot.mechanisms.ExampleMechanism;
@@ -527,12 +526,16 @@ public class Robot extends OpModeRobot {
 </strong>
   @Override
   public void robotPeriodic() {
+    // Runs every loop, on the robot and in simulation.
     // Update the mechanism before the scheduler runs its commands.
     elevator.periodic();
-    if (RobotBase.isSimulation()) {
-      elevator.simulationPeriodic();
-    }
     Scheduler.getDefault().run();
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // Runs every loop, in simulation only.
+    elevator.simulationPeriodic();
   }
 }
 </code></pre>

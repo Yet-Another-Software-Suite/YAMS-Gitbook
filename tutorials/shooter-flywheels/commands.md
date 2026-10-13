@@ -472,7 +472,7 @@ public class ShooterMechanism implements Mechanism {
     shooter.updateTelemetry();
   }
 
-  /** Call this from Robot.robotPeriodic() in simulation. */
+  /** Call this from Robot.simulationPeriodic(). */
   public void simulationPeriodic() {
     // Runs the flywheel's physics simulation.
     shooter.simIterate();
@@ -487,7 +487,6 @@ public class ShooterMechanism implements Mechanism {
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
-import org.wpilib.framework.RobotBase;
 import first.robot.constants.DriverConstants;
 import first.robot.mechanisms.ShooterMechanism;
 import first.robot.mechanisms.ExampleMechanism;
@@ -505,12 +504,16 @@ public class Robot extends OpModeRobot {
 </strong>
   @Override
   public void robotPeriodic() {
+    // Runs every loop, on the robot and in simulation.
     // Update the mechanism before the scheduler runs its commands.
     shooter.periodic();
-    if (RobotBase.isSimulation()) {
-      shooter.simulationPeriodic();
-    }
     Scheduler.getDefault().run();
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // Runs every loop, in simulation only.
+    shooter.simulationPeriodic();
   }
 }
 </code></pre>

@@ -602,7 +602,7 @@ public class DoubleFlywheelMechanism implements Mechanism {
     lowerMotor.updateTelemetry();
   }
 
-  /** Call this from Robot.robotPeriodic() in simulation. */
+  /** Call this from Robot.simulationPeriodic(). */
   public void simulationPeriodic() {
     // Runs each flywheel's physics simulation.
     upperMotor.simIterate();

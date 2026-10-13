@@ -105,7 +105,14 @@ m_shooter.emplace(&m_shooterConfig, &m_motor.value());
 
 Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry and applies anything you change through live tuning. `simIterate()` runs the physics simulation, and only needs to run in simulation.
 
-In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you. In Commands v3 nothing does, so `Robot.java` creates the mechanism and calls them.
+In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you, so there is nothing more to do.
+
+In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it. `Robot.java` has the two functions you need:
+
+* **`robotPeriodic()`** runs every loop, on the robot and in simulation. Call the mechanism's `periodic()` here, before `Scheduler.getDefault().run()`, so that the commands see fresh values.
+* **`simulationPeriodic()`** runs every loop in simulation only, right after `robotPeriodic()`. The template does not have it yet, so add it, and call the mechanism's `simulationPeriodic()` here.
+
+Every mechanism you add to the robot gets one line in each of the two.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -135,7 +142,7 @@ public void periodic() {
   shooter.updateTelemetry();
 }
 
-/** Call this from Robot.robotPeriodic() in simulation. */
+/** Call this from Robot.simulationPeriodic(). */
 public void simulationPeriodic() {
   // Runs the flywheel's physics simulation.
   shooter.simIterate();
@@ -149,9 +156,17 @@ import first.robot.mechanisms.ShooterMechanism;
 
 final ShooterMechanism shooter = new ShooterMechanism();
 
-// Update the mechanism before the scheduler runs its commands.
-shooter.periodic();
-if (RobotBase.isSimulation()) {
+@Override
+public void robotPeriodic() {
+  // Runs every loop, on the robot and in simulation.
+  // Update the mechanism before the scheduler runs its commands.
+  shooter.periodic();
+  Scheduler.getDefault().run();
+}
+
+@Override
+public void simulationPeriodic() {
+  // Runs every loop, in simulation only.
   shooter.simulationPeriodic();
 }
 ```
@@ -266,7 +281,7 @@ public class ShooterSubsystem extends SubsystemBase {
 {% tab title="Java, Commands v3" %}
 The highlighted lines are new in this step.
 
-Nothing calls a periodic method on a Commands v3 `Mechanism`, so give the class its own `periodic()` and `simulationPeriodic()`, create the mechanism in `Robot.java`, and call both from `robotPeriodic()` before the scheduler runs.
+Nothing calls a periodic method on a Commands v3 `Mechanism`, so give the class its own `periodic()` and `simulationPeriodic()` and create the mechanism in `Robot.java`. Then call its `periodic()` from `Robot.robotPeriodic()`, before the scheduler runs, and its `simulationPeriodic()` from `Robot.simulationPeriodic()`.
 
 <pre class="language-java" data-title="mechanisms/ShooterMechanism.java" data-line-numbers><code class="lang-java">package first.robot.mechanisms;
 
@@ -332,7 +347,7 @@ public class ShooterMechanism implements Mechanism {
 </strong><strong>    shooter.updateTelemetry();
 </strong><strong>  }
 </strong>
-<strong>  /** Call this from Robot.robotPeriodic() in simulation. */
+<strong>  /** Call this from Robot.simulationPeriodic(). */
 </strong><strong>  public void simulationPeriodic() {
 </strong><strong>    // Runs the flywheel's physics simulation.
 </strong><strong>    shooter.simIterate();
@@ -345,8 +360,7 @@ public class ShooterMechanism implements Mechanism {
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
-<strong>import org.wpilib.framework.RobotBase;
-</strong>import first.robot.constants.DriverConstants;
+import first.robot.constants.DriverConstants;
 <strong>import first.robot.mechanisms.ShooterMechanism;
 </strong>import first.robot.mechanisms.ExampleMechanism;
 
@@ -360,13 +374,17 @@ public class Robot extends OpModeRobot {
 
   @Override
   public void robotPeriodic() {
-<strong>    // Update the mechanism before the scheduler runs its commands.
+<strong>    // Runs every loop, on the robot and in simulation.
+</strong><strong>    // Update the mechanism before the scheduler runs its commands.
 </strong><strong>    shooter.periodic();
-</strong><strong>    if (RobotBase.isSimulation()) {
-</strong><strong>      shooter.simulationPeriodic();
-</strong><strong>    }
 </strong>    Scheduler.getDefault().run();
-  }
+<strong>  }
+</strong>
+<strong>  @Override
+</strong><strong>  public void simulationPeriodic() {
+</strong><strong>    // Runs every loop, in simulation only.
+</strong><strong>    shooter.simulationPeriodic();
+</strong>  }
 }
 </code></pre>
 {% endtab %}

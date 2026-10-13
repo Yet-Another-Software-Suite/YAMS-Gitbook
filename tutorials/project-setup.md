@@ -110,7 +110,29 @@ A subsystem `extends SubsystemBase`, so the command scheduler calls its `periodi
 {% tab title="Java, Commands v3" %}
 The template gives you `Robot.java`, `ExampleTeleop.java` and a `mechanisms` folder. Each tutorial adds one mechanism class to `mechanisms`, creates it in `Robot.java`, and binds its buttons in `ExampleTeleop.java`.
 
-A Commands v3 mechanism `implements Mechanism`. Nothing calls a periodic method on it for you, so each tutorial gives the class a `periodic()` and a `simulationPeriodic()` and calls them from `Robot.robotPeriodic()`.
+A Commands v3 mechanism `implements Mechanism`. Nothing calls a periodic method on it for you, so each tutorial gives the class a `periodic()` and a `simulationPeriodic()`, and `Robot.java` calls them:
+
+* `Robot.robotPeriodic()` runs every loop, on the robot and in simulation. It calls each mechanism's `periodic()`, and then runs the scheduler.
+* `Robot.simulationPeriodic()` runs every loop in simulation only. It calls each mechanism's `simulationPeriodic()`.
+
+With an arm and an elevator on the robot, `Robot.java` ends up with this:
+
+```java
+@Override
+public void robotPeriodic() {
+  arm.periodic();
+  elevator.periodic();
+  Scheduler.getDefault().run();
+}
+
+@Override
+public void simulationPeriodic() {
+  arm.simulationPeriodic();
+  elevator.simulationPeriodic();
+}
+```
+
+Forget the first and the mechanism publishes no telemetry and ignores live tuning. Forget the second and it never moves in simulation.
 
 YAMS for Commands v3 lives in `yams.commands3` where the Commands v2 pages say `yams.commands2`. Everything in `yams.core` is shared.
 {% endtab %}

@@ -486,7 +486,7 @@ public class ArmMechanism implements Mechanism {
     arm.updateTelemetry();
   }
 
-  /** Call this from Robot.robotPeriodic() in simulation. */
+  /** Call this from Robot.simulationPeriodic(). */
   public void simulationPeriodic() {
     // Runs the arm's physics simulation.
     arm.simIterate();
@@ -501,7 +501,6 @@ public class ArmMechanism implements Mechanism {
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
-import org.wpilib.framework.RobotBase;
 import first.robot.constants.DriverConstants;
 import first.robot.mechanisms.ArmMechanism;
 import first.robot.mechanisms.ExampleMechanism;
@@ -519,12 +518,16 @@ public class Robot extends OpModeRobot {
 </strong>
   @Override
   public void robotPeriodic() {
+    // Runs every loop, on the robot and in simulation.
     // Update the mechanism before the scheduler runs its commands.
     arm.periodic();
-    if (RobotBase.isSimulation()) {
-      arm.simulationPeriodic();
-    }
     Scheduler.getDefault().run();
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // Runs every loop, in simulation only.
+    arm.simulationPeriodic();
   }
 }
 </code></pre>
