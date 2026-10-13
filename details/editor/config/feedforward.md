@@ -29,7 +29,22 @@ Takes one of WPILib's three feedforward classes.
 
 `ArmFeedforward` and `SimpleMotorFeedforward` gains are per rotation of the mechanism. `ElevatorFeedforward` gains are per meter, and giving one makes the controller [distance based](closed-loop-control.md#withlinearclosedloopcontroller).
 
-[Live tuning](../../live-tuning/README.md) has the full order for finding these, and [Exponential profiles](../exponential-profiles.md#measuring-kv-and-ka) shows how to measure `kV` and `kA` from one voltage step.
+[Live tuning](../../live-tuning/README.md) has the full order for finding these.
+
+### These are not an exponential profile's `kV` and `kA`
+
+An [exponential profile](../exponential-profiles.md) also has a `kV` and a `kA`. They share the names and the units, but they are separate settings that do different jobs, and changing one pair does not change the other.
+
+| | Feedforward `kV` and `kA` | Exponential profile `kV` and `kA` |
+| --- | --- | --- |
+| Set with | `withFeedforward(...)` | `withExponentialProfile(...)` |
+| What they do | Turn the velocity and acceleration of the setpoint into volts for the motor. | Shape the plan. The maximum voltage divided by `kV` is the profile's top speed, and divided by `kA` is its maximum acceleration. |
+| Raising them | Sends the motor more voltage. | Makes the profile slower. No extra voltage is sent. |
+| Tuned by | Watching how well the mechanism follows the setpoint. | Watching whether the mechanism can keep up with the profile. |
+
+A mechanism with an exponential profile needs both pairs: the profile's to plan the move, and the feedforward's to follow it. Do not copy one pair into the other. The profile's values are often set higher than the feedforward's, so the plan asks for less than the motor can give and leaves voltage in reserve.
+
+[Measuring kV and kA](../exponential-profiles.md#measuring-kv-and-ka-optional) on the exponential profiles page measures the profile's pair, and [refining the profile live](../exponential-profiles.md#refining-the-profile-live) tunes them.
 
 ### Slots
 
