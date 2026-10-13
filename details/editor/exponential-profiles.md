@@ -95,6 +95,10 @@ This shows that as velocity (ω) increases, the available acceleration (α) decr
 
 YAMS provides `ExponentialProfilePIDController` (`yams.core.math.ExponentialProfilePIDController`), which combines an exponential motion profile with a PID controller and has factory methods for the profile's constraints. In a `SmartMotorControllerConfig` you set the PID gains with `withClosedLoopController(kP, kI, kD)` and the profile with `withExponentialProfile(constraints)`, instead of a trapezoidal profile (`withTrapezoidalProfile`) or no profile at all.
 
+Exponential profiles in YAMS follow the same idea as CTRE's Motion Magic Expo, on every supported motor controller. CTRE's documentation is a good companion to this page:
+
+{% embed url="https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo" %}
+
 ### What you set
 
 An exponential profile is defined by a kV and a kA, and those are what you tune, exactly as CTRE's documentation describes. What YAMS adds is a way to get **starting values** for them without measuring anything: you give the **maximum voltage** and one of two descriptions of the mechanism, and YAMS works out a kV and a kA to start from:
