@@ -35,6 +35,19 @@ A game piece keeps the robot's velocity when it leaves the shooter, so a robot t
 
 <figure><img src="../.gitbook/assets/howto-sotm-virtual-target.gif" alt="Animation of two robots seen from above, both driving to the right at the same speed and shooting at a target. The first aims straight at the target, and every shot drifts to the right of it and misses. The second aims at a virtual target to the left of the real one, and every shot drifts into the real target."><figcaption><p>The shot keeps the robot's velocity, so the aim has to lead it.</p></figcaption></figure>
 
+## A primer: vector subtraction
+
+**Read:** Eeshwar's [Shooting on the Fly](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [Shooting on the Fly, Part 2: The LUT Approach](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2).
+
+Before you pick a firing strategy, it helps to see the lead as one subtraction, which is how Eeshwar's posts explain it:
+
+1. The time of flight in your lookup table gives the horizontal speed of the standing shot: the distance divided by the time.
+2. Point a velocity of that speed at the target. This is the velocity the game piece needs over the ground.
+3. Subtract the robot's velocity. What is left is the velocity the shooter has to give the game piece.
+4. The direction of that vector is where to aim, and its length is the speed the shot needs.
+
+Two things follow from this, and every firing strategy below has to deal with both. The **aim** changes when the robot moves, and so does the **speed** of the shot: drive toward the target and the shooter needs less, drive away and it needs more. The strategies below are different ways of working out that same lead from the time of flight in your table.
+
 ## How the sources' ideas apply to YAMS
 
 Each row is a concept from the sources, where to read about it, and the YAMS piece that does that job.
@@ -231,11 +244,9 @@ public static Shot standing(Pose2d robotPose) {
 {% endtab %}
 
 {% tab title="Time of flight recursion" %}
-**Read first:** Eeshwar's [Shooting on the Fly](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [Shooting on the Fly, Part 2: The LUT Approach](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2) as a primer, then [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html).
+**Read first:** [Dynamic Shooting via Time-of-Flight Recursion](https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/dynamic-shooting.html).
 
-**The primer: vector subtraction.** Eeshwar's posts explain the lead as one subtraction. The time of flight in your table gives the horizontal speed of the standing shot: the distance divided by the time. Point a velocity of that speed at the target, subtract the robot's velocity, and what is left is the velocity the shooter has to give the game piece. Its direction is where to aim, and its length is the speed the shot needs. Read this first, because it makes clear why the aim and the shot speed both change when the robot moves.
-
-**The recursion.** WPILib's page reaches the same lead by moving the target instead. It moves the target against the robot's velocity by the time of flight, which changes the distance and so the time of flight, and repeats until the time stops changing. This is the virtual target that most teams use, and it is what the method below does.
+A time of flight method. It moves the target against the robot's velocity by the time of flight, which changes the distance and so the time of flight, and repeats until the time stops changing. This is the virtual target that most teams use.
 
 {% code title="ShotCalculator.java" %}
 ```java
