@@ -6,9 +6,13 @@ description: Make commands from the Elevator and bind them to controller buttons
 
 The `Elevator` makes commands for you. Your class hands them out, and the buttons schedule them.
 
-<figure><img src="../../.gitbook/assets/tutorial-elevator-buttons.gif" alt="Animation of the four face buttons of a controller, the elevator, and the command that is running. With no button held the default command runs: hold the elevator at 0 meters. While A is held its command runs: hold the elevator at 0.5 meters. While B is held: hold the elevator at 1 meter. While X is held the elevator is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the elevator. Let go, and the default command brings it back down.</p></figcaption></figure>
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
 
-## The commands a Elevator gives you
+## 1. Make the commands
+
+The `Elevator` makes the commands. Your class only hands them out, so that the rest of the robot code never touches the motor directly.
 
 | What it does | Java, Commands v2 | Java, Commands v3 | C++ |
 | --- | --- | --- | --- |
@@ -16,9 +20,195 @@ The `Elevator` makes commands for you. Your class hands them out, and the button
 | Go to a height, and end when the carriage is within the tolerance. | `elevator.runTo(height, tolerance)` | `elevator.runTo(height, tolerance)` | `m_elevator->RunTo(height, tolerance)` |
 | Drive at a duty cycle from -1 to 1, with the closed loop off. | `elevator.set(dutycycle)` | `elevator.set(dutycycle)` | `m_elevator->Set(dutycycle)` |
 
-The **default command** runs whenever no other command is using the elevator. Here it holds the carriage at the bottom.
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+/** Go to a height and hold it. This command does not end on its own. */
+public Command run(Distance height) {
+  return elevator.run(height);
+}
 
-## The code
+/** Go to a height, and end once the carriage is within the tolerance of it. */
+public Command runTo(Distance height, Distance tolerance) {
+  return elevator.runTo(height, tolerance);
+}
+
+/** Drive the elevator with a duty cycle from -1 to 1. The closed loop is not used. */
+public Command set(double dutycycle) {
+  return elevator.set(dutycycle);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+/** Go to a height and hold it. This command does not end on its own. */
+public Command setHeight(Distance height) {
+  return elevator.setHeight(height);
+}
+
+/** Go to a height, and end once the carriage is within the tolerance of it. */
+public Command moveTo(Distance height, Distance tolerance) {
+  return elevator.runTo(height, tolerance);
+}
+
+/** Drive the elevator with a duty cycle from -1 to 1. The closed loop is not used. */
+public Command set(double dutycycle) {
+  return elevator.set(dutycycle);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ElevatorSubsystem.hpp" %}
+```cpp
+/** Go to a height and hold it. This command does not end on its own. */
+wpi::cmd::CommandPtr Run(wpi::units::meter_t height);
+
+/** Go to a height, and end once the carriage is within the tolerance of it. */
+wpi::cmd::CommandPtr RunTo(wpi::units::meter_t height, wpi::units::meter_t tolerance);
+
+/** Drive the elevator with a duty cycle from -1 to 1. The closed loop is not used. */
+wpi::cmd::CommandPtr Set(double dutycycle);
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr ElevatorSubsystem::Run(wpi::units::meter_t height) {
+  return m_elevator->Run(height);
+}
+
+wpi::cmd::CommandPtr ElevatorSubsystem::RunTo(wpi::units::meter_t height, wpi::units::meter_t tolerance) {
+  return m_elevator->RunTo(height, tolerance);
+}
+
+wpi::cmd::CommandPtr ElevatorSubsystem::Set(double dutycycle) {
+  return m_elevator->Set(dutycycle);
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
+
+Want the details? [run() vs runTo() Commands](../../details/run-vs-runto.md)
+
+## 2. Set the default command
+
+The **default command** runs whenever no other command is using the elevator. Here it holds the carriage at the bottom. In Commands v3 the default command is given the lowest priority, so that any other command for the mechanism can interrupt it.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+import first.robot.subsystems.ElevatorSubsystem;
+
+private final ElevatorSubsystem elevator = new ElevatorSubsystem();
+
+// When no other command is using the elevator, hold it at the bottom.
+elevator.setDefaultCommand(elevator.run(Meters.of(0)));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+/** Hold a height at the lowest priority, so that any other elevator command can interrupt it. */
+public Command hold(Distance height) {
+  return run(coroutine -> coroutine.await(elevator.setHeight(height)))
+      .withPriority(Command.LOWEST_PRIORITY)
+      .named("Elevator Hold");
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+public Robot() {
+  // When no other command is using the elevator, hold it at the bottom.
+  elevator.setDefaultCommand(elevator.hold(Meters.of(0)));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/RobotContainer.hpp" %}
+```cpp
+#include "subsystems/ElevatorSubsystem.hpp"
+
+ElevatorSubsystem elevator;
+```
+{% endcode %}
+
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// When no other command is using the elevator, hold it at the bottom.
+elevator.SetDefaultCommand(elevator.Run(0_m));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Choose what your mechanism should do when nobody is asking anything of it.
+
+## 3. Bind the buttons
+
+`whileTrue` runs a command for as long as its button is held, and cancels it on release. The default command then takes back over.
+
+<figure><img src="../../.gitbook/assets/tutorial-elevator-buttons.gif" alt="Animation of the four face buttons of a controller, the elevator, and the command that is running. With no button held the default command runs: hold the elevator at 0 meters. While A is held its command runs: hold the elevator at 0.5 meters. While B is held: hold the elevator at 1 meter. While X is held the elevator is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the elevator. Let go, and the default command brings it back down.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+// Hold a height while the bottom (A) or right (B) face button is held.
+driverController.faceDown().whileTrue(elevator.run(Meters.of(0.5)));
+driverController.faceRight().whileTrue(elevator.run(Meters.of(1)));
+// Drive the elevator up or down while the left (X) or top (Y) face button is held.
+driverController.faceLeft().whileTrue(elevator.set(0.3));
+driverController.faceUp().whileTrue(elevator.set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="ExampleTeleop.java" %}
+```java
+// Hold a height while the bottom (A) or right (B) face button is held.
+robot.exampleController.faceDown().whileTrue(robot.elevator.setHeight(Meters.of(0.5)));
+robot.exampleController.faceRight().whileTrue(robot.elevator.setHeight(Meters.of(1)));
+// Drive the elevator up or down while the left (X) or top (Y) face button is held.
+robot.exampleController.faceLeft().whileTrue(robot.elevator.set(0.3));
+robot.exampleController.faceUp().whileTrue(robot.elevator.set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// Hold a height while the bottom (A) or right (B) face button is held.
+driverController.FaceDown().WhileTrue(elevator.Run(0.5_m));
+driverController.FaceRight().WhileTrue(elevator.Run(1_m));
+// Drive the elevator up or down while the left (X) or top (Y) face button is held.
+driverController.FaceLeft().WhileTrue(elevator.Set(0.3));
+driverController.FaceUp().WhileTrue(elevator.Set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Pick your own buttons and setpoints. Use `onTrue` instead if one press should start a command that keeps running after the button is released.
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}

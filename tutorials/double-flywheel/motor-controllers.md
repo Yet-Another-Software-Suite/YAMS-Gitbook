@@ -20,12 +20,394 @@ There is no `FlyWheel` mechanism in this tutorial, so three jobs a mechanism cla
 
 The two wheels here are separate motors on separate shafts, each given its own setpoint. If yours share a shaft, see [step 3](spin-and-followers.md).
 
-## The code
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
+
+Create `DoubleFlywheelSubsystem` in your `subsystems` folder, or `DoubleFlywheelMechanism` in your `mechanisms` folder for Commands v3. In C++ that is a header in `src/main/include/subsystems` and a source file in `src/main/cpp/subsystems`.
+
+## 1. The upper flywheel's config
+
+One `SmartMotorControllerConfig` says what the upper flywheel's motor controller should do: closed loop control, its gains, its gearing, and the size and weight of the wheel for the simulation.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
-Create `DoubleFlywheelSubsystem.java` in the `subsystems` folder.
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+// Each flywheel gets its own config, so that each can be given its own speed.
+private final SmartMotorControllerConfig upperConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    // Feedback and feedforward constants, on the real robot and in simulation.
+    .withClosedLoopController(0.1, 0, 0)
+    .withSimClosedLoopController(0.1, 0, 0)
+    .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    // Gearing from the motor rotor to the flywheel: 3:1.
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+    // There is no FlyWheel mechanism to describe the wheel, so the simulation
+    // gets the wheel's diameter and weight from here.
+    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    .withMotorInverted(false)
+    .withZeroPower(MotorMode.COAST)
+    .withStatorCurrentLimit(Amps.of(40))
+    .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
 
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+// Each flywheel gets its own config, so that each can be given its own speed.
+private final SmartMotorControllerConfig upperConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    // Feedback and feedforward constants, on the real robot and in simulation.
+    .withClosedLoopController(0.1, 0, 0)
+    .withSimClosedLoopController(0.1, 0, 0)
+    .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    // Gearing from the motor rotor to the flywheel: 3:1.
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+    // There is no FlyWheel mechanism to describe the wheel, so the simulation
+    // gets the wheel's diameter and weight from here.
+    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    .withMotorInverted(false)
+    .withZeroPower(MotorMode.COAST)
+    .withStatorCurrentLimit(Amps.of(40))
+    .withTelemetry("UpperFlyWheel", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+// Each flywheel gets its own config, so that each can be given its own speed.
+yams::motorcontrollers::SmartMotorControllerConfig m_upperConfig;
+yams::motorcontrollers::SmartMotorControllerConfig m_lowerConfig;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+// The feedforward constants of both flywheels: kS and kV.
+const Feedforward feedforward{0.1_V, wpi::units::unit_t<Feedforward::kv_unit>{0.12}};
+
+m_upperConfig
+    .WithSubsystem(this)
+    .WithClosedLoopMode()
+    // Feedback and feedforward constants, on the real robot and in simulation.
+    .WithFeedback(0.1, 0, 0)
+    .WithSimClosedLoopController(0.1, 0, 0)
+    .WithFeedforward(feedforward)
+    // Gearing from the motor rotor to the flywheel: 3:1.
+    .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
+    // There is no FlyWheel mechanism to describe the wheel, so the simulation
+    // gets the wheel's diameter and weight from here.
+    .WithMOI(4_in, 1_lb)
+    .WithMotorInverted(false)
+    .WithZeroPower(Cfg::MotorMode::COAST)
+    .WithStatorCurrentLimit(40_A)
+    .WithTelemetry("UpperFlyWheel", Cfg::TelemetryVerbosity::HIGH);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Set your own gearing, wheel diameter and wheel weight. The gains are only a place to start: tune them with [Live tuning](../../details/live-tuning/README.md).
+
+Want the details? [SmartMotorControllerConfig](../../details/editor/config/README.md)
+
+## 2. The lower flywheel's config
+
+The same again for the lower flywheel, with its own telemetry name and the motor inverted.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+// The lower flywheel is the same, except that its motor faces the other way.
+private final SmartMotorControllerConfig lowerConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(0.1, 0, 0)
+    .withSimClosedLoopController(0.1, 0, 0)
+    .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    .withMotorInverted(true)
+    .withZeroPower(MotorMode.COAST)
+    .withStatorCurrentLimit(Amps.of(40))
+    .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+// The lower flywheel is the same, except that its motor faces the other way.
+private final SmartMotorControllerConfig lowerConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(0.1, 0, 0)
+    .withSimClosedLoopController(0.1, 0, 0)
+    .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
+    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    .withMotorInverted(true)
+    .withZeroPower(MotorMode.COAST)
+    .withStatorCurrentLimit(Amps.of(40))
+    .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+// The lower flywheel is the same, except that its motor faces the other way.
+m_lowerConfig
+    .WithSubsystem(this)
+    .WithClosedLoopMode()
+    .WithFeedback(0.1, 0, 0)
+    .WithSimClosedLoopController(0.1, 0, 0)
+    .WithFeedforward(feedforward)
+    .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
+    .WithMOI(4_in, 1_lb)
+    .WithMotorInverted(true)
+    .WithZeroPower(Cfg::MotorMode::COAST)
+    .WithStatorCurrentLimit(40_A)
+    .WithTelemetry("LowerFlyWheel", Cfg::TelemetryVerbosity::HIGH);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Flip the inversion of whichever wheel spins the wrong way. Both wheels should throw the game piece out when given a positive speed.
+
+## 3. The motor controller objects
+
+These are the vendor's own objects, exactly as you would create them without YAMS.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+// The vendor motor controller objects: two TalonFX, with CAN IDs 1 and 2.
+private final TalonFX upperTalon = new TalonFX(1, new CANBus(CANPort.CAN_S0));
+private final TalonFX lowerTalon = new TalonFX(2, new CANBus(CANPort.CAN_S0));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+// The vendor motor controller objects: two TalonFX, with CAN IDs 1 and 2.
+private final TalonFX upperTalon = new TalonFX(1, new CANBus(CANPort.CAN_S0));
+private final TalonFX lowerTalon = new TalonFX(2, new CANBus(CANPort.CAN_S0));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+// The vendor motor controller objects: two TalonFX, with CAN IDs 1 and 2.
+ctre::phoenix6::hardware::TalonFX m_upperTalon{1, ctre::phoenix6::CANBus{}};
+ctre::phoenix6::hardware::TalonFX m_lowerTalon{2, ctre::phoenix6::CANBus{}};
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the CAN IDs to yours.
+
+## 4. The SmartMotorControllers
+
+One wrapper for each flywheel brings together its motor controller object, its motor and its config.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+// One SmartMotorController for each flywheel, each driving one Kraken X60.
+private final SmartMotorController upperMotor = new TalonFXWrapper(upperTalon, DCMotor.getKrakenX60(1), upperConfig);
+private final SmartMotorController lowerMotor = new TalonFXWrapper(lowerTalon, DCMotor.getKrakenX60(1), lowerConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+// One SmartMotorController for each flywheel, each driving one Kraken X60.
+private final SmartMotorController upperMotor = new TalonFXWrapper(upperTalon, DCMotor.getKrakenX60(1), upperConfig);
+private final SmartMotorController lowerMotor = new TalonFXWrapper(lowerTalon, DCMotor.getKrakenX60(1), lowerConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+// One SmartMotorController for each flywheel, created in the constructor.
+std::optional<yams::motorcontrollers::remote::TalonFXWrapper> m_upperMotor;
+std::optional<yams::motorcontrollers::remote::TalonFXWrapper> m_lowerMotor;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+// One SmartMotorController for each flywheel, each driving one Kraken X60.
+m_upperMotor.emplace(&m_upperTalon, wpi::math::DCMotor::KrakenX60(1), &m_upperConfig);
+m_lowerMotor.emplace(&m_lowerTalon, wpi::math::DCMotor::KrakenX60(1), &m_lowerConfig);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the motor to the kind and the number of motors on each wheel.
+
+Want the details? [Smart motor controllers](../../details/editor/README.md)
+
+## 5. Set up the telemetry
+
+A mechanism class would do this for you. Without one, call `setupTelemetry()` on each `SmartMotorController` once. This is also what makes live tuning work.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+public DoubleFlywheelSubsystem() {
+  // A mechanism class would do this for us. Without one, set up the telemetry
+  // (and live tuning) of each motor controller ourselves.
+  upperMotor.setupTelemetry();
+  lowerMotor.setupTelemetry();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+public DoubleFlywheelMechanism() {
+  // A mechanism class would do this for us. Without one, set up the telemetry
+  // (and live tuning) of each motor controller ourselves.
+  upperMotor.setupTelemetry();
+  lowerMotor.setupTelemetry();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+// A mechanism class would do this for us. Without one, set up the telemetry
+// (and live tuning) of each motor controller ourselves.
+m_upperMotor->SetupTelemetry();
+m_lowerMotor->SetupTelemetry();
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Telemetry](../../understanding/telemetry.md)
+
+## 6. Update both every loop
+
+`updateTelemetry()` on each wheel publishes its telemetry, and `simIterate()` on each runs its simulation.
+
+In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you. In Commands v3 nothing does, so `Robot.java` creates the mechanism and calls them.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+@Override
+public void periodic() {
+  // Publishes each flywheel's telemetry, and applies anything changed through live tuning.
+  upperMotor.updateTelemetry();
+  lowerMotor.updateTelemetry();
+}
+
+@Override
+public void simulationPeriodic() {
+  // Runs each flywheel's physics simulation.
+  upperMotor.simIterate();
+  lowerMotor.simIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+/** Call this from Robot.robotPeriodic(), before the scheduler runs. */
+public void periodic() {
+  // Publishes each flywheel's telemetry, and applies anything changed through live tuning.
+  upperMotor.updateTelemetry();
+  lowerMotor.updateTelemetry();
+}
+
+/** Call this from Robot.robotPeriodic() in simulation. */
+public void simulationPeriodic() {
+  // Runs each flywheel's physics simulation.
+  upperMotor.simIterate();
+  lowerMotor.simIterate();
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+import first.robot.mechanisms.DoubleFlywheelMechanism;
+
+final DoubleFlywheelMechanism doubleFlywheel = new DoubleFlywheelMechanism();
+
+// Update the mechanism before the scheduler runs its commands.
+doubleFlywheel.periodic();
+if (RobotBase.isSimulation()) {
+  doubleFlywheel.simulationPeriodic();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+void Periodic() override;
+void SimulationPeriodic() override;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+void DoubleFlywheelSubsystem::Periodic() {
+  // Publishes each flywheel's telemetry, and applies anything changed through live tuning.
+  m_upperMotor->UpdateTelemetry();
+  m_lowerMotor->UpdateTelemetry();
+}
+
+void DoubleFlywheelSubsystem::SimulationPeriodic() {
+  // Runs each flywheel's physics simulation.
+  m_upperMotor->SimIterate();
+  m_lowerMotor->SimIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## The complete file
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
 {% code title="subsystems/DoubleFlywheelSubsystem.java" lineNumbers="true" %}
 ```java
 package first.robot.subsystems;
@@ -117,8 +499,6 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Create `DoubleFlywheelMechanism.java` in the `mechanisms` folder. Nothing calls a periodic method on a Commands v3 `Mechanism`, so create the mechanism in `Robot.java` and call its `periodic()` and `simulationPeriodic()` from `robotPeriodic()`. The lines added to `Robot.java` are highlighted.
-
 {% code title="mechanisms/DoubleFlywheelMechanism.java" lineNumbers="true" %}
 ```java
 package first.robot.mechanisms;
@@ -240,10 +620,6 @@ public class Robot extends OpModeRobot {
 {% endtab %}
 
 {% tab title="C++" %}
-Create `DoubleFlywheelSubsystem.hpp` in `src/main/include/subsystems` and `DoubleFlywheelSubsystem.cpp` in `src/main/cpp/subsystems`.
-
-YAMS keeps a pointer to each config and each `TalonFX`, so in C++ they are members of the subsystem, and each `SmartMotorController` is a `std::optional` that the constructor fills in. `WithMOI` is the C++ name of `withMomentOfInertia`.
-
 {% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" lineNumbers="true" %}
 ```cpp
 #pragma once

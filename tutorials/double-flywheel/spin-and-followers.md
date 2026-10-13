@@ -16,6 +16,79 @@ The average of the two speeds stays at the base speed, so changing the spin does
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+/**
+ * Spin both flywheels around a base speed, with a spin ratio between them.
+ *
+ * @param baseSpeed The average speed of the two flywheels.
+ * @param spinRatio From -1 (the most topspin) to 1 (the most backspin). 0 is no spin.
+ */
+public Command setSpinShot(AngularVelocity baseSpeed, double spinRatio) {
+  double ratio = Math.max(-1.0, Math.min(1.0, spinRatio));
+  // At a ratio of 1 the lower flywheel runs 25% faster and the upper one 25% slower.
+  double upperMultiplier = 1.0 - ratio * 0.25;
+  double lowerMultiplier = 1.0 + ratio * 0.25;
+  return setFlywheelSpeeds(baseSpeed.times(upperMultiplier), baseSpeed.times(lowerMultiplier));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+/**
+ * Spin both flywheels around a base speed, with a spin ratio between them.
+ *
+ * @param baseSpeed The average speed of the two flywheels.
+ * @param spinRatio From -1 (the most topspin) to 1 (the most backspin). 0 is no spin.
+ */
+public Command setSpinShot(AngularVelocity baseSpeed, double spinRatio) {
+  double ratio = Math.max(-1.0, Math.min(1.0, spinRatio));
+  // At a ratio of 1 the lower flywheel runs 25% faster and the upper one 25% slower.
+  double upperMultiplier = 1.0 - ratio * 0.25;
+  double lowerMultiplier = 1.0 + ratio * 0.25;
+  return setFlywheelSpeeds(baseSpeed.times(upperMultiplier), baseSpeed.times(lowerMultiplier));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+/**
+ * Spin both flywheels around a base speed, with a spin ratio between them.
+ *
+ * @param baseSpeed The average speed of the two flywheels.
+ * @param spinRatio From -1 (the most topspin) to 1 (the most backspin). 0 is no spin.
+ */
+wpi::cmd::CommandPtr SetSpinShot(wpi::units::revolutions_per_minute_t baseSpeed, double spinRatio);
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr DoubleFlywheelSubsystem::SetSpinShot(wpi::units::revolutions_per_minute_t baseSpeed,
+                                                          double spinRatio) {
+  double ratio = std::clamp(spinRatio, -1.0, 1.0);
+  // At a ratio of 1 the lower flywheel runs 25% faster and the upper one 25% slower.
+  double upperMultiplier = 1.0 - ratio * 0.25;
+  double lowerMultiplier = 1.0 + ratio * 0.25;
+  return SetFlywheelSpeeds(baseSpeed * upperMultiplier, baseSpeed * lowerMultiplier);
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** the 25% is how much the two wheels may differ at most. Raise it for more spin.
+
+### The complete file
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
 The highlighted lines are new in this step.
 
 <pre class="language-java" data-title="subsystems/DoubleFlywheelSubsystem.java" data-line-numbers><code class="lang-java">package first.robot.subsystems;

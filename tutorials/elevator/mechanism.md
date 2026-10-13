@@ -8,11 +8,188 @@ The `SmartMotorController` from step 1 can already spin the motor. An `Elevator`
 
 <figure><img src="../../.gitbook/assets/mech-two-configs.png" alt="A diagram. A mechanism config, which says what the mechanism is, such as its length, mass, hard stops and how it is drawn, and a SmartMotorControllerConfig, which says how its motor behaves, such as gearing, PID, feedforward, soft limits and current, both go into the mechanism class. The mechanism then drives the simulation's physics and Mechanism2d, and the real robot's commands and telemetry."><figcaption><p>Two configs go into one mechanism.</p></figcaption></figure>
 
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
+
+## 1. Describe the elevator
+
 `ElevatorConfig` describes the elevator itself: its hard limits and the weight of its carriage. The simulation uses both. The hard limits are where the carriage physically stops, which is different from the soft limits you set in step 1.
 
 <figure><img src="../../.gitbook/assets/tutorial-elevator-heights.png" alt="A side view of the elevator and the heights used in this tutorial. The hard limits are 0 and 3 meters: where the carriage physically stops, set on ElevatorConfig and used by the simulation. The soft limits are 0 and 2 meters: as far as the closed loop will go, set on SmartMotorControllerConfig. Inside them are the setpoints: 0.5 meters for the A button, 1 meter for the B button, and 0 meters for the default command, which is also where the carriage starts."><figcaption><p>The soft limits from step 1 sit inside the hard limits from this step.</p></figcaption></figure>
 
-## The code
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+private final ElevatorConfig elevatorConfig = new ElevatorConfig()
+    // The hard stops, used by the simulation.
+    .withHardLimits(Meters.of(0), Meters.of(3))
+    // The weight of the carriage and everything on it, used by the simulation.
+    .withCarriageWeight(Pounds.of(16))
+    // Telemetry name and how much to publish.
+    .withTelemetry("Elevator", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+private final ElevatorConfig elevatorConfig = new ElevatorConfig()
+    // The hard stops, used by the simulation.
+    .withHardLimits(Meters.of(0), Meters.of(3))
+    // The weight of the carriage and everything on it, used by the simulation.
+    .withCarriageWeight(Pounds.of(16))
+    // Telemetry name and how much to publish.
+    .withTelemetry("Elevator", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ElevatorSubsystem.hpp" %}
+```cpp
+// The elevator mechanism and its config, also set up in the constructor.
+yams::mechanisms::config::ElevatorConfig m_elevatorConfig;
+std::optional<yams::mechanisms::positional::Elevator> m_elevator;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+m_elevatorConfig
+    // The hard stops, used by the simulation.
+    .WithMinimumHeight(0_m)
+    .WithMaximumHeight(3_m)
+    // The weight of the carriage and everything on it, used by the simulation.
+    .WithCarriageMass(16_lb)
+    // Telemetry name.
+    .WithTelemetryName("Elevator");
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Set where your carriage's hard stops are, and what the carriage weighs with everything that rides on it.
+
+Want the details? [Elevators](../../details/elevators.md) and [ElevatorConfig](../../details/mechanism-configs/elevator-config.md)
+
+## 2. Create the Elevator
+
+Hand the config, and the `SmartMotorController` from step 1, to the `Elevator`.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// The elevator mechanism.
+private final Elevator elevator = new Elevator(elevatorConfig, motor);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// The elevator mechanism.
+private final Elevator elevator = new Elevator(elevatorConfig, motor);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// The elevator mechanism.
+m_elevator.emplace(&m_elevatorConfig, &m_motor.value());
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## 3. Update it every loop
+
+Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry and applies anything you change through live tuning. `simIterate()` runs the physics simulation, and only needs to run in simulation.
+
+In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you. In Commands v3 nothing does, so `Robot.java` creates the mechanism and calls them.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+@Override
+public void periodic() {
+  // Publishes the elevator's telemetry, and applies anything changed through live tuning.
+  elevator.updateTelemetry();
+}
+
+@Override
+public void simulationPeriodic() {
+  // Runs the elevator's physics simulation.
+  elevator.simIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+/** Call this from Robot.robotPeriodic(), before the scheduler runs. */
+public void periodic() {
+  // Publishes the elevator's telemetry, and applies anything changed through live tuning.
+  elevator.updateTelemetry();
+}
+
+/** Call this from Robot.robotPeriodic() in simulation. */
+public void simulationPeriodic() {
+  // Runs the elevator's physics simulation.
+  elevator.simIterate();
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+import first.robot.mechanisms.ElevatorMechanism;
+
+final ElevatorMechanism elevator = new ElevatorMechanism();
+
+// Update the mechanism before the scheduler runs its commands.
+elevator.periodic();
+if (RobotBase.isSimulation()) {
+  elevator.simulationPeriodic();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ElevatorSubsystem.hpp" %}
+```cpp
+void Periodic() override;
+void SimulationPeriodic() override;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+void ElevatorSubsystem::Periodic() {
+  // Publishes the elevator's telemetry, and applies anything changed through live tuning.
+  m_elevator->UpdateTelemetry();
+}
+
+void ElevatorSubsystem::SimulationPeriodic() {
+  // Runs the elevator's physics simulation.
+  m_elevator->SimIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -341,15 +518,6 @@ ElevatorSubsystem::ElevatorSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
-
-Two calls keep the mechanism alive, and both must run every loop:
-
-* **`updateTelemetry()`** publishes the mechanism's telemetry, and applies anything you change through live tuning.
-* **`simIterate()`** runs the physics simulation. It only needs to run in simulation.
-
-## Read more
-
-[Elevators](../../details/elevators.md) and [ElevatorConfig](../../details/mechanism-configs/elevator-config.md) cover everything the mechanism and its config can do.
 
 Previous: [Step 1: The motor controller](motor-controller.md)
 

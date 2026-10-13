@@ -6,9 +6,13 @@ description: Make commands from the Arm and bind them to controller buttons.
 
 The `Arm` makes commands for you. Your class hands them out, and the buttons schedule them.
 
-<figure><img src="../../.gitbook/assets/tutorial-arm-buttons.gif" alt="Animation of the four face buttons of a controller, the arm, and the command that is running. With no button held the default command runs: hold the arm at 0 degrees. While A is held its command runs: hold the arm at minus 5 degrees. While B is held: hold the arm at 15 degrees. While X is held the arm is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the arm. Let go, and the default command brings it back to 0°.</p></figcaption></figure>
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
 
-## The commands a Arm gives you
+## 1. Make the commands
+
+The `Arm` makes the commands. Your class only hands them out, so that the rest of the robot code never touches the motor directly.
 
 | What it does | Java, Commands v2 | Java, Commands v3 | C++ |
 | --- | --- | --- | --- |
@@ -16,9 +20,195 @@ The `Arm` makes commands for you. Your class hands them out, and the buttons sch
 | Go to an angle, and end when the arm is within the tolerance. | `arm.runTo(angle, tolerance)` | `arm.runTo(angle, tolerance)` | `m_arm->RunTo(angle, tolerance)` |
 | Drive at a duty cycle from -1 to 1, with the closed loop off. | `arm.set(dutycycle)` | `arm.set(dutycycle)` | `m_arm->Set(dutycycle)` |
 
-The **default command** runs whenever no other command is using the arm. Here it holds the arm at 0 degrees.
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+/** Go to an angle and hold it. This command does not end on its own. */
+public Command run(Angle angle) {
+  return arm.run(angle);
+}
 
-## The code
+/** Go to an angle, and end once the arm is within the tolerance of it. */
+public Command runTo(Angle angle, Angle tolerance) {
+  return arm.runTo(angle, tolerance);
+}
+
+/** Drive the arm with a duty cycle from -1 to 1. The closed loop is not used. */
+public Command set(double dutycycle) {
+  return arm.set(dutycycle);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+/** Go to an angle and hold it. This command does not end on its own. */
+public Command setAngle(Angle angle) {
+  return arm.setAngle(angle);
+}
+
+/** Go to an angle, and end once the arm is within the tolerance of it. */
+public Command moveTo(Angle angle, Angle tolerance) {
+  return arm.runTo(angle, tolerance);
+}
+
+/** Drive the arm with a duty cycle from -1 to 1. The closed loop is not used. */
+public Command set(double dutycycle) {
+  return arm.set(dutycycle);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ArmSubsystem.hpp" %}
+```cpp
+/** Go to an angle and hold it. This command does not end on its own. */
+wpi::cmd::CommandPtr Run(wpi::units::degree_t angle);
+
+/** Go to an angle, and end once the arm is within the tolerance of it. */
+wpi::cmd::CommandPtr RunTo(wpi::units::degree_t angle, wpi::units::degree_t tolerance);
+
+/** Drive the arm with a duty cycle from -1 to 1. The closed loop is not used. */
+wpi::cmd::CommandPtr Set(double dutycycle);
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr ArmSubsystem::Run(wpi::units::degree_t angle) {
+  return m_arm->Run(angle);
+}
+
+wpi::cmd::CommandPtr ArmSubsystem::RunTo(wpi::units::degree_t angle, wpi::units::degree_t tolerance) {
+  return m_arm->RunTo(angle, tolerance);
+}
+
+wpi::cmd::CommandPtr ArmSubsystem::Set(double dutycycle) {
+  return m_arm->Set(dutycycle);
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
+
+Want the details? [run() vs runTo() Commands](../../details/run-vs-runto.md)
+
+## 2. Set the default command
+
+The **default command** runs whenever no other command is using the arm. Here it holds the arm at 0 degrees. In Commands v3 the default command is given the lowest priority, so that any other command for the mechanism can interrupt it.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+import first.robot.subsystems.ArmSubsystem;
+
+private final ArmSubsystem arm = new ArmSubsystem();
+
+// When no other command is using the arm, hold it at 0 degrees.
+arm.setDefaultCommand(arm.run(Degrees.of(0)));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+/** Hold an angle at the lowest priority, so that any other arm command can interrupt it. */
+public Command hold(Angle angle) {
+  return run(coroutine -> coroutine.await(arm.setAngle(angle)))
+      .withPriority(Command.LOWEST_PRIORITY)
+      .named("Arm Hold");
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+public Robot() {
+  // When no other command is using the arm, hold it at 0 degrees.
+  arm.setDefaultCommand(arm.hold(Degrees.of(0)));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/RobotContainer.hpp" %}
+```cpp
+#include "subsystems/ArmSubsystem.hpp"
+
+ArmSubsystem arm;
+```
+{% endcode %}
+
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// When no other command is using the arm, hold it at 0 degrees.
+arm.SetDefaultCommand(arm.Run(0_deg));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Choose what your mechanism should do when nobody is asking anything of it.
+
+## 3. Bind the buttons
+
+`whileTrue` runs a command for as long as its button is held, and cancels it on release. The default command then takes back over.
+
+<figure><img src="../../.gitbook/assets/tutorial-arm-buttons.gif" alt="Animation of the four face buttons of a controller, the arm, and the command that is running. With no button held the default command runs: hold the arm at 0 degrees. While A is held its command runs: hold the arm at minus 5 degrees. While B is held: hold the arm at 15 degrees. While X is held the arm is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the arm. Let go, and the default command brings it back to 0°.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+// Hold an angle while the bottom (A) or right (B) face button is held.
+driverController.faceDown().whileTrue(arm.run(Degrees.of(-5)));
+driverController.faceRight().whileTrue(arm.run(Degrees.of(15)));
+// Drive the arm up or down while the left (X) or top (Y) face button is held.
+driverController.faceLeft().whileTrue(arm.set(0.3));
+driverController.faceUp().whileTrue(arm.set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="ExampleTeleop.java" %}
+```java
+// Hold an angle while the bottom (A) or right (B) face button is held.
+robot.exampleController.faceDown().whileTrue(robot.arm.setAngle(Degrees.of(-5)));
+robot.exampleController.faceRight().whileTrue(robot.arm.setAngle(Degrees.of(15)));
+// Drive the arm up or down while the left (X) or top (Y) face button is held.
+robot.exampleController.faceLeft().whileTrue(robot.arm.set(0.3));
+robot.exampleController.faceUp().whileTrue(robot.arm.set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// Hold an angle while the bottom (A) or right (B) face button is held.
+driverController.FaceDown().WhileTrue(arm.Run(-5_deg));
+driverController.FaceRight().WhileTrue(arm.Run(15_deg));
+// Drive the arm up or down while the left (X) or top (Y) face button is held.
+driverController.FaceLeft().WhileTrue(arm.Set(0.3));
+driverController.FaceUp().WhileTrue(arm.Set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Pick your own buttons and setpoints. Use `onTrue` instead if one press should start a command that keeps running after the button is released.
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}

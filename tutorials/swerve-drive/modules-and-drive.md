@@ -4,29 +4,399 @@ description: Build four SwerveModules, add the gyro, and create the SwerveDrive.
 
 # Step 2: The modules and the drive
 
-## Four modules
+Four `SwerveModule`s, a gyro and a `SwerveDriveConfig` make a `SwerveDrive`.
 
-One helper builds a module from its two `SparkMax`, its `CANcoder`, a name and a location. It wraps each `SparkMax` in a `SmartMotorController` using the configs from step 1, then describes the module with a `SwerveModuleConfig`:
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
+
+## 1. Build one module
+
+One helper builds a module from its two `SparkMax`, its `CANcoder`, a name and a location. It wraps each `SparkMax` in a `SmartMotorController` using the configs from step 1, and describes the module with a `SwerveModuleConfig`:
 
 * **`withAbsoluteEncoder`** gives the module the `CANcoder`'s angle, so that it knows which way it points as soon as the robot turns on.
 * **`withLocation`** says where the module is on the robot.
 * **`withOptimization(true)`** lets the module reverse its wheel instead of turning more than 90 degrees.
 
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
+```java
+/** All four modules share their gearing and gains, so one method builds each of them. */
+private SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder absoluteEncoder,
+                                  String moduleName, Translation2d location) {
+  SmartMotorController driveMotor = new SparkWrapper(drive, DCMotor.getNEO(1), buildDriveCfg());
+  SmartMotorController azimuthMotor = new SparkWrapper(azimuth, DCMotor.getNEO(1), buildAzimuthCfg());
+
+  return new SwerveModule(new SwerveModuleConfig(driveMotor, azimuthMotor)
+      // The CANcoder tells the module which way it points when the robot turns on.
+      .withAbsoluteEncoder(absoluteEncoder.getAbsolutePosition().asSupplier())
+      .withTelemetry(moduleName, TelemetryVerbosity.HIGH)
+      // Where the module is on the robot: +X is forward, +Y is left.
+      .withLocation(location)
+      // Turn the module at most 90 degrees, reversing the wheel instead of turning further.
+      .withOptimization(true));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
+```java
+/** All four modules share their gearing and gains, so one method builds each of them. */
+private SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder absoluteEncoder,
+                                  String moduleName, Translation2d location) {
+  SmartMotorController driveMotor = new SparkWrapper(drive, DCMotor.getNEO(1), buildDriveCfg());
+  SmartMotorController azimuthMotor = new SparkWrapper(azimuth, DCMotor.getNEO(1), buildAzimuthCfg());
+
+  return new SwerveModule(new SwerveModuleConfig(driveMotor, azimuthMotor)
+      // The CANcoder tells the module which way it points when the robot turns on.
+      .withAbsoluteEncoder(absoluteEncoder.getAbsolutePosition().asSupplier())
+      .withTelemetry(moduleName, TelemetryVerbosity.HIGH)
+      // Where the module is on the robot: +X is forward, +Y is left.
+      .withLocation(location)
+      // Turn the module at most 90 degrees, reversing the wheel instead of turning further.
+      .withOptimization(true));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/SwerveSubsystem.hpp" %}
+```cpp
+// Everything one module is made of. YAMS keeps pointers to the configs and the
+// motor controllers, so they live here, next to the module that uses them.
+struct Module {
+  Module(int driveId, int azimuthId, int encoderId)
+      : drive{wpi::CANPort::CAN_S0, driveId, rev::spark::SparkMax::MotorType::kBrushless},
+        azimuth{wpi::CANPort::CAN_S0, azimuthId, rev::spark::SparkMax::MotorType::kBrushless},
+        encoder{encoderId, ctre::phoenix6::CANBus{}} {}
+
+  rev::spark::SparkMax drive;
+  rev::spark::SparkMax azimuth;
+  ctre::phoenix6::hardware::CANcoder encoder;
+  yams::motorcontrollers::SmartMotorControllerConfig driveConfig;
+  yams::motorcontrollers::SmartMotorControllerConfig azimuthConfig;
+  std::optional<yams::motorcontrollers::local::SparkWrapper> driveMotor;
+  std::optional<yams::motorcontrollers::local::SparkWrapper> azimuthMotor;
+  yams::mechanisms::config::SwerveModuleConfig config;
+  std::optional<yams::mechanisms::swerve::SwerveModule> module;
+};
+
+/** All four modules share their gearing and gains, so one method sets up each of them. */
+void SetupModule(Module& module, const std::string& name, wpi::math::Translation2d location);
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/SwerveSubsystem.cpp" %}
+```cpp
+void SwerveSubsystem::SetupModule(Module& module, const std::string& name,
+                                  wpi::math::Translation2d location) {
+  ConfigureDrive(module.driveConfig);
+  ConfigureAzimuth(module.azimuthConfig);
+  module.driveMotor.emplace(&module.drive, wpi::math::DCMotor::NEO(1), &module.driveConfig);
+  module.azimuthMotor.emplace(&module.azimuth, wpi::math::DCMotor::NEO(1), &module.azimuthConfig);
+
+  module.config = SwerveModuleConfig{&module.driveMotor.value(), &module.azimuthMotor.value()};
+  module.config
+      // The CANcoder tells the module which way it points when the robot turns on.
+      .WithAbsoluteEncoder([&module]() -> wpi::units::degree_t {
+        return wpi::units::turn_t{module.encoder.GetAbsolutePosition().GetValue()};
+      })
+      .WithTelemetry(name, Cfg::TelemetryVerbosity::HIGH)
+      // Where the module is on the robot: +X is forward, +Y is left.
+      .WithLocation(location)
+      // Turn the module at most 90 degrees, reversing the wheel instead of turning further.
+      .WithOptimization(true);
+
+  module.module.emplace(&module.config);
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Nothing here usually needs changing, unless your motors are not NEOs.
+
+Want the details? [SwerveModuleConfig](../../details/mechanism-configs/swerve-module-config.md)
+
+## 2. The gyro, and a place for the drive
+
+The drive needs a gyro for its heading.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
+```java
+private final SwerveDrive drive;
+
+// The gyro: a Pigeon2 with CAN ID 14.
+private final Pigeon2 gyro = new Pigeon2(14, new CANBus(CANPort.CAN_S0));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
+```java
+private final SwerveDrive drive;
+
+// The gyro: a Pigeon2 with CAN ID 14.
+private final Pigeon2 gyro = new Pigeon2(14, new CANBus(CANPort.CAN_S0));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/SwerveSubsystem.hpp" %}
+```cpp
+// The gyro: a Pigeon2 with CAN ID 14.
+ctre::phoenix6::hardware::Pigeon2 m_gyro{14, ctre::phoenix6::CANBus{}};
+
+// CAN IDs are grouped by module: drive, azimuth, CANcoder.
+Module m_frontLeft{1, 2, 3};
+Module m_frontRight{4, 5, 6};
+Module m_backLeft{7, 8, 9};
+Module m_backRight{10, 11, 12};
+
+yams::mechanisms::swerve::SwerveDriveConfig m_driveConfig;
+std::optional<yams::mechanisms::swerve::SwerveDrive<4>> m_drive;
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the CAN ID to your gyro's. In C++ this is also where the four modules get their CAN IDs.
+
+## 3. Create the four modules
+
+Locations use WPILib's convention: **+X is toward the front of the robot and +Y is toward its left side**.
+
 <figure><img src="../../.gitbook/assets/mech-module-location.png" alt="A top view of a robot with the center at zero, plus X pointing forward and plus Y pointing left. The front left module is at 0.3, 0.3; front right at 0.3, minus 0.3; back left at minus 0.3, 0.3; back right at minus 0.3, minus 0.3, in meters."><figcaption><p>Module locations: X is forward and Y is left.</p></figcaption></figure>
 
-Locations use WPILib's convention: **+X is toward the front of the robot and +Y is toward its left side**. The modules in this tutorial are 24 inches forward or back and 24 inches left or right of the robot's center. Change those to match your chassis.
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
+```java
+public SwerveSubsystem() {
+  // Each module is 24 inches forward or back and 24 inches left or right of the robot center.
+  // CAN IDs are grouped by module: drive, azimuth, CANcoder.
+  var frontLeft = createModule(new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless),
+                               new SparkMax(CANPort.CAN_S0, 2, MotorType.kBrushless),
+                               new CANcoder(3, new CANBus(CANPort.CAN_S0)), "frontleft",
+                               new Translation2d(Inches.of(24), Inches.of(24)));
+  var frontRight = createModule(new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless),
+                                new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless),
+                                new CANcoder(6, new CANBus(CANPort.CAN_S0)), "frontright",
+                                new Translation2d(Inches.of(24), Inches.of(-24)));
+  var backLeft = createModule(new SparkMax(CANPort.CAN_S0, 7, MotorType.kBrushless),
+                              new SparkMax(CANPort.CAN_S0, 8, MotorType.kBrushless),
+                              new CANcoder(9, new CANBus(CANPort.CAN_S0)), "backleft",
+                              new Translation2d(Inches.of(-24), Inches.of(24)));
+  var backRight = createModule(new SparkMax(CANPort.CAN_S0, 10, MotorType.kBrushless),
+                               new SparkMax(CANPort.CAN_S0, 11, MotorType.kBrushless),
+                               new CANcoder(12, new CANBus(CANPort.CAN_S0)), "backright",
+                               new Translation2d(Inches.of(-24), Inches.of(-24)));
+```
+{% endcode %}
+{% endtab %}
 
-## The drive
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
+```java
+public SwerveMechanism() {
+  // Each module is 24 inches forward or back and 24 inches left or right of the robot center.
+  // CAN IDs are grouped by module: drive, azimuth, CANcoder.
+  var frontLeft = createModule(new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless),
+                               new SparkMax(CANPort.CAN_S0, 2, MotorType.kBrushless),
+                               new CANcoder(3, new CANBus(CANPort.CAN_S0)), "frontleft",
+                               new Translation2d(Inches.of(24), Inches.of(24)));
+  var frontRight = createModule(new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless),
+                                new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless),
+                                new CANcoder(6, new CANBus(CANPort.CAN_S0)), "frontright",
+                                new Translation2d(Inches.of(24), Inches.of(-24)));
+  var backLeft = createModule(new SparkMax(CANPort.CAN_S0, 7, MotorType.kBrushless),
+                              new SparkMax(CANPort.CAN_S0, 8, MotorType.kBrushless),
+                              new CANcoder(9, new CANBus(CANPort.CAN_S0)), "backleft",
+                              new Translation2d(Inches.of(-24), Inches.of(24)));
+  var backRight = createModule(new SparkMax(CANPort.CAN_S0, 10, MotorType.kBrushless),
+                               new SparkMax(CANPort.CAN_S0, 11, MotorType.kBrushless),
+                               new CANcoder(12, new CANBus(CANPort.CAN_S0)), "backright",
+                               new Translation2d(Inches.of(-24), Inches.of(-24)));
+```
+{% endcode %}
+{% endtab %}
 
-`SwerveDriveConfig` takes the four modules, plus:
+{% tab title="C++" %}
+{% code title="cpp/subsystems/SwerveSubsystem.cpp" %}
+```cpp
+// Each module is 24 inches forward or back and 24 inches left or right of the robot center.
+SetupModule(m_frontLeft, "frontleft", wpi::math::Translation2d{24_in, 24_in});
+SetupModule(m_frontRight, "frontright", wpi::math::Translation2d{24_in, -24_in});
+SetupModule(m_backLeft, "backleft", wpi::math::Translation2d{-24_in, 24_in});
+SetupModule(m_backRight, "backright", wpi::math::Translation2d{-24_in, -24_in});
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
 
-* **`withGyro`**: the gyro's attitude as a `Rotation3d`. Its yaw is the heading used for field relative driving.
-* **`withStartingPose`**: where on the field the robot starts.
-* **`withTranslationController`** and **`withRotationController`**: the PID controllers that `driveToPose()` uses in step 3.
+**For your robot:** Change the CAN IDs, and change the 24 inches to how far your modules really are from the center of your robot.
+
+## 4. Configure and create the drive
+
+`SwerveDriveConfig` takes the four modules, the gyro's attitude, where on the field the robot starts, and the two PID controllers that `driveToPose()` uses in step 3.
 
 <figure><img src="../../.gitbook/assets/mech-swerve-how.png" alt="A flow diagram. You ask for a ChassisVelocities with vx, vy and omega. The kinematics, built from the module locations, turn it into four module states, a speed and an angle each. Odometry combines wheel travel and the gyro into the robot's pose, which feeds field relative driving, auto-align and paths."><figcaption><p>From one chassis velocity to four wheels, and back to a pose.</p></figcaption></figure>
 
-## The code
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
+```java
+  SwerveDriveConfig config = new SwerveDriveConfig(this, frontLeft, frontRight, backLeft, backRight)
+      // The gyro's attitude. Its yaw is the heading used for field relative driving.
+      .withGyro(gyro::getRotation3d)
+      .withStartingPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)))
+      // Used by driveToPose(). A kP of 1 is a careful place to start.
+      .withTranslationController(new PIDController(1, 0, 0))
+      .withRotationController(new PIDController(1, 0, 0));
+
+  drive = new SwerveDrive(config);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
+```java
+  SwerveDriveConfig config = new SwerveDriveConfig(this, frontLeft, frontRight, backLeft, backRight)
+      // The gyro's attitude. Its yaw is the heading used for field relative driving.
+      .withGyro(gyro::getRotation3d)
+      .withStartingPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)))
+      // Used by driveToPose(). A kP of 1 is a careful place to start.
+      .withTranslationController(new PIDController(1, 0, 0))
+      .withRotationController(new PIDController(1, 0, 0));
+
+  drive = new SwerveDrive(config);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/SwerveSubsystem.cpp" %}
+```cpp
+m_driveConfig
+    .WithSubsystem(this)
+    .WithModules({&m_frontLeft.module.value(), &m_frontRight.module.value(),
+                  &m_backLeft.module.value(), &m_backRight.module.value()})
+    // The gyro's attitude. Its yaw is the heading used for field relative driving.
+    .WithGyro([this]() -> wpi::math::Rotation3d { return m_gyro.GetRotation3d(); })
+    .WithStartingPose(wpi::math::Pose2d{})
+    // Used by DriveToPose(). A kP of 1 is a careful place to start.
+    .WithTranslationController(wpi::math::PIDController{1, 0, 0})
+    .WithRotationController(wpi::math::PIDController{1, 0, 0});
+
+m_drive.emplace(&m_driveConfig);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** The two controllers are only a place to start. Tune them once the robot drives well by hand.
+
+Want the details? [SwerveDriveConfig](../../details/mechanism-configs/swerve-drive-config.md)
+
+## 5. Update it every loop
+
+`updateTelemetry()` must run every loop: it updates the pose estimate as well as the telemetry. `simIterate()` runs the physics simulation, and the line after it feeds the simulated heading back into the `Pigeon2`.
+
+In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you. In Commands v3 nothing does, so `Robot.java` creates the mechanism and calls them.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
+```java
+@Override
+public void periodic() {
+  // Updates the pose estimate, the telemetry and the drive's Field2d.
+  drive.updateTelemetry();
+}
+
+@Override
+public void simulationPeriodic() {
+  // Runs the physics simulation of all eight motors.
+  drive.simIterate();
+  // Keep the simulated Pigeon2 in step with the simulated robot's heading.
+  gyro.getSimState().setRawYaw(drive.getSimPose().getRotation().getMeasure());
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
+```java
+/** Call this from Robot.robotPeriodic(), before the scheduler runs. */
+public void periodic() {
+  // Updates the pose estimate, the telemetry and the drive's Field2d.
+  drive.updateTelemetry();
+}
+
+/** Call this from Robot.robotPeriodic() in simulation. */
+public void simulationPeriodic() {
+  // Runs the physics simulation of all eight motors.
+  drive.simIterate();
+  // Keep the simulated Pigeon2 in step with the simulated robot's heading.
+  gyro.getSimState().setRawYaw(drive.getSimPose().getRotation().getMeasure());
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+import first.robot.mechanisms.SwerveMechanism;
+
+final SwerveMechanism drive = new SwerveMechanism();
+
+// Update the mechanism before the scheduler runs its commands.
+drive.periodic();
+if (RobotBase.isSimulation()) {
+  drive.simulationPeriodic();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/SwerveSubsystem.hpp" %}
+```cpp
+void Periodic() override;
+void SimulationPeriodic() override;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/SwerveSubsystem.cpp" %}
+```cpp
+void SwerveSubsystem::Periodic() {
+  // Updates the pose estimate, the telemetry and the drive's Field2d.
+  m_drive->UpdateTelemetry();
+}
+
+void SwerveSubsystem::SimulationPeriodic() {
+  // Runs the physics simulation of all eight motors.
+  m_drive->SimIterate();
+  // Keep the simulated Pigeon2 in step with the simulated robot's heading.
+  m_gyro.GetSimState().SetRawYaw(m_drive->GetSimPose().Rotation().Degrees());
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -500,8 +870,6 @@ SwerveSubsystem::SwerveSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
-
-`updateTelemetry()` must run every loop: it updates the pose estimate as well as the telemetry. `simIterate()` runs the physics simulation, and the line after it feeds the simulated heading back into the `Pigeon2`.
 
 {% hint style="info" %}
 If your gyro is mounted so that the robot turning shows up as its roll or pitch instead of its yaw, add `.withGyroHeadingAxis(GyroAxis.ROLL)` or `.withGyroHeadingAxis(GyroAxis.PITCH)` to the `SwerveDriveConfig`. The default is `GyroAxis.YAW`. See [How do I use a gyro mounted on its side?](../../how-to/how-do-i-use-a-gyro-mounted-on-its-side.md).

@@ -16,14 +16,411 @@ A `SmartMotorController` is how YAMS talks to a motor controller. It takes three
 
 YAMS applies the config to the `SparkMax` for you, and uses the same config to build the simulation.
 
-<figure><img src="../../.gitbook/assets/tutorial-gearing.gif" alt="Animation of a motor rotor turning 12 times while the mechanism it drives through a 3 to 1 stage and a 4 to 1 stage, 12 to 1 in total, turns once. Counters show the motor rotations and the mechanism rotations and angle."><figcaption><p>With 12:1 gearing, twelve rotations of the motor are one rotation of the mechanism.</p></figcaption></figure>
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
 
-## The code
+## Create the file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
 Create `ArmSubsystem.java` in the `subsystems` folder, next to the template's `ExampleSubsystem.java`.
+{% endtab %}
 
+{% tab title="Java, Commands v3" %}
+Create `ArmMechanism.java` in the `mechanisms` folder, next to the template's `ExampleMechanism.java`.
+
+The config comes from `yams.commands3.config`, and it takes the `Mechanism` where Commands v2 passes the subsystem.
+{% endtab %}
+
+{% tab title="C++" %}
+Create `ArmSubsystem.hpp` in `src/main/include/subsystems` and `ArmSubsystem.cpp` in `src/main/cpp/subsystems`.
+
+YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are members of the subsystem. The constructor fills in the config and then creates the `SmartMotorController`, which is why that one is a `std::optional`.
+
+`WithFeedback` is the C++ name of `withClosedLoopController`, `WithMotorGearing` of `withGearing`, and `WithMechanismLimits` of `withSoftLimits`.
+{% endtab %}
+{% endtabs %}
+
+## 1. Start the config
+
+Everything the motor controller should do goes into one `SmartMotorControllerConfig`. Start it, and put it in closed loop mode so that it can hold a position.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// What the motor controller should do: its control mode, gains, gearing and limits.
+private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// What the motor controller should do: its control mode, gains, gearing and limits.
+private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ArmSubsystem.hpp" %}
+```cpp
+// What the motor controller should do. It is filled in by the constructor.
+yams::motorcontrollers::SmartMotorControllerConfig m_smcConfig;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// What the motor controller should do: its control mode, gains, gearing and limits.
+m_smcConfig
+    .WithSubsystem(this)
+    .WithClosedLoopMode()
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Motor basics](../../details/editor/config/motor-basics.md)
+
+## 2. PID and feedforward
+
+The PID gains correct the difference between where the arm is and where you asked it to be. The feedforward supplies the voltage you already know it needs. The `Sim` options are used only in simulation, so the simulation can be tuned without touching the real robot's gains.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// Feedback constants (PID), on the real robot and in simulation.
+.withClosedLoopController(50, 0, 0)
+.withSimClosedLoopController(50, 0, 0)
+
+// Feedforward constants, on the real robot and in simulation.
+.withFeedforward(new ArmFeedforward(0, 0, 0))
+.withSimFeedforward(new ArmFeedforward(0, 0, 0))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// Feedback constants (PID), on the real robot and in simulation.
+.withClosedLoopController(50, 0, 0)
+.withSimClosedLoopController(50, 0, 0)
+
+// Feedforward constants, on the real robot and in simulation.
+.withFeedforward(new ArmFeedforward(0, 0, 0))
+.withSimFeedforward(new ArmFeedforward(0, 0, 0))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// Feedback constants (PID), on the real robot and in simulation.
+.WithFeedback(50, 0, 0)
+.WithSimClosedLoopController(50, 0, 0)
+
+// Feedforward constants: kS, kG and kV.
+.WithFeedforward(wpi::math::ArmFeedforward{
+    0_V, 0_V, wpi::units::unit_t<wpi::math::ArmFeedforward::kv_unit>{0}})
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** These numbers are only a place to start. Leave them, get the arm moving, then tune them with [Live tuning](../../details/live-tuning/README.md).
+
+Want the details? [Closed loop control](../../details/editor/config/closed-loop-control.md) and [Feedforward](../../details/editor/config/feedforward.md)
+
+## 3. Motion profile
+
+The profile caps how fast the arm may move and accelerate on its way to a setpoint, so that it glides there instead of lunging.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// The fastest the closed loop is allowed to move and accelerate the arm.
+.withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// The fastest the closed loop is allowed to move and accelerate the arm.
+.withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// The fastest the closed loop is allowed to move and accelerate the arm.
+.WithTrapezoidProfile(90_deg_per_s, 45_deg_per_s_sq)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Start slow. Raise the two numbers once the mechanism moves safely.
+
+Want the details? [Motion profiles](../../details/editor/config/motion-profiles.md)
+
+## 4. Gearing
+
+The gearing tells YAMS how many turns of the motor make one turn of the arm.
+
+<figure><img src="../../.gitbook/assets/tutorial-gearing.gif" alt="Animation of a motor rotor turning 12 times while the mechanism it drives through a 3 to 1 stage and a 4 to 1 stage, 12 to 1 in total, turns once. Counters show the motor rotations and the mechanism rotations and angle."><figcaption><p>With 12:1 gearing, twelve rotations of the motor are one rotation of the mechanism.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// Gearing from the motor rotor to the arm: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// Gearing from the motor rotor to the arm: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// Gearing from the motor rotor to the arm: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** List your gearbox stages in order, from the motor outward. `3, 4` here is a 3:1 stage followed by a 4:1 stage.
+
+Want the details? [Gearing and units](../../details/editor/config/gearing-and-units.md)
+
+## 5. Direction, idle mode and current limit
+
+Which way is positive, what the motor does when it is given no power, and the most current it may draw.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+.withMotorInverted(false)
+.withZeroPower(MotorMode.BRAKE)
+.withStatorCurrentLimit(Amps.of(40))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+.withMotorInverted(false)
+.withZeroPower(MotorMode.BRAKE)
+.withStatorCurrentLimit(Amps.of(40))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+.WithMotorInverted(false)
+.WithZeroPower(Cfg::MotorMode::BRAKE)
+.WithStatorCurrentLimit(40_A)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Flip the inversion if a positive output moves your arm the wrong way. Keep the current limit within what your wiring and breaker allow.
+
+Want the details? [Motor basics](../../details/editor/config/motor-basics.md) and [Limits and protection](../../details/editor/config/limits-and-protection.md)
+
+## 6. Starting position and soft limits
+
+The starting position is where the arm is when the robot turns on. The soft limits are as far as the closed loop is allowed to take it.
+
+<figure><img src="../../.gitbook/assets/smc-soft-limits.png" alt="A bar showing a mechanism's travel between two hard stops, with a lower and an upper soft limit a little inside them. The mechanism may move between the soft limits. A setpoint asked for beyond the upper limit is moved back to the limit."><figcaption><p>Soft limits sit a little inside the hard stops.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// Where the arm is when the robot turns on.
+.withStartingPosition(Degrees.of(-5))
+// The closed loop will not take the arm past these angles.
+.withSoftLimits(Degrees.of(-20), Degrees.of(30))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// Where the arm is when the robot turns on.
+.withStartingPosition(Degrees.of(-5))
+// The closed loop will not take the arm past these angles.
+.withSoftLimits(Degrees.of(-20), Degrees.of(30))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// Where the arm is when the robot turns on.
+.WithStartingPosition(-5_deg)
+// The closed loop will not take the arm past these angles.
+.WithMechanismLimits(-20_deg, 30_deg)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Set the starting position to where your arm really rests, and the soft limits just inside its hard stops.
+
+Want the details? [Limits and protection](../../details/editor/config/limits-and-protection.md)
+
+## 7. Telemetry
+
+The name the motor gets on your dashboard, and how much it publishes. `HIGH` publishes everything, which is what you want while tuning.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// Telemetry name and how much to publish.
+.withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// Telemetry name and how much to publish.
+.withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// Telemetry name and how much to publish.
+.WithTelemetry("ArmMotor", Cfg::TelemetryVerbosity::HIGH);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Telemetry](../../understanding/telemetry.md)
+
+## 8. The motor controller object
+
+This is the vendor's own object, exactly as you would create it without YAMS.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+private final SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+private final SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ArmSubsystem.hpp" %}
+```cpp
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+rev::spark::SparkMax m_spark{wpi::CANPort::CAN_S0, 4, rev::spark::SparkMax::MotorType::kBrushless};
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the CAN ID to yours. Using a different motor controller? See the [feature matrix](../../details/editor/feature-matrix.md) for the wrapper that goes with it.
+
+## 9. The SmartMotorController
+
+The wrapper brings the three together: the motor controller object, the motor plugged into it, and the config.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ArmSubsystem.hpp" %}
+```cpp
+// The SmartMotorController, created in the constructor once the config is ready.
+std::optional<yams::motorcontrollers::local::SparkWrapper> m_motor;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+m_motor.emplace(&m_spark, wpi::math::DCMotor::NEO(1), &m_smcConfig);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the motor to the kind and the number of motors you have.
+
+Want the details? [Smart motor controllers](../../details/editor/README.md)
+
+## The complete file
+
+Every part above, in one file, with its imports.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
 {% code title="subsystems/ArmSubsystem.java" lineNumbers="true" %}
 ```java
 package first.robot.subsystems;
@@ -84,10 +481,6 @@ public class ArmSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Create `ArmMechanism.java` in the `mechanisms` folder, next to the template's `ExampleMechanism.java`.
-
-The config comes from `yams.commands3.config`, and it takes the `Mechanism` where Commands v2 passes the subsystem.
-
 {% code title="mechanisms/ArmMechanism.java" lineNumbers="true" %}
 ```java
 package first.robot.mechanisms;
@@ -148,12 +541,6 @@ public class ArmMechanism implements Mechanism {
 {% endtab %}
 
 {% tab title="C++" %}
-Create `ArmSubsystem.hpp` in `src/main/include/subsystems` and `ArmSubsystem.cpp` in `src/main/cpp/subsystems`.
-
-YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are members of the subsystem. The constructor fills in the config and then creates the `SmartMotorController`, which is why that one is a `std::optional`.
-
-`WithFeedback` is the C++ name of `withClosedLoopController`, `WithMotorGearing` of `withGearing`, and `WithMechanismLimits` of `withSoftLimits`.
-
 {% code title="include/subsystems/ArmSubsystem.hpp" lineNumbers="true" %}
 ```cpp
 #pragma once
@@ -234,8 +621,6 @@ ArmSubsystem::ArmSubsystem() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
-
-
 
 ## Read more
 

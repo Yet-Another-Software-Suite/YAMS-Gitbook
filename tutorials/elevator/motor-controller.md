@@ -16,14 +16,481 @@ A `SmartMotorController` is how YAMS talks to a motor controller. It takes three
 
 YAMS applies the config to the `SparkMax` for you, and uses the same config to build the simulation.
 
-<figure><img src="../../.gitbook/assets/tutorial-gearing.gif" alt="Animation of a motor rotor turning 12 times while the mechanism it drives through a 3 to 1 stage and a 4 to 1 stage, 12 to 1 in total, turns once. Counters show the motor rotations and the mechanism rotations and angle."><figcaption><p>With 12:1 gearing, twelve rotations of the motor are one rotation of the mechanism.</p></figcaption></figure>
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
 
-## The code
+## Create the file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
 Create `ElevatorSubsystem.java` in the `subsystems` folder, next to the template's `ExampleSubsystem.java`.
+{% endtab %}
 
+{% tab title="Java, Commands v3" %}
+Create `ElevatorMechanism.java` in the `mechanisms` folder, next to the template's `ExampleMechanism.java`.
+
+The config comes from `yams.commands3.config`, and it takes the `Mechanism` where Commands v2 passes the subsystem.
+{% endtab %}
+
+{% tab title="C++" %}
+Create `ElevatorSubsystem.hpp` in `src/main/include/subsystems` and `ElevatorSubsystem.cpp` in `src/main/cpp/subsystems`.
+
+YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are members of the subsystem. The constructor fills in the config and then creates the `SmartMotorController`, which is why that one is a `std::optional`.
+
+`WithFeedback` is the C++ name of `withClosedLoopController`, `WithMotorGearing` of `withGearing`, `WithLinearTrapezoidProfile` of the linear `withTrapezoidalProfile`, and `WithMeasurementLimits` of the linear `withSoftLimits`. The sprocket is described with `WithMechanismCircumference(pitch, teeth)` where Java uses `withDrumRadius(pitch, teeth)`.
+{% endtab %}
+{% endtabs %}
+
+## 1. Start the config
+
+Everything the motor controller should do goes into one `SmartMotorControllerConfig`. Start it, and put it in closed loop mode so that it can hold a position.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// What the motor controller should do: its control mode, gains, gearing and limits.
+private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// What the motor controller should do: its control mode, gains, gearing and limits.
+private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ElevatorSubsystem.hpp" %}
+```cpp
+// What the motor controller should do. It is filled in by the constructor.
+yams::motorcontrollers::SmartMotorControllerConfig m_smcConfig;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// What the motor controller should do: its control mode, gains, gearing and limits.
+m_smcConfig
+    .WithSubsystem(this)
+    .WithClosedLoopMode()
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Motor basics](../../details/editor/config/motor-basics.md)
+
+## 2. The sprocket or drum
+
+An elevator has to know how far the carriage moves for each turn of the output shaft. Without it YAMS cannot turn rotations into a height.
+
+<figure><img src="../../.gitbook/assets/howto-mechanism-circumference.gif" alt="Animation of a 4 inch drum and a 22 tooth sprocket on 0.25 inch pitch chain, each turning two rotations. The drum moves its cable 12.57 inches per rotation, 25.13 inches in total. The sprocket moves its chain 5.50 inches per rotation, 11 inches in total."><figcaption><p>Each rotation of the mechanism moves it by one circumference.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// How far the carriage moves for each turn of the output shaft:
+// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+.withDrumRadius(Inches.of(0.25), 22)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// How far the carriage moves for each turn of the output shaft:
+// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+.withDrumRadius(Inches.of(0.25), 22)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// How far the carriage moves for each turn of the output shaft:
+// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+.WithMechanismCircumference(0.25_in, 22)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Use your own chain pitch and tooth count, or the radius of your drum:
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+```java
+.withDrumRadius(Inches.of(0.25), 22)   // #25 chain (0.25 inch pitch), 22 tooth sprocket
+.withDrumRadius(Inches.of(0.375), 16)  // #35 chain (0.375 inch pitch), 16 tooth sprocket
+.withDrumRadius(Inches.of(0.875))      // a spool or drum with a 0.875 inch radius
+```
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+```java
+.withDrumRadius(Inches.of(0.25), 22)   // #25 chain (0.25 inch pitch), 22 tooth sprocket
+.withDrumRadius(Inches.of(0.375), 16)  // #35 chain (0.375 inch pitch), 16 tooth sprocket
+.withDrumRadius(Inches.of(0.875))      // a spool or drum with a 0.875 inch radius
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+.WithMechanismCircumference(0.25_in, 22)   // #25 chain (0.25 inch pitch), 22 tooth sprocket
+.WithMechanismCircumference(0.375_in, 16)  // #35 chain (0.375 inch pitch), 16 tooth sprocket
+.WithMechanismRadius(0.875_in)             // a spool or drum with a 0.875 inch radius
+```
+{% endtab %}
+{% endtabs %}
+
+A **cascading** elevator also needs its number of stages, with `withCascadingElevatorStages(2)` in Java or `WithCascadingElevatorStages(2)` in C++.
+
+Want the details? [How to find your mechanism circumference?](../../how-to/how-to-find-your-mechanism-circumference.md)
+
+## 3. PID and feedforward
+
+The PID gains correct the difference between where the elevator is and where you asked it to be. The feedforward supplies the voltage you already know it needs. The `Sim` options are used only in simulation, so the simulation can be tuned without touching the real robot's gains.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// Feedback constants (PID), on the real robot and in simulation.
+.withClosedLoopController(4, 0, 0)
+.withSimClosedLoopController(4, 0, 0)
+
+// Feedforward constants, on the real robot and in simulation.
+.withFeedforward(new ElevatorFeedforward(0, 0, 0))
+.withSimFeedforward(new ElevatorFeedforward(0, 0, 0))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// Feedback constants (PID), on the real robot and in simulation.
+.withClosedLoopController(4, 0, 0)
+.withSimClosedLoopController(4, 0, 0)
+
+// Feedforward constants, on the real robot and in simulation.
+.withFeedforward(new ElevatorFeedforward(0, 0, 0))
+.withSimFeedforward(new ElevatorFeedforward(0, 0, 0))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// Feedback constants (PID), on the real robot and in simulation.
+.WithFeedback(4, 0, 0)
+.WithSimClosedLoopController(4, 0, 0)
+
+// Feedforward constants: kS, kG and kV.
+.WithFeedforward(wpi::math::ElevatorFeedforward{
+    0_V, 0_V, wpi::units::unit_t<wpi::math::ElevatorFeedforward::kv_unit>{0}})
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** These numbers are only a place to start. Leave them, get the elevator moving, then tune them with [Live tuning](../../details/live-tuning/README.md).
+
+Want the details? [Closed loop control](../../details/editor/config/closed-loop-control.md) and [Feedforward](../../details/editor/config/feedforward.md)
+
+## 4. Motion profile
+
+The profile caps how fast the elevator may move and accelerate on its way to a setpoint, so that it glides there instead of lunging.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// The fastest the closed loop is allowed to move and accelerate the carriage.
+.withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// The fastest the closed loop is allowed to move and accelerate the carriage.
+.withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(0.5))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// The fastest the closed loop is allowed to move and accelerate the carriage.
+.WithLinearTrapezoidProfile(0.5_mps, 0.5_mps_sq)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Start slow. Raise the two numbers once the mechanism moves safely.
+
+Want the details? [Motion profiles](../../details/editor/config/motion-profiles.md)
+
+## 5. Gearing
+
+The gearing tells YAMS how many turns of the motor make one turn of the sprocket.
+
+<figure><img src="../../.gitbook/assets/tutorial-gearing.gif" alt="Animation of a motor rotor turning 12 times while the mechanism it drives through a 3 to 1 stage and a 4 to 1 stage, 12 to 1 in total, turns once. Counters show the motor rotations and the mechanism rotations and angle."><figcaption><p>With 12:1 gearing, twelve rotations of the motor are one rotation of the mechanism.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// Gearing from the motor rotor to the sprocket: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// Gearing from the motor rotor to the sprocket: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// Gearing from the motor rotor to the sprocket: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** List your gearbox stages in order, from the motor outward. `3, 4` here is a 3:1 stage followed by a 4:1 stage.
+
+Want the details? [Gearing and units](../../details/editor/config/gearing-and-units.md)
+
+## 6. Direction, idle mode and current limit
+
+Which way is positive, what the motor does when it is given no power, and the most current it may draw.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+.withMotorInverted(false)
+.withZeroPower(MotorMode.BRAKE)
+.withStatorCurrentLimit(Amps.of(40))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+.withMotorInverted(false)
+.withZeroPower(MotorMode.BRAKE)
+.withStatorCurrentLimit(Amps.of(40))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+.WithMotorInverted(false)
+.WithZeroPower(Cfg::MotorMode::BRAKE)
+.WithStatorCurrentLimit(40_A)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Flip the inversion if a positive output moves your elevator the wrong way. Keep the current limit within what your wiring and breaker allow.
+
+Want the details? [Motor basics](../../details/editor/config/motor-basics.md) and [Limits and protection](../../details/editor/config/limits-and-protection.md)
+
+## 7. Starting position and soft limits
+
+The starting position is where the elevator is when the robot turns on. The soft limits are as far as the closed loop is allowed to take it.
+
+<figure><img src="../../.gitbook/assets/smc-soft-limits.png" alt="A bar showing a mechanism's travel between two hard stops, with a lower and an upper soft limit a little inside them. The mechanism may move between the soft limits. A setpoint asked for beyond the upper limit is moved back to the limit."><figcaption><p>Soft limits sit a little inside the hard stops.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// Where the carriage is when the robot turns on.
+.withStartingPosition(Meters.of(0))
+// The closed loop will not take the carriage past these heights.
+.withSoftLimits(Meters.of(0), Meters.of(2))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// Where the carriage is when the robot turns on.
+.withStartingPosition(Meters.of(0))
+// The closed loop will not take the carriage past these heights.
+.withSoftLimits(Meters.of(0), Meters.of(2))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// Where the carriage is when the robot turns on.
+.WithStartingPosition(0_m)
+// The closed loop will not take the carriage past these heights.
+.WithMeasurementLimits(0_m, 2_m)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Set the starting position to where your elevator really rests, and the soft limits just inside its hard stops.
+
+Want the details? [Limits and protection](../../details/editor/config/limits-and-protection.md)
+
+## 8. Telemetry
+
+The name the motor gets on your dashboard, and how much it publishes. `HIGH` publishes everything, which is what you want while tuning.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// Telemetry name and how much to publish.
+.withTelemetry("ElevatorMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// Telemetry name and how much to publish.
+.withTelemetry("ElevatorMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// Telemetry name and how much to publish.
+.WithTelemetry("ElevatorMotor", Cfg::TelemetryVerbosity::HIGH);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Telemetry](../../understanding/telemetry.md)
+
+## 9. The motor controller object
+
+This is the vendor's own object, exactly as you would create it without YAMS.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+private final SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+private final SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ElevatorSubsystem.hpp" %}
+```cpp
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+rev::spark::SparkMax m_spark{wpi::CANPort::CAN_S0, 4, rev::spark::SparkMax::MotorType::kBrushless};
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the CAN ID to yours. Using a different motor controller? See the [feature matrix](../../details/editor/feature-matrix.md) for the wrapper that goes with it.
+
+## 10. The SmartMotorController
+
+The wrapper brings the three together: the motor controller object, the motor plugged into it, and the config.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ElevatorSubsystem.java" %}
+```java
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ElevatorMechanism.java" %}
+```java
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ElevatorSubsystem.hpp" %}
+```cpp
+// The SmartMotorController, created in the constructor once the config is ready.
+std::optional<yams::motorcontrollers::local::SparkWrapper> m_motor;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
+```cpp
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+m_motor.emplace(&m_spark, wpi::math::DCMotor::NEO(1), &m_smcConfig);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the motor to the kind and the number of motors you have.
+
+Want the details? [Smart motor controllers](../../details/editor/README.md)
+
+## The complete file
+
+Every part above, in one file, with its imports.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
 {% code title="subsystems/ElevatorSubsystem.java" lineNumbers="true" %}
 ```java
 package first.robot.subsystems;
@@ -88,10 +555,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Create `ElevatorMechanism.java` in the `mechanisms` folder, next to the template's `ExampleMechanism.java`.
-
-The config comes from `yams.commands3.config`, and it takes the `Mechanism` where Commands v2 passes the subsystem.
-
 {% code title="mechanisms/ElevatorMechanism.java" lineNumbers="true" %}
 ```java
 package first.robot.mechanisms;
@@ -156,12 +619,6 @@ public class ElevatorMechanism implements Mechanism {
 {% endtab %}
 
 {% tab title="C++" %}
-Create `ElevatorSubsystem.hpp` in `src/main/include/subsystems` and `ElevatorSubsystem.cpp` in `src/main/cpp/subsystems`.
-
-YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are members of the subsystem. The constructor fills in the config and then creates the `SmartMotorController`, which is why that one is a `std::optional`.
-
-`WithFeedback` is the C++ name of `withClosedLoopController`, `WithMotorGearing` of `withGearing`, `WithLinearTrapezoidProfile` of the linear `withTrapezoidalProfile`, and `WithMeasurementLimits` of the linear `withSoftLimits`. The sprocket is described with `WithMechanismCircumference(pitch, teeth)` where Java uses `withDrumRadius(pitch, teeth)`.
-
 {% code title="include/subsystems/ElevatorSubsystem.hpp" lineNumbers="true" %}
 ```cpp
 #pragma once
@@ -245,40 +702,6 @@ ElevatorSubsystem::ElevatorSubsystem() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
-
-## The sprocket or drum
-
-An elevator needs one option that an arm does not: how far the carriage moves for each rotation of the output shaft. Without it YAMS cannot turn rotations into a height.
-
-<figure><img src="../../.gitbook/assets/howto-mechanism-circumference.gif" alt="Animation of a 4 inch drum and a 22 tooth sprocket on 0.25 inch pitch chain, each turning two rotations. The drum moves its cable 12.57 inches per rotation, 25.13 inches in total. The sprocket moves its chain 5.50 inches per rotation, 11 inches in total."><figcaption><p>Each rotation of the mechanism moves it by one circumference.</p></figcaption></figure>
-
-{% tabs %}
-{% tab title="Java, Commands v2" %}
-```java
-.withDrumRadius(Inches.of(0.25), 22)   // #25 chain (0.25 inch pitch), 22 tooth sprocket
-.withDrumRadius(Inches.of(0.375), 16)  // #35 chain (0.375 inch pitch), 16 tooth sprocket
-.withDrumRadius(Inches.of(0.875))      // a spool or drum with a 0.875 inch radius
-```
-{% endtab %}
-
-{% tab title="Java, Commands v3" %}
-```java
-.withDrumRadius(Inches.of(0.25), 22)   // #25 chain (0.25 inch pitch), 22 tooth sprocket
-.withDrumRadius(Inches.of(0.375), 16)  // #35 chain (0.375 inch pitch), 16 tooth sprocket
-.withDrumRadius(Inches.of(0.875))      // a spool or drum with a 0.875 inch radius
-```
-{% endtab %}
-
-{% tab title="C++" %}
-```cpp
-.WithMechanismCircumference(0.25_in, 22)   // #25 chain (0.25 inch pitch), 22 tooth sprocket
-.WithMechanismCircumference(0.375_in, 16)  // #35 chain (0.375 inch pitch), 16 tooth sprocket
-.WithMechanismRadius(0.875_in)             // a spool or drum with a 0.875 inch radius
-```
-{% endtab %}
-{% endtabs %}
-
-A **cascading** elevator also needs its number of stages, with `withCascadingElevatorStages(2)` in Java or `WithCascadingElevatorStages(2)` in C++. See [How to find your mechanism circumference?](../../how-to/how-to-find-your-mechanism-circumference.md) for the measurements.
 
 ## Read more
 

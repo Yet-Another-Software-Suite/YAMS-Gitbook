@@ -16,14 +16,331 @@ A `SmartMotorController` is how YAMS talks to a motor controller. It takes three
 
 YAMS applies the config to the `SparkMax` for you, and uses the same config to build the simulation.
 
-<figure><img src="../../.gitbook/assets/tutorial-gearing.gif" alt="Animation of a motor rotor turning 12 times while the mechanism it drives through a 3 to 1 stage and a 4 to 1 stage, 12 to 1 in total, turns once. Counters show the motor rotations and the mechanism rotations and angle."><figcaption><p>With 12:1 gearing, twelve rotations of the motor are one rotation of the mechanism.</p></figcaption></figure>
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
 
-## The code
+## Create the file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
 Create `ShooterSubsystem.java` in the `subsystems` folder, next to the template's `ExampleSubsystem.java`.
+{% endtab %}
 
+{% tab title="Java, Commands v3" %}
+Create `ShooterMechanism.java` in the `mechanisms` folder, next to the template's `ExampleMechanism.java`.
+
+The config comes from `yams.commands3.config`, and it takes the `Mechanism` where Commands v2 passes the subsystem.
+{% endtab %}
+
+{% tab title="C++" %}
+Create `ShooterSubsystem.hpp` in `src/main/include/subsystems` and `ShooterSubsystem.cpp` in `src/main/cpp/subsystems`.
+
+YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are members of the subsystem. The constructor fills in the config and then creates the `SmartMotorController`, which is why that one is a `std::optional`.
+
+`WithFeedback` is the C++ name of `withClosedLoopController`, and `WithMotorGearing` of `withGearing`.
+{% endtab %}
+{% endtabs %}
+
+## 1. Start the config
+
+Everything the motor controller should do goes into one `SmartMotorControllerConfig`. Start it, and put it in closed loop mode so that it can hold a speed. A flywheel holds a speed and has no position to protect, so this config has no motion profile, no starting position and no soft limits. It coasts at zero power, so that the wheel is not braked to a stop every time a command ends.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+// What the motor controller should do: its control mode, gains and gearing.
+private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+// What the motor controller should do: its control mode, gains and gearing.
+private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ShooterSubsystem.hpp" %}
+```cpp
+// What the motor controller should do. It is filled in by the constructor.
+yams::motorcontrollers::SmartMotorControllerConfig m_smcConfig;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+// What the motor controller should do: its control mode, gains and gearing.
+m_smcConfig
+    .WithSubsystem(this)
+    .WithClosedLoopMode()
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Motor basics](../../details/editor/config/motor-basics.md)
+
+## 2. PID and feedforward
+
+The PID gains correct the difference between where the flywheel is and where you asked it to be. The feedforward supplies the voltage you already know it needs. The `Sim` options are used only in simulation, so the simulation can be tuned without touching the real robot's gains.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+// Feedback constants (PID), on the real robot and in simulation.
+// A flywheel holds a speed, so it gets no motion profile.
+.withClosedLoopController(1, 0, 0)
+.withSimClosedLoopController(1, 0, 0)
+// Feedforward constants, on the real robot and in simulation.
+.withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
+.withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+// Feedback constants (PID), on the real robot and in simulation.
+// A flywheel holds a speed, so it gets no motion profile.
+.withClosedLoopController(1, 0, 0)
+.withSimClosedLoopController(1, 0, 0)
+// Feedforward constants, on the real robot and in simulation.
+.withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
+.withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+// Feedback constants (PID), on the real robot and in simulation.
+// A flywheel holds a speed, so it gets no motion profile.
+.WithFeedback(1, 0, 0)
+.WithSimClosedLoopController(1, 0, 0)
+// Feedforward constants: kS and kV.
+.WithFeedforward(Feedforward{0_V, wpi::units::unit_t<Feedforward::kv_unit>{0}})
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** These numbers are only a place to start. Leave them, get the flywheel moving, then tune them with [Live tuning](../../details/live-tuning/README.md).
+
+Want the details? [Closed loop control](../../details/editor/config/closed-loop-control.md) and [Feedforward](../../details/editor/config/feedforward.md)
+
+## 3. Gearing
+
+The gearing tells YAMS how many turns of the motor make one turn of the flywheel.
+
+<figure><img src="../../.gitbook/assets/tutorial-gearing.gif" alt="Animation of a motor rotor turning 12 times while the mechanism it drives through a 3 to 1 stage and a 4 to 1 stage, 12 to 1 in total, turns once. Counters show the motor rotations and the mechanism rotations and angle."><figcaption><p>With 12:1 gearing, twelve rotations of the motor are one rotation of the mechanism.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+// Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+// Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+// Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
+.WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** List your gearbox stages in order, from the motor outward. `3, 4` here is a 3:1 stage followed by a 4:1 stage.
+
+Want the details? [Gearing and units](../../details/editor/config/gearing-and-units.md)
+
+## 4. Direction, idle mode and current limit
+
+Which way is positive, what the motor does when it is given no power, and the most current it may draw.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+.withMotorInverted(false)
+// Coast, so that the wheel spins down by itself instead of being braked to a stop.
+.withZeroPower(MotorMode.COAST)
+.withStatorCurrentLimit(Amps.of(40))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+.withMotorInverted(false)
+// Coast, so that the wheel spins down by itself instead of being braked to a stop.
+.withZeroPower(MotorMode.COAST)
+.withStatorCurrentLimit(Amps.of(40))
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+.WithMotorInverted(false)
+// Coast, so that the wheel spins down by itself instead of being braked to a stop.
+.WithZeroPower(Cfg::MotorMode::COAST)
+.WithStatorCurrentLimit(40_A)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Flip the inversion if a positive output moves your flywheel the wrong way. Keep the current limit within what your wiring and breaker allow.
+
+Want the details? [Motor basics](../../details/editor/config/motor-basics.md) and [Limits and protection](../../details/editor/config/limits-and-protection.md)
+
+## 5. Telemetry
+
+The name the motor gets on your dashboard, and how much it publishes. `HIGH` publishes everything, which is what you want while tuning.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+// Telemetry name and how much to publish.
+.withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+// Telemetry name and how much to publish.
+.withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+// Telemetry name and how much to publish.
+.WithTelemetry("ShooterMotor", Cfg::TelemetryVerbosity::HIGH);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Telemetry](../../understanding/telemetry.md)
+
+## 6. The motor controller object
+
+This is the vendor's own object, exactly as you would create it without YAMS.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+private final SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+private final SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ShooterSubsystem.hpp" %}
+```cpp
+// The vendor motor controller object: a SPARK MAX with CAN ID 4.
+rev::spark::SparkMax m_spark{wpi::CANPort::CAN_S0, 4, rev::spark::SparkMax::MotorType::kBrushless};
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the CAN ID to yours. Using a different motor controller? See the [feature matrix](../../details/editor/feature-matrix.md) for the wrapper that goes with it.
+
+## 7. The SmartMotorController
+
+The wrapper brings the three together: the motor controller object, the motor plugged into it, and the config.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ShooterSubsystem.hpp" %}
+```cpp
+// The SmartMotorController, created in the constructor once the config is ready.
+std::optional<yams::motorcontrollers::local::SparkWrapper> m_motor;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+// The SmartMotorController applies the config to the SPARK MAX, which drives one NEO.
+m_motor.emplace(&m_spark, wpi::math::DCMotor::NEO(1), &m_smcConfig);
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the motor to the kind and the number of motors you have.
+
+Want the details? [Smart motor controllers](../../details/editor/README.md)
+
+## The complete file
+
+Every part above, in one file, with its imports.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
 {% code title="subsystems/ShooterSubsystem.java" lineNumbers="true" %}
 ```java
 package first.robot.subsystems;
@@ -77,10 +394,6 @@ public class ShooterSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Create `ShooterMechanism.java` in the `mechanisms` folder, next to the template's `ExampleMechanism.java`.
-
-The config comes from `yams.commands3.config`, and it takes the `Mechanism` where Commands v2 passes the subsystem.
-
 {% code title="mechanisms/ShooterMechanism.java" lineNumbers="true" %}
 ```java
 package first.robot.mechanisms;
@@ -134,12 +447,6 @@ public class ShooterMechanism implements Mechanism {
 {% endtab %}
 
 {% tab title="C++" %}
-Create `ShooterSubsystem.hpp` in `src/main/include/subsystems` and `ShooterSubsystem.cpp` in `src/main/cpp/subsystems`.
-
-YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are members of the subsystem. The constructor fills in the config and then creates the `SmartMotorController`, which is why that one is a `std::optional`.
-
-`WithFeedback` is the C++ name of `withClosedLoopController`, and `WithMotorGearing` of `withGearing`.
-
 {% code title="include/subsystems/ShooterSubsystem.hpp" lineNumbers="true" %}
 ```cpp
 #pragma once
@@ -214,10 +521,6 @@ ShooterSubsystem::ShooterSubsystem() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
-
-## What a flywheel leaves out
-
-A flywheel holds a speed and has no position to protect, so this config has no motion profile, no starting position and no soft limits. It coasts at zero power, so that the wheel is not braked to a stop every time a command ends.
 
 ## Read more
 

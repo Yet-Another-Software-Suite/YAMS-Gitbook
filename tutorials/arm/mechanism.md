@@ -8,11 +8,188 @@ The `SmartMotorController` from step 1 can already spin the motor. An `Arm` adds
 
 <figure><img src="../../.gitbook/assets/mech-two-configs.png" alt="A diagram. A mechanism config, which says what the mechanism is, such as its length, mass, hard stops and how it is drawn, and a SmartMotorControllerConfig, which says how its motor behaves, such as gearing, PID, feedforward, soft limits and current, both go into the mechanism class. The mechanism then drives the simulation's physics and Mechanism2d, and the real robot's commands and telemetry."><figcaption><p>Two configs go into one mechanism.</p></figcaption></figure>
 
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
+
+## 1. Describe the arm
+
 `ArmConfig` describes the arm itself: its length and its hard limits. The simulation uses both. The hard limits are where the arm physically stops, which is different from the soft limits you set in step 1.
 
 <figure><img src="../../.gitbook/assets/tutorial-arm-angles.png" alt="A side view of the arm and the angles used in this tutorial. The hard limits are minus 30 and 40 degrees: where the arm physically stops, set on ArmConfig and used by the simulation. The soft limits are minus 20 and 30 degrees: as far as the closed loop will go, set on SmartMotorControllerConfig. Inside them are the setpoints: minus 5 degrees for the A button, which is also where the arm starts, 15 degrees for the B button, and 0 degrees for the default command."><figcaption><p>The soft limits from step 1 sit inside the hard limits from this step.</p></figcaption></figure>
 
-## The code
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+private final ArmConfig armConfig = new ArmConfig()
+    // The hard stops, used by the simulation.
+    .withHardLimits(Degrees.of(-30), Degrees.of(40))
+    // The length of the arm, used by the simulation.
+    .withLength(Feet.of(3))
+    // Telemetry name and how much to publish.
+    .withTelemetry("Arm", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+private final ArmConfig armConfig = new ArmConfig()
+    // The hard stops, used by the simulation.
+    .withHardLimits(Degrees.of(-30), Degrees.of(40))
+    // The length of the arm, used by the simulation.
+    .withLength(Feet.of(3))
+    // Telemetry name and how much to publish.
+    .withTelemetry("Arm", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ArmSubsystem.hpp" %}
+```cpp
+// The arm mechanism and its config, also set up in the constructor.
+yams::mechanisms::config::ArmConfig m_armConfig;
+std::optional<yams::mechanisms::positional::Arm> m_arm;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+m_armConfig
+    // The hard stops, used by the simulation.
+    .WithMinAngle(-30_deg)
+    .WithMaxAngle(40_deg)
+    // The length of the arm, used by the simulation.
+    .WithArmLength(3_ft)
+    // Telemetry name.
+    .WithTelemetryName("Arm");
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Set the length of your arm, and where its hard stops are.
+
+Want the details? [Arms](../../details/arms.md) and [ArmConfig](../../details/mechanism-configs/arm-config.md)
+
+## 2. Create the Arm
+
+Hand the config, and the `SmartMotorController` from step 1, to the `Arm`.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+// The arm mechanism.
+private final Arm arm = new Arm(armConfig, motor);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+// The arm mechanism.
+private final Arm arm = new Arm(armConfig, motor);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+// The arm mechanism.
+m_arm.emplace(&m_armConfig, &m_motor.value());
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## 3. Update it every loop
+
+Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry and applies anything you change through live tuning. `simIterate()` runs the physics simulation, and only needs to run in simulation.
+
+In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you. In Commands v3 nothing does, so `Robot.java` creates the mechanism and calls them.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ArmSubsystem.java" %}
+```java
+@Override
+public void periodic() {
+  // Publishes the arm's telemetry, and applies anything changed through live tuning.
+  arm.updateTelemetry();
+}
+
+@Override
+public void simulationPeriodic() {
+  // Runs the arm's physics simulation.
+  arm.simIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ArmMechanism.java" %}
+```java
+/** Call this from Robot.robotPeriodic(), before the scheduler runs. */
+public void periodic() {
+  // Publishes the arm's telemetry, and applies anything changed through live tuning.
+  arm.updateTelemetry();
+}
+
+/** Call this from Robot.robotPeriodic() in simulation. */
+public void simulationPeriodic() {
+  // Runs the arm's physics simulation.
+  arm.simIterate();
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+import first.robot.mechanisms.ArmMechanism;
+
+final ArmMechanism arm = new ArmMechanism();
+
+// Update the mechanism before the scheduler runs its commands.
+arm.periodic();
+if (RobotBase.isSimulation()) {
+  arm.simulationPeriodic();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ArmSubsystem.hpp" %}
+```cpp
+void Periodic() override;
+void SimulationPeriodic() override;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ArmSubsystem.cpp" %}
+```cpp
+void ArmSubsystem::Periodic() {
+  // Publishes the arm's telemetry, and applies anything changed through live tuning.
+  m_arm->UpdateTelemetry();
+}
+
+void ArmSubsystem::SimulationPeriodic() {
+  // Runs the arm's physics simulation.
+  m_arm->SimIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -330,15 +507,6 @@ ArmSubsystem::ArmSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
-
-Two calls keep the mechanism alive, and both must run every loop:
-
-* **`updateTelemetry()`** publishes the mechanism's telemetry, and applies anything you change through live tuning.
-* **`simIterate()`** runs the physics simulation. It only needs to run in simulation.
-
-## Read more
-
-[Arms](../../details/arms.md) and [ArmConfig](../../details/mechanism-configs/arm-config.md) cover everything the mechanism and its config can do.
 
 Previous: [Step 1: The motor controller](motor-controller.md)
 

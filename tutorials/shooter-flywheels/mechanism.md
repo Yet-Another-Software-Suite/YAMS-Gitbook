@@ -8,11 +8,181 @@ The `SmartMotorController` from step 1 can already spin the motor. A `FlyWheel` 
 
 <figure><img src="../../.gitbook/assets/mech-two-configs.png" alt="A diagram. A mechanism config, which says what the mechanism is, such as its length, mass, hard stops and how it is drawn, and a SmartMotorControllerConfig, which says how its motor behaves, such as gearing, PID, feedforward, soft limits and current, both go into the mechanism class. The mechanism then drives the simulation's physics and Mechanism2d, and the real robot's commands and telemetry."><figcaption><p>Two configs go into one mechanism.</p></figcaption></figure>
 
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
+
+## 1. Describe the flywheel
+
 `FlyWheelConfig` describes the flywheel itself. Its diameter is used by the simulation, and it is what lets you ask for a surface speed in meters per second as well as a rotation speed.
 
 <figure><img src="../../.gitbook/assets/mech-flywheel-diameter.png" alt="A flywheel with its diameter marked, spinning at 3000 RPM and throwing a game piece from its surface. For a 4 inch wheel the circumference is 0.319 meters, 3000 RPM is 50 rotations per second, and the surface speed is 16 meters per second. getLinearVelocity and getAngularVelocity on the config convert between the two."><figcaption><p>The diameter converts rotation speed to surface speed.</p></figcaption></figure>
 
-## The code
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
+    // The diameter of the flywheel, used by the simulation and for surface speeds.
+    .withDiameter(Inches.of(4))
+    // Telemetry name and how much to publish.
+    .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
+    // The diameter of the flywheel, used by the simulation and for surface speeds.
+    .withDiameter(Inches.of(4))
+    // Telemetry name and how much to publish.
+    .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ShooterSubsystem.hpp" %}
+```cpp
+// The flywheel mechanism and its config, also set up in the constructor.
+yams::mechanisms::config::FlyWheelConfig m_shooterConfig;
+std::optional<yams::mechanisms::velocity::FlyWheel> m_shooter;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+m_shooterConfig
+    // The diameter of the flywheel, used by the simulation and for surface speeds.
+    .WithRollerDiameter(4_in)
+    // Telemetry name.
+    .WithTelemetryName("Shooter");
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Set the diameter of your wheel.
+
+Want the details? [Shooters](../../details/shooters.md) and [FlyWheelConfig](../../details/mechanism-configs/flywheel-config.md)
+
+## 2. Create the FlyWheel
+
+Hand the config, and the `SmartMotorController` from step 1, to the `FlyWheel`.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+// The flywheel mechanism.
+private final FlyWheel shooter = new FlyWheel(shooterConfig, motor);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+// The flywheel mechanism.
+private final FlyWheel shooter = new FlyWheel(shooterConfig, motor);
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+// The flywheel mechanism.
+m_shooter.emplace(&m_shooterConfig, &m_motor.value());
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## 3. Update it every loop
+
+Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry and applies anything you change through live tuning. `simIterate()` runs the physics simulation, and only needs to run in simulation.
+
+In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you. In Commands v3 nothing does, so `Robot.java` creates the mechanism and calls them.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+@Override
+public void periodic() {
+  // Publishes the flywheel's telemetry, and applies anything changed through live tuning.
+  shooter.updateTelemetry();
+}
+
+@Override
+public void simulationPeriodic() {
+  // Runs the flywheel's physics simulation.
+  shooter.simIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+/** Call this from Robot.robotPeriodic(), before the scheduler runs. */
+public void periodic() {
+  // Publishes the flywheel's telemetry, and applies anything changed through live tuning.
+  shooter.updateTelemetry();
+}
+
+/** Call this from Robot.robotPeriodic() in simulation. */
+public void simulationPeriodic() {
+  // Runs the flywheel's physics simulation.
+  shooter.simIterate();
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+import first.robot.mechanisms.ShooterMechanism;
+
+final ShooterMechanism shooter = new ShooterMechanism();
+
+// Update the mechanism before the scheduler runs its commands.
+shooter.periodic();
+if (RobotBase.isSimulation()) {
+  shooter.simulationPeriodic();
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ShooterSubsystem.hpp" %}
+```cpp
+void Periodic() override;
+void SimulationPeriodic() override;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+void ShooterSubsystem::Periodic() {
+  // Publishes the flywheel's telemetry, and applies anything changed through live tuning.
+  m_shooter->UpdateTelemetry();
+}
+
+void ShooterSubsystem::SimulationPeriodic() {
+  // Runs the flywheel's physics simulation.
+  m_shooter->SimIterate();
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -303,15 +473,6 @@ ShooterSubsystem::ShooterSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
-
-Two calls keep the mechanism alive, and both must run every loop:
-
-* **`updateTelemetry()`** publishes the mechanism's telemetry, and applies anything you change through live tuning.
-* **`simIterate()`** runs the physics simulation. It only needs to run in simulation.
-
-## Read more
-
-[Shooters](../../details/shooters.md) and [FlyWheelConfig](../../details/mechanism-configs/flywheel-config.md) cover everything the mechanism and its config can do.
 
 Previous: [Step 1: The motor controller](motor-controller.md)
 

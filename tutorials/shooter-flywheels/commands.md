@@ -6,9 +6,13 @@ description: Make commands from the FlyWheel and bind them to controller buttons
 
 The `FlyWheel` makes commands for you. Your class hands them out, and the buttons schedule them.
 
-<figure><img src="../../.gitbook/assets/tutorial-shooter-buttons.gif" alt="Animation of the four face buttons of a controller, the flywheel, and the command that is running. With no button held the default command runs: a duty cycle of 0, so the flywheel coasts. While A is held its command runs: hold the flywheel at 60 RPM. While B is held: hold the flywheel at 300 RPM. While X is held the flywheel is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the flywheel. Let go, and the default command lets it coast down.</p></figcaption></figure>
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
 
-## The commands a FlyWheel gives you
+## 1. Make the commands
+
+The `FlyWheel` makes the commands. Your class only hands them out, so that the rest of the robot code never touches the motor directly.
 
 | What it does | Java, Commands v2 | Java, Commands v3 | C++ |
 | --- | --- | --- | --- |
@@ -16,9 +20,195 @@ The `FlyWheel` makes commands for you. Your class hands them out, and the button
 | Drive at a duty cycle from -1 to 1, with the closed loop off. | `shooter.set(dutycycle)` | `shooter.set(dutycycle)` | `m_shooter->Set(dutycycle)` |
 | A `Trigger` that is true while the flywheel is near a speed. | `shooter.near(speed, tolerance)` | `shooter.near(speed, tolerance)` | `m_shooter->IsNear(speed, tolerance)` |
 
-The **default command** runs whenever no other command is using the shooter. Here it sets a duty cycle of 0, so the flywheel coasts.
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/ShooterSubsystem.java" %}
+```java
+/** Spin at a speed and hold it. This command does not end on its own. */
+public Command run(AngularVelocity speed) {
+  return shooter.run(speed);
+}
 
-## The code
+/** Drive the flywheel with a duty cycle from -1 to 1. The closed loop is not used. */
+public Command set(double dutycycle) {
+  return shooter.set(dutycycle);
+}
+
+/** True while the flywheel is within 50 RPM of a speed. */
+public Trigger atSpeed(AngularVelocity speed) {
+  return shooter.near(speed, RPM.of(50));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+/** Spin at a speed and hold it. This command does not end on its own. */
+public Command setVelocity(AngularVelocity speed) {
+  return shooter.run(speed);
+}
+
+/** Drive the flywheel with a duty cycle from -1 to 1. The closed loop is not used. */
+public Command set(double dutycycle) {
+  return shooter.set(dutycycle);
+}
+
+/** True while the flywheel is within 50 RPM of a speed. */
+public Trigger atSpeed(AngularVelocity speed) {
+  return shooter.near(speed, RPM.of(50));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/ShooterSubsystem.hpp" %}
+```cpp
+/** Spin at a speed and hold it. This command does not end on its own. */
+wpi::cmd::CommandPtr Run(wpi::units::revolutions_per_minute_t speed);
+
+/** Drive the flywheel with a duty cycle from -1 to 1. The closed loop is not used. */
+wpi::cmd::CommandPtr Set(double dutycycle);
+
+/** True while the flywheel is within 50 RPM of a speed. */
+wpi::cmd::Trigger AtSpeed(wpi::units::revolutions_per_minute_t speed);
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr ShooterSubsystem::Run(wpi::units::revolutions_per_minute_t speed) {
+  return m_shooter->Run(wpi::units::degrees_per_second_t{speed});
+}
+
+wpi::cmd::CommandPtr ShooterSubsystem::Set(double dutycycle) {
+  return m_shooter->Set(dutycycle);
+}
+
+wpi::cmd::Trigger ShooterSubsystem::AtSpeed(wpi::units::revolutions_per_minute_t speed) {
+  return m_shooter->IsNear(speed, 50_rpm);
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
+
+Want the details? [run() vs runTo() Commands](../../details/run-vs-runto.md)
+
+## 2. Set the default command
+
+The **default command** runs whenever no other command is using the shooter. Here it sets a duty cycle of 0, so the flywheel coasts. In Commands v3 the default command is given the lowest priority, so that any other command for the mechanism can interrupt it.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+import first.robot.subsystems.ShooterSubsystem;
+
+private final ShooterSubsystem shooter = new ShooterSubsystem();
+
+// When no other command is using the shooter, let the flywheel coast.
+shooter.setDefaultCommand(shooter.set(0));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" %}
+```java
+/** Let the flywheel coast at the lowest priority, so that any other shooter command can interrupt it. */
+public Command idle() {
+  return run(coroutine -> coroutine.await(shooter.set(0)))
+      .withPriority(Command.LOWEST_PRIORITY)
+      .named("Shooter Idle");
+}
+```
+{% endcode %}
+
+{% code title="Robot.java" %}
+```java
+public Robot() {
+  // When no other command is using the shooter, let the flywheel coast.
+  shooter.setDefaultCommand(shooter.idle());
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/RobotContainer.hpp" %}
+```cpp
+#include "subsystems/ShooterSubsystem.hpp"
+
+ShooterSubsystem shooter;
+```
+{% endcode %}
+
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// When no other command is using the shooter, let the flywheel coast.
+shooter.SetDefaultCommand(shooter.Set(0));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Choose what your mechanism should do when nobody is asking anything of it.
+
+## 3. Bind the buttons
+
+`whileTrue` runs a command for as long as its button is held, and cancels it on release. The default command then takes back over.
+
+<figure><img src="../../.gitbook/assets/tutorial-shooter-buttons.gif" alt="Animation of the four face buttons of a controller, the flywheel, and the command that is running. With no button held the default command runs: a duty cycle of 0, so the flywheel coasts. While A is held its command runs: hold the flywheel at 60 RPM. While B is held: hold the flywheel at 300 RPM. While X is held the flywheel is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the flywheel. Let go, and the default command lets it coast down.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+// Hold a speed while the bottom (A) or right (B) face button is held.
+driverController.faceDown().whileTrue(shooter.run(RPM.of(60)));
+driverController.faceRight().whileTrue(shooter.run(RPM.of(300)));
+// Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
+driverController.faceLeft().whileTrue(shooter.set(0.3));
+driverController.faceUp().whileTrue(shooter.set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="ExampleTeleop.java" %}
+```java
+// Hold a speed while the bottom (A) or right (B) face button is held.
+robot.exampleController.faceDown().whileTrue(robot.shooter.setVelocity(RPM.of(60)));
+robot.exampleController.faceRight().whileTrue(robot.shooter.setVelocity(RPM.of(300)));
+// Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
+robot.exampleController.faceLeft().whileTrue(robot.shooter.set(0.3));
+robot.exampleController.faceUp().whileTrue(robot.shooter.set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// Hold a speed while the bottom (A) or right (B) face button is held.
+driverController.FaceDown().WhileTrue(shooter.Run(60_rpm));
+driverController.FaceRight().WhileTrue(shooter.Run(300_rpm));
+// Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
+driverController.FaceLeft().WhileTrue(shooter.Set(0.3));
+driverController.FaceUp().WhileTrue(shooter.Set(-0.3));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Pick your own buttons and setpoints. Use `onTrue` instead if one press should start a command that keeps running after the button is released.
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}

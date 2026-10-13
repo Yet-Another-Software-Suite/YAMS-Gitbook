@@ -6,7 +6,73 @@ description: One command sets both flywheel speeds. Presets give no spin, backsp
 
 One command sets both velocity setpoints, so the two wheels always change together. Everything else is a preset built on that one command.
 
-<figure><img src="../../.gitbook/assets/tutorial-double-flywheel-spin.gif" alt="Animation of a ball passing between an upper and a lower flywheel, three times. With both at 3000 RPM the ball leaves with no spin and flies straight. With the lower flywheel faster, 3500 against 2500 RPM, it leaves with backspin and its path lifts. With the upper flywheel faster it leaves with topspin and its path dips."><figcaption><p>The faster wheel drags its side of the ball forward. Lower wheel faster is backspin; upper wheel faster is topspin.</p></figcaption></figure>
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
+
+## 1. One command for both wheels
+
+A single command sets both velocity setpoints every loop, so the two wheels always change together.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+/** Spin both flywheels. One command sets both speeds, so the two always change together. */
+public Command setFlywheelSpeeds(AngularVelocity upperSpeed, AngularVelocity lowerSpeed) {
+  return run(() -> {
+    upperMotor.setVelocity(upperSpeed);
+    lowerMotor.setVelocity(lowerSpeed);
+  }).withName("Set FlyWheel Speeds");
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+/** Spin both flywheels. One command sets both speeds, so the two always change together. */
+public Command setFlywheelSpeeds(AngularVelocity upperSpeed, AngularVelocity lowerSpeed) {
+  return run(coroutine -> {
+    while (true) {
+      upperMotor.setVelocity(upperSpeed);
+      lowerMotor.setVelocity(lowerSpeed);
+      coroutine.yield();
+    }
+  }).named("Set FlyWheel Speeds");
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+/** Spin both flywheels. One command sets both speeds, so the two always change together. */
+wpi::cmd::CommandPtr SetFlywheelSpeeds(wpi::units::revolutions_per_minute_t upperSpeed,
+                                       wpi::units::revolutions_per_minute_t lowerSpeed);
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr DoubleFlywheelSubsystem::SetFlywheelSpeeds(
+    wpi::units::revolutions_per_minute_t upperSpeed, wpi::units::revolutions_per_minute_t lowerSpeed) {
+  return Run([this, upperSpeed, lowerSpeed] {
+           m_upperMotor->SetVelocity(wpi::units::turns_per_second_t{upperSpeed});
+           m_lowerMotor->SetVelocity(wpi::units::turns_per_second_t{lowerSpeed});
+         })
+      .WithName("Set FlyWheel Speeds");
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+## 2. Preset shots
+
+Each preset is that one command with two speeds filled in.
 
 | Preset | Upper | Lower | Spin |
 | --- | --- | --- | --- |
@@ -15,7 +81,213 @@ One command sets both velocity setpoints, so the two wheels always change togeth
 | Topspin shot | 3500 RPM | 2500 RPM | topspin |
 | Stop | 0 RPM | 0 RPM | |
 
-## The code
+<figure><img src="../../.gitbook/assets/tutorial-double-flywheel-spin.gif" alt="Animation of a ball passing between an upper and a lower flywheel, three times. With both at 3000 RPM the ball leaves with no spin and flies straight. With the lower flywheel faster, 3500 against 2500 RPM, it leaves with backspin and its path lifts. With the upper flywheel faster it leaves with topspin and its path dips."><figcaption><p>The faster wheel drags its side of the ball forward. Lower wheel faster is backspin; upper wheel faster is topspin.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+/** Both flywheels at the same speed: no spin. */
+public Command neutralSpinShot() {
+  return setFlywheelSpeeds(RPM.of(3000), RPM.of(3000));
+}
+
+/** The lower flywheel faster: backspin. */
+public Command backspinShot() {
+  return setFlywheelSpeeds(RPM.of(2500), RPM.of(3500));
+}
+
+/** The upper flywheel faster: topspin. */
+public Command topspinShot() {
+  return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
+}
+
+/** Bring both flywheels to a stop. */
+public Command stopFlywheels() {
+  return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+/** Both flywheels at the same speed: no spin. */
+public Command neutralSpinShot() {
+  return setFlywheelSpeeds(RPM.of(3000), RPM.of(3000));
+}
+
+/** The lower flywheel faster: backspin. */
+public Command backspinShot() {
+  return setFlywheelSpeeds(RPM.of(2500), RPM.of(3500));
+}
+
+/** The upper flywheel faster: topspin. */
+public Command topspinShot() {
+  return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
+}
+
+/** Bring both flywheels to a stop. */
+public Command stopFlywheels() {
+  return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+/** Both flywheels at the same speed: no spin. */
+wpi::cmd::CommandPtr NeutralSpinShot();
+
+/** The lower flywheel faster: backspin. */
+wpi::cmd::CommandPtr BackspinShot();
+
+/** The upper flywheel faster: topspin. */
+wpi::cmd::CommandPtr TopspinShot();
+
+/** Bring both flywheels to a stop. */
+wpi::cmd::CommandPtr StopFlywheels();
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr DoubleFlywheelSubsystem::NeutralSpinShot() {
+  return SetFlywheelSpeeds(3000_rpm, 3000_rpm);
+}
+
+wpi::cmd::CommandPtr DoubleFlywheelSubsystem::BackspinShot() {
+  return SetFlywheelSpeeds(2500_rpm, 3500_rpm);
+}
+
+wpi::cmd::CommandPtr DoubleFlywheelSubsystem::TopspinShot() {
+  return SetFlywheelSpeeds(3500_rpm, 2500_rpm);
+}
+
+wpi::cmd::CommandPtr DoubleFlywheelSubsystem::StopFlywheels() {
+  return SetFlywheelSpeeds(0_rpm, 0_rpm);
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the speeds to the shots your robot needs, and add a preset for each one.
+
+## 3. Know when it is ready
+
+This tells you when both wheels have reached their speeds, so that you can hold the feeder back until the shooter is ready.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/DoubleFlywheelSubsystem.java" %}
+```java
+/** True when both flywheels are within the tolerance of their target speeds. */
+public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+  return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+      && lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/DoubleFlywheelMechanism.java" %}
+```java
+/** True when both flywheels are within the tolerance of their target speeds. */
+public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+  return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+      && lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
+```cpp
+/** True when both flywheels are within the tolerance of their target speeds. */
+bool AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+                      wpi::units::revolutions_per_minute_t lowerTarget,
+                      wpi::units::revolutions_per_minute_t tolerance);
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
+```cpp
+bool DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+                                               wpi::units::revolutions_per_minute_t lowerTarget,
+                                               wpi::units::revolutions_per_minute_t tolerance) {
+  return wpi::units::math::abs(m_upperMotor->GetMechanismVelocity() - upperTarget) <= tolerance &&
+         wpi::units::math::abs(m_lowerMotor->GetMechanismVelocity() - lowerTarget) <= tolerance;
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [How to shoot with a Shooter?](../../how-to/how-to-shoot-with-a-shooter.md) does the same for one flywheel.
+
+## 4. Create it and bind the buttons
+
+`onTrue` starts a shot with one press. The shot keeps running after the button is released, until another shot or the stop button replaces it.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+import first.robot.subsystems.DoubleFlywheelSubsystem;
+
+private final DoubleFlywheelSubsystem doubleFlywheel = new DoubleFlywheelSubsystem();
+
+// Bottom (A): no spin. Right (B): backspin. Left (X): topspin. Top (Y): stop.
+driverController.faceDown().onTrue(doubleFlywheel.neutralSpinShot());
+driverController.faceRight().onTrue(doubleFlywheel.backspinShot());
+driverController.faceLeft().onTrue(doubleFlywheel.topspinShot());
+driverController.faceUp().onTrue(doubleFlywheel.stopFlywheels());
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="ExampleTeleop.java" %}
+```java
+// Bottom (A): no spin. Right (B): backspin. Left (X): topspin. Top (Y): stop.
+robot.exampleController.faceDown().onTrue(robot.doubleFlywheel.neutralSpinShot());
+robot.exampleController.faceRight().onTrue(robot.doubleFlywheel.backspinShot());
+robot.exampleController.faceLeft().onTrue(robot.doubleFlywheel.topspinShot());
+robot.exampleController.faceUp().onTrue(robot.doubleFlywheel.stopFlywheels());
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/RobotContainer.hpp" %}
+```cpp
+#include "subsystems/DoubleFlywheelSubsystem.hpp"
+
+DoubleFlywheelSubsystem doubleFlywheel;
+```
+{% endcode %}
+
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// Bottom (A): no spin. Right (B): backspin. Left (X): topspin. Top (Y): stop.
+driverController.FaceDown().OnTrue(doubleFlywheel.NeutralSpinShot());
+driverController.FaceRight().OnTrue(doubleFlywheel.BackspinShot());
+driverController.FaceLeft().OnTrue(doubleFlywheel.TopspinShot());
+driverController.FaceUp().OnTrue(doubleFlywheel.StopFlywheels());
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Pick your own buttons.
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -596,10 +868,6 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 </code></pre>
 {% endtab %}
 {% endtabs %}
-
-The buttons use `onTrue`, so one press starts a shot and it keeps running after the button is released, until another shot or the stop button replaces it.
-
-`atTargetVelocity(...)` tells you when both wheels have reached their speeds. Use it to hold the feeder back until the shooter is ready, the same way [How to shoot with a Shooter?](../../how-to/how-to-shoot-with-a-shooter.md) does for one flywheel.
 
 Previous: [Step 1: Two motor controllers](motor-controllers.md)
 

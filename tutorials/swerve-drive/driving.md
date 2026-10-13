@@ -14,9 +14,275 @@ Three things are added in this step:
 * **`driveToPose(pose)`**, which uses the two PID controllers from step 2 to drive to a pose on the field.
 * **A `SwerveInputStream`**, which turns the raw stick values into field relative chassis speeds, with the deadband, the cubing and the alliance flip already applied.
 
+{% hint style="success" %}
+**In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
+{% endhint %}
+
+## 1. Read the sticks, and drive with them
+
+A `SwerveInputStream` turns the raw stick values into field relative chassis speeds, with the deadband, the cubing and the alliance flip already applied. A drive command gives those speeds to the drive every loop.
+
 <figure><img src="../../.gitbook/assets/swerve-input-stream-sticks.gif" alt="Animation of two controller sticks, the ChassisVelocities they produce, and a robot on a field. Left stick forward gives positive vx and the robot moves away from the driver station. Left stick left gives positive vy and the robot moves left. A diagonal push gives both. Right stick left gives a positive omega and the robot turns counter-clockwise"><figcaption><p>How each stick movement becomes a field relative velocity.</p></figcaption></figure>
 
-## The code
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
+```java
+/** Drive with field relative chassis speeds. */
+public Command drive(Supplier<ChassisVelocities> speedsSupplier) {
+  return run(() -> drive.setFieldRelativeChassisSpeeds(speedsSupplier.get()))
+      .withName("Field Oriented Drive");
+}
+
+/** Turn three controller axes into field relative chassis speeds. */
+public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier translationX, DoubleSupplier translationY,
+                                                  DoubleSupplier rotation) {
+  return SwerveInputStream.of(drive, translationX, translationY)
+      .withControllerRotationAxis(rotation)
+      // What a full stick means.
+      .withMaximumLinearVelocity(MetersPerSecond.of(1))
+      .withMaximumAngularVelocity(DegreesPerSecond.of(360))
+      // Ignore a stick that is barely off center.
+      .withDeadband(0.01)
+      // Cube the sticks, for finer control at low speed.
+      .withCubeTranslationControllerAxis()
+      .withCubeRotationControllerAxis()
+      // Forward on the stick is away from your own alliance wall.
+      .withAllianceRelativeControl()
+      // Publish the stream's inputs and outputs, and allow live tuning of it.
+      .withTelemetry("Driver", TelemetryVerbosity.HIGH);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
+```java
+/** Drive with field relative chassis speeds. */
+public Command drive(Supplier<ChassisVelocities> speedsSupplier) {
+  return run(coroutine -> {
+    while (true) {
+      drive.setFieldRelativeChassisSpeeds(speedsSupplier.get());
+      coroutine.yield();
+    }
+  }).named("Field Oriented Drive");
+}
+
+/** Turn three controller axes into field relative chassis speeds. */
+public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier translationX, DoubleSupplier translationY,
+                                                  DoubleSupplier rotation) {
+  return SwerveInputStream.of(drive, translationX, translationY)
+      .withControllerRotationAxis(rotation)
+      // What a full stick means.
+      .withMaximumLinearVelocity(MetersPerSecond.of(1))
+      .withMaximumAngularVelocity(DegreesPerSecond.of(360))
+      // Ignore a stick that is barely off center.
+      .withDeadband(0.01)
+      // Cube the sticks, for finer control at low speed.
+      .withCubeTranslationControllerAxis()
+      .withCubeRotationControllerAxis()
+      // Forward on the stick is away from your own alliance wall.
+      .withAllianceRelativeControl()
+      // Publish the stream's inputs and outputs, and allow live tuning of it.
+      .withTelemetry("Driver", TelemetryVerbosity.HIGH);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/SwerveSubsystem.hpp" %}
+```cpp
+/** Drive field relative from three controller axes. */
+wpi::cmd::CommandPtr DriveWithSticks(std::function<double()> translationX,
+                                     std::function<double()> translationY,
+                                     std::function<double()> rotation);
+
+// Turns the controller axes into field relative chassis speeds.
+std::optional<yams::mechanisms::swerve::utility::SwerveInputStream<4>> m_inputStream;
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/SwerveSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr SwerveSubsystem::DriveWithSticks(std::function<double()> translationX,
+                                                      std::function<double()> translationY,
+                                                      std::function<double()> rotation) {
+  m_inputStream.emplace(
+      utility::SwerveInputStream<4>::Of(m_drive.value(), translationX, translationY)
+          .WithControllerRotationAxis(rotation)
+          // What a full stick means.
+          .WithMaximumLinearVelocity(1_mps)
+          .WithMaximumAngularVelocity(360_deg_per_s)
+          // Ignore a stick that is barely off center.
+          .WithDeadband(0.01)
+          // Cube the sticks, for finer control at low speed.
+          .WithCubeTranslationControllerAxis()
+          .WithCubeRotationControllerAxis()
+          // Forward on the stick is away from your own alliance wall.
+          .WithAllianceRelativeControl()
+          // Publish the stream's inputs and outputs, and allow live tuning of it.
+          .WithTelemetry("Driver", Cfg::TelemetryVerbosity::HIGH));
+
+  return Run([this] { m_drive->SetFieldRelativeChassisSpeeds(m_inputStream->Get()); })
+      .WithName("Field Oriented Drive");
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Set the two maximum velocities to what a full stick should mean on your robot.
+
+Want the details? [Swerve Input Stream](../../details/swerve-input-stream.md)
+
+## 2. Drive to a pose, and lock the wheels
+
+`driveToPose(pose)` uses the two PID controllers from step 2 to drive to a pose on the field. `lock()` turns every module toward the robot center, the X pattern, and holds it there.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
+```java
+/** Drive to a pose on the field. */
+public Command driveToPose(Pose2d pose) {
+  return drive.driveToPose(pose);
+}
+
+/** Turn the wheels into an X, which resists being pushed. */
+public Command lock() {
+  return run(drive::lockPose);
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
+```java
+/** Drive to a pose on the field. */
+public Command driveToPose(Pose2d pose) {
+  return drive.driveToPose(pose);
+}
+
+/** Turn the wheels into an X, which resists being pushed. */
+public Command lock() {
+  return run(coroutine -> {
+    while (true) {
+      drive.lockPose();
+      coroutine.yield();
+    }
+  }).named("Swerve Lock");
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/subsystems/SwerveSubsystem.hpp" %}
+```cpp
+/** Drive to a pose on the field. */
+wpi::cmd::CommandPtr DriveToPose(wpi::math::Pose2d pose);
+
+/** Turn the wheels into an X, which resists being pushed. */
+wpi::cmd::CommandPtr Lock();
+```
+{% endcode %}
+
+{% code title="cpp/subsystems/SwerveSubsystem.cpp" %}
+```cpp
+wpi::cmd::CommandPtr SwerveSubsystem::DriveToPose(wpi::math::Pose2d pose) {
+  return m_drive->DriveToPose(pose);
+}
+
+wpi::cmd::CommandPtr SwerveSubsystem::Lock() {
+  return Run([this] { m_drive->LockPose(); });
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+Want the details? [Auto-align](../../details/swerve-drive.md#auto-align)
+
+## 3. Create it, set the default command and bind a button
+
+Pushing a stick forward or to the left reads **negative** on a controller, so each axis is negated to match WPILib's convention: +X forward, +Y left, and counterclockwise positive.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+import first.robot.subsystems.SwerveSubsystem;
+
+private final SwerveSubsystem drive = new SwerveSubsystem();
+
+// The left stick translates and the right stick's X axis rotates.
+// Pushing a stick forward or left reads negative, so negate each axis to match
+// WPILib's convention: +X forward, +Y left, counterclockwise positive.
+drive.setDefaultCommand(drive.drive(
+    drive.getChassisSpeedsSupplier(
+        () -> -driverController.getLeftY(),
+        () -> -driverController.getLeftX(),
+        () -> -driverController.getRightX())));
+
+// Drive to a pose on the field while the left bumper is held.
+driverController.leftBumper().whileTrue(drive.driveToPose(
+    new Pose2d(Meters.of(3), Meters.of(3), Rotation2d.fromDegrees(30))));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="ExampleTeleop.java" %}
+```java
+// The left stick translates and the right stick's X axis rotates.
+// Pushing a stick forward or left reads negative, so negate each axis to match
+// WPILib's convention: +X forward, +Y left, counterclockwise positive.
+robot.drive.setDefaultCommand(robot.drive.drive(
+    robot.drive.getChassisSpeedsSupplier(
+        () -> -robot.exampleController.getLeftY(),
+        () -> -robot.exampleController.getLeftX(),
+        () -> -robot.exampleController.getRightX())));
+
+// Drive to a pose on the field while the left bumper is held.
+robot.exampleController.leftBumper().whileTrue(robot.drive.driveToPose(
+    new Pose2d(Meters.of(3), Meters.of(3), Rotation2d.fromDegrees(30))));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="include/RobotContainer.hpp" %}
+```cpp
+#include "subsystems/SwerveSubsystem.hpp"
+
+SwerveSubsystem drive;
+```
+{% endcode %}
+
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// The left stick translates and the right stick's X axis rotates.
+// Pushing a stick forward or left reads negative, so negate each axis to match
+// WPILib's convention: +X forward, +Y left, counterclockwise positive.
+drive.SetDefaultCommand(drive.DriveWithSticks(
+    [this] { return -driverController.GetLeftY(); },
+    [this] { return -driverController.GetLeftX(); },
+    [this] { return -driverController.GetRightX(); }));
+
+// Drive to a pose on the field while the left bumper is held.
+driverController.LeftBumper().WhileTrue(
+    drive.DriveToPose(wpi::math::Pose2d{3_m, 3_m, wpi::math::Rotation2d{30_deg}}));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**For your robot:** Change the pose to somewhere useful on your field, and bind `lock()` to a button if you want it.
+
+## The complete file
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -792,8 +1058,6 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 </code></pre>
 {% endtab %}
 {% endtabs %}
-
-Pushing a stick forward or to the left reads **negative** on a controller, so each axis is negated to match WPILib's convention: +X forward, +Y left, and counterclockwise positive.
 
 These methods use `ChassisVelocities`, which is WPILib 2027's name for `ChassisSpeeds`. `lock()` turns every module toward the robot center, the X pattern, and holds it there.
 
