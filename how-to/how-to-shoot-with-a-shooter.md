@@ -2,6 +2,8 @@
 
 A flywheel shooter's effectiveness depends on reaching a stable velocity setpoint before the game piece enters the shooter. `FlyWheel` exposes a velocity trigger (`near`) so you can gate game piece injection on whether the wheel has spun up, rather than using a fixed time delay.
 
+<figure><img src="../.gitbook/assets/howto-shooter-at-speed.gif" alt="Animation of a flywheel spinning up to 3000 RPM, with a band of 100 RPM around the setpoint. A feeder started by a fixed delay of 0.5 seconds feeds at 2252 RPM, before the wheel is ready. A feeder started by the near trigger feeds at 2900 RPM, once the wheel is inside the band."><figcaption><p>A fixed delay feeds whether or not the wheel is ready. The trigger waits for the wheel.</p></figcaption></figure>
+
 ## Create `Command`s with our `Shooter`
 
 We use the `FlyWheel` class as a interface to create commands!
