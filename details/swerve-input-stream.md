@@ -317,20 +317,30 @@ The lookahead assumes the robot keeps its current velocity, so it works best whi
 
 `withAimFeedforward(SimpleMotorFeedforward)` adds a feedforward to the aim rotation. The rotation controller only reacts to heading error, so while the robot drives past a target it trails a little behind. The feedforward is calculated from the robot's current angular velocity to the angular velocity the controller asks for, and its result is added to that angular velocity.
 
+<figure><img src="../.gitbook/assets/sis-aim-feedforward.gif" alt="Animation of two robots driving back and forth past a target. A grey dashed line shows the direction to the target and an orange arrow shows where each robot faces. The robot with only the rotation controller trails the target by about 20 degrees as it passes in front of it. The robot with an aim feedforward trails by about 9 degrees."><figcaption><p>The lag is largest as the robot passes in front of the target. A feedforward shrinks it.</p></figcaption></figure>
+
 ```java
 input.withAimFeedforward(new SimpleMotorFeedforward(0, 0.1));
 ```
 
-Start with a small `kV` and raise it until the robot stops trailing the target. Too much makes the heading overshoot.
+**How to use it:** hold the aim button and drive sideways past the target while you watch the heading, or [`aimLock`](#aim-lock). If the robot trails the target, start with a small `kV` and raise it until it keeps up. Too much makes the heading overshoot and wobble. `kS` and `kA` can usually stay at 0.
+
+The feedforward does not remove the lag completely, and it is no substitute for a rotation controller that is tuned well. Tune the controller in [`SwerveDriveConfig`](mechanism-configs/swerve-drive-config.md) first.
 
 #### Aim heading offset
 
 `withAimHeadingOffset(Rotation2d)` rotates the aim heading, for a shooter that does not point out of the front of the robot. The offset is counter-clockwise positive. `withAimHeadingOffset(Rotation2d, BooleanSupplier)` only applies it while the supplier is true.
 
+<figure><img src="../.gitbook/assets/sis-aim-heading-offset.gif" alt="Animation of two robots driving left and right in front of a target. Each has a shooter on its back, drawn in orange. With no offset the front of the robot faces the target and the shooter faces away from it. With an offset of 180 degrees the robot is turned around, so the shooter faces the target."><figcaption><p><code>withAim</code> points the front of the robot at the target. The offset turns the side with the shooter to it instead.</p></figcaption></figure>
+
 ```java
 // The shooter points out of the back of the robot.
 input.withAimHeadingOffset(Rotation2d.fromDegrees(180));
 ```
+
+**How to use it:** the offset is the angle from the front of the robot to the direction the shooter points, counter-clockwise positive. A shooter out of the back is 180 degrees, out of the left side is 90 degrees, and out of the right side is -90 degrees. A small offset, such as 2 degrees, also works as a trim for a shooter that throws slightly to one side.
+
+The version with a `BooleanSupplier` lets one stream serve two mechanisms: aim the front at a target for an intake, and turn the offset on while a shooter on the back is in use.
 
 #### Aim lock
 
