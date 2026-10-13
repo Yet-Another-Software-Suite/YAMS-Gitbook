@@ -39,7 +39,7 @@ YAMS ships as two vendordeps, one per WPILib command framework. Install **only o
 | Commands v2 (`org.wpilib.command2`, Java and C++) | Yet Another Mechanism System (Commands v2) | `https://cdn.yassrobotics.com/yams_commands2.json` |
 | Commands v3 (`org.wpilib.command3`, Java only) | Yet Another Mechanism System (Commands v3) | `https://cdn.yassrobotics.com/yams_commands3.json` |
 
-If you are not sure which one you need, use Commands v2. The tutorials in these docs use Commands v2.
+If you are not sure which one you need, use Commands v2. The [tutorials](tutorials/project-setup.md) have a tab for Java with Commands v2, Java with Commands v3, and C++.
 
 {% tabs %}
 {% tab title="Online" %}

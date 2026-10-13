@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 444" width="760" height="444" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Three ways to follow the tutorials</title>
+<desc id="d">A table comparing the three ways to follow the tutorials. Java with Commands v2 uses the Command v2 Robot template and the YAMS Commands v2 vendordep; the mechanism lives in a subsystem class that extends SubsystemBase, buttons are bound in RobotContainer.java, and the scheduler calls periodic. Java with Commands v3 uses the Command v3 Robot template and the YAMS Commands v3 vendordep; the mechanism lives in a class that implements Mechanism, buttons are bound in ExampleTeleop.java, and you call periodic yourself from Robot.robotPeriodic. C++ uses the Command v2 Robot template for C++ and the YAMS Commands v2 vendordep; the mechanism lives in a subsystem header and source file, buttons are bound in RobotContainer.cpp, and the scheduler calls periodic.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="444" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="412.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Three ways to follow the tutorials</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The YAMS calls are the same in all three. What changes is the project around them.</text>
+<text x="34.0" y="130.0" font-size="11" font-weight="700" text-anchor="start" fill="#52606d" >WPILib template</text>
+<text x="34.0" y="188.0" font-size="11" font-weight="700" text-anchor="start" fill="#52606d" >YAMS vendordep</text>
+<line x1="34.0" y1="160.0" x2="726.0" y2="160.0" stroke="#cbd2d9" stroke-width="1" stroke-linecap="round"/>
+<text x="34.0" y="246.0" font-size="11" font-weight="700" text-anchor="start" fill="#52606d" >The mechanism lives in</text>
+<line x1="34.0" y1="218.0" x2="726.0" y2="218.0" stroke="#cbd2d9" stroke-width="1" stroke-linecap="round"/>
+<text x="34.0" y="304.0" font-size="11" font-weight="700" text-anchor="start" fill="#52606d" >Buttons are bound in</text>
+<line x1="34.0" y1="276.0" x2="726.0" y2="276.0" stroke="#cbd2d9" stroke-width="1" stroke-linecap="round"/>
+<text x="34.0" y="362.0" font-size="11" font-weight="700" text-anchor="start" fill="#52606d" >Who calls periodic()</text>
+<line x1="34.0" y1="334.0" x2="726.0" y2="334.0" stroke="#cbd2d9" stroke-width="1" stroke-linecap="round"/>
+<rect x="190.0" y="76.0" width="172.0" height="30.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="276.0" y="96.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Java, Commands v2</text>
+<text x="276.0" y="122.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Command v2 Robot</text>
+<text x="276.0" y="137.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >language: Java</text>
+<text x="276.0" y="180.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Yet Another Mechanism</text>
+<text x="276.0" y="195.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >System (Commands v2)</text>
+<text x="276.0" y="238.0" font-size="10.3" font-weight="700" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">subsystems/ArmSubsystem.java</text>
+<text x="276.0" y="253.0" font-size="9.8" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">extends SubsystemBase</text>
+<text x="276.0" y="304.0" font-size="10.3" font-weight="700" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">RobotContainer.java</text>
+<text x="276.0" y="354.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >The scheduler,</text>
+<text x="276.0" y="369.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >for every subsystem</text>
+<rect x="372.0" y="76.0" width="172.0" height="30.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="458.0" y="96.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Java, Commands v3</text>
+<text x="458.0" y="122.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Command v3 Robot</text>
+<text x="458.0" y="137.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >language: Java</text>
+<text x="458.0" y="180.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Yet Another Mechanism</text>
+<text x="458.0" y="195.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >System (Commands v3)</text>
+<text x="458.0" y="238.0" font-size="10.3" font-weight="700" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">mechanisms/ArmMechanism.java</text>
+<text x="458.0" y="253.0" font-size="9.8" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">implements Mechanism</text>
+<text x="458.0" y="304.0" font-size="10.3" font-weight="700" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">ExampleTeleop.java</text>
+<text x="458.0" y="354.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >You, from</text>
+<text x="458.0" y="369.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >Robot.robotPeriodic()</text>
+<rect x="554.0" y="76.0" width="172.0" height="30.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="640.0" y="96.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >C++</text>
+<text x="640.0" y="122.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Command v2 Robot</text>
+<text x="640.0" y="137.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >language: C++</text>
+<text x="640.0" y="180.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Yet Another Mechanism</text>
+<text x="640.0" y="195.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >System (Commands v2)</text>
+<text x="640.0" y="238.0" font-size="10.3" font-weight="700" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">subsystems/ArmSubsystem.hpp</text>
+<text x="640.0" y="253.0" font-size="9.8" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">and ArmSubsystem.cpp</text>
+<text x="640.0" y="304.0" font-size="10.3" font-weight="700" text-anchor="middle" fill="#1f2933" font-family="Consolas, Menlo, monospace">RobotContainer.cpp</text>
+<text x="640.0" y="354.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >The scheduler,</text>
+<text x="640.0" y="369.0" font-size="10.3" font-weight="400" text-anchor="middle" fill="#52606d" >for every subsystem</text>
+<text x="34.0" y="412.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Every tutorial page has a tab for each of the three. Pick one and stay in it.</text>
+</svg>

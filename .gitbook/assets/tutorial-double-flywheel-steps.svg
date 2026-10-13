@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 324" width="760" height="324" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">What you build in this tutorial</title>
+<desc id="d">The three steps of the double flywheel tutorial. Step 1, two motor controllers: one config and one SmartMotorController for each flywheel. Step 2, commands and buttons: one command sets both speeds, with presets for no spin, backspin and topspin. Step 3, spin control and followers: a spin ratio between the wheels, and what to do when they share a shaft.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="324" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="292.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >What you build in this tutorial</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Each step is one page. Each adds a layer on top of the one before.</text>
+<rect x="34.0" y="78.0" width="692.0" height="62.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<circle cx="66.0" cy="109.0" r="17" fill="#147d6f" stroke="none" stroke-width="1.6" />
+<text x="66.0" y="115.0" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff" >1</text>
+<text x="98.0" y="104.0" font-size="13.5" font-weight="700" text-anchor="start" fill="#1f2933" >Two motor controllers</text>
+<text x="98.0" y="123.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >One config and one SmartMotorController for each flywheel.</text>
+<text x="710.0" y="114.0" font-size="10.5" font-weight="400" text-anchor="end" fill="#52606d" font-family="Consolas, Menlo, monospace">2 x (TalonFX + SmartMotorControllerConfig)</text>
+<line x1="380.0" y1="142.0" x2="380.0" y2="153.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<rect x="34.0" y="156.0" width="692.0" height="62.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<circle cx="66.0" cy="187.0" r="17" fill="#3e6da8" stroke="none" stroke-width="1.6" />
+<text x="66.0" y="193.0" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff" >2</text>
+<text x="98.0" y="182.0" font-size="13.5" font-weight="700" text-anchor="start" fill="#1f2933" >Commands and buttons</text>
+<text x="98.0" y="201.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >One command sets both speeds. Presets give no spin, backspin or topspin.</text>
+<text x="710.0" y="192.0" font-size="10.5" font-weight="400" text-anchor="end" fill="#52606d" font-family="Consolas, Menlo, monospace">setFlywheelSpeeds(upper, lower)</text>
+<line x1="380.0" y1="220.0" x2="380.0" y2="231.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<rect x="34.0" y="234.0" width="692.0" height="62.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<circle cx="66.0" cy="265.0" r="17" fill="#c2630b" stroke="none" stroke-width="1.6" />
+<text x="66.0" y="271.0" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff" >3</text>
+<text x="98.0" y="260.0" font-size="13.5" font-weight="700" text-anchor="start" fill="#1f2933" >Spin control and followers</text>
+<text x="98.0" y="279.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >A spin ratio between the wheels, and what to do when they share a shaft.</text>
+<text x="710.0" y="270.0" font-size="10.5" font-weight="400" text-anchor="end" fill="#52606d" font-family="Consolas, Menlo, monospace">setSpinShot(speed, ratio)</text>
+</svg>

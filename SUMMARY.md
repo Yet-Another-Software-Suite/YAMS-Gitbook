@@ -6,11 +6,30 @@
 
 ## Tutorials
 
+* [Create a project and install YAMS](tutorials/project-setup.md)
 * [Arm](tutorials/arm.md)
+  * [Step 1: The motor controller](tutorials/arm/motor-controller.md)
+  * [Step 2: The arm](tutorials/arm/mechanism.md)
+  * [Step 3: Commands and buttons](tutorials/arm/commands.md)
+  * [Step 4: Simulate it](tutorials/arm/simulate.md)
 * [Elevator](tutorials/elevator.md)
+  * [Step 1: The motor controller](tutorials/elevator/motor-controller.md)
+  * [Step 2: The elevator](tutorials/elevator/mechanism.md)
+  * [Step 3: Commands and buttons](tutorials/elevator/commands.md)
+  * [Step 4: Simulate it](tutorials/elevator/simulate.md)
 * [Shooter/FlyWheels](tutorials/shooter-flywheels.md)
+  * [Step 1: The motor controller](tutorials/shooter-flywheels/motor-controller.md)
+  * [Step 2: The flywheel](tutorials/shooter-flywheels/mechanism.md)
+  * [Step 3: Commands and buttons](tutorials/shooter-flywheels/commands.md)
+  * [Step 4: Simulate it](tutorials/shooter-flywheels/simulate.md)
 * [Double FlyWheel](tutorials/double-flywheel.md)
+  * [Step 1: Two motor controllers](tutorials/double-flywheel/motor-controllers.md)
+  * [Step 2: Commands and buttons](tutorials/double-flywheel/commands.md)
+  * [Step 3: Spin control and followers](tutorials/double-flywheel/spin-and-followers.md)
 * [Swerve Drive](tutorials/swerve-drive.md)
+  * [Step 1: The module motors](tutorials/swerve-drive/module-motors.md)
+  * [Step 2: The modules and the drive](tutorials/swerve-drive/modules-and-drive.md)
+  * [Step 3: Driving](tutorials/swerve-drive/driving.md)
 
 ## Explanation
 
