@@ -2,7 +2,7 @@
 
 An `Arm`'s position setpoint is an `Angle` expressed in WPILib's typed unit system (`Angle`, `org.wpilib.units.measure.Angle`). Understanding the difference between `run()`, which tracks the setpoint continuously, and `runTo()`, which ends the command once the setpoint is reached within tolerance, shapes how you bind controls in `RobotContainer`.
 
-<figure><img src="../.gitbook/assets/howto-arm-run-vs-runto.gif" alt="Animation of the same arm moving to 45 degrees with two commands. With run the command is still running after the arm arrives. With runTo and a tolerance of 3 degrees the command ends once the arm has stayed inside the tolerance for 0.1 seconds. In both the motor keeps holding 45 degrees."><figcaption><p><code>run()</code> keeps running until something interrupts it. <code>runTo()</code> ends at the setpoint. Neither one stops the motor.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/howto-arm-run-vs-runto.gif" alt="Animation of the same arm moving to 45 degrees with two commands, with a default command of run to 0 degrees. With run the command keeps running after the arm arrives, and the arm stays at 45 degrees. With runTo and a tolerance of 3 degrees the command ends once the arm has stayed inside the tolerance for 0.1 seconds, then the default command takes over and moves the arm back to 0 degrees."><figcaption><p><code>run()</code> keeps running until something interrupts it. <code>runTo()</code> ends at the setpoint, and the default command takes over.</p></figcaption></figure>
 
 ## Create `Command`s with our `Arm`
 
