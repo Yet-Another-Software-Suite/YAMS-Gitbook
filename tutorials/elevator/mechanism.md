@@ -162,28 +162,33 @@ public void simulationPeriodic() {
 {% code title="Robot.java" %}
 ```java
 import org.wpilib.telemetry.Telemetry;
-
 import first.robot.mechanisms.ElevatorMechanism;
 
-final ElevatorMechanism elevator = new ElevatorMechanism();
+public class Robot extends OpModeRobot {
+  // ...
+  final ElevatorMechanism elevator = new ElevatorMechanism();
+  // ...
 
-// The scheduler that runs every command.
-private final Scheduler scheduler = Scheduler.getDefault();
+  // The scheduler that runs every command.
+  private final Scheduler scheduler = Scheduler.getDefault();
 
-@Override
-public void robotPeriodic() {
-  // Runs every loop, on the robot and in simulation.
-  // Update the mechanism before the scheduler runs its commands.
-  elevator.periodic();
-  scheduler.run();
-  // Publish the scheduler, so that a dashboard shows which commands are running.
-  Telemetry.log("Scheduler", scheduler, Scheduler.proto);
-}
+  // ...
 
-@Override
-public void simulationPeriodic() {
-  // Runs every loop, in simulation only.
-  elevator.simulationPeriodic();
+  @Override
+  public void robotPeriodic() {
+    // Runs every loop, on the robot and in simulation.
+    // Update the mechanism before the scheduler runs its commands.
+    elevator.periodic();
+    scheduler.run();
+    // Publish the scheduler, so that a dashboard shows which commands are running.
+    Telemetry.log("Scheduler", scheduler, Scheduler.proto);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // Runs every loop, in simulation only.
+    elevator.simulationPeriodic();
+  }
 }
 ```
 {% endcode %}

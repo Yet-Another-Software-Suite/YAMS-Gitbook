@@ -131,9 +131,15 @@ public Command hold(Distance height) {
 
 {% code title="Robot.java" %}
 ```java
-public Robot() {
-  // When no other command is using the elevator, hold it at the bottom.
-  elevator.setDefaultCommand(elevator.hold(Meters.of(0)));
+public class Robot extends OpModeRobot {
+  // ...
+
+  public Robot() {
+    // When no other command is using the elevator, hold it at the bottom.
+    elevator.setDefaultCommand(elevator.hold(Meters.of(0)));
+  }
+
+  // ...
 }
 ```
 {% endcode %}

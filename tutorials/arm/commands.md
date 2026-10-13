@@ -131,9 +131,15 @@ public Command hold(Angle angle) {
 
 {% code title="Robot.java" %}
 ```java
-public Robot() {
-  // When no other command is using the arm, hold it at 0 degrees.
-  arm.setDefaultCommand(arm.hold(Degrees.of(0)));
+public class Robot extends OpModeRobot {
+  // ...
+
+  public Robot() {
+    // When no other command is using the arm, hold it at 0 degrees.
+    arm.setDefaultCommand(arm.hold(Degrees.of(0)));
+  }
+
+  // ...
 }
 ```
 {% endcode %}

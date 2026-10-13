@@ -131,9 +131,15 @@ public Command idle() {
 
 {% code title="Robot.java" %}
 ```java
-public Robot() {
-  // When no other command is using the shooter, let the flywheel coast.
-  shooter.setDefaultCommand(shooter.idle());
+public class Robot extends OpModeRobot {
+  // ...
+
+  public Robot() {
+    // When no other command is using the shooter, let the flywheel coast.
+    shooter.setDefaultCommand(shooter.idle());
+  }
+
+  // ...
 }
 ```
 {% endcode %}
