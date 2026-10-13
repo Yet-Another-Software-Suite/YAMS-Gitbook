@@ -23,7 +23,7 @@ The WPILib pages on fire control are a work in progress in [wpilib-docs #3242](h
 Only the time of flight is repeated. The flywheel speed is read from the table once, at the end, for the distance to the final virtual target. That is why you measured the time of flight in [Strategy 1](lookup-table.md): with it in the table, the code never needs a physics model of the shot.
 
 {% hint style="success" %}
-**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), is the best companion to these pages. Part 1 covers the vector math. Part 2 is the practical side: building the lookup table, getting the shot's speed from the time of flight, what to do with a hood, and how to tune the latency.
+**Read this too:** Eeshwar's blog series, [Shooting on the fly, part 1](https://blog.eeshwark.com/robotblog/shooting-on-the-fly) and [part 2](https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2), is the best companion to these pages. Part 1 explains the idea as plain vector math and then covers what goes wrong on a real robot: latency, a flywheel that slows and slips, spin and drag, and a turret that is moving. Part 2 is the practical side: building the lookup table, getting the shot's speed from the time of flight, what to do with a hood, and how to tune the latency.
 {% endhint %}
 
 ## The calculator
