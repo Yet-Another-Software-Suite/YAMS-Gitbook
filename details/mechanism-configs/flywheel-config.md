@@ -21,7 +21,7 @@ LinearVelocity  surface = config.getLinearVelocity(RPM.of(3000));
 AngularVelocity spin    = config.getAngularVelocity(MetersPerSecond.of(16));
 ```
 
-It is used for the drawing, and to convert between how fast the wheel spins and how fast its surface moves. The conversions throw if no diameter is set.
+It is used for the drawing, and to convert between how fast the wheel spins and how fast its surface moves. The conversions throw a `FlyWheelConfigurationException` if no diameter is set.
 
 **Used in:** simulation and on the real robot. The conversions work on the real robot. The drawing is simulation only.
 

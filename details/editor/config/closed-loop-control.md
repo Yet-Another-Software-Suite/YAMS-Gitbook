@@ -7,7 +7,7 @@ icon: arrows-spin
 Closed loop control is what takes a mechanism to a setpoint and holds it there. These options need [`withControlMode(ControlMode.CLOSED_LOOP)`](motor-basics.md#withcontrolmode), which is the default.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws at startup. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
 For how to find good values, see [live tuning](../../live-tuning/README.md).
@@ -46,7 +46,7 @@ Each call can name a slot, so one motor can hold several sets of gains and switc
 motor.setClosedLoopSlot(ClosedLoopControllerSlot.SLOT_1);
 ```
 
-**Not supported everywhere.** `SLOT_3` throws on a TalonFX or TalonFXS.
+**Not supported everywhere.** Selecting `SLOT_3` on a TalonFX or TalonFXS throws an `IllegalArgumentException`, and a feedforward configured for `SLOT_3` on a TalonFX throws a `SmartMotorControllerConfigurationException`.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -63,9 +63,9 @@ How close to the setpoint counts as being there.
 .withClosedLoopTolerance(Degrees.of(1))
 ```
 
-Call it after `withClosedLoopController`: it is set on the PID controllers that exist at that moment, and throws if there are none.
+Call it after `withClosedLoopController`: it is set on the PID controllers that exist at that moment, and throws a `SmartMotorControllerConfigurationException` if there are none.
 
-**Not supported everywhere.** It throws on a TalonFX or TalonFXS.
+**Not supported everywhere.** It throws a `SmartMotorControllerConfigurationException` on a TalonFX or TalonFXS.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -96,7 +96,7 @@ Caps the voltage the closed loop controller may ask for.
 .withClosedLoopControllerMaximumVoltage(Volts.of(6))
 ```
 
-**Not supported everywhere.** On a TalonFX or TalonFXS it is applied as the peak forward and reverse voltage. On a SPARK it throws unless the loop runs on the SystemCore.
+**Not supported everywhere.** On a TalonFX or TalonFXS it is applied as the peak forward and reverse voltage. On a SPARK it throws a `SmartMotorControllerConfigurationException` unless the loop runs on the SystemCore.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -131,7 +131,7 @@ Changes how often the SystemCore loop runs. The default is 20 ms.
 .withClosedLoopControlPeriod(Milliseconds.of(10))
 ```
 
-**Not supported everywhere.** It throws where it is not supported.
+**Not supported everywhere.** Where it is not supported it throws an `IllegalArgumentException` on a TalonFX, TalonFXS or Thrifty Nova, and a `SmartMotorControllerConfigurationException` on a SPARK.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |

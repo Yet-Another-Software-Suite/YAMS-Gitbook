@@ -7,7 +7,7 @@ icon: shield-halved
 These options stop a mechanism or a motor from hurting itself or the rest of the robot.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws at startup. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
 ## `withSoftLimits`
@@ -48,7 +48,7 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
-| ✅ | ✅ | ⚠️ stator limit only: a supply limit throws | ✅ |
+| ✅ | ✅ | ⚠️ stator limit only: a supply limit throws a `SmartMotorControllerConfigurationException` | ✅ |
 
 ## Ramp rates
 
@@ -67,7 +67,7 @@ A ramp rate is the last thing to reach for. It slows everything the motor does, 
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
-| ✅ | ✅ | ✅ | ⚠️ one ramp rate for both: two different values throw |
+| ✅ | ✅ | ✅ | ⚠️ one ramp rate for both: two different values throw a `SmartMotorControllerConfigurationException` |
 
 ## `withVoltageCompensation`
 
@@ -79,7 +79,7 @@ Scales the output so a duty cycle means the same voltage whatever the battery vo
 .withVoltageCompensation(Volts.of(12))
 ```
 
-**Not supported everywhere.** It throws on a TalonFX or TalonFXS. Use a voltage request instead of a duty cycle there.
+**Not supported everywhere.** It throws an `IllegalArgumentException` on a TalonFX or TalonFXS. Use a voltage request instead of a duty cycle there.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |

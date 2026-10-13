@@ -129,7 +129,7 @@ SwerveModule fl = new SwerveModule(moduleConfig);
 See [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config) for a full worked example with the rest of the `withAbsoluteEncoder`/`withLocation`/`withOptimization`/`withTelemetry` chain filled in.
 
 {% hint style="info" %}
-There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws, it's meant to be set exactly once.
+There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws an `IllegalStateException`, it's meant to be set exactly once.
 {% endhint %}
 
 ```java

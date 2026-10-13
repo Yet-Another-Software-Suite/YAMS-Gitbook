@@ -7,7 +7,7 @@ icon: compass-drafting
 Every motor has a built in encoder. Many mechanisms add an external one that knows where the mechanism is when the robot turns on.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws at startup. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
 <figure><img src="../../../.gitbook/assets/smc-encoder-chain.png" alt="A chain from left to right: the rotor with its built in relative encoder, which starts at zero each boot; the gearing set by withGearing; the mechanism; the encoder gearing set by withExternalEncoderGearing; and the external encoder, set by withExternalEncoder, which is often absolute and remembers its position."><figcaption><p>The built in encoder, the external encoder, and the gearing between them.</p></figcaption></figure>
@@ -53,13 +53,13 @@ Inverts the built in encoder. Use `withExternalEncoderInverted` for the external
 
 Most built in encoders are fixed to the rotor and follow [`withMotorInverted`](motor-basics.md#withmotorinverted), so they rarely need this.
 
-**Not supported everywhere.** `withEncoderInverted` only works on a TalonFXS and throws on every other controller. `withExternalEncoderInverted` works on every controller that has an external encoder configured.
+**Not supported everywhere.** `withEncoderInverted` only works on a TalonFXS and throws on every other controller: a `SmartMotorControllerConfigurationException` on a TalonFX, and an `IllegalArgumentException` on a SPARK or Thrifty Nova. `withExternalEncoderInverted` works on every controller that has an external encoder configured.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
 | ❌ | ✅ | ❌ | ❌ |
 
-`withExternalEncoderInverted` throws if no external encoder is configured.
+`withExternalEncoderInverted` throws a `SmartMotorControllerConfigurationException` if no external encoder is configured.
 
 ## `withExternalEncoder`
 
@@ -109,7 +109,7 @@ The reduction between the mechanism and the external encoder, for an encoder tha
 .withExternalEncoderGearing(0.5)
 ```
 
-The number is how many times the encoder turns for one turn of the mechanism: `2` means the encoder turns twice as far as the mechanism. It appears on the right of the diagram at the top of this page. It throws if no external encoder is configured.
+The number is how many times the encoder turns for one turn of the mechanism: `2` means the encoder turns twice as far as the mechanism. It appears on the right of the diagram at the top of this page. It throws a `SmartMotorControllerConfigurationException` if no external encoder is configured.
 
 ### Only gear an absolute encoder if it cannot wrap
 
@@ -139,7 +139,7 @@ Moves an absolute encoder's zero to the mechanism's zero.
 
 A negative offset is wrapped into the positive range for you. The distance version needs a [circumference](gearing-and-units.md#withmechanismcircumference).
 
-**Not supported everywhere.** On a quadrature encoder it throws.
+**Not supported everywhere.** On a quadrature encoder it throws a `SmartMotorControllerConfigurationException`.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -200,7 +200,7 @@ Chooses where an absolute encoder's reading wraps.
 
 Only `0.5` and `1` rotations are accepted. Like the zero offset, it is for absolute encoders only.
 
-**Not supported everywhere.** On a quadrature encoder it throws.
+**Not supported everywhere.** On a quadrature encoder it throws a `SmartMotorControllerConfigurationException`.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -229,9 +229,9 @@ When the loop follows the built in encoder, re-seeds it from the external encode
 .withFeedbackSynchronizationThreshold(Degrees.of(2))
 ```
 
-It is not available for distance mechanisms: it throws if a circumference is set.
+It is not available for distance mechanisms: it throws a `SmartMotorControllerConfigurationException` if a circumference is set.
 
-**Not supported everywhere.** It throws where it is not supported.
+**Not supported everywhere.** Where it is not supported it throws an `IllegalArgumentException` on a TalonFX or TalonFXS, and a `SmartMotorControllerConfigurationException` on a SPARK.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |

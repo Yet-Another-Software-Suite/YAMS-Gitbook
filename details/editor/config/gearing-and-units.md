@@ -42,7 +42,7 @@ How far the mechanism travels in one rotation of its output. Setting it lets you
 
 All of these set the same value. Use whichever matches what you can measure. [How to find your mechanism circumference?](../../../how-to/how-to-find-your-mechanism-circumference.md) covers the measuring.
 
-Several options need it first and throw without it: distance `withSoftLimits`, distance `withExternalEncoderZeroOffset`, and anything else that takes a `Distance`.
+Several options need it first and throw a `SmartMotorControllerConfigurationException` without it: distance `withSoftLimits`, distance `withExternalEncoderZeroOffset`, and anything else that takes a `Distance`.
 
 **Supported on:** every supported motor controller.
 

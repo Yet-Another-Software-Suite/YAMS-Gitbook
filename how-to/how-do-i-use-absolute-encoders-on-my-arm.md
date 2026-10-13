@@ -6,7 +6,7 @@ Absolute encoders report the physical position of a mechanism within a single ro
 
 ## Supported encoder types
 
-Each `SmartMotorController` wrapper only accepts the encoders from its own vendor ecosystem. Passing the wrong encoder type will throw an exception at runtime.
+Each `SmartMotorController` wrapper only accepts the encoders from its own vendor ecosystem. `SparkWrapper` and `NovaWrapper` throw an `IllegalArgumentException` when given an encoder type they do not support.
 
 | Wrapper | Supported absolute encoders |
 |---|---|

@@ -7,7 +7,7 @@ icon: power-off
 The options every motor needs, whatever it drives.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws at startup. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
 ## `withControlMode`
@@ -101,7 +101,7 @@ Gives YAMS a vendor config to start from, for settings YAMS has no option for. Y
 
 Each wrapper accepts only its own vendor's root config class. The classes and an example for each vendor are in [vendor configuration classes](../feature-matrix.md#vendor-configuration-classes), and [How do I use a vendor hardware config?](../../../how-to/how-do-i-use-a-vendor-hardware-config.md) walks through it.
 
-**Supported on every motor controller.** Every controller accepts a vendor config, but only its own class. Any other class throws.
+**Supported on every motor controller.** Every controller accepts a vendor config, but only its own class. Any other class throws a `SmartMotorControllerConfigurationException`.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
@@ -144,17 +144,17 @@ Nothing else changes. `arm.runTo(Degrees.of(45))` and every other command work a
 * **One request per config.** A position request replaces the one used for positions, and a velocity request replaces the one used for velocities. The other kind keeps YAMS's default.
 * **Match it to your profile.** YAMS only sets up Motion Magic when the config has a motion profile, so use a `MotionMagic` request with a profile and a `Position` or `Velocity` request without one.
 * **A `TorqueCurrentFOC` request changes what your gains mean.** The closed loop output is current in amps, not volts, so gains tuned for a voltage request do not carry over. Tune them again from the start.
-* **A `TorqueCurrentFOC` request cannot have FOC switched on or off.** It is always FOC, so the FOC toggles on the wrapper throw with one.
+* **A `TorqueCurrentFOC` request cannot have FOC switched on or off.** It is always FOC, so the FOC toggles on the wrapper throw a `SmartMotorControllerConfigurationException` with one.
 
 ### Supported requests
 
-**Not supported everywhere.** Anything that is not on this list throws when the config is applied.
+**Not supported everywhere.** Anything that is not on this list throws a `SmartMotorControllerConfigurationException` when the config is applied.
 
 | Motor controller | Position requests | Velocity requests |
 | --- | --- | --- |
 | TalonFX, TalonFXS | `PositionVoltage`, `PositionDutyCycle`, `PositionTorqueCurrentFOC`, `MotionMagicVoltage`, `MotionMagicDutyCycle`, `MotionMagicTorqueCurrentFOC`, `MotionMagicExpoVoltage`, `MotionMagicExpoDutyCycle` | `VelocityVoltage`, `VelocityDutyCycle`, `VelocityTorqueCurrentFOC`, `MotionMagicVelocityVoltage`, `MotionMagicVelocityDutyCycle`, `MotionMagicVelocityTorqueCurrentFOC` |
-| SPARK MAX / Flex | ❌ Throws | ❌ Throws |
-| Thrifty Nova | ❌ Throws | ❌ Throws |
+| SPARK MAX / Flex | ❌ Throws a `SmartMotorControllerConfigurationException` | ❌ Throws a `SmartMotorControllerConfigurationException` |
+| Thrifty Nova | ❌ Throws a `SmartMotorControllerConfigurationException` | ❌ Throws a `SmartMotorControllerConfigurationException` |
 
 On a SPARK, YAMS chooses the REV `ControlType` itself: MAXMotion when the config has a trapezoidal profile, plain position or velocity otherwise.
 

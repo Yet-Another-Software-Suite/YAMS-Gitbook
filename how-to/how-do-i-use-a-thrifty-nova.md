@@ -142,5 +142,5 @@ See [How do I use a vendor hardware config?](how-do-i-use-a-vendor-hardware-conf
 
 ## Limitations
 
-* The Nova's internal encoder cannot be inverted, so calling `withEncoderInverted(...)` throws. Invert the motor with `withMotorInverted(...)` or the external encoder with `withExternalEncoderInverted(...)` instead.
+* The Nova's internal encoder cannot be inverted, so calling `withEncoderInverted(...)` throws an `IllegalArgumentException`. Invert the motor with `withMotorInverted(...)` or the external encoder with `withExternalEncoderInverted(...)` instead.
 * Followers given to a Nova must also be `Nova` objects.

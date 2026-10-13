@@ -138,7 +138,7 @@ Pick pinions with no common factor, so the lcm is their product. Sharing a facto
 | 25 | 27 | 675 | 6.75 turns | 3.375 turns |
 | 30 | 31 | 930 | 9.30 turns | 4.65 turns |
 
-The range has to be at least your full travel, including how far the mechanism can coast past its soft limits. `getUniqueRange()` returns it, and `solve(a, b, min, max)` throws if the travel you pass is longer.
+The range has to be at least your full travel, including how far the mechanism can coast past its soft limits. `getUniqueRange()` returns it, and `solve(a, b, min, max)` throws an `IllegalArgumentException` if the travel you pass is longer.
 
 To check a pair before you build it:
 
@@ -560,7 +560,7 @@ Two failures are worth seeing in motion.
 | Angle is off by a fixed amount | Encoder A's zero is off. The result follows encoder A. |
 | Angle is off by a whole number of pinion turns | The readings were taken while moving, or encoder B's zero is off. |
 | Angle is mirrored | Both encoders count the wrong way. |
-| `solve(a, b, min, max)` throws | The travel is longer than the unique range. Choose different pinions. |
+| `solve(a, b, min, max)` throws an `IllegalArgumentException` | The travel is longer than the unique range. Choose different pinions. |
 
 ### Checklist
 

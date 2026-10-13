@@ -235,7 +235,7 @@ LQRConfig config = new LQRConfig(motor, gearing, moi)
 `LQRConfig` uses a 20ms (50Hz) period for its discrete-time calculations (see `LQRConfig.getPeriod()`), which matches the default closed loop control period of the `Notifier` that runs the controller. There is currently no setter for the LQR period, so keep the default closed loop control period when using LQR.
 
 {% hint style="info" %}
-`SmartMotorControllerConfig.withClosedLoopControlPeriod` changes how often the `Notifier` runs, but `TalonFXWrapper` and `TalonFXSWrapper` throw if it is set, and it does not change the period `LQRConfig` was built with.
+`SmartMotorControllerConfig.withClosedLoopControlPeriod` changes how often the `Notifier` runs, but `TalonFXWrapper` and `TalonFXSWrapper` throw an `IllegalArgumentException` if it is set, and it does not change the period `LQRConfig` was built with.
 {% endhint %}
 
 ## Simulation-Only LQR

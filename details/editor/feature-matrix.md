@@ -194,7 +194,7 @@ This is every option against every motor controller. What each option does, with
 | Closed Loop Max Voltage | ✅       | ✅        | ⚠️ (requires an Exponential Profile or LQR controller) | ✅ |
 
 {% hint style="warning" %}
-**Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an exception if voltage compensation is configured; it's supported on `SparkWrapper` and `NovaWrapper`.
+**Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an `IllegalArgumentException` if voltage compensation is configured; it's supported on `SparkWrapper` and `NovaWrapper`.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -465,7 +465,7 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 * Requires ThriftyLib 2027
 * All closed loop control, motion profiles and feedforwards run on the SystemCore
 * One ramp rate for open and closed loop control
-* The internal encoder cannot be inverted (`withEncoderInverted` throws)
+* The internal encoder cannot be inverted (`withEncoderInverted` throws an `IllegalArgumentException`)
 * Vendor control requests (`withVendorControlRequest`) are not supported
 * Hardware followers must be `Nova` controllers
 * Setting the encoder velocity is only supported in simulation

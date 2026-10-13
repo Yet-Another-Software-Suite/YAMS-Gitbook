@@ -44,13 +44,13 @@ SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), config);
 Three things are worth knowing before reading the option pages:
 
 * **Every `with...()` method returns the config**, so options chain. A few options depend on an earlier one and say so on their page, for example `withClosedLoopTolerance` needs a PID controller first.
-* **Options are checked when the wrapper is created.** An option that motor controller cannot do throws a `SmartMotorControllerConfigurationException` that names the method to change, so problems show up at startup and not mid-match.
+* **Options are checked when the wrapper is created.** An option that motor controller cannot do throws an exception, so problems show up at startup and not mid-match. It is usually a `SmartMotorControllerConfigurationException` that names the method to change, and for a few options an `IllegalArgumentException`. Each option says which.
 * **A mechanism adds to the config for you.** `Arm`, `Elevator`, `Pivot` and `FlyWheel` configs forward options such as `withSoftLimits` to the motor's config, so set those on the mechanism where one exists.
 
 ## Not every option works on every motor controller
 
 {% hint style="warning" %}
-Motor controllers differ. Some options only exist on one of them, and some only work in certain situations, for example only when the closed loop runs on the SystemCore. An option a controller cannot do normally throws an exception at startup, but check the table for each option you rely on.
+Motor controllers differ. Some options only exist on one of them, and some only work in certain situations, for example only when the closed loop runs on the SystemCore. An option a controller cannot do normally throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup, but check the table for each option you rely on.
 {% endhint %}
 
 Every option on the following pages has a table showing where it works. These are the ones that are **not** supported everywhere:

@@ -76,7 +76,7 @@ config.withTranslationController(new PIDController(4, 0, 0))
       .withRotationController(new PIDController(5, 0, 0));
 ```
 
-They are used by [auto-align](../swerve-drive.md#auto-align) and by the heading, aim and translation-only modes of a [`SwerveInputStream`](../swerve-input-stream.md#modes-are-chosen-automatically), which throw if no rotation controller is set. Normal stick driving does not use them.
+They are used by [auto-align](../swerve-drive.md#auto-align) and by the heading, aim and translation-only modes of a [`SwerveInputStream`](../swerve-input-stream.md#modes-are-chosen-automatically), which throw a `SwerveDriveConfigurationException` if no rotation controller is set. Normal stick driving does not use them.
 
 `withSimTranslationController` and `withSimRotationController` give different gains for simulation only. [Live tuning](../live-tuning/README.md#tune-auto-align) shows how to find the values.
 
@@ -103,7 +103,7 @@ config.withGyroVelocity(() -> pigeon.getAngularVelocityZWorld().getValue())
       .withGyroAngularVelocityScaleFactor(0.1);
 ```
 
-It needs a gyro: it throws if one is not set. `withSimGyroAngularVelocityScaleFactor` sets a different value for simulation.
+It needs a gyro: without `withGyroVelocity(...)` it reads the gyro set with `withGyro(...)`, and throws an `IllegalStateException` if that is not set either. `withSimGyroAngularVelocityScaleFactor` sets a different value for simulation.
 
 {% hint style="info" %}
 This option has no graphic of its own: it corrects the same drift shown above for `withDiscretizationTime`.
