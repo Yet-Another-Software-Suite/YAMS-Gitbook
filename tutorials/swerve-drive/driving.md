@@ -20,7 +20,7 @@ Three things are added in this step:
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Add the commands and the input stream to `SwerveSubsystem.java`, then create the subsystem, set its default command and bind the bumper in `RobotContainer.java`.
 
@@ -270,7 +270,7 @@ public class RobotContainer {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Add the commands and the input stream to `SwerveMechanism.java`, then set the default command and bind the bumper in `ExampleTeleop.java`. Setting the drive's default command in the teleop op mode means an autonomous op mode never reads the sticks.
 
@@ -485,7 +485,7 @@ public class ExampleTeleop implements OpMode {
 {% endtab %}
 
 {% tab title="C++" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 In C++ the subsystem owns the `SwerveInputStream`, because the drive command reads it every loop. `DriveWithSticks` builds the stream from three functions that read the controller and returns the command that drives with it.
 

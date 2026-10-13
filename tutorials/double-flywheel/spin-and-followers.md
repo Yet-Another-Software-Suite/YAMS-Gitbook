@@ -16,7 +16,7 @@ The average of the two speeds stays at the base speed, so changing the spin does
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 <pre class="language-java" data-title="subsystems/DoubleFlywheelSubsystem.java" data-line-numbers><code class="lang-java">package first.robot.subsystems;
 
@@ -157,7 +157,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 <pre class="language-java" data-title="mechanisms/DoubleFlywheelMechanism.java" data-line-numbers><code class="lang-java">package first.robot.mechanisms;
 
@@ -301,7 +301,7 @@ public class DoubleFlywheelMechanism implements Mechanism {
 {% endtab %}
 
 {% tab title="C++" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 <pre class="language-cpp" data-title="include/subsystems/DoubleFlywheelSubsystem.hpp" data-line-numbers><code class="lang-cpp">#pragma once
 

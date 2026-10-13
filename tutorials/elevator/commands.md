@@ -22,7 +22,7 @@ The **default command** runs whenever no other command is using the elevator. He
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Add the commands to `ElevatorSubsystem.java`, then create the subsystem and bind the buttons in `RobotContainer.java`. The template bound the right face button to its example command; that binding is replaced.
 
@@ -197,7 +197,7 @@ public class RobotContainer {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Add the commands to `ElevatorMechanism.java`, set the default command in `Robot.java`, and bind the buttons in `ExampleTeleop.java`.
 
@@ -371,7 +371,7 @@ public class ExampleTeleop implements OpMode {
 {% endtab %}
 
 {% tab title="C++" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Declare the commands in `ElevatorSubsystem.hpp`, define them in `ElevatorSubsystem.cpp`, then create the subsystem and bind the buttons in `RobotContainer`. The template bound the right face button to its example command; that binding is replaced.
 

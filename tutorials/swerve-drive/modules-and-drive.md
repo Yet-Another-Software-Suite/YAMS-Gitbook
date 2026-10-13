@@ -30,7 +30,7 @@ Locations use WPILib's convention: **+X is toward the front of the robot and +Y 
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 `SwerveSubsystem` extends `SubsystemBase`, so the scheduler calls `periodic()` and `simulationPeriodic()` for you.
 
@@ -163,7 +163,7 @@ public class SwerveSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Nothing calls a periodic method on a Commands v3 `Mechanism`, so give the class its own `periodic()` and `simulationPeriodic()`, create the mechanism in `Robot.java`, and call both from `robotPeriodic()` before the scheduler runs.
 
@@ -326,7 +326,7 @@ public class Robot extends OpModeRobot {
 {% endtab %}
 
 {% tab title="C++" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 In C++ everything a module is made of has to outlive the module, so a small `Module` struct holds the two `SparkMax`, the `CANcoder`, the two configs, the two `SmartMotorController`s and the `SwerveModule` itself. `SetupModule` fills one in. The `SwerveDrive` is a template on the number of modules: `SwerveDrive<4>`.
 

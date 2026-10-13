@@ -117,7 +117,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Create `DoubleFlywheelMechanism.java` in the `mechanisms` folder. Nothing calls a periodic method on a Commands v3 `Mechanism`, so create the mechanism in `Robot.java` and call its `periodic()` and `simulationPeriodic()` from `robotPeriodic()`. The lines added to `Robot.java` are in **bold**.
+Create `DoubleFlywheelMechanism.java` in the `mechanisms` folder. Nothing calls a periodic method on a Commands v3 `Mechanism`, so create the mechanism in `Robot.java` and call its `periodic()` and `simulationPeriodic()` from `robotPeriodic()`. The lines added to `Robot.java` are highlighted.
 
 {% code title="mechanisms/DoubleFlywheelMechanism.java" lineNumbers="true" %}
 ```java

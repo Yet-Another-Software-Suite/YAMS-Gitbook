@@ -19,7 +19,7 @@ One command sets both velocity setpoints, so the two wheels always change togeth
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Add the commands to `DoubleFlywheelSubsystem.java`, then create the subsystem and bind the buttons in `RobotContainer.java`. The template bound the right face button to its example command; that binding is replaced.
 
@@ -209,7 +209,7 @@ public class RobotContainer {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Add the commands to `DoubleFlywheelMechanism.java` and bind the buttons in `ExampleTeleop.java`. A Commands v3 command is a coroutine: it sets both speeds, yields until the next loop, and repeats until something interrupts it.
 
@@ -360,7 +360,7 @@ public class ExampleTeleop implements OpMode {
 {% endtab %}
 
 {% tab title="C++" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Declare the commands in `DoubleFlywheelSubsystem.hpp`, define them in `DoubleFlywheelSubsystem.cpp`, then create the subsystem and bind the buttons in `RobotContainer`. The template bound the right face button to its example command; that binding is replaced.
 

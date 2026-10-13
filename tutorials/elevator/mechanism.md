@@ -16,7 +16,7 @@ The `SmartMotorController` from step 1 can already spin the motor. An `Elevator`
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 `ElevatorSubsystem` extends `SubsystemBase`, so the scheduler calls `periodic()` and `simulationPeriodic()` for you.
 
@@ -107,7 +107,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 Nothing calls a periodic method on a Commands v3 `Mechanism`, so give the class its own `periodic()` and `simulationPeriodic()`, create the mechanism in `Robot.java`, and call both from `robotPeriodic()` before the scheduler runs.
 
@@ -228,7 +228,7 @@ public class Robot extends OpModeRobot {
 {% endtab %}
 
 {% tab title="C++" %}
-Lines in **bold** are new in this step.
+The highlighted lines are new in this step.
 
 `ElevatorConfig` in C++ takes the two hard limits separately, with `WithMinimumHeight` and `WithMaximumHeight`, and `WithCarriageMass` is the C++ name of `withCarriageWeight`. The C++ mechanism configs take a telemetry name only.
 
