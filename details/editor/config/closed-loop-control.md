@@ -23,7 +23,7 @@ Sets the PID gains.
 .withClosedLoopController(new PIDController(4, 0, 0.2))
 ```
 
-The gains work in rotations and volts, or meters and volts for a [distance based controller](#withlinearclosedloopcontroller). YAMS converts them to whatever the motor controller uses, so the same numbers behave the same on every vendor.
+The gains work in rotations and volts, or meters and volts for a [distance based controller](#withlinearclosedloopcontroller). YAMS converts them to whatever the motor controller uses, so the same numbers behave the same on every vendor. [How your gains reach the motor controller](#how-your-gains-reach-the-motor-controller) shows how.
 
 Passing an `LQRController` instead replaces the PID with an LQR: see [LQR controllers](../lqr-controllers.md).
 
@@ -136,6 +136,69 @@ Changes how often the SystemCore loop runs. The default is 20 ms. It does not ch
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
 | --- | --- | --- | --- |
 | ❌ | ❌ | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
+
+## How your gains reach the motor controller
+
+You write every gain once, in mechanism units: volts per mechanism rotation, or per meter for a [distance based controller](#withlinearclosedloopcontroller). Every [feedforward](feedforward.md) uses the same units, including an `ArmFeedforward`. Each motor controller wants its gains in its own units, so YAMS converts them when it applies the config, and again every time you change a gain while [live tuning](../../live-tuning/README.md).
+
+<figure><img src="../../../.gitbook/assets/smc-gain-overview.png" alt="Your gains, in YAMS units of volts per mechanism rotation or meter, go to three motor controllers. TalonFX and TalonFXS: the sensor to mechanism ratio is the gear ratio, so the Talon already works in mechanism rotations; a linear mechanism's gains are divided by the rotations per meter; kS and kG are volts and do not change; Motion Magic limits go from meters to rotations; gravity is Arm_Cosine or Elevator_Static. SPARK MAX and Flex: gains are per rotation of its encoder and output a duty cycle, so they are divided by 12 V and the gear ratio, velocity gains by 60 more for RPM, kI is multiplied by 1 ms and kD divided by 1 ms, kV and kA are volts per RPM of its encoder, and an arm's kG becomes kCos with a kCosRatio of 1 over the ratio. Thrifty Nova: the PID runs on the SystemCore in YAMS units, so nothing is converted."><figcaption><p>Where your gains go.</p></figcaption></figure>
+
+### Dimensional analysis
+
+The conversion is dimensional analysis. A gain is a number with units, like 4 V per mechanism rotation. To change its units, multiply it by fractions that are each worth exactly 1, such as 1 mechanism rotation over 12 motor rotations on a 12:1 gearbox. A unit that appears on both the top and the bottom cancels. Once only the units the motor controller wants are left, the number in front is its gain.
+
+{% tabs %}
+{% tab title="SPARK MAX / Flex" %}
+A SPARK's closed loop works on its own encoder, not on the mechanism. Its PID output is a duty cycle from -1 to 1, not volts. So every PID gain loses the gear ratio and the 12 V, and a velocity gain also changes from rotations per second to RPM.
+
+<figure><img src="../../../.gitbook/assets/smc-gain-units-spark.gif" alt="An animation of four unit conversions for a 12 to 1 SPARK. Position kP: 4 volts per mechanism rotation, times 1 mechanism rotation over 12 motor rotations, times 1 duty over 12 volts. Mechanism rotations cancel, then volts cancel, leaving 0.0278 duty cycle per motor rotation. Velocity kP: 0.5 volts per mechanism rotation per second, times 1 mechanism rotation per second over 12 motor rotations per second, times 1 motor rotation per second over 60 RPM, times 1 duty over 12 volts, leaving 5.79e-05 duty cycle per RPM. kD: 0.2 volt seconds per mechanism rotation, through the same gear ratio and voltage, times 1 loop over 0.001 seconds, so seconds cancel and it leaves 1.39 duty cycle loops per motor rotation. kV: 1.0 volt per mechanism rotation per second, through the gear ratio and 60 RPM, leaving 0.00139 volts per RPM, because feedforwards stay in volts."><figcaption><p>Converting a 12:1 arm's gains for a SPARK, one unit at a time.</p></figcaption></figure>
+
+| Gain | YAMS units | SPARK units | YAMS does |
+| --- | --- | --- | --- |
+| `kP`, position | V per mechanism rotation | duty cycle per encoder rotation | ÷ (12 V × ratio) |
+| `kP`, velocity | V per mechanism rotation per second | duty cycle per encoder RPM | ÷ (12 V × ratio × 60) |
+| `kI` | `kP`'s units per second | `kP`'s units per 1 ms loop | × 0.001 s, then as `kP` |
+| `kD` | `kP`'s units × seconds | `kP`'s units × 1 ms loops | ÷ 0.001 s, then as `kP` |
+| `kS`, `kG` | V | V | nothing |
+| `kV` | V per mechanism rotation per second | V per encoder RPM | ÷ (ratio × 60) |
+| `kA` | V per mechanism rotation per second² | V per encoder RPM per second | ÷ (ratio × 60) |
+| Profile velocity | mechanism rotations per second | encoder RPM | × ratio × 60 |
+| Profile acceleration | mechanism rotations per second² | encoder RPM per second | × ratio × 60 |
+
+* **The ratio** is the gearing between the mechanism and the encoder the SPARK uses: your [gearing](gearing-and-units.md), or the [external encoder's gearing](encoders.md#withexternalencodergearing) when the SPARK uses an external encoder for feedback.
+* **The 12 V** is your [voltage compensation](limits-and-protection.md#withvoltagecompensation) if you set one, and 12 V if you do not.
+* **A distance based controller** first turns meters into mechanism rotations: YAMS divides a gain per meter by the mechanism rotations per meter, then converts the result as in the table.
+* **Position and velocity need different gains.** A SPARK measures position error in rotations and velocity error in RPM, so YAMS writes the position or velocity version of your gains whenever the type of setpoint changes. You still tune only one set.
+* **An arm's `kG`** goes to the SPARK's `kCos`, with a `kCosRatio` of 1 over the ratio so the SPARK can turn its encoder's rotations into the arm's angle.
+* **In simulation**, REVLib's SPARK applies `kI` and `kD` per second instead of per loop, so YAMS skips the 0.001 s step there.
+{% endtab %}
+
+{% tab title="TalonFX / TalonFXS" %}
+YAMS sets the Talon's `SensorToMechanismRatio` to your gear ratio, so the Talon already measures in mechanism rotations and works in volts. An angle based gain goes to the Talon unchanged. Only a [distance based controller](#withlinearclosedloopcontroller) is converted, from meters to mechanism rotations.
+
+<figure><img src="../../../.gitbook/assets/smc-gain-units-talon.gif" alt="An animation of three unit conversions for an elevator on a Talon whose drum moves 0.2 meters per mechanism rotation. kP: 40 volts per meter times 0.2 meters per mechanism rotation; meters cancel, leaving 8 volts per mechanism rotation. kV: 8 volts per meter per second times 0.2 meters per mechanism rotation, leaving 1.6 volts per mechanism rotation per second. Motion Magic cruise velocity: 1.5 meters per second times 1 mechanism rotation over 0.2 meters, leaving 7.5 mechanism rotations per second."><figcaption><p>Converting an elevator's gains for a Talon, one unit at a time.</p></figcaption></figure>
+
+| Gain | YAMS units | Talon units | YAMS does |
+| --- | --- | --- | --- |
+| `kP`, `kI`, `kD` | V per mechanism rotation (or meter) | V per mechanism rotation | ÷ mechanism rotations per meter when distance based |
+| `kS`, `kG` | V | V | nothing, and sets `GravityType` to `Arm_Cosine` for an arm or `Elevator_Static` for an elevator |
+| `kV`, `kA` | V per mechanism rotation (or meter) per second (²) | V per mechanism rotation per second (²) | ÷ mechanism rotations per meter when distance based |
+| Motion Magic velocity, acceleration | mechanism rotations (or meters) per second (²) | mechanism rotations per second (²) | × mechanism rotations per meter when distance based |
+| Motion Magic Expo `kV`, `kA` | from the [exponential profile](../exponential-profiles.md) | V per mechanism rotation per second (²) | ÷ mechanism rotations per meter when distance based |
+
+With an [external encoder](encoders.md#withexternalencoder), the `SensorToMechanismRatio` is the encoder's gearing and the `RotorToSensorRatio` is the rest of the gearing, so the gains are still per mechanism rotation.
+{% endtab %}
+
+{% tab title="Thrifty Nova" %}
+The Nova's closed loop [runs on the SystemCore](#where-the-loop-runs) in YAMS units, so nothing is converted. Your gains are used exactly as you wrote them, and the Nova only receives the voltage the loop asks for.
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+WPILib's `ArmFeedforward` documents its `kV` and `kA` per radian. In YAMS they are per rotation, like every other gain. When the loop runs on the SystemCore, YAMS converts them to radians for WPILib's math.
+{% endhint %}
+
+The units are the same on every controller, but [where the loop runs](#where-the-loop-runs) still matters. A loop on the motor controller runs every millisecond, so gains tuned there are not the best gains for a loop on the SystemCore.
 
 ## `withLinearClosedLoopController`
 
