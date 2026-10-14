@@ -358,7 +358,7 @@ public Command lock() {
 {% endtab %}
 {% endtabs %}
 
-In Java each module is locked through `SwerveModule.lock(Rotation2d)`, which uses `SwerveModuleConfig.getLockedState(...)`. Unlike a normal zero-speed module state, the lock skips the module's [velocity deadband](swerve-module.md#velocity-deadband), which would otherwise hold the wheels where they are, so the wheels actually turn into the X. With optimization enabled each wheel turns to whichever of the lock angle and its opposite is nearer, since both hold the robot the same way. C++ `LockPose()` commands the same X pattern.
+In Java each module is locked through `SwerveModule.setAzimuthAngle(Rotation2d)`, which uses `SwerveModuleConfig.getLockedState(...)`. Unlike a normal zero-speed module state, the lock skips the module's [velocity deadband](swerve-module.md#velocity-deadband), which would otherwise hold the wheels where they are, so the wheels actually turn into the X. With optimization enabled each wheel turns to whichever of the lock angle and its opposite is nearer, since both hold the robot the same way. C++ `LockPose()` commands the same X pattern.
 
 {% hint style="info" %}
 `lockPose()` is not compatible with AdvantageKit, like the other `SwerveDrive` methods that command the modules directly.

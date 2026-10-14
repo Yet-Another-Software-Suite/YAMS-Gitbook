@@ -23,7 +23,7 @@ You rarely call a module directly, but these are the functions it has:
 | Function | What it does |
 | --- | --- |
 | `setSwerveModuleState(SwerveModuleVelocity)` | Set the wheel's speed and angle. The [optimization, cosine compensation and velocity deadband](mechanism-configs/swerve-module-config.md) are applied first. An overload adds a drive feedforward force. |
-| `lock(Rotation2d)` | Turn the wheel to an angle without driving it. |
+| `setAzimuthAngle(Rotation2d)` | Turn the wheel to an angle without driving it. |
 | `getState()` | The wheel's current speed and angle, and how fast the azimuth is turning. |
 | `getPosition()` | How far the wheel has rolled, and its angle. Used for odometry. |
 | `seedAzimuthEncoder()` | Set the azimuth motor's encoder from the absolute encoder. |
@@ -238,7 +238,7 @@ If the robot stops short or will not creep, lower the deadband. If the wheels tw
 moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
 ```
 
-The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.lock(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is.
+The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](../live-tuning/README.md#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
 
 ## Steer to Drive Coupling
 
