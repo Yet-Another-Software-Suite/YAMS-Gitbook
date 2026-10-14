@@ -60,6 +60,23 @@ If you are not sure which one you need, use Commands v2. The [tutorials](tutoria
 
 YAMS maven artifacts are served from `https://cdn.yassrobotics.com/`.
 
+### Get started with YAMG
+
+The quickest way to get started is [YAMG](https://yamg.yassrobotics.com/), the Yet Another Mechanisms Generator. Fill in a form about your mechanism and it writes the code for you, ready to copy into your project.
+
+<figure><img src=".gitbook/assets/yamg.png" alt="The YAMG website generating an arm. On the left, the form: subsystem name ArmSubsystem, mechanism type Arm, Use YAMS turned on, Commands v2, and the motor configuration with a SparkMAX and a NEO. On the right, the generated ArmSubsystem.java with its SmartMotorControllerConfig, in tabs next to Robot.java and RobotContainer.java, with Copy, Save File, Copy Link and Download All buttons. A WPILib 2026 and WPILib 2027 toggle is at the top right."><figcaption><p>YAMG generating an arm with YAMS.</p></figcaption></figure>
+
+1. Pick your WPILib version with the toggle at the top right: 2027, or 2026 for a 2026 project.
+2. Turn on **Use YAMS**. Without it, YAMG writes code that uses only WPILib and the motor controller's vendor library.
+3. Name your subsystem and pick the mechanism type: an elevator, an arm, a pivot or a flywheel.
+4. Pick the command framework that matches the vendordep you installed: Commands v2 or Commands v3.
+5. Fill in your motor controller, motor, gearing, limits and gains.
+6. Copy each generated file into your project, or press **Download All**. Along with the mechanism, YAMG writes `Robot.java` and, for Commands v2, `RobotContainer.java` with controller bindings, or, for Commands v3, a teleop op mode.
+
+**Copy Link** puts the whole form into a link, so you can share the mechanism with your team or come back to it later.
+
+The tutorials below build the same mechanisms step by step and explain each part.
+
 ### Jump right in
 
-<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th><th data-hidden data-card-cover data-type="files"></th><th data-hidden></th></tr></thead><tbody><tr><td><h4><i class="fa-bolt">:bolt:</i></h4></td><td><strong>Create an Arm</strong></td><td>Create your first Arm.</td><td><a href="tutorials/arm.md">arm.md</a></td><td></td><td></td></tr><tr><td><h4><i class="fa-leaf">:leaf:</i></h4></td><td><strong>Create an Elevator</strong></td><td>Create your first elevator.</td><td><a href="tutorials/elevator.md">elevator.md</a></td><td></td><td></td></tr><tr><td><i class="fa-crosshairs">:crosshairs:</i></td><td><strong>Create a shooter</strong></td><td>Create your first shooter.</td><td><a href="tutorials/shooter-flywheels.md">shooter-flywheels.md</a></td><td></td><td></td></tr></tbody></table>
+<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th><th data-hidden data-card-cover data-type="files"></th><th data-hidden></th></tr></thead><tbody><tr><td><h4><i class="fa-wand-magic-sparkles">:wand-magic-sparkles:</i></h4></td><td><strong>Generate a mechanism</strong></td><td>Generate a YAMS mechanism with YAMG.</td><td><a href="https://yamg.yassrobotics.com/">https://yamg.yassrobotics.com/</a></td><td></td><td></td></tr><tr><td><h4><i class="fa-bolt">:bolt:</i></h4></td><td><strong>Create an Arm</strong></td><td>Create your first Arm.</td><td><a href="tutorials/arm.md">arm.md</a></td><td></td><td></td></tr><tr><td><h4><i class="fa-leaf">:leaf:</i></h4></td><td><strong>Create an Elevator</strong></td><td>Create your first elevator.</td><td><a href="tutorials/elevator.md">elevator.md</a></td><td></td><td></td></tr><tr><td><i class="fa-crosshairs">:crosshairs:</i></td><td><strong>Create a shooter</strong></td><td>Create your first shooter.</td><td><a href="tutorials/shooter-flywheels.md">shooter-flywheels.md</a></td><td></td><td></td></tr></tbody></table>
