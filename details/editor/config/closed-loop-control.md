@@ -151,24 +151,24 @@ The conversion is dimensional analysis. A gain is a number with units, like 4 V 
 {% tab title="SPARK MAX / Flex" %}
 A SPARK's closed loop works on its own encoder, not on the mechanism. Its PID output is a duty cycle from -1 to 1, not volts. So every PID gain loses the gear ratio and the 12 V, and a velocity gain also changes from rotations per second to RPM.
 
-<figure><img src="../../../.gitbook/assets/smc-gain-units-spark.gif" alt="An animation of four unit conversions for a 12 to 1 SPARK. Position kP: 4 volts per mechanism rotation, times 1 mechanism rotation over 12 motor rotations, times 1 duty over 12 volts. Mechanism rotations cancel, then volts cancel, leaving 0.0278 duty cycle per motor rotation. Velocity kP: 0.5 volts per mechanism rotation per second, times 1 mechanism rotation per second over 12 motor rotations per second, times 1 motor rotation per second over 60 RPM, times 1 duty over 12 volts, leaving 5.79e-05 duty cycle per RPM. kD: 0.2 volt seconds per mechanism rotation, through the same gear ratio and voltage, times 1 loop over 0.001 seconds, so seconds cancel and it leaves 1.39 duty cycle loops per motor rotation. kV: 1.0 volt per mechanism rotation per second, through the gear ratio and 60 RPM, leaving 0.00139 volts per RPM, because feedforwards stay in volts."><figcaption><p>Converting a 12:1 arm's gains for a SPARK, one unit at a time.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-gain-units-spark.gif" alt="An animation of five unit conversions for a 12 to 1 SPARK. Position kP: 4 volts per mechanism rotation, times 1 mechanism rotation over 12 motor rotations, times 1 duty over 12 volts. Mechanism rotations cancel, then volts cancel, leaving 0.0278 duty cycle per motor rotation. Elevator kP: 40 volts per meter, times 0.2 meters per mechanism rotation, then the same gear ratio and voltage, leaving 0.0556 duty cycle per motor rotation. Velocity kP: 0.5 volts per mechanism rotation per second, times 1 mechanism rotation per second over 12 motor rotations per second, times 1 motor rotation per second over 60 RPM, times 1 duty over 12 volts, leaving 5.79e-05 duty cycle per RPM. kD: 0.2 volt seconds per mechanism rotation, through the same gear ratio and voltage, times 1 loop over 0.001 seconds, so seconds cancel and it leaves 1.39 duty cycle loops per motor rotation. kV: 1.0 volt per mechanism rotation per second, through the gear ratio and 60 RPM, leaving 0.00139 volts per RPM, because feedforwards stay in volts."><figcaption><p>Converting a 12:1 mechanism's gains for a SPARK, one unit at a time.</p></figcaption></figure>
 
 | Gain | YAMS units | SPARK units | YAMS does |
 | --- | --- | --- | --- |
-| `kP`, position | V per mechanism rotation | duty cycle per encoder rotation | ÷ (12 V × ratio) |
-| `kP`, velocity | V per mechanism rotation per second | duty cycle per encoder RPM | ÷ (12 V × ratio × 60) |
+| `kP`, position | V per mechanism rotation (or meter) | duty cycle per encoder rotation | ÷ (12 V × ratio) |
+| `kP`, velocity | V per mechanism rotation (or meter) per second | duty cycle per encoder RPM | ÷ (12 V × ratio × 60) |
 | `kI` | `kP`'s units per second | `kP`'s units per 1 ms loop | × 0.001 s, then as `kP` |
 | `kD` | `kP`'s units × seconds | `kP`'s units × 1 ms loops | ÷ 0.001 s, then as `kP` |
 | `kS`, `kG` | V | V | nothing |
-| `kV` | V per mechanism rotation per second | V per encoder RPM | ÷ (ratio × 60) |
-| `kA` | V per mechanism rotation per second² | V per encoder RPM per second | ÷ (ratio × 60) |
-| Profile velocity | mechanism rotations per second | encoder RPM | × ratio × 60 |
-| Profile acceleration | mechanism rotations per second² | encoder RPM per second | × ratio × 60 |
+| `kV` | V per mechanism rotation (or meter) per second | V per encoder RPM | ÷ (ratio × 60) |
+| `kA` | V per mechanism rotation (or meter) per second² | V per encoder RPM per second | ÷ (ratio × 60) |
+| Profile velocity | mechanism rotations (or meters) per second | encoder RPM | × ratio × 60 |
+| Profile acceleration | mechanism rotations (or meters) per second² | encoder RPM per second | × ratio × 60 |
 
 * **The ratio** is the gearing between the mechanism and the encoder the SPARK uses: your [gearing](gearing-and-units.md), or the [external encoder's gearing](encoders.md#withexternalencodergearing) when the SPARK uses an external encoder for feedback.
 * **The 12 V** is your [voltage compensation](limits-and-protection.md#withvoltagecompensation) if you set one, and 12 V if you do not. The SPARK's PID output is a fraction of full output, from -1 to 1, in every closed loop control type YAMS sends: position, velocity and both MAXMotion types. With voltage compensation, full output is the compensation voltage, so the gains are exact. Without it, full output is the battery's voltage, so at 11 V the PID pushes about 8% less than you tuned for.
 * **The feedforward is in volts**, not a fraction of full output. The SPARK's `kS`, `kV`, `kA`, `kG` and `kCos` are in volts, and YAMS sends its own feedforward with each setpoint in volts (`ArbFFUnits.kVoltage`), so the feedforward does not change with the battery's voltage.
-* **A distance based controller** first turns meters into mechanism rotations: YAMS divides a gain per meter by the mechanism rotations per meter, then converts the result as in the table.
+* **An elevator, or any distance based controller,** has every gain per meter, as on a Talon: `kP`, `kI`, `kD`, `kV` and `kA`, and the profile's limits. `kS` and `kG` are volts either way. YAMS first divides a gain per meter by the mechanism rotations per meter (multiplies, for a profile limit), then converts the result as in the table. An `ElevatorFeedforward` or [`withLinearClosedLoopController`](#withlinearclosedloopcontroller) makes the controller distance based.
 * **Position and velocity need different gains.** A SPARK measures position error in rotations and velocity error in RPM, so YAMS writes the position or velocity version of your gains whenever the type of setpoint changes. You still tune only one set.
 * **An arm's `kG`** goes to the SPARK's `kCos`, with a `kCosRatio` of 1 over the ratio so the SPARK can turn its encoder's rotations into the arm's angle.
 * **In simulation**, REVLib's SPARK applies `kI` and `kD` per second instead of per loop, so YAMS skips the 0.001 s step there.
