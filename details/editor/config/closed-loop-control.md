@@ -166,7 +166,8 @@ A SPARK's closed loop works on its own encoder, not on the mechanism. Its PID ou
 | Profile acceleration | mechanism rotations per second² | encoder RPM per second | × ratio × 60 |
 
 * **The ratio** is the gearing between the mechanism and the encoder the SPARK uses: your [gearing](gearing-and-units.md), or the [external encoder's gearing](encoders.md#withexternalencodergearing) when the SPARK uses an external encoder for feedback.
-* **The 12 V** is your [voltage compensation](limits-and-protection.md#withvoltagecompensation) if you set one, and 12 V if you do not.
+* **The 12 V** is your [voltage compensation](limits-and-protection.md#withvoltagecompensation) if you set one, and 12 V if you do not. The SPARK's PID output is a fraction of full output, from -1 to 1, in every closed loop control type YAMS sends: position, velocity and both MAXMotion types. With voltage compensation, full output is the compensation voltage, so the gains are exact. Without it, full output is the battery's voltage, so at 11 V the PID pushes about 8% less than you tuned for.
+* **The feedforward is in volts**, not a fraction of full output. The SPARK's `kS`, `kV`, `kA`, `kG` and `kCos` are in volts, and YAMS sends its own feedforward with each setpoint in volts (`ArbFFUnits.kVoltage`), so the feedforward does not change with the battery's voltage.
 * **A distance based controller** first turns meters into mechanism rotations: YAMS divides a gain per meter by the mechanism rotations per meter, then converts the result as in the table.
 * **Position and velocity need different gains.** A SPARK measures position error in rotations and velocity error in RPM, so YAMS writes the position or velocity version of your gains whenever the type of setpoint changes. You still tune only one set.
 * **An arm's `kG`** goes to the SPARK's `kCos`, with a `kCosRatio` of 1 over the ratio so the SPARK can turn its encoder's rotations into the arm's angle.
