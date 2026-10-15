@@ -67,7 +67,7 @@ There are two ways to choose what a motor publishes: pick a verbosity level, or 
 
 | Level | Adds | Good for |
 | --- | --- | --- |
-| `LOW` | Positions, velocities and accelerations (`mechanism/*`, `measurement/*`, `rotor/*`, and `externalencoder/mechanism/*` when there is an external encoder), the setpoints (`closedloop/setpoint/*`) and the active slot | Competition, where you only need to see what happened |
+| `LOW` | Positions, velocities and accelerations (`mechanism/*`, `measurement/*`, `rotor/*`, and `externalencoder/*` when there is an external encoder), the setpoints (`closedloop/setpoint/*`) and the active slot | Competition, where you only need to see what happened |
 | `MID` | `motor/outputVoltage`, `current/stator`, `current/supply` | Checking power draw |
 | `HIGH` | Every tunable value, `motor/temperature`, the status booleans, and the `Live Tuning` command | Tuning and development |
 
