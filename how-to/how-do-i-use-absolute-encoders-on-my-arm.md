@@ -147,6 +147,8 @@ private final SmartMotorController smc = new TalonFXWrapper(armMotor, DCMotor.ge
 
 The `CANdi` connects to the TalonFXS via its PWM port and is treated the same as a CANcoder for configuration purposes.
 
+A `CANdi` has two PWM inputs, so tell the Talon which one the encoder is on with a vendor config. Without it, YAMS throws a `SmartMotorControllerConfigurationException` because no PWM input is selected. Use `SyncCANdiPWM1` for the PWM1 input or `SyncCANdiPWM2` for PWM2. YAMS sets the matching input on the `CANdi` from the other options here.
+
 ```java
 private final TalonFXS armMotor = new TalonFXS(1, new CANBus(CANPort.CAN_S0));
 private final CANdi candi = new CANdi(2, new CANBus(CANPort.CAN_S0));
@@ -161,6 +163,10 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withZeroPower(MotorMode.BRAKE)
     .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
     .withStatorCurrentLimit(Amps.of(40))
+    // The encoder is on the CANdi's PWM1 input.
+    .withVendorConfig(new TalonFXSConfiguration()
+        .withExternalFeedback(new ExternalFeedbackConfigs()
+            .withExternalFeedbackSensorSource(ExternalFeedbackSensorSourceValue.SyncCANdiPWM1)))
     .withExternalEncoder(candi)
     .withExternalEncoderInverted(false)
     .withExternalEncoderGearing(1.0)
@@ -170,6 +176,16 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
 
 private final SmartMotorController smc = new TalonFXSWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
 ```
+
+On a TalonFX the feedback source is in `Feedback` instead:
+
+```java
+.withVendorConfig(new TalonFXConfiguration()
+    .withFeedback(new FeedbackConfigs()
+        .withFeedbackSensorSource(FeedbackSensorSourceValue.SyncCANdiPWM1)))
+```
+
+The CTRE types come from Phoenix 6: `com.ctre.phoenix6.configs.TalonFXSConfiguration`, `ExternalFeedbackConfigs`, `TalonFXConfiguration` and `FeedbackConfigs`, and `com.ctre.phoenix6.signals.ExternalFeedbackSensorSourceValue` and `FeedbackSensorSourceValue`.
 
 ### Thrifty Nova + absolute encoder on the data port
 
