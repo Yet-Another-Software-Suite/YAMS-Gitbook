@@ -221,7 +221,7 @@ drive.setDefaultCommand(drive.setFieldRelativeChassisSpeeds(
 ```
 
 {% hint style="warning" %}
-`SwerveDrive.lockPose()` turns every module to its corner (the X pattern) with zero drive speed, but it is marked as not compatible with AdvantageKit. The YAMS AdvantageKit example builds the same X pattern itself in `lock()` and sends it with `setSwerveModuleStates()`, so the desired states are recorded with `Logger.recordOutput()` like every other drive command.
+`SwerveDrive.lockPose()` turns every module to its corner (the X pattern) with zero drive speed, but it is marked as not compatible with AdvantageKit. The YAMS AdvantageKit example builds the same X pattern itself in `lock()`, turning each module with `SwerveModule.setAzimuthAngle(...)` so the [velocity deadband](../swerve-module.md#velocity-deadband) doesn't hold the wheels where they are, and the desired states are recorded with `Logger.recordOutput()` like every other drive command.
 {% endhint %}
 
 ## Commands v3
