@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 296" width="760" height="296" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withResetPreviousConfig and withVendorConfig</title>
+<desc id="d">Two stacks of layers applied top to bottom. With the reset on, the default, the controller starts from factory defaults, then your vendor config if you gave one, then your SmartMotorControllerConfig options. With the reset off it starts from whatever is already saved on the controller, so old settings you did not set stay.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="296" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="264.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withResetPreviousConfig and withVendorConfig</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >What the controller ends up with is built in layers.</text>
+<text x="34.0" y="100.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >withResetPreviousConfig(true)  (the default)</text>
+<rect x="34.0" y="110.0" width="316.0" height="34.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="192.0" y="131.0" font-size="10.8" font-weight="400" text-anchor="middle" fill="#1f2933" >factory defaults</text>
+<rect x="34.0" y="150.0" width="316.0" height="34.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.4" />
+<text x="192.0" y="171.0" font-size="10.8" font-weight="400" text-anchor="middle" fill="#1f2933" >your vendor config, if you gave one</text>
+<rect x="34.0" y="190.0" width="316.0" height="34.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.4" />
+<text x="192.0" y="211.0" font-size="10.8" font-weight="700" text-anchor="middle" fill="#1f2933" >your SmartMotorControllerConfig options</text>
+<text x="410.0" y="100.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#c2630b" >withResetPreviousConfig(false)</text>
+<rect x="410.0" y="110.0" width="316.0" height="34.0" rx="8" fill="#fde2e2" stroke="#d64545" stroke-width="1.4" />
+<text x="568.0" y="131.0" font-size="10.8" font-weight="400" text-anchor="middle" fill="#1f2933" >whatever is already saved on the controller</text>
+<rect x="410.0" y="150.0" width="316.0" height="34.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.4" />
+<text x="568.0" y="171.0" font-size="10.8" font-weight="400" text-anchor="middle" fill="#1f2933" >your vendor config, if you gave one</text>
+<rect x="410.0" y="190.0" width="316.0" height="34.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.4" />
+<text x="568.0" y="211.0" font-size="10.8" font-weight="700" text-anchor="middle" fill="#1f2933" >your SmartMotorControllerConfig options</text>
+<text x="380.0" y="172.0" font-size="12" font-weight="700" text-anchor="middle" fill="#52606d" >or</text>
+<text x="192.0" y="246.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >applied top to bottom: later layers win</text>
+<text x="568.0" y="246.0" font-size="10" font-weight="400" text-anchor="middle" fill="#d64545" >old settings you did not set stay</text>
+<text x="34.0" y="272.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Leave the reset on unless you set the controller up in the vendor's own tool and want to keep that.</text>
+</svg>

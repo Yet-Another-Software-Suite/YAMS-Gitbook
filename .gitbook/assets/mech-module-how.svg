@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 316" width="760" height="316" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">How a swerve module works</title>
+<desc id="d">A swerve module seen from above, with its speed along the wheel and its angle. The drive motor uses velocity control to set how fast the wheel rolls. The azimuth motor uses position control with wrapping to set which way the wheel points. An absolute encoder tells the azimuth where the wheel is at startup. The module's state is a SwerveModuleVelocity, a speed and an angle.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="316" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="284.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >How a swerve module works</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Two motors: one rolls the wheel and one steers it.</text>
+<circle cx="150.0" cy="174.0" r="70" fill="#ffffff" stroke="#cbd2d9" stroke-width="1.4" stroke-dasharray="4 4"/>
+<g transform="translate(150.0,174.0) rotate(35.0)"><rect x="-13.0" y="-37.0" width="26.0" height="74.0" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="0" /><path d="M-4,-29.0 L0,-35.0 L4,-29.0 Z" fill="#ffffff"/></g>
+<line x1="150.0" y1="174.0" x2="207.4" y2="92.1" stroke="#c2630b" stroke-width="3" stroke-linecap="round" marker-end="url(#ao)"/>
+<text x="218.0" y="88.0" font-size="11" font-weight="700" text-anchor="start" fill="#c2630b" >speed</text>
+<path d="M150.0,88.0 A86,86 0 0 1 199.3,103.6" fill="none" stroke="#6b46c1" stroke-width="2.4" marker-end="url(#ap)"/>
+<text x="154.0" y="80.0" font-size="11" font-weight="700" text-anchor="end" fill="#6b46c1" >angle</text>
+<text x="150.0" y="264.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >one module, seen from above</text>
+<rect x="330.0" y="100.0" width="190.0" height="72.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="425.0" y="126.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Drive motor</text>
+<text x="425.0" y="141.5" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >velocity control</text>
+<text x="425.0" y="156.5" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >how fast the wheel rolls</text>
+<rect x="330.0" y="190.0" width="190.0" height="72.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="425.0" y="216.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Azimuth motor</text>
+<text x="425.0" y="231.5" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >position control, wrapping</text>
+<text x="425.0" y="246.5" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >which way the wheel points</text>
+<rect x="556.0" y="190.0" width="170.0" height="72.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="641.0" y="216.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Absolute encoder</text>
+<text x="641.0" y="231.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >tells the azimuth where</text>
+<text x="641.0" y="246.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >the wheel is at startup</text>
+<line x1="552.0" y1="226.0" x2="524.0" y2="226.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<rect x="556.0" y="100.0" width="170.0" height="72.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="641.0" y="126.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >State</text>
+<text x="641.0" y="141.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">SwerveModuleVelocity</text>
+<text x="641.0" y="156.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">a speed and an angle</text>
+<line x1="552.0" y1="136.0" x2="524.0" y2="136.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<text x="34.0" y="292.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >A module is two ordinary SmartMotorControllers. Everything you know about tuning a motor applies to each.</text>
+</svg>

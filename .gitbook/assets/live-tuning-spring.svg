@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 424" width="760" height="424" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">What a constant force spring does to kG</title>
+<desc id="d">Three elevators. With no spring the motor holds all of the weight and kG is large and positive. With a spring that matches the carriage weight the spring holds the weight and kG is close to zero. With a stronger spring the spring pulls the carriage up, the motor has to hold it down, and kG is negative.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="424" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="392" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >What a constant force spring does to kG</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The spring pulls up with about the same force at every height, so it cancels some or all of gravity.</text>
+<defs><marker id="fg" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs><defs><marker id="fs" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker></defs><defs><marker id="fm" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker></defs><rect x="34" y="84" width="228" height="290" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="48.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >No spring</text>
+<text x="48.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >the motor holds all of the weight</text>
+<rect x="114" y="132" width="6" height="168" fill="#52606d"/><rect x="176" y="132" width="6" height="168" fill="#52606d"/>
+<rect x="104" y="300" width="88" height="6" fill="#52606d"/>
+<rect x="122" y="210" width="52" height="32" rx="4" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2"/>
+<line x1="96" y1="226" x2="96" y2="286" stroke="#52606d" stroke-width="4" stroke-linecap="round" marker-end="url(#fg)"/><text x="86.0" y="260.0" font-size="10.5" font-weight="700" text-anchor="end" fill="#52606d" >gravity</text>
+<line x1="148" y1="226" x2="148" y2="166" stroke="#c2630b" stroke-width="4" stroke-linecap="round" marker-end="url(#fm)"/><text x="158.0" y="200.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#c2630b" ></text>
+<text x="148.0" y="328.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#c2630b" >kG is large and positive</text>
+<text x="148.0" y="346.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >the motor works just to</text>
+<text x="148.0" y="360.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >stay where it is</text>
+<rect x="266" y="84" width="228" height="290" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="280.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Spring matches the carriage</text>
+<text x="280.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >the spring holds the weight</text>
+<rect x="346" y="132" width="6" height="168" fill="#52606d"/><rect x="408" y="132" width="6" height="168" fill="#52606d"/>
+<rect x="336" y="300" width="88" height="6" fill="#52606d"/>
+<circle cx="380" cy="136" r="11" fill="#d5f0ea" stroke="#147d6f" stroke-width="2.5"/>
+<line x1="391" y1="136" x2="391" y2="210" stroke="#147d6f" stroke-width="2.5"/>
+<rect x="354" y="210" width="52" height="32" rx="4" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2"/>
+<line x1="328" y1="226" x2="328" y2="286" stroke="#52606d" stroke-width="4" stroke-linecap="round" marker-end="url(#fg)"/><text x="318.0" y="260.0" font-size="10.5" font-weight="700" text-anchor="end" fill="#52606d" >gravity</text>
+<line x1="432" y1="226" x2="432" y2="166" stroke="#147d6f" stroke-width="4" stroke-linecap="round" marker-end="url(#fs)"/><text x="442.0" y="200.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#147d6f" >spring</text>
+
+<text x="380.0" y="328.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#c2630b" >kG is close to zero</text>
+<text x="380.0" y="346.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >the motor only has to</text>
+<text x="380.0" y="360.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >accelerate and fight friction</text>
+<rect x="498" y="84" width="228" height="290" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="512.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Spring is stronger</text>
+<text x="512.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >the spring pulls the carriage up</text>
+<rect x="578" y="132" width="6" height="168" fill="#52606d"/><rect x="640" y="132" width="6" height="168" fill="#52606d"/>
+<rect x="568" y="300" width="88" height="6" fill="#52606d"/>
+<circle cx="612" cy="136" r="11" fill="#d5f0ea" stroke="#147d6f" stroke-width="2.5"/>
+<line x1="623" y1="136" x2="623" y2="210" stroke="#147d6f" stroke-width="2.5"/>
+<rect x="586" y="210" width="52" height="32" rx="4" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2"/>
+<line x1="560" y1="226" x2="560" y2="286" stroke="#52606d" stroke-width="4" stroke-linecap="round" marker-end="url(#fg)"/><text x="550.0" y="260.0" font-size="10.5" font-weight="700" text-anchor="end" fill="#52606d" >gravity</text>
+<line x1="664" y1="226" x2="664" y2="142" stroke="#147d6f" stroke-width="4" stroke-linecap="round" marker-end="url(#fs)"/><text x="674.0" y="188.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#147d6f" >spring</text>
+<line x1="612" y1="226" x2="612" y2="250" stroke="#c2630b" stroke-width="4" stroke-linecap="round" marker-end="url(#fm)"/><text x="622.0" y="242.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#c2630b" ></text>
+<text x="612.0" y="328.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#c2630b" >kG is negative</text>
+<text x="612.0" y="346.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >the motor holds the</text>
+<text x="612.0" y="360.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >carriage down</text>
+<line x1="60" y1="398" x2="84" y2="398" stroke="#c2630b" stroke-width="4"/>
+<text x="90.0" y="402.0" font-size="11" font-weight="700" text-anchor="start" fill="#c2630b" >what the motor has to supply to hold still (kG)</text>
+<text x="726.0" y="402.0" font-size="11.5" font-weight="700" text-anchor="end" fill="#1f2933" >kG is whatever is left over after the spring.</text>
+</svg>

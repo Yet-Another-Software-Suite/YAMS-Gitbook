@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 388" width="760" height="388" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">The two NetworkTables trees</title>
+<desc id="d">Two NetworkTables trees for an elevator named Elevator with a motor named ElevatorMotor. Under NT Mechanisms are the read-only values: the Mechanism2d and, under the motor, keys such as mechanism/position, mechanism/velocity, measurement/position, closedloop/setpoint/position, motor/outputVoltage, current/stator and motor/temperature. Under NT Tuning are the editable values: the Live Tuning command and, under the motor, keys such as closedloop/feedback/kP, closedloop/feedforward/kG and current/limit/stator.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="388" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="356" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >The two NetworkTables trees</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Nothing is published under NT:/SmartDashboard.</text>
+<text x="34.0" y="96.0" font-size="12" font-weight="700" text-anchor="start" fill="#3e6da8" >What happened: read-only</text>
+<rect x="34" y="104" width="340" height="236" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="48.0" y="128.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#3e6da8" font-family="Consolas, Menlo, monospace">Mechanisms</text>
+<text x="64.0" y="148.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">Elevator</text>
+<text x="80.0" y="168.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">mechanism</text>
+<text x="362.0" y="168.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >the Mechanism2d</text>
+<text x="80.0" y="188.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">ElevatorMotor</text>
+<text x="96.0" y="208.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">mechanism/position</text>
+<text x="362.0" y="208.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >rotations</text>
+<text x="96.0" y="228.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">mechanism/velocity</text>
+<text x="362.0" y="228.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >rot/s</text>
+<text x="96.0" y="248.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">measurement/position</text>
+<text x="362.0" y="248.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >meters</text>
+<text x="96.0" y="268.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">closedloop/setpoint/position</text>
+<text x="362.0" y="268.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >the target</text>
+<text x="96.0" y="288.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">motor/outputVoltage</text>
+<text x="362.0" y="288.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >volts</text>
+<text x="96.0" y="308.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">current/stator</text>
+<text x="362.0" y="308.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >amps</text>
+<text x="96.0" y="328.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">motor/temperature</text>
+<text x="362.0" y="328.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >°F</text>
+<text x="386.0" y="96.0" font-size="12" font-weight="700" text-anchor="start" fill="#c2630b" >What you can change: tunable</text>
+<rect x="386" y="104" width="340" height="216" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="400.0" y="128.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#c2630b" font-family="Consolas, Menlo, monospace">Tuning</text>
+<text x="416.0" y="148.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">Elevator</text>
+<text x="432.0" y="168.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">Live Tuning</text>
+<text x="714.0" y="168.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >the command</text>
+<text x="432.0" y="188.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">ElevatorMotor</text>
+<text x="448.0" y="208.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">closedloop/feedback/kP</text>
+<text x="714.0" y="208.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >editable</text>
+<text x="448.0" y="228.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">closedloop/feedforward/kG</text>
+<text x="714.0" y="228.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >editable</text>
+<text x="448.0" y="248.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">closedloop/setpoint/position</text>
+<text x="714.0" y="248.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >editable</text>
+<text x="448.0" y="268.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">closedloop/motionprofile/maxVelocity</text>
+<text x="714.0" y="268.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >editable</text>
+<text x="448.0" y="288.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">current/limit/stator</text>
+<text x="714.0" y="288.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >editable</text>
+<text x="448.0" y="308.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">measurement/limit/upper</text>
+<text x="714.0" y="308.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >editable</text>
+<text x="34.0" y="364.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >An elevator named Elevator with a motor named ElevatorMotor. Not every key is shown.</text>
+</svg>

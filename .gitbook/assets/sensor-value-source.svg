@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 372" width="760" height="372" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Where a Sensor field gets its value</title>
+<desc id="d">Two panels. On the real robot, getAsBoolean returns the real sensor reading from the supplier you gave, and simulated values are ignored. In simulation, the first simulated value whose condition is true is returned. Otherwise the value shown in the Sim GUI is returned, which starts as the default and can be changed by hand or with getField and set.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="372" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="340.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Where a Sensor field gets its value</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The same call in your code. The sensor only changes what answers it in simulation.</text>
+<rect x="34.0" y="78.0" width="336.0" height="262.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="98.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#3e6da8" >On the real robot</text>
+<rect x="54.0" y="112.0" width="296.0" height="50.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="202.0" y="134.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >The real sensor</text>
+<text x="202.0" y="150.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">dio::get</text>
+<line x1="202.0" y1="164.0" x2="202.0" y2="262.0" stroke="#3e6da8" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ab)"/>
+<text x="214.0" y="206.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >always the real reading</text>
+<text x="214.0" y="222.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >simulated values are ignored</text>
+<rect x="54.0" y="266.0" width="296.0" height="54.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="202.0" y="290.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Your code</text>
+<text x="202.0" y="306.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">coralSensor.getAsBoolean("Beam")</text>
+<rect x="390.0" y="78.0" width="336.0" height="262.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="402.0" y="98.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#6b46c1" >In simulation</text>
+<rect x="410.0" y="104.0" width="296.0" height="46.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="558.0" y="124.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >1. A simulated value that is true</text>
+<text x="558.0" y="140.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">withSimulatedValue, addSimTrigger</text>
+<text x="558.0" y="166.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >the first one that is true wins</text>
+<line x1="558.0" y1="172.0" x2="558.0" y2="186.0" stroke="#6b46c1" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ap)"/>
+<rect x="410.0" y="190.0" width="296.0" height="46.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="558.0" y="210.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >2. Otherwise, the value in the Sim GUI</text>
+<text x="558.0" y="225.8" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >the default, your edit, or getField(...).set(...)</text>
+<line x1="558.0" y1="238.0" x2="558.0" y2="262.0" stroke="#c2630b" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ao)"/>
+<rect x="410.0" y="266.0" width="296.0" height="54.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="558.0" y="290.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Your code</text>
+<text x="558.0" y="306.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">coralSensor.getAsBoolean("Beam")</text>
+</svg>

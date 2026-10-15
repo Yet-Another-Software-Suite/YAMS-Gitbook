@@ -4,17 +4,51 @@ WPILib ships physics models for common FRC motors (NEO, Falcon, CIM, etc.), but 
 
 Sometimes the motor you use is not yet included in WPILib.
 
-{% @github-files/github-code-block url="https://github.com/wpilibsuite/allwpilib/blob/main/wpimath/src/main/java/edu/wpi/first/math/system/plant/DCMotor.java#L166-L175" %}
+WPILib's `org.wpilib.math.system.DCMotor` has static factories for the motors it knows about (`getNEO`, `getNeo550`, `getNeoVortex`, `getFalcon500`, `getKrakenX60`, `getKrakenX44`, `getMinion`, and more). Each one is just a call to the `DCMotor` constructor, for example the Kraken X60:
+
+```java
+public static DCMotor getKrakenX60(int numMotors) {
+  // From https://store.ctr-electronics.com/announcing-kraken-x60/
+  return new DCMotor(
+      12, 7.09, 366, 2, Units.rotationsPerMinuteToRadiansPerSecond(6000), numMotors);
+}
+```
 
 Create a `DCMotor` from the datasheet values. Use ReCa.lc to calculate them.
 
 {% embed url="https://www.reca.lc/motors" %}
 
-{% @github-files/github-code-block url="https://github.com/wpilibsuite/allwpilib/blob/main/wpimath/src/main/java/edu/wpi/first/math/system/plant/DCMotor.java#L45-L61" %}
+```java
+/**
+ * Constructs a DC motor.
+ *
+ * @param nominalVoltage Voltage at which the motor constants were measured.
+ * @param stallTorque Torque when stalled.
+ * @param stallCurrent Current draw when stalled.
+ * @param freeCurrent Current draw under no load.
+ * @param freeSpeed Angular velocity under no load.
+ * @param numMotors Number of motors in a gearbox.
+ */
+public DCMotor(
+    double nominalVoltage,
+    double stallTorque,
+    double stallCurrent,
+    double freeCurrent,
+    double freeSpeed,
+    int numMotors)
+```
 
-For example, a [Minion motor](https://store.ctr-electronics.com/products/minion-brushless-motor) uses:
+Torque is in newton-meters, current in amps and free speed in radians per second.
+
+<figure><img src="../.gitbook/assets/howto-dcmotor-curve.png" alt="A graph of torque and current against motor speed for a Minion at 12 volts. Torque falls in a straight line from the stall torque of 3.1 newton meters at zero speed to zero at the free speed of 7200 RPM. Current falls from the stall current of 200.46 amps to the free current of 1.43 amps. Beside it, the DCMotor constructor takes the nominal voltage, stall torque, stall current, free current, free speed and number of motors, in that order."><figcaption><p>The four datasheet values and where each goes in the constructor.</p></figcaption></figure>
+
+For example, before WPILib added `DCMotor.getMinion()`, a [Minion motor](https://store.ctr-electronics.com/products/minion-brushless-motor) could be created with:
 
 ```java
+import static org.wpilib.units.Units.RPM;
+import static org.wpilib.units.Units.RadiansPerSecond;
+import org.wpilib.math.system.DCMotor;
+
 int numMotors = 1;
 new DCMotor(12, 3.1, 200.46, 1.43, RPM.of(7200).in(RadiansPerSecond), numMotors);
 ```

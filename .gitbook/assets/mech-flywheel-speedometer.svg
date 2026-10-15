@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 310" width="760" height="310" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">FlyWheelConfig: withSpeedometerSimulation</title>
+<desc id="d">Two Mechanism2d windows. Without the speedometer the flywheel's line spins with the wheel and is a blur at speed. With withSpeedometerSimulation and a maximum of 6000 RPM, the line points at the speed like a dial: straight down at zero, to the left at half and straight up at the maximum. Here it shows 3720 RPM.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="310" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="278.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >FlyWheelConfig: withSpeedometerSimulation</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Draws the flywheel's speed as a needle instead of a spinning line.</text>
+<rect x="34.0" y="84.0" width="338.0" height="176.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#52606d" >Without the speedometer</text>
+<rect x="58.0" y="112.0" width="172.0" height="132.0" rx="6" fill="#10151c" stroke="#10151c" stroke-width="1" />
+<line x1="144.0" y1="176.0" x2="196.6" y2="156.8" stroke="#f6a03c" stroke-width="5.0" stroke-linecap="round"/>
+<line x1="144.0" y1="176.0" x2="142.0" y2="120.0" stroke="#f6a03c" stroke-width="4.1" stroke-linecap="round"/>
+<line x1="144.0" y1="176.0" x2="90.2" y2="160.6" stroke="#f6a03c" stroke-width="3.2" stroke-linecap="round"/>
+<line x1="144.0" y1="176.0" x2="112.7" y2="222.4" stroke="#f6a03c" stroke-width="2.3" stroke-linecap="round"/>
+<line x1="144.0" y1="176.0" x2="178.5" y2="220.1" stroke="#f6a03c" stroke-width="1.4" stroke-linecap="round"/>
+<circle cx="144.0" cy="176.0" r="5" fill="#ffffff" stroke="none" stroke-width="1.6" />
+<text x="244.0" y="150.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >The line spins with the</text>
+<text x="244.0" y="166.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >wheel: a blur at speed.</text>
+<rect x="388.0" y="84.0" width="338.0" height="176.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="400.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >withSpeedometerSimulation(RPM.of(6000))</text>
+<rect x="412.0" y="112.0" width="172.0" height="132.0" rx="6" fill="#10151c" stroke="#10151c" stroke-width="1" />
+<path d="M528.0,122.0 A56,56 0 0 0 528.0,234.0" fill="none" stroke="#3b4754" stroke-width="3"/>
+<line x1="528.0" y1="178.0" x2="479.7" y2="158.9" stroke="#f6a03c" stroke-width="6" stroke-linecap="round"/>
+<circle cx="528.0" cy="178.0" r="5" fill="#ffffff" stroke="none" stroke-width="1.6" />
+<text x="538.0" y="238.0" font-size="9" font-weight="400" text-anchor="start" fill="#9aa5b1" >0</text>
+<text x="538.0" y="126.0" font-size="9" font-weight="400" text-anchor="start" fill="#9aa5b1" >max</text>
+<text x="454.0" y="182.0" font-size="9" font-weight="400" text-anchor="end" fill="#9aa5b1" >half</text>
+<text x="598.0" y="150.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >The line points at the</text>
+<text x="598.0" y="166.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >speed, like a dial.</text>
+<text x="598.0" y="196.0" font-size="12" font-weight="700" text-anchor="start" fill="#c2630b" >3720 RPM</text>
+<text x="34.0" y="286.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >It only changes the drawing in simulation. The flywheel itself behaves the same either way.</text>
+</svg>

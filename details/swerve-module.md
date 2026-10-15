@@ -4,7 +4,96 @@ icon: gear
 
 # Swerve Module
 
+Every `SwerveModuleConfig` option, with a graphic and an example, is on the [SwerveModuleConfig](mechanism-configs/swerve-module-config.md) page under this one.
+
+## How a swerve module works
+
+<figure><img src="../.gitbook/assets/mech-module-how.png" alt="A swerve module seen from above, with its speed along the wheel and its angle. The drive motor uses velocity control to set how fast the wheel rolls. The azimuth motor uses position control with wrapping to set which way the wheel points. An absolute encoder tells the azimuth where the wheel is at startup. The module's state is a SwerveModuleVelocity, a speed and an angle."><figcaption><p>One module is a drive motor, an azimuth motor and an absolute encoder.</p></figcaption></figure>
+
+A module has one job: make its wheel roll at a speed, pointing at an angle. The drive motor runs velocity control for the speed, and the azimuth motor runs position control for the angle. An absolute encoder tells the azimuth which way the wheel points when the robot turns on, because the azimuth motor's own encoder starts at zero wherever the wheel happens to be.
+
+Both motors are ordinary [`SmartMotorController`s](editor/README.md), each with its own [`SmartMotorControllerConfig`](editor/config/README.md), so everything about gearing, gains and current limits applies to them unchanged.
+
+## Commands v2, Commands v3 and functions
+
+A `SwerveModule` has no commands of its own, and is the same class in Commands v2 and Commands v3: `yams.core.mechanisms.swerve.SwerveModule`. The only difference is the package its two motor configs come from, `yams.commands2.config` or `yams.commands3.config`. The [`SwerveDrive`](swerve-drive.md#commands) is what you command, and it sets each module for you.
+
+You rarely call a module directly, but these are the functions it has:
+
+| Function | What it does |
+| --- | --- |
+| `setSwerveModuleState(SwerveModuleVelocity)` | Set the wheel's speed and angle. The [optimization, cosine compensation and velocity deadband](mechanism-configs/swerve-module-config.md) are applied first. An overload adds a drive feedforward force. |
+| `setAzimuthAngle(Rotation2d)` | Turn the wheel to an angle without driving it. |
+| `getState()` | The wheel's current speed and angle, and how fast the azimuth is turning. |
+| `getPosition()` | How far the wheel has rolled, and its angle. Used for odometry. |
+| `seedAzimuthEncoder()` | Set the azimuth motor's encoder from the absolute encoder. |
+| `getRawAbsoluteEncoderAngle()` | The absolute encoder's reading with no offset, for [finding the offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder). |
+| `getDriveMotorController()`, `getAzimuthMotorController()` | The two motors, for anything YAMS does not wrap. |
+
+`SwerveDrive.updateTelemetry()` and `SwerveDrive.simIterate()` update every module, so you do not call those on a module yourself.
+
 See [Swerve Drive](swerve-drive.md) first for how modules fit into the drive as a whole. This page goes deeper on `SwerveModule` and `SwerveModuleConfig` themselves.
+
+Both are in `yams.core` and are shared by Commands v2 and Commands v3, so the imports are the same whichever vendordep you use:
+
+```java
+import yams.core.mechanisms.config.SwerveModuleConfig;
+import yams.core.mechanisms.swerve.SwerveModule;
+```
+
+Module states are WPILib 2027 `SwerveModuleVelocity`s (the 2027 name for `SwerveModuleState`).
+
+## Configuring and tuning a swerve module, step by step
+
+{% stepper %}
+{% step %}
+#### Configure the drive motor
+
+Set its gearing and wheel size, a `SimpleMotorFeedforward` and a stator current limit: see [The two motors](mechanism-configs/swerve-module-config.md#the-two-motors).
+{% endstep %}
+
+{% step %}
+#### Configure the azimuth motor
+
+Set its gearing, position gains and a stator current limit. The azimuth turns all the way round, so it usually has [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping).
+{% endstep %}
+
+{% step %}
+#### Set the location
+
+Give the module's position from the center of the robot: see [`withLocation`](mechanism-configs/swerve-module-config.md#withlocation). Front is positive X and left is positive Y.
+{% endstep %}
+
+{% step %}
+#### Find the absolute encoder offset
+
+Point the wheel forward with its bevel gear to the left, read the absolute encoder, and use that as the offset: see [The absolute encoder](mechanism-configs/swerve-module-config.md#the-absolute-encoder). Every module has its own.
+{% endstep %}
+
+{% step %}
+#### Lift the robot before tuning
+
+Put the robot on blocks so that every wheel is clear of the blocks and of the ground. Always start tuning the real modules this way, even if you already tuned them in simulation. Simulation is great practice, but its gains cannot be relied on for the first run of a real module.
+{% endstep %}
+
+{% step %}
+#### Tune the azimuth
+
+Step the wheel's angle with `NT:/Tuning/<name>/modules/azimuth/angle` and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/README.md#azimuth-motors).
+{% endstep %}
+
+{% step %}
+#### Tune the drive
+
+Type the setpoint velocity into `NT:/Tuning/<name>/modules/drive/velocity`, find the drive's `kS` and `kV`, then add a little `kP`: see [Drive motors](live-tuning/README.md#drive-motors).
+{% endstep %}
+
+{% step %}
+#### Add the coupling ratio if the odometry drifts
+
+If the robot's position creeps when the wheels only steer, set [`withCouplingRatio`](mechanism-configs/swerve-module-config.md#withcouplingratio).
+{% endstep %}
+{% endstepper %}
 
 ## A Fully Configured Module
 
@@ -18,7 +107,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withLocation(Meters.of(0.3), Meters.of(0.3))
       .withOptimization(true)
       .withCosineCompensation(true)
-      .withMinimumVelocity(MetersPerSecond.of(0.05))
+      .withVelocityDeadband(MetersPerSecond.of(0.05))
       .withTelemetry("frontleft", TelemetryVerbosity.HIGH);
 
 SwerveModule fl = new SwerveModule(moduleConfig);
@@ -40,7 +129,7 @@ SwerveModule fl = new SwerveModule(moduleConfig);
 See [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config) for a full worked example with the rest of the `withAbsoluteEncoder`/`withLocation`/`withOptimization`/`withTelemetry` chain filled in.
 
 {% hint style="info" %}
-There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws, it's meant to be set exactly once.
+There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws an `IllegalStateException`, it's meant to be set exactly once.
 {% endhint %}
 
 ```java
@@ -60,8 +149,9 @@ Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting posi
 A CANcoder feeding a `TalonFXWrapper` azimuth motor is same-vendor, so it can be passed directly:
 
 ```java
-CANcoder canCoder = new CANcoder(3);
-SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2), DCMotor.getKrakenX60(1), azimuthCfg);
+CANBus canBus = new CANBus(CANPort.CAN_S0);
+CANcoder canCoder = new CANcoder(3, canBus);
+SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2, canBus), DCMotor.getKrakenX60(1), azimuthCfg);
 
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withAbsoluteEncoder(canCoder)
@@ -70,7 +160,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 azimuthSMC.applyConfig(azimuthCfg); // Needed to apply the offset to the azimuthSmc
 ```
 
-Setting the External Encoder inside of the azimuth config is reccommended so the settings are propogated to the External Encoder.
+Setting the external encoder inside of the azimuth config is recommended so the settings are propagated to the external encoder. `withExternalEncoderZeroOffset(...)` is read back with `getExternalEncoderZeroOffset()` (formerly `getZeroOffset()`).
 
 ```java
 SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
@@ -80,7 +170,7 @@ SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
       .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))
       .withUseExternalFeedbackEncoder(true);
 
-SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2), DCMotor.getKrakenX60(1), azimuthCfg);
+SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2, canBus), DCMotor.getKrakenX60(1), azimuthCfg);
 
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC);
 ```
@@ -105,7 +195,7 @@ Angle raw = moduleConfig.getRawAbsoluteEncoderAngle().get();
 
 Two `SwerveModuleConfig` flags exist purely to make a module track its setpoint more efficiently:
 
-* `withOptimization(true)` calls WPILib's `SwerveModuleState.optimize(...)`, so a module never rotates more than 90 degrees to reach a target heading (it reverses the drive direction instead of steering the long way around).
+* `withOptimization(true)` optimizes each state like WPILib's `SwerveModuleVelocity.optimize(...)`, so a module never rotates more than 90 degrees to reach a target heading (it reverses the drive direction instead of steering the long way around). `SwerveDriveConfig.withModuleStateOptimization(boolean)` overrides this flag on every module of a drive at once, even while it is running.
 * `withCosineCompensation(true)` scales the commanded drive velocity by the cosine of the angle error between the module's current heading and its desired heading, so a module that hasn't finished rotating yet doesn't also try to drive at full speed in the wrong direction.
 
 ```java
@@ -117,21 +207,48 @@ Both are safe to leave enabled for essentially every swerve module; they exist a
 
 ### The Flip-Decision Feedback Loop
 
-When optimization is enabled, WPILib's `SwerveModuleState.optimize(...)` decides whether to flip a module 180 degrees, and that decision needs a reference angle to compare against.
+When optimization is enabled, the module decides every loop whether to flip 180 degrees (and reverse the drive) or steer straight to the target.
 
-`SwerveModuleConfig` deliberately compares against `lastCommandedAngle`, the angle it last actually commanded, rather than the live absolute encoder reading. Kinematics recomputes the raw desired angle from scratch every loop with no memory of a prior flip. If the flip decision were re-derived from the encoder instead, a debounced flip in progress would get pulled back toward the raw angle by the encoder's own reading before the debounce could ever confirm it, a feedback loop that could leave the module chattering between two headings. Comparing against the last commanded angle avoids that entirely.
+Kinematics recomputes the raw desired angle from scratch every loop with no memory of a prior flip, and a wheel that is still turning can sit near 90 degrees from both orientations of a target that keeps moving, such as a path starting off in a new direction. Choosing by the measured angle alone would reverse the wheel back and forth. `SwerveModuleConfig` therefore remembers `lastCommandedAngle`, the orientation it last actually sent, and keeps that orientation unless the other one is better by more than 30 degrees of hysteresis (see `SwerveModuleVelocityWithAzimuth.optimize(...)`). That avoids the module chattering between two headings.
 
-## Minimum Velocity
+## Velocity Deadband
 
-`SwerveModuleConfig.withMinimumVelocity(LinearVelocity)` sets a deadband below which `getOptimizedState(...)` zeroes the commanded speed and holds the module at its current angle instead of the kinematically-desired one. This keeps a module from spinning to face a new heading every time the requested drive speed is nearly zero, which otherwise reads as constant, pointless wheel chatter when the driver lets go of the stick.
+`SwerveModuleConfig.withVelocityDeadband(LinearVelocity)` sets a wheel speed at or below which the module stops and holds its current angle, instead of steering to the angle the kinematics ask for. The default is 0.1 m/s.
+
+<figure><img src="../.gitbook/assets/swerve-velocity-deadband.gif" alt="Animation of a wheel whose requested speed sweeps from 0 to 0.3 meters per second and back. While the request is inside the 0.1 meters per second deadband the commanded speed is zero and the wheel is stopped. Above it the commanded speed equals the request"><figcaption><p>Requested and commanded wheel speed with the default 0.1 m/s deadband.</p></figcaption></figure>
+
+**Why it exists.** When the driver lets go of the stick the requested speed is nearly zero, and the direction of a nearly zero velocity is mostly noise. Without the deadband every module would keep steering to chase that noise, which looks like constant, pointless wheel chatter.
+
+**What it costs.** The robot cannot move slower than the deadband:
+
+| Requested wheel speed | What the module does |
+| --- | --- |
+| Above the deadband | Drives at that speed and steers normally. |
+| At or below the deadband | Stops, and holds the angle it already has. |
+
+That matters whenever the robot is meant to creep:
+
+* **Lining up slowly by hand.** Gentle stick pushes do nothing until the request passes the deadband, then the robot starts with a small jump.
+* **The end of auto-align or a path.** As a PID closes in on its target it asks for smaller and smaller speeds. Once they drop inside the deadband the wheels stop, and the robot can settle a little short of the target.
+* **Slow turns.** Wheels closer to the center of rotation move slower, so they can fall inside the deadband while the others keep driving.
+
+If the robot stops short or will not creep, lower the deadband. If the wheels twitch at rest, raise it. Pass `null` to turn it off and always steer.
 
 ```java
-moduleConfig.withMinimumVelocity(MetersPerSecond.of(0.05));
+moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
 ```
 
-{% hint style="warning" %}
-`SwerveModuleConfig` also has a `couplingRatio` field intended for differential swerve modules where azimuth rotation mechanically couples into drive rotation, but it isn't wired into any public setter yet (tracked as a TODO in the source). Don't rely on it being applied.
-{% endhint %}
+The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](../live-tuning/README.md#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
+
+## Steer to Drive Coupling
+
+On most modules the drive gearing turns the wheel when the azimuth rotates, even with the drive motor still, so steering alone would drive the wheel and skew its speed and odometry. `withCouplingRatio(...)` compensates for this the same way the CTRE swerve API does: the drive setpoint includes the motion steering causes, and that motion is removed from the measured wheel speed and distance.
+
+```java
+moduleConfig.withCouplingRatio(3.5); // drive motor rotations per azimuth rotation, e.g. kCoupleRatio from CTRE Tuner X
+```
+
+`withCouplingRatio(GearBox)` takes the same ratio as a `GearBox` from the drive motor (input) to the azimuth (output). A ratio of `0` disables compensation.
 
 ## Module Telemetry
 
@@ -142,7 +259,7 @@ moduleConfig.withMinimumVelocity(MetersPerSecond.of(0.05));
 | Field                  | NetworkTables key | `LOW` | `MID` | `HIGH` |
 | ---------------------- | ----------------- | :---: | :---: | :----: |
 | Absolute encoder angle | `encoder`         |   ✓   |   ✓   |    ✓   |
-| SwerveModuleState      | `state`           |       |       |    ✓   |
+| SwerveModuleVelocity   | `state`           |       |       |    ✓   |
 
 See [Telemetry](../understanding/telemetry.md) for how struct-encoded fields and verbosity presets work across YAMS generally.
 
@@ -166,8 +283,8 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 
 ## How SwerveDrive Uses Each Module
 
-`SwerveDrive` computes one `SwerveModuleState[]` per loop from the requested `ChassisSpeeds` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where [optimization and cosine compensation](swerve-module.md#optimization-and-cosine-compensation) are actually applied, so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
+`SwerveDrive` computes one `SwerveModuleVelocity[]` per loop from the requested `ChassisVelocities` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where [optimization and cosine compensation](swerve-module.md#optimization-and-cosine-compensation) are actually applied, so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
 
 ## Code Reference
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/swerve_drive/java/frc/robot/subsystems/SwerveSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/SwerveSubsystem.java" %}

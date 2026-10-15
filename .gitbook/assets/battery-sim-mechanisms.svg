@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 468" width="760" height="468" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">When each mechanism draws current</title>
+<desc id="d">Six cards with a current over time shape for each mechanism type. An arm spikes when it starts and stops and keeps drawing to hold against gravity. An elevator draws the most going up. A flywheel draws very large current while spinning up and little at speed. A pivot or turret draws short bursts. A swerve drive has eight motors and is usually the largest draw. Together the draws add up and overlapping peaks cause the deepest sag.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="468" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="436" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >When each mechanism draws current</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Each sketch is current over time. Typical shapes, not measurements: gearing, mass and current limits change the numbers.</text>
+<rect x="34" y="84" width="222" height="168" rx="8" fill="#fafbfc" stroke="#3e6da8" stroke-width="1.5"/>
+<text x="48.0" y="108.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Arm</text>
+<text x="48.0" y="124.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >1 or 2 motors</text>
+<path d="M48.0,183.4 L71.3,183.4 L79.0,144.4 L106.2,162.6 L145.0,165.2 L156.6,149.6 L168.3,173.0 L242.0,173.0 L242.0,186 L48,186 Z" fill="#dbe7f5"/><path d="M48.0,183.4 L71.3,183.4 L79.0,144.4 L106.2,162.6 L145.0,165.2 L156.6,149.6 L168.3,173.0 L242.0,173.0" fill="none" stroke="#3e6da8" stroke-width="2.2" stroke-linejoin="round"/><line x1="48" y1="186" x2="242" y2="186" stroke="#cbd2d9"/>
+<text x="48.0" y="206.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Spikes when it starts and stops.</text>
+<text x="48.0" y="221.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Keeps drawing to hold the arm</text>
+<text x="48.0" y="236.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >against gravity.</text>
+<rect x="268" y="84" width="222" height="168" rx="8" fill="#fafbfc" stroke="#6b46c1" stroke-width="1.5"/>
+<text x="282.0" y="108.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Elevator</text>
+<text x="282.0" y="124.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >1 to 4 motors</text>
+<path d="M282.0,183.4 L301.4,183.4 L309.2,136.6 L340.2,149.6 L379.0,152.2 L390.6,170.4 L427.5,170.4 L437.2,183.4 L476.0,183.4 L476.0,186 L282,186 Z" fill="#e4dcf7"/><path d="M282.0,183.4 L301.4,183.4 L309.2,136.6 L340.2,149.6 L379.0,152.2 L390.6,170.4 L427.5,170.4 L437.2,183.4 L476.0,183.4" fill="none" stroke="#6b46c1" stroke-width="2.2" stroke-linejoin="round"/><line x1="282" y1="186" x2="476" y2="186" stroke="#cbd2d9"/>
+<text x="282.0" y="206.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Largest going up fast with a</text>
+<text x="282.0" y="221.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >heavy carriage. Steady draw to</text>
+<text x="282.0" y="236.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >hold a height.</text>
+<rect x="502" y="84" width="222" height="168" rx="8" fill="#fafbfc" stroke="#147d6f" stroke-width="1.5"/>
+<text x="516.0" y="108.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Flywheel, shooter, rollers</text>
+<text x="516.0" y="124.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >1 to 4 motors</text>
+<path d="M516.0,184.4 L531.5,184.4 L535.4,134.0 L574.2,162.6 L603.3,178.2 L644.0,179.8 L649.9,160.0 L663.4,178.7 L710.0,179.8 L710.0,186 L516,186 Z" fill="#d5f0ea"/><path d="M516.0,184.4 L531.5,184.4 L535.4,134.0 L574.2,162.6 L603.3,178.2 L644.0,179.8 L649.9,160.0 L663.4,178.7 L710.0,179.8" fill="none" stroke="#147d6f" stroke-width="2.2" stroke-linejoin="round"/><line x1="516" y1="186" x2="710" y2="186" stroke="#cbd2d9"/>
+<text x="516.0" y="206.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Very large while spinning up.</text>
+<text x="516.0" y="221.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Small once at speed, with a</text>
+<text x="516.0" y="236.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >bump on every shot.</text>
+<rect x="34" y="266" width="222" height="168" rx="8" fill="#fafbfc" stroke="#52606d" stroke-width="1.5"/>
+<text x="48.0" y="290.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Pivot, turret, wrist</text>
+<text x="48.0" y="306.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >1 motor</text>
+<path d="M48.0,366.4 L86.8,366.4 L92.6,339.4 L106.2,360.2 L129.5,362.8 L135.3,342.0 L145.0,366.4 L242.0,366.4 L242.0,368 L48,368 Z" fill="#eef1f4"/><path d="M48.0,366.4 L86.8,366.4 L92.6,339.4 L106.2,360.2 L129.5,362.8 L135.3,342.0 L145.0,366.4 L242.0,366.4" fill="none" stroke="#52606d" stroke-width="2.2" stroke-linejoin="round"/><line x1="48" y1="368" x2="242" y2="368" stroke="#cbd2d9"/>
+<text x="48.0" y="388.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Short bursts when it starts and</text>
+<text x="48.0" y="403.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >stops. Almost nothing while it</text>
+<text x="48.0" y="418.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >sits still.</text>
+<rect x="268" y="266" width="222" height="168" rx="8" fill="#fafbfc" stroke="#c2630b" stroke-width="1.5"/>
+<text x="282.0" y="290.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Swerve drive</text>
+<text x="282.0" y="306.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >8 motors: 4 drive, 4 azimuth</text>
+<path d="M282.0,365.4 L293.6,365.4 L299.5,316.0 L340.2,326.4 L359.6,349.8 L398.4,352.4 L404.2,318.6 L433.3,323.8 L445.0,352.4 L476.0,355.0 L476.0,368 L282,368 Z" fill="#fde3c8"/><path d="M282.0,365.4 L293.6,365.4 L299.5,316.0 L340.2,326.4 L359.6,349.8 L398.4,352.4 L404.2,318.6 L433.3,323.8 L445.0,352.4 L476.0,355.0" fill="none" stroke="#c2630b" stroke-width="2.2" stroke-linejoin="round"/><line x1="282" y1="368" x2="476" y2="368" stroke="#cbd2d9"/>
+<text x="282.0" y="388.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Usually the largest draw. Peaks</text>
+<text x="282.0" y="403.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >when accelerating, changing</text>
+<text x="282.0" y="418.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >direction or pushing.</text>
+<rect x="502" y="266" width="222" height="168" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.5"/>
+<text x="516.0" y="290.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >All of them together</text>
+<text x="516.0" y="306.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >what the battery actually sees</text>
+<path d="M516.0,362.8 L531.5,362.8 L535.4,329.0 L570.3,336.8 L585.8,352.4 L609.1,353.4 L613.0,335.8 L624.6,316.0 L651.8,318.6 L667.3,344.6 L682.8,352.4 L710.0,353.4 L710.0,368 L516,368 Z" fill="#fde2e2"/><path d="M516.0,362.8 L531.5,362.8 L535.4,329.0 L570.3,336.8 L585.8,352.4 L609.1,353.4 L613.0,335.8 L624.6,316.0 L651.8,318.6 L667.3,344.6 L682.8,352.4 L710.0,353.4" fill="none" stroke="#d64545" stroke-width="2.2" stroke-linejoin="round"/><line x1="516" y1="368" x2="710" y2="368" stroke="#cbd2d9"/>
+<text x="516.0" y="388.0" font-size="11" font-weight="700" text-anchor="start" fill="#1f2933" >The draws add up. Peaks that</text>
+<text x="516.0" y="403.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >line up cause the deepest sag,</text>
+<text x="516.0" y="418.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >and that is when brownouts hit.</text>
+</svg>

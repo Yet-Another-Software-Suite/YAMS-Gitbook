@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 390" width="760" height="390" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">What each TelemetryVerbosity publishes</title>
+<desc id="d">Three nested boxes. LOW publishes positions and velocities: the mechanism, measurement, rotor and external encoder keys and the closed loop setpoint and slot. MID adds power: the output voltage and the stator and supply currents. HIGH adds everything tunable: gains, limits and ramp rates, the motor temperature, status booleans and the Live Tuning command.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="390" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="358" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >What each TelemetryVerbosity publishes</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >For a SmartMotorController. Use the level that matches what you need to see.</text>
+<rect x="34" y="92" width="692" height="250" rx="10" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.8"/>
+<text x="48.0" y="116.0" font-size="13.5" font-weight="700" text-anchor="start" fill="#147d6f" >LOW</text>
+<text x="48.0" y="144.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" >Positions and velocities</text>
+<text x="48.0" y="162.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">mechanism/*</text>
+<text x="48.0" y="180.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">measurement/*</text>
+<text x="48.0" y="198.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">rotor/*</text>
+<text x="48.0" y="216.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">externalencoder/*</text>
+<text x="48.0" y="234.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">closedloop/setpoint/*</text>
+<text x="48.0" y="252.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">closedloop/slot</text>
+<rect x="268" y="110" width="444" height="214" rx="10" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.8"/>
+<text x="282.0" y="134.0" font-size="13.5" font-weight="700" text-anchor="start" fill="#3e6da8" >MID adds</text>
+<text x="282.0" y="162.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" >Power</text>
+<text x="282.0" y="180.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">motor/outputVoltage</text>
+<text x="282.0" y="198.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">current/stator</text>
+<text x="282.0" y="216.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">current/supply</text>
+<rect x="470" y="128" width="228" height="178" rx="10" fill="#fde3c8" stroke="#c2630b" stroke-width="1.8"/>
+<text x="484.0" y="152.0" font-size="13.5" font-weight="700" text-anchor="start" fill="#c2630b" >HIGH adds</text>
+<text x="484.0" y="180.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" >Everything tunable</text>
+<text x="484.0" y="198.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">gains, limits, ramp rates</text>
+<text x="484.0" y="216.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">motor/temperature</text>
+<text x="484.0" y="234.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">status booleans</text>
+<text x="484.0" y="252.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">the Live Tuning command</text>
+<text x="34.0" y="366.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Each level includes the one before it. HIGH is what live tuning needs; LOW is enough to see what a mechanism did.</text>
+</svg>

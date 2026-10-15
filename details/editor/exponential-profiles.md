@@ -16,20 +16,11 @@ Motion profiles output a series of intermediate setpoints (position and velocity
 
 ## Trapezoidal vs Exponential Profiles
 
+<figure><img src="../../.gitbook/assets/exponential-profile-compare.png" alt="Two graphs. Setpoint velocity over time: a trapezoidal profile ramps in a straight line to a flat top, an exponential profile rises quickly and curves over near top speed. Acceleration against speed: the motor's available acceleration falls to zero at top speed, the exponential profile follows it, and the trapezoidal profile asks for a constant acceleration the motor cannot give at high speed"><figcaption><p>The two profiles, and why the motor can follow one more easily than the other.</p></figcaption></figure>
+
 ### Trapezoidal Profiles
 
 Trapezoidal profiles are the most common type. The name comes from the trapezoidal shape of the velocity-time graph.
-
-```
-Velocity
-  ^
-  |      ___________
-  |     /           \
-  |    /             \
-  |   /               \
-  |  /                 \
-  |_/___________________\____> Time
-```
 
 **Key characteristics:**
 
@@ -48,27 +39,18 @@ Velocity
 
 Exponential profiles model how DC motors actually behave. Instead of assuming constant acceleration, they account for the motor's torque-speed curve and the system's physical dynamics.
 
-```
-Velocity
-  ^
-  |           __________
-  |         _/
-  |       _/
-  |     _/
-  |   _/
-  |__/____________________> Time
-```
-
 **Key characteristics:**
 
 * Acceleration naturally decreases as velocity increases (following motor physics)
-* Uses motor kV (velocity constant) and kA (acceleration constant) to model behavior
+* Models the mechanism with a kV (velocity constant) and a kA (acceleration constant)
 * More accurately represents what the motor can actually achieve
 * Better disturbance rejection
 
 {% hint style="info" %}
 Exponential profiles are named for the exponential approach to maximum velocity, which mirrors the natural response of a first-order system like a DC motor.
 {% endhint %}
+
+<figure><img src="../../.gitbook/assets/exponential-profile-tracking.gif" alt="Animation of a 12 volt motor following each profile. With the trapezoidal profile the measured velocity falls behind the setpoint as the speed rises and the motor saturates at 12 volts. With the exponential profile the measured velocity stays on the setpoint"><figcaption><p>A simulated 12 V motor following each profile. The trapezoidal profile asks for more than the motor has left at speed.</p></figcaption></figure>
 
 ## The Physics Behind Exponential Profiles
 
@@ -111,7 +93,32 @@ This shows that as velocity (ω) increases, the available acceleration (α) decr
 
 ## Exponential Profiles in YAMS
 
-YAMS provides `ExponentialProfilePIDController` which combines an exponential motion profile with a PID controller. This replaces `ProfiledPIDController` (which uses trapezoidal profiles) or `PIDController` (which has no profiling).
+YAMS provides `ExponentialProfilePIDController` (`yams.core.math.ExponentialProfilePIDController`), which combines an exponential motion profile with a PID controller and has factory methods for the profile's constraints. In a `SmartMotorControllerConfig` you set the PID gains with `withClosedLoopController(kP, kI, kD)` and the profile with `withExponentialProfile(constraints)`, instead of a trapezoidal profile (`withTrapezoidalProfile`) or no profile at all.
+
+Exponential profiles in YAMS follow the same idea as CTRE's Motion Magic Expo, on every supported motor controller. CTRE's documentation is a good companion to this page:
+
+{% embed url="https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo" %}
+
+### What you set
+
+An exponential profile is defined by a kV and a kA, and those are what you tune, exactly as CTRE's documentation describes. What YAMS adds is a way to get **starting values** for them without measuring anything: you give the **maximum voltage** and one of two descriptions of the mechanism, and YAMS works out a kV and a kA to start from:
+
+| You give | YAMS works out the starting kV and kA from |
+| --- | --- |
+| Maximum voltage, the motor, and the mechanism's moment of inertia (or its mass and drum radius) | The motor and the load it has to move |
+| Maximum voltage, a maximum velocity and a maximum acceleration | `kV = maximum voltage / maximum velocity` and `kA = maximum voltage / maximum acceleration` |
+
+The second row is the same relationship [CTRE's Motion Magic Expo documentation](https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo) gives: dividing the voltage by kV gives the maximum velocity of the profile, and dividing it by kA gives its maximum acceleration from a standstill. CTRE's page is the best description of exponential profiles there is, and this page is meant to agree with it. If the two ever differ, CTRE's is right.
+
+From there you adjust kV and kA directly, either [live](#refining-the-profile-live) or by passing your own with `ExponentialProfile.Constraints.fromCharacteristics(maxVoltage, kV, kA)`.
+
+`SmartMotorControllerConfig` takes all of these directly:
+
+```java
+.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.5))  // arm or flywheel
+.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(2), Kilograms.of(8), Inches.of(1)) // elevator
+.withExponentialProfile(Volts.of(10), RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(8))
+```
 
 ### Creating Constraints
 
@@ -170,17 +177,13 @@ ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.cre
 ```java
 SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(new ExponentialProfilePIDController(
-        30,  // kP
-        0,   // kI
-        0,   // kD
-        ExponentialProfilePIDController.createElevatorConstraints(
-            Volts.of(12),
-            DCMotor.getNEO(2),
-            Pounds.of(15),
-            Inches.of(1),
-            gearing
-        )
+    .withClosedLoopController(30, 0, 0) // kP, kI, kD
+    .withExponentialProfile(ExponentialProfilePIDController.createElevatorConstraints(
+        Volts.of(12),
+        DCMotor.getNEO(2),
+        Pounds.of(15),
+        Inches.of(1),
+        gearing
     ))
     .withGearing(gearing)
     .withFeedforward(new ElevatorFeedforward(0, 0.5, 0, 0))
@@ -189,16 +192,141 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 
 ## Tuning Exponential Profiles
 
-### Step 1: Characterize Your System
+### Step 1: Get a starting kV and kA
 
-The exponential profile needs accurate kV and kA values. You have two options:
+Start with the maximum voltage and a description of the mechanism, and let YAMS work out a kV and a kA to begin with. Then tune them directly in [Refining the profile live](#refining-the-profile-live):
 
-1. **Use the factory methods** - They calculate kV and kA from motor specs and mechanism parameters
-2. **Run SysId** - Get experimental values from your actual mechanism
+| Option | How | Good for |
+| --- | --- | --- |
+| The mechanism | The motor, with the moment of inertia or the mass and drum radius | A first version, and simulation |
+| A maximum velocity and acceleration | The fastest you want the profile to go, and the hardest you want it to accelerate | Real mechanisms: both numbers are easy to see on a graph and to adjust |
+| kV and kA, measured | One constant voltage test, see [Measuring kV and kA](#measuring-kv-and-ka-optional) | Starting closer to the real mechanism, so there is less to tune |
+
+{% hint style="info" %}
+**Start slower than you think the mechanism can go.** CTRE's advice for Motion Magic Expo is that it is safer to start from a higher kV and kA than ideal, which is a profile with a lower maximum velocity and acceleration. So if the starting values are in doubt, raise kV and kA, or start from a lower maximum velocity and acceleration, and bring them down once the mechanism follows the profile well.
+{% endhint %}
 
 {% hint style="warning" %}
-Factory methods use theoretical values. Real mechanisms have friction, cable drag, and other losses. SysId values are more accurate but require testing.
+A description from the motor and the mass is theoretical. Real mechanisms have friction, cable drag and other losses, so expect to slow the profile down a little from what the numbers say.
 {% endhint %}
+
+### Measuring kV and kA (optional)
+
+This is another way to get starting values, from the real mechanism instead of from a calculation. It needs only a button binding and a graph, and it gives you both from one run.
+
+<figure><img src="../../.gitbook/assets/exponential-profile-step-test.png" alt="A graph of velocity after a constant 6 volts is applied. It levels off at 2.9 rotations per second, so kV is 6.0 minus kS, divided by 2.9, which is 2.0. It reaches 63 percent of that speed after 0.15 seconds, so kA is kV times 0.15, which is 0.30"><figcaption><p>One voltage step gives both constants. Example values.</p></figcaption></figure>
+
+{% stepper %}
+{% step %}
+#### Find kS
+
+Raise the voltage slowly from zero until the mechanism just starts to move. That voltage is kS.
+{% endstep %}
+
+{% step %}
+#### Apply a constant voltage
+
+Bind a button to a fixed voltage, well below 12 V so the mechanism does not hit a hard stop before it reaches a steady speed:
+
+```java
+driver.a().whileTrue(flywheel.setVoltage(Volts.of(6)));
+```
+
+Graph `NT:/Mechanisms/<Mechanism>/<Motor>/mechanism/velocity` in AdvantageScope while you hold the button. Leave it in rotations per second: the profile's kV and kA are per rotation of the mechanism.
+{% endstep %}
+
+{% step %}
+#### Read the steady speed: that gives kV
+
+Once the line goes flat, read the speed.
+
+`kV = (voltage - kS) / steady speed`
+{% endstep %}
+
+{% step %}
+#### Read the time to 63%: that gives kA
+
+Find the moment the velocity reached 63% of the steady speed, and how long after the voltage was applied that was.
+
+`kA = kV x that time`
+{% endstep %}
+
+{% step %}
+#### Put them in the config
+
+```java
+.withExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(
+    10.0, // maximum voltage the profile may ask for
+    2.0,  // kV, volts per rotation per second
+    0.30  // kA, volts per rotation per second squared
+))
+```
+{% endstep %}
+
+{% endstepper %}
+
+{% hint style="info" %}
+**Gravity gets in the way of this test.** On an elevator, subtract kG as well: `kV = (voltage - kS - kG) / steady speed`. On an arm the pull of gravity changes with the angle, so the speed never settles: start from `createArmConstraints(...)` and refine it live instead.
+{% endhint %}
+
+### Refining the profile live
+
+This is where the profile is actually tuned, by changing kV and kA directly. However you got the starting values, YAMS stores the profile as a maximum voltage, a kV and a kA, and all three can be changed while the robot is running.
+
+{% stepper %}
+{% step %}
+#### Turn on live tuning
+
+Give the motor `TelemetryVerbosity.HIGH` and start the `Live Tuning` command. [Live tuning](../live-tuning/README.md) covers both.
+{% endstep %}
+
+{% step %}
+#### Graph the profile against the mechanism
+
+In AdvantageScope, put these two on one graph:
+
+* `NT:/Mechanisms/<Mechanism>/<Motor>/closedloop/setpoint/velocity`: what the profile asks for.
+* `NT:/Mechanisms/<Mechanism>/<Motor>/mechanism/velocity`: what the mechanism does.
+{% endstep %}
+
+{% step %}
+#### Run a move
+
+Command a move long enough for the mechanism to reach its top speed, and watch how closely the second line follows the first.
+{% endstep %}
+
+{% step %}
+#### Tune `kA` on the way up
+
+Look at the start of the move, while the mechanism is speeding up. If it falls behind the profile, raise `NT:/Tuning/<Mechanism>/<Motor>/closedloop/motionprofile/kA`. A higher `kA` lowers the profile's acceleration. Run the move again and repeat until it keeps up.
+{% endstep %}
+
+{% step %}
+#### Tune `kV` at top speed
+
+Look at the fastest part of the move. If the mechanism falls behind there, or never reaches the profile's top speed, raise `NT:/Tuning/<Mechanism>/<Motor>/closedloop/motionprofile/kV`. A higher `kV` lowers the profile's top speed.
+{% endstep %}
+
+{% step %}
+#### Speed it up if there is room
+
+If the mechanism follows the whole move easily with voltage to spare on `NT:/Mechanisms/<Mechanism>/<Motor>/motor/outputVoltage`, lower `kV` and `kA` a little at a time, or raise `NT:/Tuning/<Mechanism>/<Motor>/closedloop/motionprofile/maxInput`. Stop as soon as it starts to fall behind again, and go back one step.
+{% endstep %}
+
+{% step %}
+#### Put the tuned values in the config
+
+Live values are lost when the robot code restarts, so copy them into the config:
+
+```java
+.withExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(
+    10.0, // maxInput: maximum voltage the profile may ask for
+    2.2,  // kV, tuned
+    0.35  // kA, tuned
+))
+```
+{% endstep %}
+{% endstepper %}
 
 ### Step 2: Set Maximum Voltage
 
@@ -210,7 +338,7 @@ The maximum voltage determines how aggressively the profile will command the mec
 
 ### Step 3: Tune PID Gains
 
-With exponential profiles, the feedforward does most of the work. The PID handles:
+With a good feedforward ([Step 4](#step-4-add-feedforward)), the feedforward does most of the work. The PID handles:
 
 * **kP** - Corrects position error. Start low (1-5) and increase until responsive
 * **kI** - Usually not needed with good feedforward. Use only if steady-state error persists
@@ -218,31 +346,32 @@ With exponential profiles, the feedforward does most of the work. The PID handle
 
 ### Step 4: Add Feedforward
 
-Even with exponential profiles, you still need feedforward for:
+The profile only plans the move. It does not drive the motor: the voltage that follows the plan comes from the feedforward and the PID. So an exponential profile still needs a full feedforward:
 
-* **Gravity compensation** (arms, elevators) - The profile doesn't know about gravity
-* **Friction compensation** (kS) - Helps overcome stiction
+* **kS** for friction.
+* **kG** for gravity, on arms and elevators. The profile does not know about gravity.
+* **kV and kA** for the speed and acceleration the profile asks for.
 
 ```java
 // For an arm
 .withFeedforward(new ArmFeedforward(
     0.1,  // kS - voltage to overcome friction
     0.3,  // kG - voltage to hold horizontal
-    0,    // kV - usually 0 since profile handles this
-    0     // kA - usually 0 since profile handles this
+    1.2,  // kV - voltage per unit of speed
+    0.05  // kA - voltage per unit of acceleration
 ))
 
 // For an elevator
 .withFeedforward(new ElevatorFeedforward(
     0.1,  // kS - voltage to overcome friction
     0.2,  // kG - voltage to counteract gravity
-    0,    // kV - usually 0 since profile handles this
-    0     // kA - usually 0 since profile handles this
+    3.0,  // kV - voltage per unit of speed
+    0.1   // kA - voltage per unit of acceleration
 ))
 ```
 
 {% hint style="info" %}
-When using exponential profiles, the profile itself handles the velocity and acceleration feedforward. You typically only need kS (static friction) and kG (gravity) in your feedforward object.
+**The profile's kV and kA are not the feedforward's kV and kA.** The profile's pair only shape the plan. The feedforward's pair turn that plan into voltage. CTRE's Motion Magic Expo example sets both, the gain slot's `kV` and `kA` and the profile's `MotionMagicExpo_kV` and `MotionMagicExpo_kA`, and YAMS keeps them separate in the same way. [Feedforward](config/feedforward.md) covers finding the feedforward's values.
 {% endhint %}
 
 ## Motor Controller Support
@@ -251,10 +380,11 @@ When using exponential profiles, the profile itself handles the velocity and acc
 | ------------------------ | ------------------------ | ----------------------------- | --------------------------- |
 | TalonFX (Kraken, Falcon) | On-device (Motion Magic) | On-device (Motion Magic Expo) | Best performance            |
 | TalonFXS                 | On-device (Motion Magic) | On-device (Motion Magic Expo) | Best performance            |
-| SparkMax/SparkFlex       | On-device (MAXMotion)    | RoboRIO                       | Exponential runs on RoboRIO |
+| SparkMax/SparkFlex       | On-device (MAXMotion)    | SystemCore                    | Exponential runs on the SystemCore |
+| Thrifty Nova             | SystemCore               | SystemCore                    | All closed loop control runs on the SystemCore |
 
 {% hint style="info" %}
-When exponential profiles run on the RoboRIO, there's slightly more latency compared to on-device execution. However, the profile calculation is still very fast and suitable for most mechanisms.
+When exponential profiles run on the SystemCore, there's slightly more latency compared to on-device execution. However, the profile calculation is still very fast and suitable for most mechanisms.
 {% endhint %}
 
 ## Common Issues and Solutions
@@ -269,7 +399,7 @@ When exponential profiles run on the RoboRIO, there's slightly more latency comp
 
 * Decrease kP
 * Add kD for damping
-* Check that kV and kA values aren't underestimated
+* Slow the profile down: a profile that asks for more than the mechanism can do overshoots
 
 ### Mechanism can't keep up with profile
 
@@ -279,7 +409,7 @@ When exponential profiles run on the RoboRIO, there's slightly more latency comp
 
 ### Profile works in sim but not on real robot
 
-* Run SysId to get real kV and kA values
+* Slow the profile down: lower the maximum velocity and acceleration, or see [Refining the profile live](#refining-the-profile-live)
 * Account for friction with kS in feedforward
 * Check current limits aren't restricting torque
 
@@ -297,27 +427,26 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
         .withControlMode(ControlMode.CLOSED_LOOP)
         .withDrumRadius(chainPitch, toothCount)
-        .withClosedLoopController(new ExponentialProfilePIDController(
-            15, 0, 0,
-            ExponentialProfilePIDController.createElevatorConstraints(
-                Volts.of(10), // Conservative voltage for testing
-                motors,
-                carriageMass,
-                chainPitch.times(toothCount).div(2 * Math.PI),
-                gearing
-            )
+        .withClosedLoopController(15, 0, 0)
+        .withExponentialProfile(ExponentialProfilePIDController.createElevatorConstraints(
+            Volts.of(10), // Conservative voltage for testing
+            motors,
+            carriageMass,
+            chainPitch.times(toothCount).div(2 * Math.PI),
+            gearing
         ))
-        .withSimClosedLoopController(15, 0, 0, 
-            MetersPerSecond.of(1), MetersPerSecondPerSecond.of(2))
+        .withSimClosedLoopController(15, 0, 0)
         .withFeedforward(new ElevatorFeedforward(0.1, 0.25, 0, 0))
         .withSimFeedforward(new ElevatorFeedforward(0, 0.2, 0, 0))
         .withGearing(gearing)
-        .withIdleMode(MotorMode.BRAKE)
+        .withZeroPower(MotorMode.BRAKE)
         .withStatorCurrentLimit(Amps.of(40))
+        .withSoftLimits(Meters.of(0), Meters.of(1.2))
+        .withStartingPosition(Meters.of(0))
         .withTelemetry("ElevatorMotor", TelemetryVerbosity.HIGH);
 
-    private final SparkMax leftSpark = new SparkMax(1, MotorType.kBrushless);
-    private final SparkMax rightSpark = new SparkMax(2, MotorType.kBrushless);
+    private final SparkMax leftSpark = new SparkMax(CANPorts.fromBusId(1), 1, MotorType.kBrushless);
+    private final SparkMax rightSpark = new SparkMax(CANPorts.fromBusId(1), 2, MotorType.kBrushless);
     
     private final SmartMotorController motor = new SparkWrapper(
         leftSpark, 
@@ -327,16 +456,24 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private final Elevator elevator = new Elevator(
         new ElevatorConfig()
-            .withSoftLimits(Meters.of(0), Meters.of(1.2))
             .withHardLimits(Meters.of(-0.05), Meters.of(1.3))
-            .withStartingPosition(Meters.of(0))
             .withCarriageWeight(carriageMass)
             .withTelemetry("Elevator", TelemetryVerbosity.HIGH),
         motor
     );
 
     public Command goToHeight(Distance height) {
-        return elevator.setGoalCommand(height);
+        return elevator.setHeight(height);
+    }
+
+    @Override
+    public void periodic() {
+        elevator.updateTelemetry();
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        elevator.simIterate();
     }
 }
 ```

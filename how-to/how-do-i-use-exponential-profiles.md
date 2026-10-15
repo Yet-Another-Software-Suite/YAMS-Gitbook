@@ -1,16 +1,12 @@
 # How do I use exponential profiles?
 
-Trapezoidal motion profiles assume constant maximum acceleration throughout a move, which can cause jerky starts on high-inertia mechanisms like heavy elevators or long arms. Exponential profiles let the acceleration vary continuously so the motor builds speed smoothly, following the physics of what the motor can actually deliver at each moment, this reduces overshoot and makes tuning more forgiving. Reach for exponential profiles when your trapezoidal profile produces oscillation, mechanical banging at the start of a move, or is difficult to tune around mechanical disturbances.
+An exponential profile plans a move the way a DC motor actually moves: hard acceleration at first, then less as it nears top speed. Every `SmartMotorController` in YAMS supports them. This is the short version: [Exponential profiles](../details/editor/exponential-profiles.md) has the full explanation and the tuning steps.
 
-## What are exponential profiles?
+<figure><img src="../.gitbook/assets/exponential-profile-compare.png" alt="Two graphs. Setpoint velocity over time: a trapezoidal profile ramps in a straight line to a flat top, an exponential profile rises quickly and curves over near top speed. Acceleration against speed: the motor's available acceleration falls to zero at top speed, the exponential profile follows it, and the trapezoidal profile asks for a constant acceleration the motor cannot give at high speed"><figcaption><p>The two profiles, and why the motor can follow one more easily than the other.</p></figcaption></figure>
 
-Exponential profiles are best described by CTRE, however with YAMS they are supported by all motor controllers.
+## Use one
 
-{% embed url="https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo" %}
-
-## How can I use exponential profiles?
-
-All `SmartMotorController`s support exponential profiles through the `ExponentialProfilePIDController` closed-loop controller. Use `ExponentialProfilePIDController` instead of `ProfiledPIDController` or `PIDController`.
+Add `withExponentialProfile(...)` instead of `withTrapezoidalProfile(...)`. The helpers on `yams.core.math.ExponentialProfilePIDController` work out starting values from the mechanism:
 
 ```java
 private final Distance chainPitch = Inches.of(0.25);
@@ -26,16 +22,28 @@ private final SmartMotorControllerConfig motorConfig        = new SmartMotorCont
       ExponentialProfilePIDController.createElevatorConstraints(
                                      Volts.of(12), // Maximum voltage during profile
                                      motors, // Motors
-                                     weight, // Carraige weight
+                                     weight, // Carriage weight
                                      chainPitch.times(toothCount).div(2 * Math.PI), // Drum radius
-                                     gearing))) // Gearing
+                                     gearing)) // Gearing
 ...
 ```
 
-There are multiple ways to create constraints, like [`createArmConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createArmConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\)) or [`createFlyWheelConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createFlywheelConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.math.system.plant.DCMotor,edu.wpi.first.units.measure.Mass,edu.wpi.first.units.measure.Distance,yams.gearing.MechanismGearing\)) or even [`createConstraints`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/math/ExponentialProfilePIDController.html#createConstraints\(edu.wpi.first.units.measure.Voltage,edu.wpi.first.units.measure.AngularVelocity,edu.wpi.first.units.measure.AngularAcceleration\)).
+There are helpers for arms, flywheels and custom limits too: see [creating constraints](../details/editor/exponential-profiles.md#creating-constraints).
 
-## When should I use exponential profiles?
+## When should I use one?
 
-Exponential Profiles are easier to tune than Trapezoidal Profiles (from `ProfiledPIDController`) and are very good at overcoming mechanical failures to a point. It CANNOT speed up a mechanism that is massively under-powered and slow to move. Trapezoidal Profiles often fail miserably when a mechanism experiences disturbances along its movement, aside from fixing those disturbances an Exponential Profile is probably your best chance at getting it "working" quickly.
+<figure><img src="../.gitbook/assets/exponential-profile-tracking.gif" alt="Animation of a 12 volt motor following each profile. With the trapezoidal profile the measured velocity falls behind the setpoint as the speed rises and the motor saturates at 12 volts. With the exponential profile the measured velocity stays on the setpoint"><figcaption><p>A simulated 12 V motor following each profile. The trapezoidal profile asks for more than the motor has left at speed.</p></figcaption></figure>
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/exponential_arm/java/frc/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}
+* **Use one** when a trapezoidal profile is hard to tune, or the mechanism falls behind it and then overshoots.
+* **Keep the trapezoidal profile** if it already works well, or the motor is always current limited.
+* **It cannot fix an underpowered mechanism.**
+
+See [when to use each profile type](../details/editor/exponential-profiles.md#when-to-use-each-profile-type).
+
+## Tune it
+
+Start from the helper's values and [refine the profile live](../details/editor/exponential-profiles.md#refining-the-profile-live). The profile only plans the move, so it still needs a feedforward, and the profile's `kV` and `kA` are [not the feedforward's](../details/editor/config/feedforward.md#these-are-not-an-exponential-profiles-kv-and-ka).
+
+## Code reference
+
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}

@@ -4,34 +4,37 @@ By default, `BatterySim` only models instantaneous voltage sag from combined cur
 
 ## Turn on discharge modeling
 
-Call `BatterySim.enableDischarge(...)` once, early on, with the capacity, nominal voltage, and nominal resistance of the battery you're modeling. `robotInit()` is a good place for it. A fresh 18 Ah competition battery is a reasonable default if you don't have measured numbers for your own.
+Call `BatterySim.enableDischarge(...)` once, early on, with the capacity, nominal voltage, and nominal resistance of the battery you're modeling. Your `Robot` constructor is a good place for it. A fresh 18 Ah competition battery is a reasonable default if you don't have measured numbers for your own.
 
 ```java
-import static edu.wpi.first.units.Units.Volts;
-import static edu.wpi.first.units.Units.Milliohms;
-import yams.motorcontrollers.simulation.BatterySim;
+import static org.wpilib.units.Units.MilliOhms;
+import static org.wpilib.units.Units.Volts;
+import yams.core.motorcontrollers.simulation.BatterySim;
 
-@Override
-public void robotInit() {
-  BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
+public Robot() {
+  BatterySim.enableDischarge(18.0, Volts.of(12.9), MilliOhms.of(20));
 }
 ```
 
 {% hint style="warning" %}
-Discharge modeling only affects simulation. On a real robot `BatterySim` is never consulted, the RIO reports the actual battery voltage from hardware, so this call is a no-op there.
+Discharge modeling only affects simulation. On a real robot `BatterySim` is never consulted, the SystemCore reports the actual battery voltage from hardware, so this call is a no-op there.
 {% endhint %}
+
+<figure><img src="../.gitbook/assets/battery-sim-discharge.png" alt="Two graphs of the default discharge model. Resting voltage against state of charge falls slowly from 12.9 volts at full to 12.0 volts at 20 percent, then steeply to 9 volts when empty. Usable capacity against sustained current falls from 100 percent at 0.9 amps to 60 percent at 54 amps. Internal resistance rises from 20 milliohms when full to 60 milliohms when empty"><figcaption><p>The default discharge curves.</p></figcaption></figure>
 
 ## Make sure your mechanisms report accurate current draw
 
-Discharge modeling can only drain the simulated battery as realistically as the current draw it's fed, and that comes straight out of each mechanism's physics simulation. If a mechanism's moment of inertia is a default/guessed value rather than a real one, its simulated current draw, and therefore how fast it drains the modeled battery, will be too low. Set a real MOI on each `SmartMotorControllerConfig` with `.withMomentOfInertia(...)` before relying on discharge numbers; see [MOI](../details/turrets-wrists.md#moi) for how.
+Discharge modeling can only drain the simulated battery as realistically as the current draw it's fed, and that comes straight out of each mechanism's physics simulation. If a mechanism's moment of inertia is a default/guessed value rather than a real one, its simulated current draw, and therefore how fast it drains the modeled battery, will be too low. Set a real MOI on each `SmartMotorControllerConfig` with `.withMomentOfInertia(...)` before relying on discharge numbers; see [MOI](../details/turrets-wrists.md#moment-of-inertia) for how.
+
+<figure><img src="../.gitbook/assets/battery-sim-mechanisms.png" alt="Six sketches of current over time. Arm: spikes when it starts and stops, then a steady draw to hold against gravity. Elevator: largest going up, steady to hold a height. Flywheel, shooter, rollers: very large while spinning up, small at speed, a bump on every shot. Pivot, turret, wrist: short bursts when starting and stopping. Swerve drive: eight motors, usually the largest draw. All together: the draws add up and overlapping peaks cause the deepest sag"><figcaption><p>When each kind of mechanism draws current.</p></figcaption></figure>
 
 ## Reset between runs (optional)
 
-`BatterySim` carries discharge state across simulation runs the same way a real battery carries charge across matches. If you want every simulated match or unit test to start from a full charge instead of inheriting drain from the previous run, call `BatterySim.resetDischarge()` at the start of it, in `testInit()` for unit tests, or wherever you reset robot state between simulated matches.
+`BatterySim` carries discharge state across simulation runs the same way a real battery carries charge across matches. If you want every simulated match or unit test to start from a full charge instead of inheriting drain from the previous run, call `BatterySim.resetDischarge()` at the start of it, in the setup of your unit tests, or wherever you reset robot state between simulated matches.
 
 ```java
-@Override
-public void testInit() {
+@BeforeEach
+void setup() {
   BatterySim.resetDischarge();
 }
 ```
@@ -43,7 +46,9 @@ Call `BatterySim.disableDischarge()` instead if you want to turn discharge model
 `BatterySim.getStateOfCharge()` returns the modeled charge from `0` (empty) to `1` (full), so you can publish it to a dashboard or log it alongside your other telemetry to watch the battery drain over a simulated match.
 
 ```java
-SmartDashboard.putNumber("Battery/StateOfCharge", BatterySim.getStateOfCharge());
+import org.wpilib.telemetry.Telemetry;
+
+Telemetry.log("Battery/StateOfCharge", BatterySim.getStateOfCharge());
 ```
 
 ## Replace the state-of-charge interpolation curve (optional)
@@ -55,8 +60,8 @@ Reach for this when you're modeling a well-used competition battery that sags ea
 {% tabs %}
 {% tab title="Java" %}
 ```java
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import yams.motorcontrollers.simulation.BatterySim;
+import org.wpilib.math.interpolation.InterpolatingDoubleTreeMap;
+import yams.core.motorcontrollers.simulation.BatterySim;
 
 InterpolatingDoubleTreeMap wornBatteryCurve = new InterpolatingDoubleTreeMap();
 wornBatteryCurve.put(0.00, 8.0);
@@ -71,7 +76,7 @@ wornBatteryCurve.put(1.00, 12.6);
 
 BatterySim.replaceSOCInterpolation(wornBatteryCurve);
 // Call enableDischarge(...) AFTER replaceSOCInterpolation(...), or it uses the default curve.
-BatterySim.enableDischarge(15.0, Volts.of(12.6), Milliohms.of(28));
+BatterySim.enableDischarge(15.0, Volts.of(12.6), MilliOhms.of(28));
 ```
 {% endtab %}
 
@@ -82,9 +87,9 @@ BatterySim.enableDischarge(15.0, Volts.of(12.6), Milliohms.of(28));
 
 // Turn on discharge modeling.
 yams::motorcontrollers::simulation::BatterySim::EnableDischarge(
-    18.0, units::volt_t{12.9}, units::ohm_t{0.020});
+    18.0, wpi::units::volt_t{12.9}, wpi::units::ohm_t{0.020});
 
-// Reset between runs (optional), e.g. in TestInit().
+// Reset between runs (optional), e.g. in your unit test setup.
 yams::motorcontrollers::simulation::BatterySim::ResetDischarge();
 
 // Read the state of charge for telemetry (optional).
@@ -109,8 +114,8 @@ Keys and values should span the full `[0, 1]` state-of-charge range. Querying ou
 Lead-acid batteries deliver noticeably fewer amp-hours the faster they're discharged (the Peukert effect), so `enableDischarge(...)` derates the amp-hours consumed against a discharge-current → capacity-fraction curve averaged from real FRC battery testing. If you have measured discharge-rate-vs-capacity data for your own battery, call `BatterySim.replaceCapacityDerating(...)` with your own curve **before** calling `enableDischarge(...)`.
 
 ```java
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import yams.motorcontrollers.simulation.BatterySim;
+import org.wpilib.math.interpolation.InterpolatingDoubleTreeMap;
+import yams.core.motorcontrollers.simulation.BatterySim;
 
 InterpolatingDoubleTreeMap measuredDerating = new InterpolatingDoubleTreeMap();
 measuredDerating.put(0.9, 1.000);
@@ -120,7 +125,7 @@ measuredDerating.put(60.0, 0.55);
 
 BatterySim.replaceCapacityDerating(measuredDerating);
 // Call enableDischarge(...) AFTER replaceCapacityDerating(...), or it uses the default curve.
-BatterySim.enableDischarge(18.0, Volts.of(12.9), Milliohms.of(20));
+BatterySim.enableDischarge(18.0, Volts.of(12.9), MilliOhms.of(20));
 ```
 
 See [Battery Simulation → Capacity derating](../understanding/battery-simulation.md#capacity-derating) for where the default curve comes from and the C++ equivalent.
@@ -128,5 +133,5 @@ See [Battery Simulation → Capacity derating](../understanding/battery-simulati
 ## Related pages
 
 * [Battery Simulation](../understanding/battery-simulation.md), the full explanation of the shared-battery model and why it matters
-* [MOI](../details/turrets-wrists.md#moi), accurate current draw starts with an accurate moment of inertia
+* [MOI](../details/turrets-wrists.md#moment-of-inertia), accurate current draw starts with an accurate moment of inertia
 * [Limiting Power Consumption](../details/editor/limiting-power-consumption.md)

@@ -20,9 +20,9 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
     .withClosedLoopController(4, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE);
+    .withZeroPower(MotorMode.BRAKE);
 
-TalonFX talonFX = new TalonFX(1);
+TalonFX talonFX = new TalonFX(1, new CANBus(CANPort.CAN_S0));
 SmartMotorController smc = new TalonFXWrapper(talonFX, DCMotor.getKrakenX60(1), motorConfig);
 ```
 
@@ -41,7 +41,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withClosedLoopController(4, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)));
 
-TalonFXS talonFXS = new TalonFXS(1);
+TalonFXS talonFXS = new TalonFXS(1, new CANBus(CANPort.CAN_S0));
 SmartMotorController smc = new TalonFXSWrapper(talonFXS, DCMotor.getKrakenX60(1), motorConfig);
 ```
 
@@ -60,9 +60,9 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
     .withClosedLoopController(4, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE);
+    .withZeroPower(MotorMode.BRAKE);
 
-SparkMax spark = new SparkMax(1, MotorType.kBrushless);
+SparkMax spark = new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless);
 SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNEO(1), motorConfig);
 ```
 
@@ -81,21 +81,41 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
     .withClosedLoopController(4, 0, 0)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE);
+    .withZeroPower(MotorMode.BRAKE);
 
-SparkFlex spark = new SparkFlex(1, MotorType.kBrushless);
+SparkFlex spark = new SparkFlex(CANPort.CAN_S0, 1, MotorType.kBrushless);
 SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNeoVortex(1), motorConfig);
 ```
+
+## Thrifty Nova
+
+Pass a ThriftyLib `NovaConfig.Config`, usually a `NovaConfigBatch` holding one or more `NovaConfig` options. The vendor config is applied to the Nova before the YAMS config:
+
+```java
+SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withVendorConfig(new NovaConfigBatch(NovaConfig.tempThrottleEnable(true)))
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(4, 0, 0)
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+    .withZeroPower(MotorMode.BRAKE);
+
+Nova nova = new Nova(0, 1, MotorType.NEO); // CAN bus 0, CAN ID 1
+SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), motorConfig);
+```
+
+Any other vendor config type throws a `SmartMotorControllerConfigurationException`.
 
 ## How precedence works
 
 YAMS uses your vendor config as a starting point and then writes its own settings on top of it. This means:
 
-* Any field you set in `SmartMotorControllerConfig` (PID gains, gearing, idle mode, current limits, etc.) **will overwrite** the corresponding field in your vendor config.
+* Any field you set in `SmartMotorControllerConfig` (PID gains, gearing, zero power mode, current limits, etc.) **will overwrite** the corresponding field in your vendor config.
 * Any field you set **only** in the vendor config and that YAMS doesn't touch will be preserved exactly as you set it.
 
 If you set the same option in both places, `SmartMotorControllerConfig` wins. Think of the vendor config as the floor, not the ceiling.
 
+<figure><img src="../.gitbook/assets/smc-config-layers.png" alt="Two stacks of layers applied top to bottom. With the reset on, the default, the controller starts from factory defaults, then your vendor config if you gave one, then your SmartMotorControllerConfig options. With the reset off it starts from whatever is already saved on the controller, so old settings you did not set stay."><figcaption><p>What the controller ends up with, with and without the reset.</p></figcaption></figure>
+
 {% hint style="warning" %}
-Always verify the final applied configuration on your hardware. Use your vendor's tuning tool (Phoenix Tuner X or REV Hardware Client) to confirm that YAMS didn't silently overwrite a setting you intended to keep from your vendor config.
+Always verify the final applied configuration on your hardware. Use your vendor's tuning tool (such as Phoenix Tuner X or REV Hardware Client) to confirm that YAMS didn't silently overwrite a setting you intended to keep from your vendor config.
 {% endhint %}

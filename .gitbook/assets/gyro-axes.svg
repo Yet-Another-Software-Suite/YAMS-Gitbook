@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 424" width="760" height="424" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Which gyro axis points up?</title>
+<desc id="d">Three drawings of a robot chassis with the gyro's X, Y and Z axes. Mounted flat, Z points up, X points to the front and Y to the left: use GyroAxis.YAW. On its side with X pointing up, Y points to the robot's left and Z to the back: use GyroAxis.ROLL. On its side with Y pointing up, X points to the robot's front and Z to the right: use GyroAxis.PITCH.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="424" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="392" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Which gyro axis points up?</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The dark box is the gyro. Its X, Y and Z axes are printed on most gyros: find the one pointing at the ceiling.</text>
+<defs><marker id="turnX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker></defs><defs><marker id="turnY" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker></defs><defs><marker id="turnZ" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs><rect x="34" y="84" width="228" height="290" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="48.0" y="108.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Gyro mounted flat</text>
+<text x="48.0" y="126.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#6b46c1" font-family="Consolas, Menlo, monospace">GyroAxis.YAW</text>
+<polygon points="148.0,292.8 223.4,256.0 223.4,246.5 148.0,283.3" fill="#dfe4ea" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<polygon points="148.0,292.8 72.6,256.0 72.6,246.5 148.0,283.3" fill="#cfd6de" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<polygon points="148.0,283.3 223.4,246.5 148.0,209.7 72.6,246.5" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<text x="239.8" y="255.2" font-size="10" font-weight="700" text-anchor="middle" fill="#52606d" >front</text>
+<line x1="167.7" y1="230.2" x2="205.4" y2="211.8" stroke="#d64545" stroke-width="2.8" stroke-linecap="round"/><circle cx="205.4" cy="211.8" r="4.2" fill="#d64545"/><text x="218.4" y="216.8" font-size="14" font-weight="700" text-anchor="middle" fill="#d64545" >X</text>
+<line x1="128.3" y1="230.2" x2="90.6" y2="211.8" stroke="#147d6f" stroke-width="2.8" stroke-linecap="round"/><circle cx="90.6" cy="211.8" r="4.2" fill="#147d6f"/><text x="77.6" y="216.8" font-size="14" font-weight="700" text-anchor="middle" fill="#147d6f" >Y</text>
+<polygon points="148.0,265.7 108.6,246.5 108.6,233.2 148.0,252.4" fill="#2a333d" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="148.0,265.7 187.4,246.5 187.4,233.2 148.0,252.4" fill="#2a333d" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="148.0,252.4 187.4,233.2 148.0,214.0 108.6,233.2" fill="#3d4a57" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<line x1="148.0" y1="233.2" x2="148.0" y2="189.5" stroke="#3e6da8" stroke-width="4.4" stroke-linecap="round"/><circle cx="148.0" cy="189.5" r="5.5" fill="#3e6da8"/><text x="162.0" y="194.5" font-size="14" font-weight="700" text-anchor="middle" fill="#3e6da8" >Z</text>
+<path d="M128.0,213.5 A22,9 0 1 0 168.0,213.5" fill="none" stroke="#3e6da8" stroke-width="1.8" marker-end="url(#turnZ)"/>
+<text x="148.0" y="330.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Z points up</text>
+<text x="148.0" y="345.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >turning the robot is the gyro's yaw</text>
+<text x="148.0" y="360.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >this is the default</text>
+<rect x="266" y="84" width="228" height="290" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="280.0" y="108.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Gyro on its side, X up</text>
+<text x="280.0" y="126.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#6b46c1" font-family="Consolas, Menlo, monospace">GyroAxis.ROLL</text>
+<polygon points="380.0,292.8 455.4,256.0 455.4,246.5 380.0,283.3" fill="#dfe4ea" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<polygon points="380.0,292.8 304.6,256.0 304.6,246.5 380.0,283.3" fill="#cfd6de" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<polygon points="380.0,283.3 455.4,246.5 380.0,209.7 304.6,246.5" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<text x="471.8" y="255.2" font-size="10" font-weight="700" text-anchor="middle" fill="#52606d" >front</text>
+<line x1="360.3" y1="214.1" x2="322.6" y2="195.7" stroke="#147d6f" stroke-width="2.8" stroke-linecap="round"/><circle cx="322.6" cy="195.7" r="4.2" fill="#147d6f"/><text x="309.6" y="200.7" font-size="14" font-weight="700" text-anchor="middle" fill="#147d6f" >Y</text>
+<polygon points="405.4,207.7 366.1,188.5 354.6,194.1 393.9,213.3" fill="#2a333d" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="405.4,253.3 405.4,207.7 393.9,213.3 393.9,258.9" fill="#2a333d" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="393.9,258.9 393.9,213.3 354.6,194.1 354.6,239.7" fill="#3d4a57" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<line x1="380.0" y1="200.9" x2="380.0" y2="157.2" stroke="#d64545" stroke-width="4.4" stroke-linecap="round"/><circle cx="380.0" cy="157.2" r="5.5" fill="#d64545"/><text x="394.0" y="162.2" font-size="14" font-weight="700" text-anchor="middle" fill="#d64545" >X</text>
+<line x1="374.3" y1="226.5" x2="336.5" y2="244.9" stroke="#3e6da8" stroke-width="2.8" stroke-linecap="round"/><circle cx="336.5" cy="244.9" r="4.2" fill="#3e6da8"/><text x="323.5" y="249.9" font-size="14" font-weight="700" text-anchor="middle" fill="#3e6da8" >Z</text>
+<path d="M360.0,181.2 A22,9 0 1 0 400.0,181.2" fill="none" stroke="#d64545" stroke-width="1.8" marker-end="url(#turnX)"/>
+<text x="380.0" y="330.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >X points up</text>
+<text x="380.0" y="345.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >turning the robot is the gyro's roll</text>
+<text x="380.0" y="360.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >Y points to the robot's left</text>
+<rect x="498" y="84" width="228" height="290" rx="8" fill="#fafbfc" stroke="#cbd2d9"/>
+<text x="512.0" y="108.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Gyro on its side, Y up</text>
+<text x="512.0" y="126.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#6b46c1" font-family="Consolas, Menlo, monospace">GyroAxis.PITCH</text>
+<polygon points="612.0,292.8 687.4,256.0 687.4,246.5 612.0,283.3" fill="#dfe4ea" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<polygon points="612.0,292.8 536.6,256.0 536.6,246.5 612.0,283.3" fill="#cfd6de" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<polygon points="612.0,283.3 687.4,246.5 612.0,209.7 536.6,246.5" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" stroke-linejoin="round"/>
+<text x="703.8" y="255.2" font-size="10" font-weight="700" text-anchor="middle" fill="#52606d" >front</text>
+<line x1="631.7" y1="214.1" x2="669.4" y2="195.7" stroke="#d64545" stroke-width="2.8" stroke-linecap="round"/><circle cx="669.4" cy="195.7" r="4.2" fill="#d64545"/><text x="682.4" y="200.7" font-size="14" font-weight="700" text-anchor="middle" fill="#d64545" >X</text>
+<polygon points="586.6,253.3 586.6,207.7 598.1,213.3 598.1,258.9" fill="#2a333d" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="586.6,207.7 625.9,188.5 637.4,194.1 598.1,213.3" fill="#2a333d" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="598.1,258.9 637.4,239.7 637.4,194.1 598.1,213.3" fill="#3d4a57" stroke="#11161b" stroke-width="1.2" stroke-linejoin="round"/>
+<line x1="612.0" y1="200.9" x2="612.0" y2="157.2" stroke="#147d6f" stroke-width="4.4" stroke-linecap="round"/><circle cx="612.0" cy="157.2" r="5.5" fill="#147d6f"/><text x="626.0" y="162.2" font-size="14" font-weight="700" text-anchor="middle" fill="#147d6f" >Y</text>
+<line x1="617.7" y1="226.5" x2="655.5" y2="244.9" stroke="#3e6da8" stroke-width="2.8" stroke-linecap="round"/><circle cx="655.5" cy="244.9" r="4.2" fill="#3e6da8"/><text x="668.5" y="249.9" font-size="14" font-weight="700" text-anchor="middle" fill="#3e6da8" >Z</text>
+<path d="M592.0,181.2 A22,9 0 1 0 632.0,181.2" fill="none" stroke="#147d6f" stroke-width="1.8" marker-end="url(#turnY)"/>
+<text x="612.0" y="330.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Y points up</text>
+<text x="612.0" y="345.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >turning the robot is the gyro's pitch</text>
+<text x="612.0" y="360.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >X points to the robot's front</text>
+<line x1="60" y1="398" x2="84" y2="398" stroke="#d64545" stroke-width="3"/>
+<text x="90.0" y="402.0" font-size="11" font-weight="700" text-anchor="start" fill="#d64545" >gyro X</text>
+<line x1="150" y1="398" x2="174" y2="398" stroke="#147d6f" stroke-width="3"/>
+<text x="180.0" y="402.0" font-size="11" font-weight="700" text-anchor="start" fill="#147d6f" >gyro Y</text>
+<line x1="240" y1="398" x2="264" y2="398" stroke="#3e6da8" stroke-width="3"/>
+<text x="270.0" y="402.0" font-size="11" font-weight="700" text-anchor="start" fill="#3e6da8" >gyro Z</text>
+<text x="726.0" y="402.0" font-size="11.5" font-weight="700" text-anchor="end" fill="#1f2933" >The thick axis points up. Pick the GyroAxis that matches it.</text>
+</svg>

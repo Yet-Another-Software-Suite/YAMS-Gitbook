@@ -5,10 +5,10 @@ icon: database
 # DataLog Best Practices
 
 {% hint style="info" %}
-Using DataLog will increase your storage usage on the RIO and could have negative consequences if left unmanaged. Please review [WPILib's DataLog documentation](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog) for more information.
+Using DataLog will increase your storage usage on the SystemCore and could have negative consequences if left unmanaged. Please review [WPILib's DataLog documentation](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog) for more information.
 {% endhint %}
 
-Every YAMS telemetry field is published to NetworkTables by default. Separately, you can opt any field into a WPILib `DataLog`, the same file format read by AdvantageScope offline, and the one WPILib's `DataLogManager` automatically saves to a USB drive or the RIO's local storage during a match. This page covers how to control both destinations independently, and calls out the one place, `SwerveDrive`, where the rules are different.
+Every YAMS telemetry field is published to NetworkTables by default. Separately, you can opt any field into a WPILib `DataLog`, the same file format read by AdvantageScope offline, and the one WPILib's `DataLogManager` automatically saves to a USB drive or the SystemCore's local storage during a match. This page covers how to control both destinations independently, and calls out the one place, `SwerveDrive`, where the rules are different.
 
 ## The two knobs: NetworkTables and DataLog
 
@@ -65,7 +65,7 @@ Because `withNetworkTables(boolean)` just takes a boolean, you can drive it from
 SmartMotorControllerTelemetryConfig telemetryConfig = new SmartMotorControllerTelemetryConfig()
     .withTelemetryVerbosity(TelemetryVerbosity.LOW)
     .withDataLogName("motors/shooter")
-    .withNetworkTables(!DriverStation.isFMSAttached());
+    .withNetworkTables(!RobotState.isFMSAttached()); // org.wpilib.driverstation.RobotState
 ```
 
 This keeps full NT4 telemetry for pit testing and practice, then automatically drops NT4 traffic (while still writing to DataLog) once you're on the field at an event.
@@ -82,7 +82,7 @@ You can still send this to DataLog:
 
 ```java
 SwerveDriveConfig driveConfig = new SwerveDriveConfig(this, frontLeft, frontRight, backLeft, backRight)
-    .withGyro(gyro.getYaw().asSupplier())
+    .withGyro(gyro::getRotation3d)
     .withTelemetry("swerve", new SwerveDriveTelemetryConfig(TelemetryVerbosity.HIGH)
         .withDataLogName("swerve"));                 // logs pose, gyro, chassis speeds, module states
 
@@ -111,10 +111,10 @@ SmartMotorControllerTelemetryConfig driveTelemetry = new SmartMotorControllerTel
 
 SmartMotorControllerConfig driveMotorConfig = new SmartMotorControllerConfig(this)
     .withClosedLoopController(0.1, 0.0, 0.0)
-    .withGearing(new MechanismGearing(GearBox.fromRatio(6.75)))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(6.75)))
     .withTelemetry("driveMotor", driveTelemetry);
 
-SmartMotorController driveMotorFL = new TalonFXWrapper(new TalonFX(10), DCMotor.getKrakenX60(1), driveMotorConfig);
+SmartMotorController driveMotorFL = new TalonFXWrapper(new TalonFX(10, new CANBus(CANPort.CAN_S0)), DCMotor.getKrakenX60(1), driveMotorConfig);
 ```
 
 This gives you the same fine-grained control (and independent DataLog name) on that one motor that you'd get on any other mechanism's motor, it's only the swerve-level pose/gyro/chassis-speed/encoder fields that are all-or-nothing per verbosity level.

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 284" width="760" height="284" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withLinearClosedLoopController</title>
+<desc id="d">Two panels. Angle based, the default: error is measured in rotations, kP is in volts per rotation and profile limits are in rotations per second, for arms, pivots, turrets and flywheels. Distance based: error in meters, kP in volts per meter and profile limits in meters per second, for elevators and other linear mechanisms.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="284" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="252.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withLinearClosedLoopController</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Whether the closed loop controller thinks in rotations or in meters.</text>
+<rect x="34.0" y="84.0" width="338.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#3e6da8" >Angle based (the default)</text>
+<rect x="388.0" y="84.0" width="338.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="400.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >Distance based</text>
+<text x="50.0" y="128.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >error is measured in</text>
+<text x="356.0" y="128.0" font-size="11" font-weight="700" text-anchor="end" fill="#3e6da8" >rotations</text>
+<text x="50.0" y="156.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >kP is in</text>
+<text x="356.0" y="156.0" font-size="11" font-weight="700" text-anchor="end" fill="#3e6da8" >volts per rotation</text>
+<text x="50.0" y="184.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >profile limits are in</text>
+<text x="356.0" y="184.0" font-size="11" font-weight="700" text-anchor="end" fill="#3e6da8" >rotations per second</text>
+<text x="203.0" y="218.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >arms, pivots, turrets, flywheels</text>
+<text x="404.0" y="128.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >error is measured in</text>
+<text x="710.0" y="128.0" font-size="11" font-weight="700" text-anchor="end" fill="#147d6f" >meters</text>
+<text x="404.0" y="156.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >kP is in</text>
+<text x="710.0" y="156.0" font-size="11" font-weight="700" text-anchor="end" fill="#147d6f" >volts per meter</text>
+<text x="404.0" y="184.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >profile limits are in</text>
+<text x="710.0" y="184.0" font-size="11" font-weight="700" text-anchor="end" fill="#147d6f" >meters per second</text>
+<text x="557.0" y="218.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >elevators and other linear mechanisms</text>
+<text x="34.0" y="260.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >It turns on by itself with a distance profile or an ElevatorFeedforward. Gains do not carry over between the two.</text>
+</svg>

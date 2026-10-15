@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 306" width="760" height="306" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">ArmConfig: withLength and the arm's zero</title>
+<desc id="d">An arm drawn at 40 degrees above a level dashed line marked 0 degrees, with straight up marked 90 degrees. Its length, set by withLength, runs from the pivot to the end of the arm, and gravity pulls down on the end. Level is zero because gravity pulls hardest on a level arm and ArmFeedforward uses kG times the cosine of the angle.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="306" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="274.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >ArmConfig: withLength and the arm's zero</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >An arm is measured from level, and its length sets how hard it is to move.</text>
+<line x1="130.0" y1="236.0" x2="360.0" y2="236.0" stroke="#cbd2d9" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="5 4"/>
+<text x="366.0" y="240.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#52606d" >0 deg: level</text>
+<line x1="190.0" y1="236.0" x2="190.0" y2="114.0" stroke="#cbd2d9" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="3 4"/>
+<text x="190.0" y="108.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >90 deg: straight up</text>
+<line x1="190.0" y1="236.0" x2="289.6" y2="152.4" stroke="#3e6da8" stroke-width="10" stroke-linecap="round"/>
+<circle cx="190.0" cy="236.0" r="8" fill="#1f2933" stroke="none" stroke-width="1.6" />
+<path d="M244.0,236.0 A54,54 0 0 0 231.4,201.3" fill="none" stroke="#c2630b" stroke-width="2.2" marker-end="url(#ao)"/>
+<text x="254.0" y="218.0" font-size="11" font-weight="700" text-anchor="start" fill="#c2630b" >40 deg</text>
+<line x1="204.0" y1="202.0" x2="275.6" y2="140.4" stroke="#6b46c1" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="4 3"/>
+<text x="228.0" y="144.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#6b46c1" >withLength</text>
+<line x1="289.6" y1="152.4" x2="289.6" y2="196.4" stroke="#d64545" stroke-width="2.2" stroke-linecap="round" marker-end="url(#ar)"/>
+<text x="297.6" y="192.4" font-size="10" font-weight="400" text-anchor="start" fill="#d64545" >gravity</text>
+<rect x="452.0" y="96.0" width="274.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" />
+<text x="466.0" y="118.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Why level is zero</text>
+<text x="466.0" y="140.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >Gravity pulls hardest on a level arm and</text>
+<text x="466.0" y="155.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >not at all on one pointing straight up.</text>
+<text x="466.0" y="178.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >ArmFeedforward uses kG x cos(angle),</text>
+<text x="466.0" y="193.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >which is only right when 0 deg is level.</text>
+<text x="466.0" y="218.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >A longer arm is harder to hold and</text>
+<text x="466.0" y="233.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >to swing: retune if the length changes.</text>
+<text x="34.0" y="282.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Measure the length from the pivot to the end of the arm.</text>
+</svg>

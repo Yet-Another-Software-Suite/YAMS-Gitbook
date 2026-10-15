@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 334" width="760" height="334" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">A turret and a wrist</title>
+<desc id="d">Two panels. A turret, seen from above, turns on top of the robot with its angle measured from the robot's front; it either wraps or is limited by its wiring, tracks a target with a Supplier of Angle, and can use EasyCRT for its true angle. A wrist turns on the end of an arm with its angle measured from the arm it is mounted on; it always has soft limits, moves together with the arm in a sequence, and should be kept balanced.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="334" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="302.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >A turret and a wrist</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The two things a Pivot is used for.</text>
+<rect x="34.0" y="84.0" width="338.0" height="200.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#c2630b" >Turret</text>
+<rect x="388.0" y="84.0" width="338.0" height="200.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="400.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#6b46c1" >Wrist</text>
+<rect x="58.0" y="136.0" width="124.0" height="108.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<circle cx="120.0" cy="190.0" r="34" fill="#d5f0ea" stroke="#147d6f" stroke-width="2.2" />
+<rect x="114.0" y="128.0" width="12.0" height="50.0" rx="3" fill="#1f2933" stroke="#1f2933" stroke-width="0" />
+<path d="M143.0,150.2 A46,46 0 0 0 80.2,167.0" fill="none" stroke="#c2630b" stroke-width="2.2" marker-end="url(#ao)"/>
+<text x="120.0" y="262.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >seen from above</text>
+<text x="210.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >turns on top of the robot</text>
+<text x="210.0" y="146.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >angle measured from</text>
+<text x="210.0" y="162.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >the robot's front</text>
+<text x="210.0" y="188.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >- wrap, or limit by wiring</text>
+<text x="210.0" y="204.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >- tracks a target with a</text>
+<text x="210.0" y="218.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >  Supplier&lt;Angle&gt;</text>
+<text x="210.0" y="238.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >- EasyCRT for its true angle</text>
+<line x1="420.0" y1="250.0" x2="496.6" y2="185.7" stroke="#52606d" stroke-width="9" stroke-linecap="round"/>
+<circle cx="420.0" cy="250.0" r="6" fill="#1f2933" stroke="none" stroke-width="1.6" />
+<line x1="496.6" y1="185.7" x2="541.9" y2="193.7" stroke="#6b46c1" stroke-width="8" stroke-linecap="round"/>
+<circle cx="496.6" cy="185.7" r="7" fill="#1f2933" stroke="none" stroke-width="1.6" />
+<path d="M519.6,166.4 A30,30 0 0 1 526.1,190.9" fill="none" stroke="#c2630b" stroke-width="2" marker-end="url(#ao)"/>
+<text x="454.0" y="196.0" font-size="9.5" font-weight="400" text-anchor="end" fill="#52606d" >arm</text>
+<text x="535.9" y="213.7" font-size="9.5" font-weight="700" text-anchor="middle" fill="#6b46c1" >wrist</text>
+<text x="566.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >turns on the end of an arm</text>
+<text x="566.0" y="146.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >angle measured from</text>
+<text x="566.0" y="162.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >the arm it is mounted on</text>
+<text x="566.0" y="188.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >- always soft limits</text>
+<text x="566.0" y="204.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >- moves together with</text>
+<text x="566.0" y="218.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >  the arm in a sequence</text>
+<text x="566.0" y="238.0" font-size="10" font-weight="400" text-anchor="start" fill="#52606d" >- keep it balanced</text>
+<text x="34.0" y="310.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Both are a Pivot. The difference is what the angle is measured from, and whether it can turn all the way round.</text>
+</svg>

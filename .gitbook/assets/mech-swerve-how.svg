@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 332" width="760" height="332" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">How a swerve drive works</title>
+<desc id="d">A flow diagram. You ask for a ChassisVelocities with vx, vy and omega. The kinematics, built from the module locations, turn it into four module states, a speed and an angle each. Odometry combines wheel travel and the gyro into the robot's pose, which feeds field relative driving, auto-align and paths.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="332" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="300.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >How a swerve drive works</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >One chassis velocity becomes four wheel speeds and angles.</text>
+<rect x="34.0" y="112.0" width="150.0" height="74.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="109.0" y="139.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >What you ask for</text>
+<text x="109.0" y="154.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">ChassisVelocities</text>
+<text x="109.0" y="169.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">vx, vy, omega</text>
+<rect x="222.0" y="112.0" width="130.0" height="74.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="287.0" y="139.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Kinematics</text>
+<text x="287.0" y="154.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >from the module</text>
+<text x="287.0" y="169.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >locations</text>
+<line x1="188.0" y1="149.0" x2="218.0" y2="149.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="356.0" y1="149.0" x2="386.0" y2="149.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<rect x="408.0" y="88.0" width="124.0" height="124.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2" />
+<g transform="translate(428.0,110.0) rotate(25.0)"><rect x="-6.0" y="-15.0" width="12.0" height="30.0" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="0" /><path d="M-4,-7.0 L0,-13.0 L4,-7.0 Z" fill="#ffffff"/></g>
+<line x1="428.0" y1="110.0" x2="439.0" y2="86.4" stroke="#c2630b" stroke-width="2" stroke-linecap="round" marker-end="url(#ao)"/>
+<g transform="translate(512.0,110.0) rotate(40.0)"><rect x="-6.0" y="-15.0" width="12.0" height="30.0" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="0" /><path d="M-4,-7.0 L0,-13.0 L4,-7.0 Z" fill="#ffffff"/></g>
+<line x1="512.0" y1="110.0" x2="528.7" y2="90.1" stroke="#c2630b" stroke-width="2" stroke-linecap="round" marker-end="url(#ao)"/>
+<g transform="translate(428.0,190.0) rotate(10.0)"><rect x="-6.0" y="-15.0" width="12.0" height="30.0" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="0" /><path d="M-4,-7.0 L0,-13.0 L4,-7.0 Z" fill="#ffffff"/></g>
+<line x1="428.0" y1="190.0" x2="432.5" y2="164.4" stroke="#c2630b" stroke-width="2" stroke-linecap="round" marker-end="url(#ao)"/>
+<g transform="translate(512.0,190.0) rotate(30.0)"><rect x="-6.0" y="-15.0" width="12.0" height="30.0" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="0" /><path d="M-4,-7.0 L0,-13.0 L4,-7.0 Z" fill="#ffffff"/></g>
+<line x1="512.0" y1="190.0" x2="525.0" y2="167.5" stroke="#c2630b" stroke-width="2" stroke-linecap="round" marker-end="url(#ao)"/>
+<text x="470.0" y="232.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1f2933" >four module states:</text>
+<text x="470.0" y="247.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >a speed and an angle each</text>
+<rect x="584.0" y="112.0" width="142.0" height="74.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="655.0" y="139.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Odometry</text>
+<text x="655.0" y="154.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >wheel travel + gyro</text>
+<text x="655.0" y="169.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >= the robot's pose</text>
+<line x1="536.0" y1="149.0" x2="580.0" y2="149.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<path d="M655.0,190.0 L655.0,262.0 L109.0,262.0 L109.0,190.0" fill="none" stroke="#52606d" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3"/>
+<line x1="109.0" y1="198.0" x2="109.0" y2="188.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<text x="382.0" y="278.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >the pose feeds field relative driving, auto-align and paths</text>
+<text x="34.0" y="308.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >You say how the whole robot should move. The drive works out what each wheel must do.</text>
+</svg>

@@ -8,7 +8,7 @@ icon: rocket
 
 Writing a motor subsystem from scratch is repetitive and error-prone. A production-quality subsystem requires:
 
-* Motor controller configuration (PID, feedforward, gearing, current limits, idle mode, ramp rates…)
+* Motor controller configuration (PID, feedforward, gearing, current limits, zero power mode, ramp rates…)
 * A physics simulation that actually matches your hardware
 * Periodic telemetry publishing so you can see what's happening
 * `Mechanism2d` visualizations for AdvantageScope
@@ -31,11 +31,11 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
     .withFeedforward(new ArmFeedforward(0, 0, 0, 0))
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    .withIdleMode(MotorMode.BRAKE)
+    .withZeroPower(MotorMode.BRAKE)
     .withStatorCurrentLimit(Amps.of(40))
     .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
 
-SmartMotorController smc = new SparkWrapper(new SparkMax(1, MotorType.kBrushless), DCMotor.getNEO(1), motorConfig);
+SmartMotorController smc = new SparkWrapper(new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless), DCMotor.getNEO(1), motorConfig);
 
 ArmConfig armConfig = new ArmConfig()
     .withLength(Feet.of(2))
@@ -66,23 +66,19 @@ For CTRE TalonFX and TalonFXS motors, YAMS feeds its physics results directly ba
 2. Open Phoenix Tuner X and connect to the simulation
 3. Every TalonFX signal, position, velocity, voltage, current, reads exactly as it would from real hardware
 
-You can watch closed-loop error, plot signal graphs, and verify your gains in TunerX's familiar interface without touching a physical robot. The same workflow you use to diagnose real hardware works identically in simulation.
+You can watch closed-loop error, plot signal graphs, and verify your gains in TunerX's familiar interface without touching a physical robot. The same workflow you use to diagnose real hardware works identically in simulation. See [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md) for the steps.
 
 ## Live tuning without reflashing
 
-`TelemetryVerbosity.HIGH` publishes all PID gains, feedforward constants, motion profile constraints, soft limits, and current limits as writable NetworkTable entries. The `Live Tuning` command (visible in Elastic or any NT-aware dashboard) applies those values to the running motor controller in real time.
+`TelemetryVerbosity.HIGH` publishes all PID gains, feedforward constants, motion profile constraints, soft limits, and current limits as writable NetworkTable entries. At `HIGH` verbosity YAMS also registers a `Live Tuning` command for each motor (call `setupLiveTuning()` on the config to register it in other cases). The command (visible in Elastic or any NT-aware dashboard) applies those values to the running motor controller in real time.
 
-Changing `kP` from 4 to 6 and seeing the mechanism respond takes seconds, not the minutes a redeploy would cost. See the [Live Tuning](details/integrations.md) page for a full field-by-field reference.
+Changing `kP` from 4 to 6 and seeing the mechanism respond takes seconds, not the minutes a redeploy would cost. See the [Live Tuning](details/live-tuning/README.md) page for a full field-by-field reference.
 
 ## Loop overruns
 
-### roboRIO
+Heavy subsystems with hand-rolled telemetry, simulation, and visualization code can push the 20 ms robot loop toward or past its budget, especially when multiple mechanisms run simultaneously. YAMS's telemetry and simulation paths are tightly optimized and only run the work that the verbosity level requires; `LOW` publishes only the fields you actually need for competition, keeping loop time predictable.
 
-The roboRIO 1 and roboRIO 2 are both CPU-constrained. Heavy subsystems with hand-rolled telemetry, simulation, and visualization code frequently push the 20 ms robot loop toward or past its budget, especially when multiple mechanisms run simultaneously. YAMS's telemetry and simulation paths are tightly optimized and only run the work that verbosity level requires, `LOW` publishes only the fields you actually need for competition, keeping loop time predictable.
-
-### SystemCore
-
-The SystemCore's baseline processing speed is significantly higher than either roboRIO generation. Loop overruns that were a concern on roboRIO hardware are not a practical issue on SystemCore even at `TelemetryVerbosity.HIGH` with multiple mechanisms active. Teams migrating from roboRIO to SystemCore can safely run full telemetry without worrying about budget.
+The SystemCore, which YAMS 2027 runs on, has plenty of processing headroom, so running `TelemetryVerbosity.HIGH` with multiple mechanisms active is not a practical loop time concern.
 
 ## Safety by default
 

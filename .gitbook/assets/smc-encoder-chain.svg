@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 286" width="760" height="286" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">The two encoders</title>
+<desc id="d">A chain from left to right: the rotor with its built in relative encoder, which starts at zero each boot; the gearing set by withGearing; the mechanism; the encoder gearing set by withExternalEncoderGearing; and the external encoder, set by withExternalEncoder, which is often absolute and remembers its position.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="286" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="254.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >The two encoders</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Where each one sits, and which gearing converts it to the mechanism's angle.</text>
+<path d="M107.0,166.0 L106.7,169.6 L101.1,171.6 L100.0,174.2 L102.6,179.5 L100.3,182.3 L94.6,180.6 L92.2,182.0 L91.1,187.9 L87.6,188.7 L84.0,184.0 L81.2,183.8 L76.9,187.9 L73.6,186.5 L73.4,180.6 L71.3,178.7 L65.4,179.5 L63.5,176.4 L66.9,171.6 L66.2,168.8 L61.0,166.0 L61.3,162.4 L66.9,160.4 L68.0,157.8 L65.4,152.5 L67.7,149.7 L73.4,151.4 L75.8,150.0 L76.9,144.1 L80.4,143.3 L84.0,148.0 L86.8,148.2 L91.1,144.1 L94.4,145.5 L94.6,151.4 L96.7,153.3 L102.6,152.5 L104.5,155.6 L101.1,160.4 L101.8,163.2 L107.0,166.0" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="84.0" cy="166.0" r="4" fill="#3e6da8" stroke="none" stroke-width="1.6" />
+<text x="84.0" y="208.0" font-size="11" font-weight="700" text-anchor="middle" fill="#3e6da8" >rotor</text>
+<rect x="52.0" y="104.0" width="64.0" height="24.0" rx="5" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.4" />
+<text x="84.0" y="120.0" font-size="10" font-weight="700" text-anchor="middle" fill="#6b46c1" >built in</text>
+<rect x="150.0" y="138.0" width="120.0" height="56.0" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.6" />
+<text x="210.0" y="163.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >gearing</text>
+<text x="210.0" y="180.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >withGearing</text>
+<line x1="108.0" y1="166.0" x2="146.0" y2="166.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="274.0" y1="166.0" x2="318.0" y2="166.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<path d="M409.0,166.0 L408.8,169.7 L403.4,172.6 L402.7,175.8 L406.4,180.7 L405.0,184.2 L398.9,185.0 L397.1,187.8 L398.9,193.6 L396.4,196.4 L390.4,195.1 L387.8,197.1 L387.5,203.2 L384.2,205.0 L379.0,201.7 L375.8,202.7 L373.5,208.3 L369.7,208.8 L366.0,204.0 L362.7,203.9 L358.5,208.3 L354.9,207.5 L353.0,201.7 L349.9,200.4 L344.5,203.2 L341.3,201.2 L341.6,195.1 L339.1,192.9 L333.1,193.6 L330.8,190.7 L333.1,185.0 L331.6,182.1 L325.6,180.7 L324.5,177.1 L328.6,172.6 L328.1,169.3 L323.0,166.0 L323.2,162.3 L328.6,159.4 L329.3,156.2 L325.6,151.3 L327.0,147.8 L333.1,147.0 L334.9,144.2 L333.1,138.4 L335.6,135.6 L341.6,136.9 L344.2,134.9 L344.5,128.8 L347.8,127.0 L353.0,130.3 L356.2,129.3 L358.5,123.7 L362.3,123.2 L366.0,128.0 L369.3,128.1 L373.5,123.7 L377.1,124.5 L379.0,130.3 L382.1,131.6 L387.5,128.8 L390.7,130.8 L390.4,136.9 L392.9,139.1 L398.9,138.4 L401.2,141.3 L398.9,147.0 L400.4,149.9 L406.4,151.3 L407.5,154.9 L403.4,159.4 L403.9,162.7 L409.0,166.0" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="366.0" cy="166.0" r="4" fill="#147d6f" stroke="none" stroke-width="1.6" />
+<text x="366.0" y="228.0" font-size="11" font-weight="700" text-anchor="middle" fill="#147d6f" >mechanism</text>
+<line x1="410.0" y1="166.0" x2="454.0" y2="166.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<rect x="458.0" y="138.0" width="120.0" height="56.0" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.6" />
+<text x="518.0" y="160.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >encoder gearing</text>
+<text x="518.0" y="177.0" font-size="8.2" font-weight="400" text-anchor="middle" fill="#52606d" >withExternalEncoderGearing</text>
+<line x1="582.0" y1="166.0" x2="620.0" y2="166.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<circle cx="662.0" cy="166.0" r="34" fill="#e4dcf7" stroke="#6b46c1" stroke-width="2.2" />
+<text x="662.0" y="162.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#6b46c1" >external</text>
+<text x="662.0" y="177.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#6b46c1" >encoder</text>
+<text x="40.0" y="96.0" font-size="9.5" font-weight="400" text-anchor="start" fill="#52606d" >relative: starts at 0 each boot</text>
+<text x="662.0" y="122.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >often absolute: remembers</text>
+<text x="662.0" y="220.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >withExternalEncoder</text>
+<text x="34.0" y="262.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >The built in encoder is always there. An external encoder is optional, and usually sits on or near the mechanism.</text>
+</svg>

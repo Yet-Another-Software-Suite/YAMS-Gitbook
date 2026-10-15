@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 318" width="760" height="318" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">How the config reaches the motor controller</title>
+<desc id="d">A flow diagram. Your SmartMotorControllerConfig goes to a wrapper such as TalonFXWrapper, SparkWrapper or NovaWrapper, which translates each option into the vendor's own config, which is sent once at startup to the motor controller. An option the controller cannot do throws an exception at startup that names the method to change.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="318" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="286.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >How the config reaches the motor controller</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The wrapper turns your options into that vendor's own configuration.</text>
+<rect x="34.0" y="108.0" width="150.0" height="84.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="109.0" y="140.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Your config</text>
+<text x="109.0" y="155.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >SmartMotorControllerConfig</text>
+<text x="109.0" y="170.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >the same for every vendor</text>
+<rect x="226.0" y="108.0" width="150.0" height="84.0" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.6" />
+<text x="301.0" y="140.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >The wrapper</text>
+<text x="301.0" y="155.2" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >TalonFXWrapper, SparkWrapper,</text>
+<text x="301.0" y="169.8" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >NovaWrapper ...</text>
+<rect x="418.0" y="108.0" width="150.0" height="84.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="493.0" y="140.8" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Vendor config</text>
+<text x="493.0" y="155.2" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >TalonFXConfiguration,</text>
+<text x="493.0" y="169.8" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >SparkMaxConfig ...</text>
+<rect x="610.0" y="108.0" width="116.0" height="84.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="668.0" y="146.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >The motor</text>
+<text x="668.0" y="164.0" font-size="12.5" font-weight="400" text-anchor="middle" fill="#52606d" >controller</text>
+<line x1="188.0" y1="150.0" x2="222.0" y2="150.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="380.0" y1="150.0" x2="414.0" y2="150.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="572.0" y1="150.0" x2="606.0" y2="150.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<text x="301.0" y="212.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >translates each option</text>
+<text x="493.0" y="212.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >sent once at startup</text>
+<rect x="226.0" y="228.0" width="342.0" height="40.0" rx="8" fill="#fde2e2" stroke="#d64545" stroke-width="1.4" />
+<text x="397.0" y="245.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#d64545" >An option this controller cannot do</text>
+<text x="397.0" y="260.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >throws an exception at startup, with the method to change</text>
+<line x1="301.0" y1="196.0" x2="301.0" y2="224.0" stroke="#d64545" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="3 3"/>
+<text x="34.0" y="294.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >You write the config once. The wrapper is the only part that knows which vendor it is talking to.</text>
+</svg>

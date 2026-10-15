@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 284" width="760" height="284" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">withControlMode</title>
+<desc id="d">Two panels. In OPEN_LOOP your code sends volts or duty cycle straight to the motor and no PID, feedforward or profile runs. In CLOSED_LOOP, the default, your code sends a setpoint to the PID, feedforward and profile, which drive the motor using the encoder position and velocity.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="284" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="252.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >withControlMode</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Whether the motor controller runs a closed loop controller at all.</text>
+<rect x="34.0" y="84.0" width="338.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#3e6da8" >OPEN_LOOP</text>
+<rect x="388.0" y="84.0" width="338.0" height="150.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="400.0" y="104.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#c2630b" >CLOSED_LOOP (the default)</text>
+<rect x="52.0" y="132.0" width="110.0" height="56.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="107.0" y="157.5" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Your code</text>
+<text x="107.0" y="172.5" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >volts or duty cycle</text>
+<rect x="244.0" y="132.0" width="110.0" height="56.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="299.0" y="165.2" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Motor</text>
+<line x1="166.0" y1="160.0" x2="240.0" y2="160.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<text x="203.0" y="150.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >direct</text>
+<text x="203.0" y="216.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >No PID, feedforward or profile runs.</text>
+<rect x="402.0" y="122.0" width="86.0" height="50.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="445.0" y="144.2" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2933" >Your code</text>
+<text x="445.0" y="159.2" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >a setpoint</text>
+<rect x="514.0" y="122.0" width="96.0" height="50.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="562.0" y="143.5" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1f2933" >PID, FF,</text>
+<text x="562.0" y="160.0" font-size="11.5" font-weight="400" text-anchor="middle" fill="#52606d" >profile</text>
+<rect x="636.0" y="122.0" width="76.0" height="50.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="674.0" y="152.0" font-size="12" font-weight="700" text-anchor="middle" fill="#1f2933" >Motor</text>
+<line x1="491.0" y1="147.0" x2="510.0" y2="147.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<line x1="613.0" y1="147.0" x2="632.0" y2="147.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<path d="M674.0,176.0 L674.0,204.0 L562.0,204.0 L562.0,178.0" fill="none" stroke="#52606d" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3"/>
+<line x1="562.0" y1="186.0" x2="562.0" y2="176.0" stroke="#52606d" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ak)"/>
+<text x="618.0" y="220.0" font-size="10" font-weight="400" text-anchor="middle" fill="#52606d" >encoder position and velocity</text>
+<text x="34.0" y="260.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Rollers and intakes that only need a voltage can use OPEN_LOOP. Anything that goes to a position or speed needs CLOSED_LOOP.</text>
+</svg>

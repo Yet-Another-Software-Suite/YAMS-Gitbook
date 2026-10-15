@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 334" width="760" height="334" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">What a SwerveDriveConfig holds</title>
+<desc id="d">A grid of six groups of SwerveDriveConfig options: the modules, the gyro, speed limits, auto-align controllers, driving corrections, and start and telemetry, each listing its methods.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="334" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="302.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >What a SwerveDriveConfig holds</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Six groups of options for the whole drive base.</text>
+<rect x="34.0" y="84.0" width="224.0" height="92.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
+<text x="46.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#147d6f" >Modules</text>
+<text x="46.0" y="126.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">new SwerveDriveConfig(this, modules)</text>
+<text x="46.0" y="141.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">each one a SwerveModule</text>
+<text x="46.0" y="157.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">with its own SwerveModuleConfig</text>
+<rect x="266.0" y="84.0" width="224.0" height="92.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
+<text x="278.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#6b46c1" >Gyro</text>
+<text x="278.0" y="126.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyro</text>
+<text x="278.0" y="141.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyroInverted, withGyroOffset</text>
+<text x="278.0" y="157.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyroHeadingAxis, withGyroVelocity</text>
+<rect x="498.0" y="84.0" width="224.0" height="92.0" rx="8" fill="#fde2e2" stroke="#d64545" stroke-width="1.6" />
+<text x="510.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#d64545" >Speed limits</text>
+<text x="510.0" y="126.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withMaximumChassisSpeed</text>
+<text x="510.0" y="141.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withMaximumModuleSpeed</text>
+<text x="510.0" y="157.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace"></text>
+<rect x="34.0" y="184.0" width="224.0" height="92.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
+<text x="46.0" y="206.0" font-size="13" font-weight="700" text-anchor="start" fill="#c2630b" >Auto-align controllers</text>
+<text x="46.0" y="226.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withTranslationController</text>
+<text x="46.0" y="241.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withRotationController</text>
+<text x="46.0" y="257.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">and their withSim... versions</text>
+<rect x="266.0" y="184.0" width="224.0" height="92.0" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6" />
+<text x="278.0" y="206.0" font-size="13" font-weight="700" text-anchor="start" fill="#3e6da8" >Driving corrections</text>
+<text x="278.0" y="226.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withDiscretizationTime</text>
+<text x="278.0" y="241.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyroAngularVelocityScaleFactor</text>
+<text x="278.0" y="257.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withAntiTipping, withCenterOfRotation</text>
+<rect x="498.0" y="184.0" width="224.0" height="92.0" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6" />
+<text x="510.0" y="206.0" font-size="13" font-weight="700" text-anchor="start" fill="#1f2933" >Start and telemetry</text>
+<text x="510.0" y="226.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withStartingPose</text>
+<text x="510.0" y="241.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withTelemetry</text>
+<text x="510.0" y="257.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withModuleStateOptimization</text>
+<text x="34.0" y="310.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >The drive config is about the whole robot. Anything about one wheel is on that module's config.</text>
+</svg>

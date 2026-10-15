@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 362" width="760" height="362" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Asking where the elevator is</title>
+<desc id="d">A number line from 0 to 1.5 meters with an elevator at 1.18 meters. near 1.2 meters within 5 centimeters is true. between 0.25 and 0.75 meters is false. gte 0.5 meters is true. lte 0.5 meters is false. max and min, at the top and bottom of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans.</desc>
+<defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
+<rect width="760" height="362" fill="#f5f7fa"/>
+<rect x="16.0" y="16.0" width="728.0" height="330.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Asking where the elevator is</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Triggers that turn the elevator's height into true or false.</text>
+<rect x="60.0" y="123.0" width="640.0" height="18.0" rx="9" fill="#eef1f4" stroke="#cbd2d9" stroke-width="1.2" />
+<line x1="60.0" y1="118.0" x2="60.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="60.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >0.00 m</text>
+<line x1="166.7" y1="118.0" x2="166.7" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="166.7" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >0.25 m</text>
+<line x1="273.3" y1="118.0" x2="273.3" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="273.3" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >0.50 m</text>
+<line x1="380.0" y1="118.0" x2="380.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="380.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >0.75 m</text>
+<line x1="486.7" y1="118.0" x2="486.7" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="486.7" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >1.00 m</text>
+<line x1="593.3" y1="118.0" x2="593.3" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="593.3" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >1.25 m</text>
+<line x1="700.0" y1="118.0" x2="700.0" y2="146.0" stroke="#52606d" stroke-width="1" stroke-linecap="round"/>
+<text x="700.0" y="160.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >1.50 m</text>
+<circle cx="563.5" cy="132.0" r="8" fill="#c2630b" stroke="#ffffff" stroke-width="2" />
+<text x="563.5" y="112.0" font-size="10.5" font-weight="700" text-anchor="middle" fill="#c2630b" >the elevator is at 1.18 m</text>
+<rect x="550.7" y="170.0" width="42.7" height="14.0" rx="4" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.4" />
+<text x="542.7" y="181.0" font-size="9.6" font-weight="700" text-anchor="end" fill="#147d6f" font-family="Consolas, Menlo, monospace">near(Meters.of(1.2), Centimeters.of(5))   true</text>
+<rect x="166.7" y="194.0" width="213.3" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="388.0" y="205.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">between(Meters.of(0.25), Meters.of(0.75))   false</text>
+<rect x="273.3" y="218.0" width="426.7" height="14.0" rx="4" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.4" />
+<text x="265.3" y="229.0" font-size="9.6" font-weight="700" text-anchor="end" fill="#147d6f" font-family="Consolas, Menlo, monospace">gte(Meters.of(0.5))   true</text>
+<rect x="60.0" y="242.0" width="213.3" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="281.3" y="253.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">lte(Meters.of(0.5))   false</text>
+<rect x="670.1" y="266.0" width="29.9" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="662.1" y="277.0" font-size="9.6" font-weight="400" text-anchor="end" fill="#52606d" font-family="Consolas, Menlo, monospace">max()   false</text>
+<rect x="60.0" y="290.0" width="29.9" height="14.0" rx="4" fill="#eef1f4" stroke="#52606d" stroke-width="1.4" />
+<text x="97.9" y="301.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">min()   false</text>
+<text x="34.0" y="338.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >Each is a Trigger to bind commands to. The is... functions, such as isNear, give the same answers as booleans.</text>
+</svg>

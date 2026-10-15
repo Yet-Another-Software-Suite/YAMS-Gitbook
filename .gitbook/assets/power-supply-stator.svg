@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 356" width="760" height="356" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Supply current and stator current</title>
+<desc id="d">A battery at 12 volts feeds a motor controller running at 25 percent output, which feeds a motor with 3 volts across it. The supply current from the battery is 20 amps at 12 volts and the stator current to the motor is 80 amps at 3 volts: the same 240 watts on both sides. The supply current limit protects the battery, breaker and bus voltage. The stator current limit protects the motor and limits torque.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="356" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="324" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Supply current and stator current</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >Two currents, measured on either side of the motor controller.</text>
+<rect x="40" y="112" width="150" height="84" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.6"/>
+<text x="115.0" y="151.5" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2933" >Battery</text>
+<text x="115.0" y="168.5" font-size="12" font-weight="400" text-anchor="middle" fill="#52606d" >12 V</text>
+<rect x="304" y="112" width="152" height="84" rx="8" fill="#eef1f4" stroke="#52606d" stroke-width="1.6"/>
+<text x="380.0" y="151.8" font-size="13" font-weight="700" text-anchor="middle" fill="#1f2933" >Motor controller</text>
+<text x="380.0" y="167.2" font-size="10.5" font-weight="400" text-anchor="middle" fill="#52606d" >running at 25% output</text>
+<rect x="570" y="112" width="150" height="84" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.6"/>
+<text x="645.0" y="152.0" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2933" >Motor</text>
+<text x="645.0" y="168.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >3 V across it</text>
+<line x1="194" y1="154" x2="300" y2="154" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<line x1="460" y1="154" x2="566" y2="154" stroke="#52606d" stroke-width="1.8" marker-end="url(#arrow)"/>
+<text x="247.0" y="136.0" font-size="11" font-weight="700" text-anchor="middle" fill="#b7791f" >SUPPLY current</text>
+<text x="247.0" y="176.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >20 A at 12 V</text>
+<text x="513.0" y="136.0" font-size="11" font-weight="700" text-anchor="middle" fill="#3e6da8" >STATOR current</text>
+<text x="513.0" y="176.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >80 A at 3 V</text>
+<text x="380.0" y="222.0" font-size="11" font-weight="400" text-anchor="middle" fill="#52606d" >Same power on both sides (240 W). The controller trades voltage for current, like a gearbox trades speed for torque.</text>
+<rect x="40" y="240" width="330" height="92" rx="8" fill="#fff7d6" stroke="#b7791f" stroke-width="1.5"/>
+<text x="56.0" y="262.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">withSupplyCurrentLimit(...)</text>
+<text x="56.0" y="282.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Protects the battery, the breaker and the</text>
+<text x="56.0" y="297.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >bus voltage. This is the one BatterySim</text>
+<text x="56.0" y="312.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >sees, and the one that prevents brownouts.</text>
+<rect x="390" y="240" width="330" height="92" rx="8" fill="#dbe7f5" stroke="#3e6da8" stroke-width="1.5"/>
+<text x="406.0" y="262.0" font-size="12" font-weight="700" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">withStatorCurrentLimit(...)</text>
+<text x="406.0" y="282.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >Protects the motor and limits torque: wheel</text>
+<text x="406.0" y="297.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >slip, hard stop hits, heat. It also caps the</text>
+<text x="406.0" y="312.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >supply current, since supply is never larger.</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 312" width="760" height="312" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">A trapezoidal motion profile</title>
+<desc id="d">A velocity against time graph shaped like a trapezoid. The height of the flat top is maxVelocity and the steepness of the ramps is maxAcceleration. The dashed line is closedloop setpoint velocity and the solid line is mechanism velocity. When the lines stay together the mechanism can follow the profile; when the measured line falls behind, lower the limits or fix kV.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="312" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="280" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >A trapezoidal motion profile</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The profile moves the setpoint smoothly. Tuning it means choosing a cruise speed and a ramp.</text>
+<line x1="70" y1="250" x2="460" y2="250" stroke="#cbd2d9" stroke-width="1.4"/>
+<line x1="70" y1="250" x2="70" y2="94" stroke="#cbd2d9" stroke-width="1.4"/>
+<text x="62.0" y="90.0" font-size="10.5" font-weight="400" text-anchor="end" fill="#52606d" >velocity</text>
+<text x="460.0" y="266.0" font-size="10.5" font-weight="400" text-anchor="end" fill="#52606d" >time</text>
+<line x1="70" y1="120" x2="460" y2="120" stroke="#c2630b" stroke-width="1.2" stroke-dasharray="4 4"/>
+<path d="M70,250 L160,120 L340,120 L430,250" fill="none" stroke="#52606d" stroke-width="2" stroke-dasharray="6 4"/>
+<path d="M70,250 C110,230 150,150 186,122 L346,121 C380,140 410,210 444,250" fill="none" stroke="#3e6da8" stroke-width="2.6"/>
+<text x="250.0" y="110.0" font-size="11.5" font-weight="700" text-anchor="middle" fill="#c2630b" >maxVelocity: the cruise speed</text>
+<text x="76.0" y="284.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#6b46c1" >maxAcceleration: how steep the ramps are</text>
+<line x1="90" y1="270" x2="104" y2="210" stroke="#6b46c1" stroke-width="1.6" marker-end="url(#arrow)"/>
+<line x1="480" y1="104" x2="510" y2="104" stroke="#52606d" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="518.0" y="108.0" font-size="11" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">closedloop/setpoint/velocity</text>
+<line x1="480" y1="126" x2="510" y2="126" stroke="#3e6da8" stroke-width="2.6"/>
+<text x="518.0" y="130.0" font-size="11" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">mechanism/velocity</text>
+<text x="518.0" y="146.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >(measurement/velocity on elevators)</text>
+<text x="480.0" y="182.0" font-size="12.5" font-weight="700" text-anchor="start" fill="#147d6f" >The lines stay together</text>
+<text x="480.0" y="199.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >The profile is one the mechanism can</text>
+<text x="480.0" y="214.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >follow. You can raise the limits.</text>
+<text x="480.0" y="242.0" font-size="12.5" font-weight="700" text-anchor="start" fill="#d64545" >The blue line falls behind</text>
+<text x="480.0" y="259.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >The profile asks for more than the motor</text>
+<text x="480.0" y="274.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >can give. Lower the limits, or fix kV.</text>
+</svg>

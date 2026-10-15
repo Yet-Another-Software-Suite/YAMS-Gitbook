@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 376" width="760" height="376" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">The same push, three meanings</title>
+<desc id="d">Three drawings of a robot facing up and to the left with the left stick pushed forward. Field relative, the default: the robot moves away from your driver station whichever way it faces. Robot relative: the robot moves toward its own front. On the red alliance with alliance relative control: the driver station is on the far side, translation is flipped 180 degrees, and the robot still moves away from you.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
+<rect width="760" height="376" fill="#f5f7fa"/>
+<rect x="16" y="16" width="728" height="344" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >The same push, three meanings</text>
+<text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >The left stick is pushed forward in all three. The robot is facing up and to the left.</text>
+<defs><marker id="oarrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker></defs><text x="34.0" y="100.0" font-size="12.5" font-weight="700" text-anchor="start" fill="#1f2933" >Field relative (default)</text>
+<text x="34.0" y="118.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">SwerveInputStream.of(drive, x, y)</text>
+<rect x="34" y="136" width="220" height="150" rx="6" fill="#f3f8f3" stroke="#cbd2d9"/>
+<rect x="74" y="268" width="180" height="18" rx="4" fill="#3e6da8" opacity="0.22"/>
+<text x="164.0" y="280.0" font-size="9.5" font-weight="700" text-anchor="middle" fill="#3e6da8" >your driver station</text>
+<circle cx="58" cy="211.0" r="20" fill="#fafbfc" stroke="#cbd2d9" stroke-width="2"/><line x1="58" y1="211.0" x2="58" y2="197.0" stroke="#c2630b" stroke-width="3"/><circle cx="58" cy="197.0" r="7" fill="#c2630b"/>
+<text x="58.0" y="247.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >forward</text>
+<g transform="translate(164.0,211.0) rotate(-60)"><rect x="-17" y="-17" width="34" height="34" rx="5" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2"/><path d="M-7,-8 L0,-15 L7,-8 Z" fill="#3e6da8"/></g>
+<line x1="164.0" y1="211.0" x2="164.0" y2="165.0" stroke="#c2630b" stroke-width="3.2" stroke-linecap="round" marker-end="url(#oarrow)"/>
+<text x="34.0" y="306.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >Moves away from you</text>
+<text x="34.0" y="321.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >whichever way the robot faces.</text>
+<text x="270.0" y="100.0" font-size="12.5" font-weight="700" text-anchor="start" fill="#1f2933" >Robot relative</text>
+<text x="270.0" y="118.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withRobotRelative()</text>
+<rect x="270" y="136" width="220" height="150" rx="6" fill="#f3f8f3" stroke="#cbd2d9"/>
+<rect x="310" y="268" width="180" height="18" rx="4" fill="#3e6da8" opacity="0.22"/>
+<text x="400.0" y="280.0" font-size="9.5" font-weight="700" text-anchor="middle" fill="#3e6da8" >your driver station</text>
+<circle cx="294" cy="211.0" r="20" fill="#fafbfc" stroke="#cbd2d9" stroke-width="2"/><line x1="294" y1="211.0" x2="294" y2="197.0" stroke="#c2630b" stroke-width="3"/><circle cx="294" cy="197.0" r="7" fill="#c2630b"/>
+<text x="294.0" y="247.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >forward</text>
+<g transform="translate(400.0,211.0) rotate(-60)"><rect x="-17" y="-17" width="34" height="34" rx="5" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2"/><path d="M-7,-8 L0,-15 L7,-8 Z" fill="#3e6da8"/></g>
+<line x1="400.0" y1="211.0" x2="360.16283142591584" y2="188.0" stroke="#c2630b" stroke-width="3.2" stroke-linecap="round" marker-end="url(#oarrow)"/>
+<text x="270.0" y="306.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >Moves toward the robot's front</text>
+<text x="270.0" y="321.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >like driving from an onboard camera.</text>
+<text x="506.0" y="100.0" font-size="12.5" font-weight="700" text-anchor="start" fill="#1f2933" >On the red alliance</text>
+<text x="506.0" y="118.0" font-size="9.6" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withAllianceRelativeControl()</text>
+<rect x="506" y="136" width="220" height="150" rx="6" fill="#f3f8f3" stroke="#cbd2d9"/>
+<rect x="546" y="136" width="180" height="18" rx="4" fill="#d64545" opacity="0.22"/>
+<text x="636.0" y="150.0" font-size="9.5" font-weight="700" text-anchor="middle" fill="#d64545" >your driver station</text>
+<circle cx="530" cy="211.0" r="20" fill="#fafbfc" stroke="#cbd2d9" stroke-width="2"/><line x1="530" y1="211.0" x2="530" y2="197.0" stroke="#c2630b" stroke-width="3"/><circle cx="530" cy="197.0" r="7" fill="#c2630b"/>
+<text x="530.0" y="247.0" font-size="9.5" font-weight="400" text-anchor="middle" fill="#52606d" >forward</text>
+<g transform="translate(636.0,211.0) rotate(-60)"><rect x="-17" y="-17" width="34" height="34" rx="5" fill="#dbe7f5" stroke="#3e6da8" stroke-width="2"/><path d="M-7,-8 L0,-15 L7,-8 Z" fill="#3e6da8"/></g>
+<line x1="636.0" y1="211.0" x2="636.0" y2="257.0" stroke="#c2630b" stroke-width="3.2" stroke-linecap="round" marker-end="url(#oarrow)"/>
+<text x="506.0" y="306.0" font-size="10.5" font-weight="700" text-anchor="start" fill="#1f2933" >Still moves away from you</text>
+<text x="506.0" y="321.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >translation is flipped 180° on red.</text>
+<text x="34.0" y="352.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >The stream's output is always field relative ChassisVelocities. These options only change how the stick is read.</text>
+</svg>

@@ -22,7 +22,7 @@ public class ArmSubsystem extends SubsystemBase {
         .withFeedforward(new ArmFeedforward(0.1, 0.3, 0.5, 0.01))
         .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0));
     
-    SmartMotorController smc = new TalonFXWrapper(new TalonFX(1), DCMotor.getKrakenX60(1), smcConfig);
+    SmartMotorController smc = new TalonFXWrapper(new TalonFX(1, new CANBus(CANPort.CAN_S0)), DCMotor.getKrakenX60(1), smcConfig);
     
     ArmConfig armConfig = new ArmConfig()
         .withLength(Inches.of(18))
@@ -43,6 +43,10 @@ This approach has drawbacks:
 ## The solution: Centralized constants with `withSubsystem()`
 
 YAMS configs can be created **without** a subsystem reference, then bound later using `.withSubsystem()`. This enables a clean separation:
+
+{% hint style="info" %}
+This page uses Commands v2 (`yams.commands2.config.SmartMotorControllerConfig`). With Commands v3, import `yams.commands3.config.SmartMotorControllerConfig` and bind it with `.withMechanism(this)` from your `Mechanism` class instead of `.withSubsystem(this)`. Everything else is the same.
+{% endhint %}
 
 ```java
 // Constants.java - ALL configs in one place
@@ -108,13 +112,13 @@ public class ArmSubsystem extends SubsystemBase {
   private final Arm arm;
   
   public ArmSubsystem() {
-    // Bind the config to this subsystem
-    SmartMotorControllerConfig smcConfig = ArmConstants.SMC_CONFIG
+    // Copy the shared config, then bind the copy to this subsystem
+    SmartMotorControllerConfig smcConfig = ArmConstants.SMC_CONFIG.clone()
         .withSubsystem(this);
     
     // Create SmartMotorController with the bound config
     SmartMotorController smc = new TalonFXWrapper(
-        new TalonFX(ArmConstants.CAN_ID), 
+        new TalonFX(ArmConstants.CAN_ID, new CANBus(CANPort.CAN_S0)), 
         DCMotor.getKrakenX60(1), 
         smcConfig
     );
@@ -125,7 +129,7 @@ public class ArmSubsystem extends SubsystemBase {
     this.arm = new Arm(armConfig, smc);
   }
   
-  // Commands and business logic only - no config clutter!
+  // Commands and business logic only, no config clutter!
   public Command goToAngle(Angle target) {
     return arm.runTo(target, Degrees.of(1));  // tolerance required
   }
@@ -145,20 +149,22 @@ public class ArmSubsystem extends SubsystemBase {
 ## Complete example: Constants file
 
 ```java
-package frc.robot;
+package first.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.ArmConfig;
-import yams.mechanisms.config.ElevatorConfig;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
+import org.wpilib.math.controller.ArmFeedforward;
+import org.wpilib.math.controller.ElevatorFeedforward;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.GearBox;
+import yams.core.gearing.MechanismGearing;
+import yams.core.mechanisms.config.ArmConfig;
+import yams.core.mechanisms.config.ElevatorConfig;
+import yams.core.mechanisms.config.FlyWheelConfig;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
 public final class Constants {
 
@@ -173,7 +179,7 @@ public final class Constants {
             .withClosedLoopController(5, 0, 0.1)
             .withFeedforward(new ArmFeedforward(0.1, 0.3, 0.5, 0.01))
             .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0))
-            .withIdleMode(MotorMode.BRAKE);
+            .withZeroPower(MotorMode.BRAKE);
     
     public static final ArmConfig ARM_CONFIG = 
         new ArmConfig()
@@ -194,7 +200,7 @@ public final class Constants {
             .withClosedLoopController(10, 0, 0.5)
             .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))
             .withTrapezoidalProfile(MetersPerSecond.of(1.0), MetersPerSecondPerSecond.of(2.0))
-            .withIdleMode(MotorMode.BRAKE);
+            .withZeroPower(MotorMode.BRAKE);
     
     public static final ElevatorConfig ELEVATOR_CONFIG = 
         new ElevatorConfig()
@@ -214,7 +220,7 @@ public final class Constants {
             .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
             .withClosedLoopController(0.5, 0, 0)
             .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0.01))
-            .withIdleMode(MotorMode.COAST);
+            .withZeroPower(MotorMode.COAST);
     
     public static final FlyWheelConfig FLYWHEEL_CONFIG = 
         new FlyWheelConfig()
@@ -227,31 +233,35 @@ public final class Constants {
 ## Complete example: Subsystem using constants
 
 ```java
-package frc.robot.subsystems;
+package first.robot.subsystems;
 
+import static org.wpilib.units.Units.*;
+
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ArmConstants;
-import yams.mechanisms.config.ArmConfig;
-import yams.mechanisms.positional.Arm;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.remote.TalonFXWrapper;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import first.robot.Constants.ArmConstants;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.commands2.mechanisms.Arm;
+import yams.core.mechanisms.config.ArmConfig;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.remote.TalonFXWrapper;
 
 public class ArmSubsystem extends SubsystemBase {
 
   private final Arm arm;
 
   public ArmSubsystem() {
-    // Step 1: Bind SmartMotorControllerConfig to this subsystem
-    SmartMotorControllerConfig smcConfig = ArmConstants.SMC_CONFIG
+    // Step 1: Copy the shared SmartMotorControllerConfig and bind the copy to this subsystem
+    SmartMotorControllerConfig smcConfig = ArmConstants.SMC_CONFIG.clone()
         .withSubsystem(this);
 
     // Step 2: Create SmartMotorController
     SmartMotorController smc = new TalonFXWrapper(
-        new TalonFX(ArmConstants.CAN_ID),
+        new TalonFX(ArmConstants.CAN_ID, new CANBus(CANPort.CAN_S0)),
         ArmConstants.MOTOR,
         smcConfig
     );
@@ -290,7 +300,7 @@ public class ArmSubsystem extends SubsystemBase {
 For larger robots, you may want to split configs into separate files:
 
 ```
-frc/robot/
+first/robot/
 ├── Constants.java           // General constants (CAN IDs, ports)
 ├── configs/
 │   ├── ArmConfigs.java      // Arm-related configs
@@ -304,7 +314,7 @@ frc/robot/
 ```
 
 {% hint style="info" %}
-**Important**: When using this pattern, you **must** call `.withSubsystem()` before passing the `SmartMotorControllerConfig` to a `SmartMotorController`. Pass the `SmartMotorController` directly as the second argument to the mechanism constructor (e.g., `new Arm(armConfig, smc)`).
+**Important**: When using this pattern, you **must** call `.withSubsystem()` (`.withMechanism()` in Commands v3) before passing the `SmartMotorControllerConfig` to a `SmartMotorController`. It can only be called once per config and throws a `SmartMotorControllerConfigurationException` if a subsystem is already set, so call `.clone()` on the shared constant first and bind the copy. Never pass the same config instance to more than one `SmartMotorController`. Pass the `SmartMotorController` directly as the second argument to the mechanism constructor (e.g., `new Arm(armConfig, smc)`).
 {% endhint %}
 
 ## When not to use this pattern
