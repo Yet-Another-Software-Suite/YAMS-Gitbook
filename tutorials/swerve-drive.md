@@ -1,5 +1,5 @@
 ---
-description: We will learn how to program a Swerve Drive!
+description: Learn how to program a Swerve Drive.
 ---
 
 # Swerve Drive
@@ -10,7 +10,7 @@ Swerve drive requires more hardware configuration than a tank drive. Make sure y
 
 ## Intro
 
-At the end of this tutorial you will have a full swerve drive that works in both real life and simulation with the same code!
+This tutorial builds a swerve drive that works in real life and simulation with the same code.
 
 <figure><img src="../.gitbook/assets/tutorial-swerve-modules.gif" alt="Animation of two controller sticks and a top view of a swerve drive with its four modules. Left stick forward: every module points forward at the same speed. Left stick left: every module turns to point left and the robot does not rotate. Right stick left: the modules form a circle and the robot spins in place. Both sticks: each module gets its own angle and speed."><figcaption><p>You ask for a chassis speed. <code>SwerveDrive</code> works out the four modules.</p></figcaption></figure>
 
@@ -36,14 +36,14 @@ This swerve drive uses the following hardware and controls:
 
 Every step has a tab for **Java with Commands v2**, **Java with Commands v3** and **C++**.
 
-| Step | What you do |
-| --- | --- |
-| [Before you start](project-setup.md) | Create a WPILib project and install YAMS, REVLib and Phoenix 6. Skip this if you already have a project. |
-| [Step 1: The module motors](swerve-drive/module-motors.md) | A config for the drive motors and a config for the azimuth motors. |
-| [Step 2: The modules and the drive](swerve-drive/modules-and-drive.md) | Build four `SwerveModule`s, add the gyro, and create the `SwerveDrive`. |
-| [Step 3: Driving](swerve-drive/driving.md) | Drive commands, a `SwerveInputStream` for the sticks, and the bindings. |
+| Step                                                                   | What you do                                                                                              |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [Before you start](project-setup.md)                                   | Create a WPILib project and install YAMS, REVLib and Phoenix 6. Skip this if you already have a project. |
+| [Step 1: The module motors](swerve-drive/module-motors.md)             | A config for the drive motors and a config for the azimuth motors.                                       |
+| [Step 2: The modules and the drive](swerve-drive/modules-and-drive.md) | Build four `SwerveModule`s, add the gyro, and create the `SwerveDrive`.                                  |
+| [Step 3: Driving](swerve-drive/driving.md)                             | Drive commands, a `SwerveInputStream` for the sticks, and the bindings.                                  |
 
-## Complete Example
+## Complete example
 
 The following files from the YAMS `simple_robot-2027` Commands v2 example show a complete swerve drive implementation matching the hardware described in this tutorial.
 
@@ -56,7 +56,7 @@ The same drive in the other two flavors:
 * **Java, Commands v3:** [`SwerveMechanism.java`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/simple_robot-2027/src/main/java/first/robot/mechanisms/SwerveMechanism.java) in `examples/commands3/simple_robot-2027`
 * **C++:** [`SwerveSubsystem.h`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/cpptest/src/main/include/subsystems/SwerveSubsystem.h) and [`SwerveSubsystem.cpp`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/cpptest/src/main/cpp/subsystems/SwerveSubsystem.cpp) in `examples/cpptest`
 
-## Next Steps
+## Next steps
 
 * Learn about [AdvantageKit Integration](../details/advantagekit-integration.md) for swerve
 * See [Organizing Configs in Constants](../details/config-organization.md) for cleaner code

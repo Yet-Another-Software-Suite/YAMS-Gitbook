@@ -16,7 +16,7 @@ Names the mechanism and chooses how much it publishes. This is the mechanism's o
 .withTelemetry("Arm", TelemetryVerbosity.HIGH)
 ```
 
-The name is the `<Mechanism>` part of every NetworkTables path, and the name [live tuning](../live-tuning/README.md) uses. [Telemetry](../../understanding/telemetry.md) explains the paths and verbosity levels.
+The name is the `<Mechanism>` part of every NetworkTables path, and the name [live tuning](../live-tuning/) uses. [Telemetry](../../understanding/telemetry.md) explains the paths and verbosity levels.
 
 **Used in:** simulation and on the real robot.
 
@@ -26,7 +26,7 @@ The name is the `<Mechanism>` part of every NetworkTables path, and the name [li
 
 Where the mechanism physically cannot go any further.
 
-<figure><img src="../../.gitbook/assets/mech-hard-limits.png" alt="A bar of a mechanism's travel. The hard limits at each end are physical stops. The soft limits sit a little inside them and are where the motor controller keeps the mechanism. withHardLimits is set on the mechanism config and the simulated mechanism cannot pass them. withSoftLimits is set on the motor config and the real motor controller will not drive past them."><figcaption><p>Hard limits are physical stops. Soft limits sit inside them.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mech-hard-limits.png" alt="A bar of a mechanism&#x27;s travel. The hard limits at each end are physical stops. The soft limits sit a little inside them and are where the motor controller keeps the mechanism. withHardLimits is set on the mechanism config and the simulated mechanism cannot pass them. withSoftLimits is set on the motor config and the real motor controller will not drive past them."><figcaption><p>Hard limits are physical stops. Soft limits sit inside them.</p></figcaption></figure>
 
 ```java
 new ArmConfig().withHardLimits(Degrees.of(-30), Degrees.of(110));
@@ -56,7 +56,7 @@ The color of the mechanism's line in its `Mechanism2d` window. The default is or
 
 Places the mechanism on a drawing of the robot, so several mechanisms line up when you view them together.
 
-<figure><img src="../../.gitbook/assets/mech-window.png" alt="A Mechanism2d window showing a robot outline, the mechanism as an orange line and its setpoint as a grey line. withSimColor sets the color of the mechanism's line. withMechanismPositionConfig sets where it sits on the robot with withRelativePosition, the size of the window with withMaxRobotLength and withMaxRobotHeight, and the plane it moves in with withMovementPlane. None of these change how the mechanism moves."><figcaption><p>The Mechanism2d window, and what each option changes in it.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mech-window.png" alt="A Mechanism2d window showing a robot outline, the mechanism as an orange line and its setpoint as a grey line. withSimColor sets the color of the mechanism&#x27;s line. withMechanismPositionConfig sets where it sits on the robot with withRelativePosition, the size of the window with withMaxRobotLength and withMaxRobotHeight, and the plane it moves in with withMovementPlane. None of these change how the mechanism moves."><figcaption><p>The Mechanism2d window, and what each option changes in it.</p></figcaption></figure>
 
 ```java
 .withMechanismPositionConfig(new MechanismPositionConfig()
@@ -66,17 +66,16 @@ Places the mechanism on a drawing of the robot, so several mechanisms line up wh
     .withMovementPlane(MechanismPositionConfig.Plane.XZ))
 ```
 
-| Option | What it sets |
-| --- | --- |
-| `withRelativePosition` | Where the mechanism's root is on the robot. |
-| `withMaxRobotLength`, `withMaxRobotHeight` | The size of the window. Without them it is twice the mechanism's length. |
-| `withMovementPlane` | The plane the mechanism moves in: `XZ` (seen from the side, the default), `YZ` or `XY`. |
+| Option                                     | What it sets                                                                            |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `withRelativePosition`                     | Where the mechanism's root is on the robot.                                             |
+| `withMaxRobotLength`, `withMaxRobotHeight` | The size of the window. Without them it is twice the mechanism's length.                |
+| `withMovementPlane`                        | The plane the mechanism moves in: `XZ` (seen from the side, the default), `YZ` or `XY`. |
 
 **Used in:** simulation only. It changes the drawing and the mechanism's reported 3D position, never how the mechanism moves.
 
 **Available on:** `ArmConfig`, `ElevatorConfig`, `PivotConfig`, `FlyWheelConfig`.
 
-
-## Code Reference
+## Code reference
 
 * `MechanismPositionConfig`

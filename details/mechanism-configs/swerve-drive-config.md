@@ -30,13 +30,13 @@ drive.getConfig().withModuleStateOptimization(false);
 
 <figure><img src="../../.gitbook/assets/mech-swerve-gyro.png" alt="Three panels showing a robot turned 30 degrees counter-clockwise. With withGyro alone the heading reads plus 30 degrees. With withGyroInverted the same turn reads minus 30 degrees. With withGyroOffset of 90 degrees the heading reads 90 degrees different."><figcaption><p>The gyro options change how the same turn is read.</p></figcaption></figure>
 
-| Option | What it does |
-| --- | --- |
-| `withGyro(Supplier<Rotation3d>)` | Supplies the robot's attitude. Its yaw is the heading. |
-| `withGyroInverted(boolean)` | Flips the heading, for a gyro that reads clockwise as positive. |
-| `withGyroOffset(Angle)` | Adds a fixed angle to the heading. |
-| `withGyroHeadingAxis(GyroAxis)` | Chooses which axis is the heading, for a gyro mounted on its side. |
-| `withGyroVelocity(Supplier<AngularVelocity>)` | Supplies the turn rate, used by [`withGyroAngularVelocityScaleFactor`](#withgyroangularvelocityscalefactor). Without it the turn rate is estimated from the heading. |
+| Option                                        | What it does                                                                                                                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `withGyro(Supplier<Rotation3d>)`              | Supplies the robot's attitude. Its yaw is the heading.                                                                                                                                     |
+| `withGyroInverted(boolean)`                   | Flips the heading, for a gyro that reads clockwise as positive.                                                                                                                            |
+| `withGyroOffset(Angle)`                       | Adds a fixed angle to the heading.                                                                                                                                                         |
+| `withGyroHeadingAxis(GyroAxis)`               | Chooses which axis is the heading, for a gyro mounted on its side.                                                                                                                         |
+| `withGyroVelocity(Supplier<AngularVelocity>)` | Supplies the turn rate, used by [`withGyroAngularVelocityScaleFactor`](swerve-drive-config.md#withgyroangularvelocityscalefactor). Without it the turn rate is estimated from the heading. |
 
 ```java
 config.withGyro(pigeon::getRotation3d)
@@ -58,9 +58,9 @@ config.withMaximumModuleSpeed(MetersPerSecond.of(4.5))
       .withMaximumChassisSpeed(MetersPerSecond.of(4.5), DegreesPerSecond.of(540));
 ```
 
-| Option | What it does |
-| --- | --- |
-| `withMaximumModuleSpeed` | The fastest a wheel can go. When a move needs more, every wheel is slowed by the same factor. |
+| Option                    | What it does                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `withMaximumModuleSpeed`  | The fastest a wheel can go. When a move needs more, every wheel is slowed by the same factor.                       |
 | `withMaximumChassisSpeed` | The fastest the robot should drive and turn. With both set, the slowdown also keeps the mix of driving and turning. |
 
 Without `withMaximumModuleSpeed` nothing is limited, and wheels asked to go too fast each fall short by a different amount, which bends the robot's path.
@@ -78,7 +78,7 @@ config.withTranslationController(new PIDController(4, 0, 0))
 
 They are used by [auto-align](../swerve-drive.md#auto-align) and by the heading, aim and translation-only modes of a [`SwerveInputStream`](../swerve-input-stream.md#modes-are-chosen-automatically), which throw a `SwerveDriveConfigurationException` if no rotation controller is set. Normal stick driving does not use them.
 
-`withSimTranslationController` and `withSimRotationController` give different gains for simulation only. [Live tuning](../live-tuning/README.md#tune-auto-align) shows how to find the values.
+`withSimTranslationController` and `withSimRotationController` give different gains for simulation only. [Live tuning](../live-tuning/#tune-auto-align) shows how to find the values.
 
 ## Driving corrections
 
@@ -120,7 +120,7 @@ config.withAntiTipping(MetersPerSecond.of(2), Degrees.of(8), MetersPerSecond.of(
 //                     kP                     threshold      maximum correction
 ```
 
-Set the threshold a few degrees above the most the robot tilts in normal driving. It reads pitch and roll from the gyro, so it needs [`withGyro`](#the-gyro).
+Set the threshold a few degrees above the most the robot tilts in normal driving. It reads pitch and roll from the gyro, so it needs [`withGyro`](swerve-drive-config.md#the-gyro).
 
 ### `withCenterOfRotation`
 
@@ -148,16 +148,15 @@ config.withStartingPose(new Pose2d(2, 4, Rotation2d.fromDegrees(180)));
 
 Names the drive and chooses what it publishes. The default name is `swerve`.
 
-<figure><img src="../../.gitbook/assets/telemetry-swerve-tree.png" alt="The NetworkTables tree for a swerve drive: pose, gyro, chassis velocities, module states and each module's motors"><figcaption><p>What a swerve drive publishes.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/telemetry-swerve-tree.png" alt="The NetworkTables tree for a swerve drive: pose, gyro, chassis velocities, module states and each module&#x27;s motors"><figcaption><p>What a swerve drive publishes.</p></figcaption></figure>
 
 ```java
 config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 ```
 
-[Telemetry](../../understanding/telemetry.md#swerve-drive-telemetry) lists what each level publishes, and [Live tuning](../live-tuning/README.md#swerve-drive) needs `HIGH`.
+[Telemetry](../../understanding/telemetry.md#swerve-drive-telemetry) lists what each level publishes, and [Live tuning](../live-tuning/#swerve-drive) needs `HIGH`.
 
-
-## Code Reference
+## Code reference
 
 * `SwerveDriveConfig`
 * `SwerveDrive`

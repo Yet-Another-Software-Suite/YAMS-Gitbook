@@ -2,7 +2,7 @@
 
 Create an interface that defines what inputs your subsystem reads and what outputs it sends. Following AdvantageKit conventions, inputs are grouped in an `Inputs` class.
 
-## Arm IO Interface
+## Arm IO interface
 
 ```java
 package first.robot.subsystems.akit;
@@ -43,7 +43,7 @@ public interface ArmIO {
 }
 ```
 
-## Elevator IO Interface
+## Elevator IO interface
 
 ```java
 package first.robot.subsystems.akit;
@@ -77,7 +77,7 @@ public interface ElevatorIO {
 }
 ```
 
-## Shooter IO Interface
+## Shooter IO interface
 
 ```java
 package first.robot.subsystems.akit;

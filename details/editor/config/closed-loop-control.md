@@ -7,10 +7,10 @@ icon: arrows-spin
 Closed loop control is what takes a mechanism to a setpoint and holds it there. These options need [`withControlMode(ControlMode.CLOSED_LOOP)`](motor-basics.md#withcontrolmode), which is the default.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](./#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
-For how to find good values, see [live tuning](../../live-tuning/README.md).
+For how to find good values, see [live tuning](../../live-tuning/).
 
 ## `withClosedLoopController`
 
@@ -23,15 +23,15 @@ Sets the PID gains.
 .withClosedLoopController(new PIDController(4, 0, 0.2))
 ```
 
-The gains work in rotations and volts, or meters and volts for a [distance based controller](#withlinearclosedloopcontroller). YAMS converts them to whatever the motor controller uses, so the same numbers behave the same on every vendor. [How your gains reach the motor controller](#how-your-gains-reach-the-motor-controller) shows how.
+The gains work in rotations and volts, or meters and volts for a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller). YAMS converts them to whatever the motor controller uses, so the same numbers behave the same on every vendor. [How your gains reach the motor controller](closed-loop-control.md#how-your-gains-reach-the-motor-controller) shows how.
 
 Passing an `LQRController` instead replaces the PID with an LQR: see [LQR controllers](../lqr-controllers.md).
 
 **Supported on every motor controller.** Every controller accepts PID gains. An [LQR controller](../lqr-controllers.md) always runs on the SystemCore, on every controller.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ | ✅ | ✅ | ✅ PID runs on the SystemCore |
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova                 |
+| ------- | -------- | ---------------- | ---------------------------- |
+| ✅       | ✅        | ✅                | ✅ PID runs on the SystemCore |
 
 ### Slots
 
@@ -48,9 +48,9 @@ motor.setClosedLoopSlot(ClosedLoopControllerSlot.SLOT_1);
 
 **Not supported everywhere.** Selecting `SLOT_3` on a TalonFX or TalonFXS throws an `IllegalArgumentException`, and a feedforward configured for `SLOT_3` on a TalonFX throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ⚠️ `SLOT_0` to `SLOT_2` | ⚠️ `SLOT_0` to `SLOT_2` | ✅ | ✅ |
+| TalonFX                 | TalonFXS                | SPARK MAX / Flex | Thrifty Nova |
+| ----------------------- | ----------------------- | ---------------- | ------------ |
+| ⚠️ `SLOT_0` to `SLOT_2` | ⚠️ `SLOT_0` to `SLOT_2` | ✅                | ✅            |
 
 ## `withClosedLoopTolerance`
 
@@ -67,9 +67,9 @@ Call it after `withClosedLoopController`: it is set on the PID controllers that 
 
 **Not supported everywhere.** It throws a `SmartMotorControllerConfigurationException` on a TalonFX or TalonFXS.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ❌ | ❌ | ⚠️ not with an [LQR controller](../lqr-controllers.md) | ⚠️ not with an [LQR controller](../lqr-controllers.md) |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                       | Thrifty Nova                                           |
+| ------- | -------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| ❌       | ❌        | ⚠️ not with an [LQR controller](../lqr-controllers.md) | ⚠️ not with an [LQR controller](../lqr-controllers.md) |
 
 ## `withContinuousWrapping`
 
@@ -98,9 +98,9 @@ Caps the voltage the closed loop controller may ask for.
 
 **Not supported everywhere.** On a TalonFX or TalonFXS it is applied as the peak forward and reverse voltage. On a SPARK it throws a `SmartMotorControllerConfigurationException` unless the loop runs on the SystemCore.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ | ✅ | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ✅ |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova |
+| ------- | -------- | --------------------------------------------------------------------------------- | ------------ |
+| ✅       | ✅        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ✅            |
 
 ## Where the loop runs
 
@@ -120,7 +120,7 @@ A slower loop reacts later to every error, so it cannot use gains as high as a f
 What this means in practice:
 
 * **Tune again whenever the loop moves.** On a SPARK that happens when you switch between a trapezoidal profile, which runs on the controller, and an exponential profile or an [LQR controller](../lqr-controllers.md), which run on the SystemCore. Moving a mechanism to a different brand of motor controller can move the loop too.
-* **Tune again after changing [`withClosedLoopControlPeriod`](#withclosedloopcontrolperiod).** A different period is a different loop.
+* **Tune again after changing** [**`withClosedLoopControlPeriod`**](closed-loop-control.md#withclosedloopcontrolperiod)**.** A different period is a different loop.
 * **Do not copy gains from another team or another robot** without checking where their loop ran and how fast.
 
 ### `withClosedLoopControlPeriod`
@@ -133,15 +133,15 @@ Changes how often the SystemCore loop runs. The default is 20 ms. It does not ch
 
 **Not supported everywhere.** Where it is not supported it throws an `IllegalArgumentException` on a TalonFX, TalonFXS or Thrifty Nova, and a `SmartMotorControllerConfigurationException` on a SPARK.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ❌ | ❌ | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                |
+| ------- | -------- | --------------------------------------------------------------------------------- | --------------------------- |
+| ❌       | ❌        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
 
 ## How your gains reach the motor controller
 
-You write every gain once, in mechanism units: volts per mechanism rotation, or per meter for a [distance based controller](#withlinearclosedloopcontroller). Every [feedforward](feedforward.md) uses the same units, including an `ArmFeedforward`. Each motor controller wants its gains in its own units, so YAMS converts them when it applies the config, and again every time you change a gain while [live tuning](../../live-tuning/README.md).
+You write every gain once, in mechanism units: volts per mechanism rotation, or per meter for a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller). Every [feedforward](feedforward.md) uses the same units, including an `ArmFeedforward`. Each motor controller wants its gains in its own units, so YAMS converts them when it applies the config, and again every time you change a gain while [live tuning](../../live-tuning/).
 
-<figure><img src="../../../.gitbook/assets/smc-gain-overview.png" alt="Your gains, in YAMS units of volts per mechanism rotation or meter, go to three motor controllers. TalonFX and TalonFXS: the sensor to mechanism ratio is the gear ratio, so the Talon already works in mechanism rotations; a linear mechanism's gains are divided by the rotations per meter; kS and kG are volts and do not change; Motion Magic limits go from meters to rotations; gravity is Arm_Cosine or Elevator_Static. SPARK MAX and Flex: gains are per rotation of its encoder and output a duty cycle, so they are divided by 12 V and the gear ratio, velocity gains by 60 more for RPM, kI is multiplied by 1 ms and kD divided by 1 ms, kV and kA are volts per RPM of its encoder, and an arm's kG becomes kCos with a kCosRatio of 1 over the ratio. Thrifty Nova: the PID runs on the SystemCore in YAMS units, so nothing is converted."><figcaption><p>Where your gains go.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-gain-overview.png" alt="Your gains, in YAMS units of volts per mechanism rotation or meter, go to three motor controllers. TalonFX and TalonFXS: the sensor to mechanism ratio is the gear ratio, so the Talon already works in mechanism rotations; a linear mechanism&#x27;s gains are divided by the rotations per meter; kS and kG are volts and do not change; Motion Magic limits go from meters to rotations; gravity is Arm_Cosine or Elevator_Static. SPARK MAX and Flex: gains are per rotation of its encoder and output a duty cycle, so they are divided by 12 V and the gear ratio, velocity gains by 60 more for RPM, kI is multiplied by 1 ms and kD divided by 1 ms, kV and kA are volts per RPM of its encoder, and an arm&#x27;s kG becomes kCos with a kCosRatio of 1 over the ratio. Thrifty Nova: the PID runs on the SystemCore in YAMS units, so nothing is converted."><figcaption><p>Where your gains go.</p></figcaption></figure>
 
 ### Dimensional analysis
 
@@ -153,45 +153,45 @@ A SPARK's closed loop works on its own encoder, not on the mechanism. Its PID ou
 
 <figure><img src="../../../.gitbook/assets/smc-gain-units-spark.gif" alt="An animation of five unit conversions for a 12 to 1 SPARK. Position kP: 4 volts per mechanism rotation, times 1 mechanism rotation over 12 motor rotations, times 1 duty over 12 volts. Mechanism rotations cancel, then volts cancel, leaving 0.0278 duty cycle per motor rotation. Elevator kP: 40 volts per meter, times 0.2 meters per mechanism rotation, then the same gear ratio and voltage, leaving 0.0556 duty cycle per motor rotation. Velocity kP: 0.5 volts per mechanism rotation per second, times 1 mechanism rotation per second over 12 motor rotations per second, times 1 motor rotation per second over 60 RPM, times 1 duty over 12 volts, leaving 5.79e-05 duty cycle per RPM. kD: 0.2 volt seconds per mechanism rotation, through the same gear ratio and voltage, times 1 loop over 0.001 seconds, so seconds cancel and it leaves 1.39 duty cycle loops per motor rotation. kV: 1.0 volt per mechanism rotation per second, through the gear ratio and 60 RPM, leaving 0.00139 volts per RPM, because feedforwards stay in volts."><figcaption><p>Converting a 12:1 mechanism's gains for a SPARK, one unit at a time.</p></figcaption></figure>
 
-| Gain | YAMS units | SPARK units | YAMS does |
-| --- | --- | --- | --- |
-| `kP`, position | V per mechanism rotation (or meter) | duty cycle per encoder rotation | ÷ (12 V × ratio) |
-| `kP`, velocity | V per mechanism rotation (or meter) per second | duty cycle per encoder RPM | ÷ (12 V × ratio × 60) |
-| `kI` | `kP`'s units per second | `kP`'s units per 1 ms loop | × 0.001 s, then as `kP` |
-| `kD` | `kP`'s units × seconds | `kP`'s units × 1 ms loops | ÷ 0.001 s, then as `kP` |
-| `kS`, `kG` | V | V | nothing |
-| `kV` | V per mechanism rotation (or meter) per second | V per encoder RPM | ÷ (ratio × 60) |
-| `kA` | V per mechanism rotation (or meter) per second² | V per encoder RPM per second | ÷ (ratio × 60) |
-| Profile velocity | mechanism rotations (or meters) per second | encoder RPM | × ratio × 60 |
-| Profile acceleration | mechanism rotations (or meters) per second² | encoder RPM per second | × ratio × 60 |
+| Gain                 | YAMS units                                      | SPARK units                     | YAMS does               |
+| -------------------- | ----------------------------------------------- | ------------------------------- | ----------------------- |
+| `kP`, position       | V per mechanism rotation (or meter)             | duty cycle per encoder rotation | ÷ (12 V × ratio)        |
+| `kP`, velocity       | V per mechanism rotation (or meter) per second  | duty cycle per encoder RPM      | ÷ (12 V × ratio × 60)   |
+| `kI`                 | `kP`'s units per second                         | `kP`'s units per 1 ms loop      | × 0.001 s, then as `kP` |
+| `kD`                 | `kP`'s units × seconds                          | `kP`'s units × 1 ms loops       | ÷ 0.001 s, then as `kP` |
+| `kS`, `kG`           | V                                               | V                               | nothing                 |
+| `kV`                 | V per mechanism rotation (or meter) per second  | V per encoder RPM               | ÷ (ratio × 60)          |
+| `kA`                 | V per mechanism rotation (or meter) per second² | V per encoder RPM per second    | ÷ (ratio × 60)          |
+| Profile velocity     | mechanism rotations (or meters) per second      | encoder RPM                     | × ratio × 60            |
+| Profile acceleration | mechanism rotations (or meters) per second²     | encoder RPM per second          | × ratio × 60            |
 
 * **The ratio** is the gearing between the mechanism and the encoder the SPARK uses: your [gearing](gearing-and-units.md), or the [external encoder's gearing](encoders.md#withexternalencodergearing) when the SPARK uses an external encoder for feedback.
 * **The 12 V** is your [voltage compensation](limits-and-protection.md#withvoltagecompensation) if you set one, and 12 V if you do not. The SPARK's PID output is a fraction of full output, from -1 to 1, in every closed loop control type YAMS sends: position, velocity and both MAXMotion types. With voltage compensation, full output is the compensation voltage, so the gains are exact. Without it, full output is the battery's voltage, so at 11 V the PID pushes about 8% less than you tuned for.
 * **The feedforward is in volts**, not a fraction of full output. The SPARK's `kS`, `kV`, `kA`, `kG` and `kCos` are in volts, and YAMS sends its own feedforward with each setpoint in volts (`ArbFFUnits.kVoltage`), so the feedforward does not change with the battery's voltage.
-* **An elevator, or any distance based controller,** has every gain per meter, as on a Talon: `kP`, `kI`, `kD`, `kV` and `kA`, and the profile's limits. `kS` and `kG` are volts either way. YAMS first divides a gain per meter by the mechanism rotations per meter (multiplies, for a profile limit), then converts the result as in the table. An `ElevatorFeedforward` or [`withLinearClosedLoopController`](#withlinearclosedloopcontroller) makes the controller distance based.
+* **An elevator, or any distance based controller,** has every gain per meter, as on a Talon: `kP`, `kI`, `kD`, `kV` and `kA`, and the profile's limits. `kS` and `kG` are volts either way. YAMS first divides a gain per meter by the mechanism rotations per meter (multiplies, for a profile limit), then converts the result as in the table. An `ElevatorFeedforward` or [`withLinearClosedLoopController`](closed-loop-control.md#withlinearclosedloopcontroller) makes the controller distance based.
 * **Position and velocity need different gains.** A SPARK measures position error in rotations and velocity error in RPM, so YAMS writes the position or velocity version of your gains whenever the type of setpoint changes. You still tune only one set.
 * **An arm's `kG`** goes to the SPARK's `kCos`, with a `kCosRatio` of 1 over the ratio so the SPARK can turn its encoder's rotations into the arm's angle.
 * **In simulation**, REVLib's SPARK applies `kI` and `kD` per second instead of per loop, so YAMS skips the 0.001 s step there.
 {% endtab %}
 
 {% tab title="TalonFX / TalonFXS" %}
-YAMS sets the Talon's `SensorToMechanismRatio` to your gear ratio, so the Talon already measures in mechanism rotations and works in volts. An angle based gain goes to the Talon unchanged. Only a [distance based controller](#withlinearclosedloopcontroller) is converted, from meters to mechanism rotations.
+YAMS sets the Talon's `SensorToMechanismRatio` to your gear ratio, so the Talon already measures in mechanism rotations and works in volts. An angle based gain goes to the Talon unchanged. Only a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller) is converted, from meters to mechanism rotations.
 
 <figure><img src="../../../.gitbook/assets/smc-gain-units-talon.gif" alt="An animation of three unit conversions for an elevator on a Talon whose drum moves 0.2 meters per mechanism rotation. kP: 40 volts per meter times 0.2 meters per mechanism rotation; meters cancel, leaving 8 volts per mechanism rotation. kV: 8 volts per meter per second times 0.2 meters per mechanism rotation, leaving 1.6 volts per mechanism rotation per second. Motion Magic cruise velocity: 1.5 meters per second times 1 mechanism rotation over 0.2 meters, leaving 7.5 mechanism rotations per second."><figcaption><p>Converting an elevator's gains for a Talon, one unit at a time.</p></figcaption></figure>
 
-| Gain | YAMS units | Talon units | YAMS does |
-| --- | --- | --- | --- |
-| `kP`, `kI`, `kD` | V per mechanism rotation (or meter) | V per mechanism rotation | ÷ mechanism rotations per meter when distance based |
-| `kS`, `kG` | V | V | nothing, and sets `GravityType` to `Arm_Cosine` for an arm or `Elevator_Static` for an elevator |
-| `kV`, `kA` | V per mechanism rotation (or meter) per second (²) | V per mechanism rotation per second (²) | ÷ mechanism rotations per meter when distance based |
-| Motion Magic velocity, acceleration | mechanism rotations (or meters) per second (²) | mechanism rotations per second (²) | × mechanism rotations per meter when distance based |
-| Motion Magic Expo `kV`, `kA` | from the [exponential profile](../exponential-profiles.md) | V per mechanism rotation per second (²) | ÷ mechanism rotations per meter when distance based |
+| Gain                                | YAMS units                                                 | Talon units                             | YAMS does                                                                                       |
+| ----------------------------------- | ---------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `kP`, `kI`, `kD`                    | V per mechanism rotation (or meter)                        | V per mechanism rotation                | ÷ mechanism rotations per meter when distance based                                             |
+| `kS`, `kG`                          | V                                                          | V                                       | nothing, and sets `GravityType` to `Arm_Cosine` for an arm or `Elevator_Static` for an elevator |
+| `kV`, `kA`                          | V per mechanism rotation (or meter) per second (²)         | V per mechanism rotation per second (²) | ÷ mechanism rotations per meter when distance based                                             |
+| Motion Magic velocity, acceleration | mechanism rotations (or meters) per second (²)             | mechanism rotations per second (²)      | × mechanism rotations per meter when distance based                                             |
+| Motion Magic Expo `kV`, `kA`        | from the [exponential profile](../exponential-profiles.md) | V per mechanism rotation per second (²) | ÷ mechanism rotations per meter when distance based                                             |
 
 With an [external encoder](encoders.md#withexternalencoder), the `SensorToMechanismRatio` is the encoder's gearing and the `RotorToSensorRatio` is the rest of the gearing, so the gains are still per mechanism rotation.
 {% endtab %}
 
 {% tab title="Thrifty Nova" %}
-The Nova's closed loop [runs on the SystemCore](#where-the-loop-runs) in YAMS units, so nothing is converted. Your gains are used exactly as you wrote them, and the Nova only receives the voltage the loop asks for.
+The Nova's closed loop [runs on the SystemCore](closed-loop-control.md#where-the-loop-runs) in YAMS units, so nothing is converted. Your gains are used exactly as you wrote them, and the Nova only receives the voltage the loop asks for.
 {% endtab %}
 {% endtabs %}
 
@@ -199,7 +199,7 @@ The Nova's closed loop [runs on the SystemCore](#where-the-loop-runs) in YAMS un
 WPILib's `ArmFeedforward` documents its `kV` and `kA` per radian. In YAMS they are per rotation, like every other gain. When the loop runs on the SystemCore, YAMS converts them to radians for WPILib's math.
 {% endhint %}
 
-The units are the same on every controller, but [where the loop runs](#where-the-loop-runs) still matters. A loop on the motor controller runs every millisecond, so gains tuned there are not the best gains for a loop on the SystemCore.
+The units are the same on every controller, but [where the loop runs](closed-loop-control.md#where-the-loop-runs) still matters. A loop on the motor controller runs every millisecond, so gains tuned there are not the best gains for a loop on the SystemCore.
 
 ## `withLinearClosedLoopController`
 
@@ -211,7 +211,6 @@ It turns on by itself when you give a distance profile, a distance exponential p
 
 **Supported on:** every supported motor controller.
 
-
-## Code Reference
+## Code reference
 
 * [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)

@@ -10,7 +10,7 @@ A motion profile turns a jump in the goal into a smooth path of setpoints for th
 
 A maximum velocity and a maximum acceleration.
 
-<figure><img src="../../../.gitbook/assets/smc-trapezoidal-profile.png" alt="Two graphs. Position: the goal is a flat line and the setpoint the PID follows rises to it in a smooth S shape. Velocity: the setpoint's velocity ramps up at the maximum acceleration, holds at the maximum velocity, and ramps back down, making a trapezoid."><figcaption><p>The setpoint glides to the goal, and its velocity makes a trapezoid.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-trapezoidal-profile.png" alt="Two graphs. Position: the goal is a flat line and the setpoint the PID follows rises to it in a smooth S shape. Velocity: the setpoint&#x27;s velocity ramps up at the maximum acceleration, holds at the maximum velocity, and ramps back down, making a trapezoid."><figcaption><p>The setpoint glides to the goal, and its velocity makes a trapezoid.</p></figcaption></figure>
 
 ```java
 .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(360)) // arms, pivots
@@ -19,7 +19,7 @@ A maximum velocity and a maximum acceleration.
 
 The distance version needs a [circumference](gearing-and-units.md#withmechanismcircumference) and makes the controller [distance based](closed-loop-control.md#withlinearclosedloopcontroller).
 
-Choose limits the mechanism can really reach. If the profile asks for more than the motor can give, the mechanism falls behind and the PID fights to catch up: see [when tuning does not help](../../live-tuning/README.md#when-tuning-does-not-help).
+Choose limits the mechanism can really reach. If the profile asks for more than the motor can give, the mechanism falls behind and the PID fights to catch up: see [when tuning does not help](../../live-tuning/#when-tuning-does-not-help).
 
 ## A velocity profile
 
@@ -54,13 +54,12 @@ You give it a maximum voltage and either the mechanism (its motor and its moment
 
 **Supported on every motor controller.** Every controller accepts both profiles, but they do not run in the same place.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
+| TalonFX                                               | TalonFXS                                              | SPARK MAX / Flex                                                           | Thrifty Nova             |
+| ----------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------ |
 | ✅ on the controller (Motion Magic, Motion Magic Expo) | ✅ on the controller (Motion Magic, Motion Magic Expo) | ✅ trapezoidal on the controller (MAXMotion), exponential on the SystemCore | ✅ both on the SystemCore |
 
 Where the profile runs decides which other options are available: see [where the loop runs](closed-loop-control.md#where-the-loop-runs).
 
-
-## Code Reference
+## Code reference
 
 * [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)

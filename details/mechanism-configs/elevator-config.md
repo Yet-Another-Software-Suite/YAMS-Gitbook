@@ -52,17 +52,16 @@ A slide with no gravity needs no `kG`, so it will want [different simulation gai
 
 ## What else an elevator needs
 
-| For | Use |
-| --- | --- |
-| The physical stops | [`withHardLimits`](shared-options.md#withhardlimits) on `ElevatorConfig` |
-| The limits the motor obeys | [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) on the motor config |
-| Heights in meters | [`withDrumRadius` or `withMechanismCircumference`](../editor/config/gearing-and-units.md#withmechanismcircumference) on the motor config |
-| A cascading elevator | [`withCascadingElevatorStages`](../editor/config/gearing-and-units.md#withcascadingelevatorstages) |
-| Holding against gravity | [`ElevatorFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kG` |
-| A constant force spring | [Elevators with a constant force spring](../live-tuning/README.md#elevators-with-a-constant-force-spring) |
+| For                        | Use                                                                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| The physical stops         | [`withHardLimits`](shared-options.md#withhardlimits) on `ElevatorConfig`                                                                 |
+| The limits the motor obeys | [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) on the motor config                                         |
+| Heights in meters          | [`withDrumRadius` or `withMechanismCircumference`](../editor/config/gearing-and-units.md#withmechanismcircumference) on the motor config |
+| A cascading elevator       | [`withCascadingElevatorStages`](../editor/config/gearing-and-units.md#withcascadingelevatorstages)                                       |
+| Holding against gravity    | [`ElevatorFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kG`                                                       |
+| A constant force spring    | [Elevators with a constant force spring](../live-tuning/#elevators-with-a-constant-force-spring)                                         |
 
-
-## Code Reference
+## Code reference
 
 * `ElevatorConfig`
 * `Elevator`

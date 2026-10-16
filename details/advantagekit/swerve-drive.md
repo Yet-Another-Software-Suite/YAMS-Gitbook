@@ -274,7 +274,7 @@ robot.drive.setInputStream(SwerveInputStream.of(
 robot.drive.setDefaultCommand(robot.drive.driveInputStream());
 ```
 
-## Key Points for Swerve with AdvantageKit
+## Key points for swerve with AdvantageKit
 
 1. **Create an `@AutoLog` inputs class** with module states, positions, gyro, and pose
 2. **Call `updateTelemetry()` BEFORE `updateInputs()`**: the pose estimator and internal state update in `updateTelemetry()`

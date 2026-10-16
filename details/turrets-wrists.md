@@ -18,7 +18,7 @@ If your mechanism needs voltage to hold itself up, it needs gravity accounted fo
 
 <figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
 
-A YAMS `Pivot` is a thin layer over one [`SmartMotorController`](editor/README.md). The `Pivot` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
+A YAMS `Pivot` is a thin layer over one [`SmartMotorController`](editor/). The `Pivot` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
 
 ## Creating a pivot
 
@@ -106,7 +106,7 @@ public class PivotMechanism implements Mechanism
 {% endtab %}
 {% endtabs %}
 
-The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/README.md), and the options in `config` in [PivotConfig](mechanism-configs/pivot-config.md).
+The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/), and the options in `config` in [PivotConfig](mechanism-configs/pivot-config.md).
 
 ## Commands
 
@@ -114,12 +114,12 @@ Every command below exists with the same name in Commands v2 and Commands v3.
 
 <figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
 
-| Command | What it does | Ends |
-| --- | --- | --- |
-| `setAngle(Angle)`, `run(Angle)` | Go to the angle and hold it. The two are the same. | Never, until interrupted. |
-| `runTo(Angle, Angle tolerance)` | Go to the angle. | When the pivot is within the tolerance. |
-| `set(double)` | Output a duty cycle, with the closed loop off. | Never, until interrupted. |
-| `setVoltage(Voltage)` | Output a voltage, with the closed loop off. | Never, until interrupted. |
+| Command                         | What it does                                       | Ends                                    |
+| ------------------------------- | -------------------------------------------------- | --------------------------------------- |
+| `setAngle(Angle)`, `run(Angle)` | Go to the angle and hold it. The two are the same. | Never, until interrupted.               |
+| `runTo(Angle, Angle tolerance)` | Go to the angle.                                   | When the pivot is within the tolerance. |
+| `set(double)`                   | Output a duty cycle, with the closed loop off.     | Never, until interrupted.               |
+| `setVoltage(Voltage)`           | Output a voltage, with the closed loop off.        | Never, until interrupted.               |
 
 `setAngle`, `run` and `runTo` also take a `Supplier<Angle>`, which is how a turret tracks a moving target: give it a supplier that returns the angle to the target.
 
@@ -174,14 +174,14 @@ When a command ends the motor keeps its last request, so a mechanism that reache
 
 The commands above are built on plain functions that set the setpoint and return at once. Use them when you write your own command, or when something other than a command decides the setpoint, such as an AdvantageKit IO layer.
 
-| Function | What it does |
-| --- | --- |
-| `setMechanismPositionSetpoint(Angle)` | Go to this angle with closed loop control. |
-| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
-| `setVoltageSetpoint(Voltage)` | Output this voltage. Stops the closed loop. |
-| `setDutyCycleSetpoint(double)` | Output this duty cycle, from -1 to 1. Stops the closed loop. |
-| `getMechanismSetpoint()` | The current position setpoint as an angle, if there is one. |
-| `getMeasurementSetpoint()` | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
+| Function                                   | What it does                                                                                                                                         |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setMechanismPositionSetpoint(Angle)`      | Go to this angle with closed loop control.                                                                                                           |
+| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference).                                         |
+| `setVoltageSetpoint(Voltage)`              | Output this voltage. Stops the closed loop.                                                                                                          |
+| `setDutyCycleSetpoint(double)`             | Output this duty cycle, from -1 to 1. Stops the closed loop.                                                                                         |
+| `getMechanismSetpoint()`                   | The current position setpoint as an angle, if there is one.                                                                                          |
+| `getMeasurementSetpoint()`                 | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
 
 ```java
 pivot.setMechanismPositionSetpoint(Degrees.of(30));
@@ -193,12 +193,12 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 
 <figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
 
-| As a `Trigger` | As a boolean | True when |
-| --- | --- | --- |
-| `near(angle, within)` | `isNear(angle, within)` | The pivot is within `within` of `angle`. |
-| `between(start, end)` | `isBetween(start, end)` | The pivot is between the two angles. |
-| `gte(angle)`, `lte(angle)` | `isGte(angle)`, `isLte(angle)` | The pivot is at or above, or at or below, the angle. |
-| `max()`, `min()` | `isAtMax()`, `isAtMin()` | The pivot is at its soft limit, or its hard limit if no soft limit is set. |
+| As a `Trigger`             | As a boolean                   | True when                                                                  |
+| -------------------------- | ------------------------------ | -------------------------------------------------------------------------- |
+| `near(angle, within)`      | `isNear(angle, within)`        | The pivot is within `within` of `angle`.                                   |
+| `between(start, end)`      | `isBetween(start, end)`        | The pivot is between the two angles.                                       |
+| `gte(angle)`, `lte(angle)` | `isGte(angle)`, `isLte(angle)` | The pivot is at or above, or at or below, the angle.                       |
+| `max()`, `min()`           | `isAtMax()`, `isAtMin()`       | The pivot is at its soft limit, or its hard limit if no soft limit is set. |
 
 `getAngle()` returns the pivot's current angle.
 
@@ -208,7 +208,7 @@ turret.near(Degrees.of(90), Degrees.of(1)).whileTrue(shooter.fire());
 
 ## Turret or wrist?
 
-<figure><img src="../.gitbook/assets/mech-pivot-kinds.png" alt="Two panels. A turret, seen from above, turns on top of the robot with its angle measured from the robot's front; it either wraps or is limited by its wiring, tracks a target with a Supplier of Angle, and can use EasyCRT for its true angle. A wrist turns on the end of an arm with its angle measured from the arm it is mounted on; it always has soft limits, moves together with the arm in a sequence, and should be kept balanced."><figcaption><p>A turret and a wrist are both a Pivot.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/mech-pivot-kinds.png" alt="Two panels. A turret, seen from above, turns on top of the robot with its angle measured from the robot&#x27;s front; it either wraps or is limited by its wiring, tracks a target with a Supplier of Angle, and can use EasyCRT for its true angle. A wrist turns on the end of an arm with its angle measured from the arm it is mounted on; it always has soft limits, moves together with the arm in a sequence, and should be kept balanced."><figcaption><p>A turret and a wrist are both a Pivot.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Turret" %}
@@ -216,10 +216,10 @@ A turret turns on top of the robot. Its angle is measured from the robot's front
 
 **Configure it** for how far it can turn:
 
-| The turret | What to set |
-| --- | --- |
-| Can spin forever (a slip ring, or nothing to wind up) | [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping) and no soft limits, so it takes the short way round. |
-| Is limited by its wiring | [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), with hard limits a little wider. It may have to unwind the long way. |
+| The turret                                            | What to set                                                                                                                                     |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Can spin forever (a slip ring, or nothing to wind up) | [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping) and no soft limits, so it takes the short way round.    |
+| Is limited by its wiring                              | [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), with hard limits a little wider. It may have to unwind the long way. |
 
 ```java
 // A turret limited by its wiring to one and a bit turns
@@ -277,7 +277,7 @@ How heavy the pivot is to turn is set on the motor config with [`withMomentOfIne
 
 ## Configuring and tuning a pivot, step by step
 
-Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
+Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
 Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
@@ -369,9 +369,9 @@ kV only acts while the setpoint is moving, so it is tuned with the profile. Run 
 
 Every `PivotConfig` option is on the [PivotConfig](mechanism-configs/pivot-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
 
-A `Pivot` needs its hard limits and a starting position before it can be created in simulation: see [what simulation needs](mechanism-configs/README.md#what-simulation-needs).
+A `Pivot` needs its hard limits and a starting position before it can be created in simulation: see [what simulation needs](mechanism-configs/#what-simulation-needs).
 
-## Code Reference
+## Code reference
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/TurretSubsystem.java" %}
 

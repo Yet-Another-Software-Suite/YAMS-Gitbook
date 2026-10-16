@@ -7,7 +7,7 @@ icon: power-off
 The options every motor needs, whatever it drives.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](./#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
 ## `withControlMode`
@@ -56,12 +56,12 @@ What that looks like on a mechanism once the output is zero:
 
 <figure><img src="../../../.gitbook/assets/smc-zero-power-mechanisms.gif" alt="Animation of an elevator, an arm, a pivot and a flywheel, each shown in brake mode and in coast mode. All are driven and then the output goes to zero. In brake mode the pivot stops and stays, the flywheel stops quickly, and the elevator and the arm sink slowly. In coast mode the elevator falls to the bottom, the arm falls onto its hard stop, the pivot keeps turning and the flywheel keeps spinning."><figcaption><p>Not powered, a mechanism in brake mode resists movement and a mechanism in coast mode moves freely.</p></figcaption></figure>
 
-| Mechanism | Not powered in `BRAKE` | Not powered in `COAST` |
-| --- | --- | --- |
-| Elevator | Sinks slowly | Falls |
-| Arm | Sinks slowly | Falls |
-| Pivot (turret or wrist) | Stops and stays where it is | Keeps turning, and moves when bumped |
-| Flywheel | Stops quickly | Keeps spinning and slows down on its own |
+| Mechanism               | Not powered in `BRAKE`      | Not powered in `COAST`                   |
+| ----------------------- | --------------------------- | ---------------------------------------- |
+| Elevator                | Sinks slowly                | Falls                                    |
+| Arm                     | Sinks slowly                | Falls                                    |
+| Pivot (turret or wrist) | Stops and stays where it is | Keeps turning, and moves when bumped     |
+| Flywheel                | Stops quickly               | Keeps spinning and slows down on its own |
 
 With nothing pulling on it, a mechanism in brake mode does not move while it is not powered, and the same mechanism in coast mode does. Gravity is something pulling on it, so most arms and elevators still sink in brake mode, only slower than they fall in coast mode.
 
@@ -103,8 +103,8 @@ Each wrapper accepts only its own vendor's root config class. The classes and an
 
 **Supported on every motor controller.** Every controller accepts a vendor config, but only its own class. Any other class throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
+| TalonFX                  | TalonFXS                  | SPARK MAX / Flex                        | Thrifty Nova          |
+| ------------------------ | ------------------------- | --------------------------------------- | --------------------- |
 | ✅ `TalonFXConfiguration` | ✅ `TalonFXSConfiguration` | ✅ `SparkMaxConfig` or `SparkFlexConfig` | ✅ `NovaConfig.Config` |
 
 ## `withVendorControlRequest`
@@ -150,11 +150,11 @@ Nothing else changes. `arm.runTo(Degrees.of(45))` and every other command work a
 
 **Not supported everywhere.** Anything that is not on this list throws a `SmartMotorControllerConfigurationException` when the config is applied.
 
-| Motor controller | Position requests | Velocity requests |
-| --- | --- | --- |
+| Motor controller  | Position requests                                                                                                                                                                                     | Velocity requests                                                                                                                                                       |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | TalonFX, TalonFXS | `PositionVoltage`, `PositionDutyCycle`, `PositionTorqueCurrentFOC`, `MotionMagicVoltage`, `MotionMagicDutyCycle`, `MotionMagicTorqueCurrentFOC`, `MotionMagicExpoVoltage`, `MotionMagicExpoDutyCycle` | `VelocityVoltage`, `VelocityDutyCycle`, `VelocityTorqueCurrentFOC`, `MotionMagicVelocityVoltage`, `MotionMagicVelocityDutyCycle`, `MotionMagicVelocityTorqueCurrentFOC` |
-| SPARK MAX / Flex | ❌ Throws a `SmartMotorControllerConfigurationException` | ❌ Throws a `SmartMotorControllerConfigurationException` |
-| Thrifty Nova | ❌ Throws a `SmartMotorControllerConfigurationException` | ❌ Throws a `SmartMotorControllerConfigurationException` |
+| SPARK MAX / Flex  | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                                               | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                 |
+| Thrifty Nova      | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                                               | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                 |
 
 On a SPARK, YAMS chooses the REV `ControlType` itself: MAXMotion when the config has a trapezoidal profile, plain position or velocity otherwise.
 
@@ -168,11 +168,10 @@ Names the motor and chooses how much it publishes.
 .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
 ```
 
-`HIGH` is what [live tuning](../../live-tuning/README.md) needs. [Telemetry](../../../understanding/telemetry.md) lists every key and how to choose fields one by one with a `SmartMotorControllerTelemetryConfig`.
+`HIGH` is what [live tuning](../../live-tuning/) needs. [Telemetry](../../../understanding/telemetry.md) lists every key and how to choose fields one by one with a `SmartMotorControllerTelemetryConfig`.
 
 **Supported on:** every supported motor controller.
 
-
-## Code Reference
+## Code reference
 
 * [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)

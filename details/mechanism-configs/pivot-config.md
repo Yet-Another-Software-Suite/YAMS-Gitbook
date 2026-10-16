@@ -18,17 +18,16 @@ new PivotConfig()
 
 ## What else a pivot needs
 
-| For | Use |
-| --- | --- |
-| The physical stops | [`withHardLimits`](shared-options.md#withhardlimits). **Required** in simulation. |
+| For                                      | Use                                                                                                                                |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| The physical stops                       | [`withHardLimits`](shared-options.md#withhardlimits). **Required** in simulation.                                                  |
 | A turret that can spin all the way round | [`withContinuousWrapping`](../editor/config/closed-loop-control.md#withcontinuouswrapping) on the motor config, and no soft limits |
-| A turret limited by its wiring | [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) on the motor config |
-| The pivot's weight in simulation | [`withMomentOfInertia`](../editor/config/simulation.md#withmomentofinertia) on the motor config |
-| Feedforward | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward): a pivot has no `kG` |
-| A turret geared to turn more than once | [EasyCRT](../easycrt.md) |
+| A turret limited by its wiring           | [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) on the motor config                                   |
+| The pivot's weight in simulation         | [`withMomentOfInertia`](../editor/config/simulation.md#withmomentofinertia) on the motor config                                    |
+| Feedforward                              | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward): a pivot has no `kG`                                   |
+| A turret geared to turn more than once   | [EasyCRT](../easycrt.md)                                                                                                           |
 
-
-## Code Reference
+## Code reference
 
 * `PivotConfig`
 * `Pivot`

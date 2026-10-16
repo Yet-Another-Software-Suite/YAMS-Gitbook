@@ -2,7 +2,7 @@
 
 With YAMS, you only need **one IO implementation** that works for both real hardware and simulation. The `SmartMotorController` automatically detects when it's running in simulation and uses physics simulation instead of real hardware.
 
-## Arm IO Implementation (Works for Real and Sim!)
+## Arm IO implementation (works for real and sim)
 
 ```java
 package first.robot.subsystems.akit;
@@ -102,7 +102,7 @@ public class ArmIOTalonFX implements ArmIO {
 }
 ```
 
-## Elevator IO Implementation (Works for Real and Sim!)
+## Elevator IO implementation (works for real and sim)
 
 ```java
 package first.robot.subsystems.akit;
@@ -203,7 +203,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 }
 ```
 
-## Shooter (FlyWheel) IO Implementation (Works for Real and Sim!)
+## Shooter (FlyWheel) IO implementation (works for real and sim)
 
 ```java
 package first.robot.subsystems.akit;
@@ -299,7 +299,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 ```
 
 {% hint style="success" %}
-**Why This Works**: YAMS's passive simulation is built into every wrapper. When `Robot.isSimulation()` is true, the `TalonFXWrapper` (and all other wrappers) automatically uses the `DCMotor`, gearing, and mass/MOI you provided to simulate physics. You get accurate simulation without writing any simulation-specific code!
+**Why this works**: YAMS's passive simulation is built into every wrapper. When `Robot.isSimulation()` is true, the `TalonFXWrapper` (and all other wrappers) automatically uses the `DCMotor`, gearing, and mass/MOI you provided to simulate physics. You get accurate simulation without writing any simulation-specific code.
 {% endhint %}
 
 Next: [Steps 3 and 4: The subsystem and RobotContainer](subsystem-and-robotcontainer.md)

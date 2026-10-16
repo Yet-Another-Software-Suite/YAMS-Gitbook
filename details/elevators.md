@@ -16,7 +16,7 @@ A vertical elevator has to hold its carriage up, which is what the `kG` term of 
 
 <figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
 
-A YAMS `Elevator` is a thin layer over one [`SmartMotorController`](editor/README.md). The `Elevator` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
+A YAMS `Elevator` is a thin layer over one [`SmartMotorController`](editor/). The `Elevator` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
 
 ## Creating an elevator
 
@@ -108,7 +108,7 @@ public class ElevatorMechanism implements Mechanism
 {% endtab %}
 {% endtabs %}
 
-The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/README.md), and the options in `config` in [ElevatorConfig](mechanism-configs/elevator-config.md).
+The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/), and the options in `config` in [ElevatorConfig](mechanism-configs/elevator-config.md).
 
 ## Commands
 
@@ -116,12 +116,12 @@ Every command below exists with the same name in Commands v2 and Commands v3.
 
 <figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
 
-| Command | What it does | Ends |
-| --- | --- | --- |
-| `setHeight(Distance)`, `run(Distance)` | Go to the height and hold it. The two are the same. | Never, until interrupted. |
-| `runTo(Distance, Distance tolerance)` | Go to the height. | When the elevator is within the tolerance. |
-| `set(double)` | Output a duty cycle, with the closed loop off. | Never, until interrupted. |
-| `setVoltage(Voltage)` | Output a voltage, with the closed loop off. | Never, until interrupted. |
+| Command                                | What it does                                        | Ends                                       |
+| -------------------------------------- | --------------------------------------------------- | ------------------------------------------ |
+| `setHeight(Distance)`, `run(Distance)` | Go to the height and hold it. The two are the same. | Never, until interrupted.                  |
+| `runTo(Distance, Distance tolerance)`  | Go to the height.                                   | When the elevator is within the tolerance. |
+| `set(double)`                          | Output a duty cycle, with the closed loop off.      | Never, until interrupted.                  |
+| `setVoltage(Voltage)`                  | Output a voltage, with the closed loop off.         | Never, until interrupted.                  |
 
 `setHeight`, `run` and `runTo` also take a `Supplier<Distance>`, and `set` and `setVoltage` a supplier too, for a setpoint that changes while the command runs.
 
@@ -176,14 +176,14 @@ When a command ends the motor keeps its last request, so a mechanism that reache
 
 The commands above are built on plain functions that set the setpoint and return at once. Use them when you write your own command, or when something other than a command decides the setpoint, such as an AdvantageKit IO layer.
 
-| Function | What it does |
-| --- | --- |
-| `setMechanismPositionSetpoint(Angle)` | Go to this angle with closed loop control. |
-| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
-| `setVoltageSetpoint(Voltage)` | Output this voltage. Stops the closed loop. |
-| `setDutyCycleSetpoint(double)` | Output this duty cycle, from -1 to 1. Stops the closed loop. |
-| `getMechanismSetpoint()` | The current position setpoint as an angle, if there is one. |
-| `getMeasurementSetpoint()` | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
+| Function                                   | What it does                                                                                                                                         |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setMechanismPositionSetpoint(Angle)`      | Go to this angle with closed loop control.                                                                                                           |
+| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference).                                         |
+| `setVoltageSetpoint(Voltage)`              | Output this voltage. Stops the closed loop.                                                                                                          |
+| `setDutyCycleSetpoint(double)`             | Output this duty cycle, from -1 to 1. Stops the closed loop.                                                                                         |
+| `getMechanismSetpoint()`                   | The current position setpoint as an angle, if there is one.                                                                                          |
+| `getMeasurementSetpoint()`                 | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
 
 ```java
 elevator.setMeasurementPositionSetpoint(Meters.of(0.8));
@@ -195,12 +195,12 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 
 <figure><img src="../.gitbook/assets/mech-triggers-elevator.png" alt="A number line from 0 to 1.5 meters with an elevator at 1.18 meters. near 1.2 meters within 5 centimeters is true. between 0.25 and 0.75 meters is false. gte 0.5 meters is true. lte 0.5 meters is false. max and min, at the top and bottom of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
 
-| As a `Trigger` | As a boolean | True when |
-| --- | --- | --- |
-| `near(height, within)` | `isNear(height, within)` | The elevator is within `within` of `height`. |
-| `between(start, end)` | `isBetween(start, end)` | The elevator is between the two heights. |
-| `gte(height)`, `lte(height)` | `isGte(height)`, `isLte(height)` | The elevator is at or above, or at or below, the height. |
-| `max()`, `min()` | `isAtMax()`, `isAtMin()` | The elevator is at its soft limit, or its hard limit if no soft limit is set. |
+| As a `Trigger`               | As a boolean                     | True when                                                                     |
+| ---------------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
+| `near(height, within)`       | `isNear(height, within)`         | The elevator is within `within` of `height`.                                  |
+| `between(start, end)`        | `isBetween(start, end)`          | The elevator is between the two heights.                                      |
+| `gte(height)`, `lte(height)` | `isGte(height)`, `isLte(height)` | The elevator is at or above, or at or below, the height.                      |
+| `max()`, `min()`             | `isAtMax()`, `isAtMin()`         | The elevator is at its soft limit, or its hard limit if no soft limit is set. |
 
 `getHeight()` returns the current height and `getVelocity()` its speed.
 
@@ -297,7 +297,7 @@ Whatever the kind, check it the same way: command a move of a known distance and
 
 ### Elevators with a constant force spring
 
-A spring that helps lift the carriage changes what `kG` should be. See [Elevators with a constant force spring](live-tuning/README.md#elevators-with-a-constant-force-spring).
+A spring that helps lift the carriage changes what `kG` should be. See [Elevators with a constant force spring](live-tuning/#elevators-with-a-constant-force-spring).
 
 ## Hard limits and soft limits
 
@@ -305,7 +305,7 @@ Hard limits are where the physical stops are, and the simulated elevator cannot 
 
 ## Configuring and tuning an elevator, step by step
 
-Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
+Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
 Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
@@ -323,13 +323,13 @@ Give the reduction from the motor to the drum, sprocket or pinion with [`withGea
 {% step %}
 #### Set how the motor moves it
 
-Give the drum radius, the chain pitch and teeth, or the pinion's pitch circumference: see [how the motor moves it](#how-the-motor-moves-it) below.
+Give the drum radius, the chain pitch and teeth, or the pinion's pitch circumference: see [how the motor moves it](elevators.md#how-the-motor-moves-it) below.
 {% endstep %}
 
 {% step %}
 #### Set how the stages are rigged
 
-Add `withCascadingElevatorStages` for a cascading elevator and nothing for a single stage or continuous one: see [how the stages are rigged](#how-the-stages-are-rigged).
+Add `withCascadingElevatorStages` for a cascading elevator and nothing for a single stage or continuous one: see [how the stages are rigged](elevators.md#how-the-stages-are-rigged).
 {% endstep %}
 
 {% step %}
@@ -403,7 +403,7 @@ Repeat the hold check with a game piece on the carriage.
 {% endstep %}
 {% endstepper %}
 
-[Tuning order](live-tuning/README.md#tuning-order) has the same steps with the NetworkTables keys to watch.
+[Tuning order](live-tuning/#tuning-order) has the same steps with the NetworkTables keys to watch.
 
 ### What changes for each kind
 
@@ -425,7 +425,7 @@ Everything is measured at the carriage, which moves several times further than t
 * **Check the stage count first.** The distance check in the configuration steps is what catches a wrong `withCascadingElevatorStages`.
 * **Expect a larger kG.** The motor lifts the carriage through a mechanical disadvantage, and lifts the moving stages as well, so it needs more voltage to hold than a single stage with the same carriage.
 * **Profile limits are the carriage's.** A maximum velocity of 1.5 m/s is the carriage moving at 1.5 m/s. The first stage moves at a fraction of that.
-* **Watch the current.** Because of the disadvantage, a cascading elevator draws more current for the same load. If it cannot reach the top, see [when tuning does not help](live-tuning/README.md#when-tuning-does-not-help).
+* **Watch the current.** Because of the disadvantage, a cascading elevator draws more current for the same load. If it cannot reach the top, see [when tuning does not help](live-tuning/#when-tuning-does-not-help).
 {% endtab %}
 
 {% tab title="Continuous" %}
@@ -443,7 +443,7 @@ A constant force spring does part of the motor's job, so kG is whatever is left 
 * **Give it simulation gains.** The simulation knows nothing about the spring, so the real gains will not hold the simulated carriage. Set [simulation only gains](editor/simulation-only-pid-+-feedforward.md) for it.
 * **The spring does not change kV, kP or kD.**
 
-[Elevators with a constant force spring](live-tuning/README.md#elevators-with-a-constant-force-spring) walks through the measurement with graphics.
+[Elevators with a constant force spring](live-tuning/#elevators-with-a-constant-force-spring) walks through the measurement with graphics.
 {% endtab %}
 {% endtabs %}
 
@@ -451,9 +451,9 @@ A constant force spring does part of the motor's job, so kG is whatever is left 
 
 Every `ElevatorConfig` option is on the [ElevatorConfig](mechanism-configs/elevator-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
 
-An `Elevator` needs its carriage weight, hard limits, a drum size and a starting position before it can be created in simulation: see [what simulation needs](mechanism-configs/README.md#what-simulation-needs).
+An `Elevator` needs its carriage weight, hard limits, a drum size and a starting position before it can be created in simulation: see [what simulation needs](mechanism-configs/#what-simulation-needs).
 
-## Code Reference
+## Code reference
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ElevatorSubsystem.java" %}
 

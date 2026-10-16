@@ -29,7 +29,7 @@ It is used for the drawing, and to convert between how fast the wheel spins and 
 
 Draws the flywheel's speed as a needle instead of a line that spins with the wheel.
 
-<figure><img src="../../.gitbook/assets/mech-flywheel-speedometer.png" alt="Two Mechanism2d windows. Without the speedometer the flywheel's line spins with the wheel and is a blur at speed. With withSpeedometerSimulation and a maximum of 6000 RPM, the line points at the speed like a dial: straight down at zero, to the left at half and straight up at the maximum. Here it shows 3720 RPM."><figcaption><p>The flywheel's Mechanism2d with and without the speedometer.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mech-flywheel-speedometer.png" alt="Two Mechanism2d windows. Without the speedometer the flywheel&#x27;s line spins with the wheel and is a blur at speed. With withSpeedometerSimulation and a maximum of 6000 RPM, the line points at the speed like a dial: straight down at zero, to the left at half and straight up at the maximum. Here it shows 3720 RPM."><figcaption><p>The flywheel's Mechanism2d with and without the speedometer.</p></figcaption></figure>
 
 ```java
 new FlyWheelConfig().withSpeedometerSimulation(RPM.of(6000)); // the speed at the top of the dial
@@ -41,16 +41,15 @@ Give it the fastest speed you expect. `disableSpeedometerSimulation()` turns it 
 
 ## What else a flywheel needs
 
-| For | Use |
-| --- | --- |
-| How heavy the wheel is in simulation | [`withMomentOfInertia`](../editor/config/simulation.md#withmomentofinertia) on the motor config |
-| Holding a speed | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kV`, plus a small `kP` |
-| A smooth spin up | [A velocity profile](../editor/config/motion-profiles.md#a-velocity-profile) |
-| A roller that only needs a voltage | [`ControlMode.OPEN_LOOP`](../editor/config/motor-basics.md#withcontrolmode) |
-| Coasting when stopped | [`MotorMode.COAST`](../editor/config/motor-basics.md#withzeropower) |
+| For                                  | Use                                                                                                      |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| How heavy the wheel is in simulation | [`withMomentOfInertia`](../editor/config/simulation.md#withmomentofinertia) on the motor config          |
+| Holding a speed                      | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kV`, plus a small `kP` |
+| A smooth spin up                     | [A velocity profile](../editor/config/motion-profiles.md#a-velocity-profile)                             |
+| A roller that only needs a voltage   | [`ControlMode.OPEN_LOOP`](../editor/config/motor-basics.md#withcontrolmode)                              |
+| Coasting when stopped                | [`MotorMode.COAST`](../editor/config/motor-basics.md#withzeropower)                                      |
 
-
-## Code Reference
+## Code reference
 
 * `FlyWheelConfig`
 * `FlyWheel`

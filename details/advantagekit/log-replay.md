@@ -1,6 +1,6 @@
 # Log replay
 
-## Log Replay Mode
+## Log replay mode
 
 For [log replay](https://docs.advantagekit.org/getting-started/what-is-advantagekit), AdvantageKit provides a "replay" mode where inputs are read from a log file instead of hardware. This is the **one case** where you need a separate IO implementation: an empty one that does nothing.
 
@@ -46,7 +46,7 @@ public RobotContainer() {
 Compare this to traditional AdvantageKit which requires **3 IO classes** (Real, Sim, Replay).
 {% endhint %}
 
-## Pattern Summary: Mechanism Classes with SmartMotorController Telemetry
+## Pattern summary: mechanism classes with SmartMotorController telemetry
 
 The examples in this tutorial demonstrate the recommended pattern for using YAMS with AdvantageKit:
 
@@ -66,7 +66,7 @@ This pattern gives you the best of both worlds:
 See the YAMS AdvantageKit examples for complete robot projects that log YAMS mechanisms with AdvantageKit: [Commands v2](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/advantage_kit) and [Commands v3](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/advantage_kit).
 {% endhint %}
 
-### Using WPILib's isNear() for Tolerance Checking
+### Using WPILib's isNear() for tolerance checking
 
 When checking if a mechanism is at its target, use the `isNear()` method from WPILib's unit classes (`Angle`, `Distance`, `AngularVelocity`):
 

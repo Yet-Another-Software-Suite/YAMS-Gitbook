@@ -16,7 +16,7 @@ If your mechanism does not need gravity accounted for, because it turns about a 
 
 <figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
 
-A YAMS `Arm` is a thin layer over one [`SmartMotorController`](editor/README.md). The `Arm` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
+A YAMS `Arm` is a thin layer over one [`SmartMotorController`](editor/). The `Arm` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
 
 ## Creating an arm
 
@@ -108,7 +108,7 @@ public class ArmMechanism implements Mechanism
 {% endtab %}
 {% endtabs %}
 
-The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/README.md), and the options in `config` in [ArmConfig](mechanism-configs/arm-config.md).
+The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/), and the options in `config` in [ArmConfig](mechanism-configs/arm-config.md).
 
 ## Commands
 
@@ -116,12 +116,12 @@ Every command below exists with the same name in Commands v2 and Commands v3.
 
 <figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
 
-| Command | What it does | Ends |
-| --- | --- | --- |
-| `setAngle(Angle)`, `run(Angle)` | Go to the angle and hold it. The two are the same. | Never, until interrupted. |
-| `runTo(Angle, Angle tolerance)` | Go to the angle. | When the arm is within the tolerance. |
-| `set(double)` | Output a duty cycle, with the closed loop off. | Never, until interrupted. |
-| `setVoltage(Voltage)` | Output a voltage, with the closed loop off. | Never, until interrupted. |
+| Command                         | What it does                                       | Ends                                  |
+| ------------------------------- | -------------------------------------------------- | ------------------------------------- |
+| `setAngle(Angle)`, `run(Angle)` | Go to the angle and hold it. The two are the same. | Never, until interrupted.             |
+| `runTo(Angle, Angle tolerance)` | Go to the angle.                                   | When the arm is within the tolerance. |
+| `set(double)`                   | Output a duty cycle, with the closed loop off.     | Never, until interrupted.             |
+| `setVoltage(Voltage)`           | Output a voltage, with the closed loop off.        | Never, until interrupted.             |
 
 `setAngle`, `run` and `runTo` also take a `Supplier<Angle>`, and `set` and `setVoltage` a supplier too, for a setpoint that changes while the command runs.
 
@@ -176,14 +176,14 @@ When a command ends the motor keeps its last request, so a mechanism that reache
 
 The commands above are built on plain functions that set the setpoint and return at once. Use them when you write your own command, or when something other than a command decides the setpoint, such as an AdvantageKit IO layer.
 
-| Function | What it does |
-| --- | --- |
-| `setMechanismPositionSetpoint(Angle)` | Go to this angle with closed loop control. |
-| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
-| `setVoltageSetpoint(Voltage)` | Output this voltage. Stops the closed loop. |
-| `setDutyCycleSetpoint(double)` | Output this duty cycle, from -1 to 1. Stops the closed loop. |
-| `getMechanismSetpoint()` | The current position setpoint as an angle, if there is one. |
-| `getMeasurementSetpoint()` | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
+| Function                                   | What it does                                                                                                                                         |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setMechanismPositionSetpoint(Angle)`      | Go to this angle with closed loop control.                                                                                                           |
+| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference).                                         |
+| `setVoltageSetpoint(Voltage)`              | Output this voltage. Stops the closed loop.                                                                                                          |
+| `setDutyCycleSetpoint(double)`             | Output this duty cycle, from -1 to 1. Stops the closed loop.                                                                                         |
+| `getMechanismSetpoint()`                   | The current position setpoint as an angle, if there is one.                                                                                          |
+| `getMeasurementSetpoint()`                 | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
 
 ```java
 arm.setMechanismPositionSetpoint(Degrees.of(45));
@@ -195,12 +195,12 @@ These do not require the subsystem or mechanism, so nothing stops two callers fi
 
 <figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
 
-| As a `Trigger` | As a boolean | True when |
-| --- | --- | --- |
-| `near(angle, within)` | `isNear(angle, within)` | The arm is within `within` of `angle`. |
-| `between(start, end)` | `isBetween(start, end)` | The arm is between the two angles. |
-| `gte(angle)`, `lte(angle)` | `isGte(angle)`, `isLte(angle)` | The arm is at or above, or at or below, the angle. |
-| `max()`, `min()` | `isAtMax()`, `isAtMin()` | The arm is at its soft limit, or its hard limit if no soft limit is set. |
+| As a `Trigger`             | As a boolean                   | True when                                                                |
+| -------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| `near(angle, within)`      | `isNear(angle, within)`        | The arm is within `within` of `angle`.                                   |
+| `between(start, end)`      | `isBetween(start, end)`        | The arm is between the two angles.                                       |
+| `gte(angle)`, `lte(angle)` | `isGte(angle)`, `isLte(angle)` | The arm is at or above, or at or below, the angle.                       |
+| `max()`, `min()`           | `isAtMax()`, `isAtMin()`       | The arm is at its soft limit, or its hard limit if no soft limit is set. |
 
 `getAngle()` returns the arm's current angle.
 
@@ -336,7 +336,7 @@ Soft limits still apply while the arm moves, with either kind of brake. The brak
 
 ## Configuring and tuning an arm, step by step
 
-Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/README.md). Tuning something that is configured wrong wastes the time.
+Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
 Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
@@ -422,7 +422,7 @@ Test near both limits, straight up, level, and holding a game piece. If the load
 {% endstep %}
 {% endstepper %}
 
-[Tuning order](live-tuning/README.md#tuning-order) has the same steps with the NetworkTables keys to watch.
+[Tuning order](live-tuning/#tuning-order) has the same steps with the NetworkTables keys to watch.
 
 ### Tuning an arm with a brake
 
@@ -440,9 +440,9 @@ Then look at how the arm and the brake work together. These are things to check 
 
 Every `ArmConfig` option is on the [ArmConfig](mechanism-configs/arm-config.md) page under this one, with a graphic and an example for each. Options shared by every mechanism are in [Shared options](mechanism-configs/shared-options.md).
 
-An `Arm` needs its length, hard limits and a starting position before it can be created in simulation: see [what simulation needs](mechanism-configs/README.md#what-simulation-needs).
+An `Arm` needs its length, hard limits and a starting position before it can be created in simulation: see [what simulation needs](mechanism-configs/#what-simulation-needs).
 
-## Code Reference
+## Code reference
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ArmSubsystem.java" %}
 

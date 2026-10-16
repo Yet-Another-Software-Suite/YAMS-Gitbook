@@ -1,6 +1,6 @@
 # Steps 3 and 4: The subsystem and RobotContainer
 
-## Step 3: Create the Subsystem
+## Step 3: Create the subsystem
 
 The subsystem uses the IO interface and doesn't know whether it's running on real hardware or in simulation.
 
@@ -78,7 +78,7 @@ public class ArmSubsystem extends SubsystemBase {
 See [run() vs runTo() Commands](../run-vs-runto.md) for important information about when commands end and how that interacts with default commands.
 {% endhint %}
 
-## Step 4: Wire It Up in RobotContainer
+## Step 4: Wire it up in RobotContainer
 
 With YAMS's passive simulation, you don't need conditional logic for real vs sim. The same IO class works for both!
 

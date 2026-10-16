@@ -7,7 +7,7 @@ icon: compass-drafting
 Every motor has a built in encoder. Many mechanisms add an external one that knows where the mechanism is when the robot turns on.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](./#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
 <figure><img src="../../../.gitbook/assets/smc-encoder-chain.png" alt="A chain from left to right: the rotor with its built in relative encoder, which starts at zero each boot; the gearing set by withGearing; the mechanism; the encoder gearing set by withExternalEncoderGearing; and the external encoder, set by withExternalEncoder, which is often absolute and remembers its position."><figcaption><p>The built in encoder, the external encoder, and the gearing between them.</p></figcaption></figure>
@@ -31,11 +31,11 @@ A wrong angle is more than a wrong number on the dashboard. An [`ArmFeedforward`
 
 <figure><img src="../../../.gitbook/assets/smc-starting-position-kg.gif" alt="Animation of the same arm with the same tuned kG of 0.60 volts, moving from straight up at 90 degrees down past level and back. The arm is straight up when the robot turns on. With no starting position YAMS thinks the arm is 90 degrees below where it really is, so kG gives its full voltage when the arm is straight up and needs none, gives almost none when the arm is level and needs the most, and pushes the arm down once it is below level. With withStartingPosition of 90 degrees, the voltage kG gives matches the voltage needed to hold the arm at every angle."><figcaption><p>The same tuned <code>kG</code>. Without the starting position it is applied at the wrong angles.</p></figcaption></figure>
 
-| The arm is really | Needed to hold it | `kG` gives, with no starting position | What happens |
-| --- | --- | --- | --- |
-| Straight up, 90° | Nothing | All of `kG` | The arm is pushed away from where it should rest |
-| Level, 0° | All of `kG` | Nothing | The arm sags, and the PID has to make up the whole difference |
-| Below level, -20° | Most of `kG` | A negative voltage | The arm is pushed down, the wrong way |
+| The arm is really | Needed to hold it | `kG` gives, with no starting position | What happens                                                  |
+| ----------------- | ----------------- | ------------------------------------- | ------------------------------------------------------------- |
+| Straight up, 90°  | Nothing           | All of `kG`                           | The arm is pushed away from where it should rest              |
+| Level, 0°         | All of `kG`       | Nothing                               | The arm sags, and the PID has to make up the whole difference |
+| Below level, -20° | Most of `kG`      | A negative voltage                    | The arm is pushed down, the wrong way                         |
 
 So set the starting position before you tune `kG`. A `kG` tuned on an arm with the wrong zero only looks right at the one angle it was tuned at.
 
@@ -56,8 +56,8 @@ Most built in encoders are fixed to the rotor and follow [`withMotorInverted`](m
 **Not supported everywhere.** `withEncoderInverted` only works on a TalonFXS and throws on every other controller: a `SmartMotorControllerConfigurationException` on a TalonFX, and an `IllegalArgumentException` on a SPARK or Thrifty Nova. `withExternalEncoderInverted` works on every controller that has an external encoder configured.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ❌ | ✅ | ❌ | ❌ |
+| ------- | -------- | ---------------- | ------------ |
+| ❌       | ✅        | ❌                | ❌            |
 
 `withExternalEncoderInverted` throws a `SmartMotorControllerConfigurationException` if no external encoder is configured.
 
@@ -76,7 +76,7 @@ The encoders each wrapper accepts are listed in the [feature matrix](../feature-
 
 This applies to **every absolute encoder, whether it is geared or mounted 1:1**.
 
-An absolute encoder only knows where it is within one turn of its own shaft. The place where its reading wraps is the **discontinuity point**. It is clearly marked on an absolute encoder, usually as a white line on the casing and another on the bearing: when the two lines line up, the encoder is at its discontinuity point. That is where it is with a discontinuity point of 1 rotation and no zero offset. A discontinuity point of 0.5 rotations moves it to 180° from the line on the casing. The line itself does not move. A zero offset moves it too: see [Zero offsets and the discontinuity point](#zero-offsets-and-the-discontinuity-point). If the encoder passes it anywhere inside the mechanism's travel, two different mechanism positions give the same reading and YAMS cannot tell them apart.
+An absolute encoder only knows where it is within one turn of its own shaft. The place where its reading wraps is the **discontinuity point**. It is clearly marked on an absolute encoder, usually as a white line on the casing and another on the bearing: when the two lines line up, the encoder is at its discontinuity point. That is where it is with a discontinuity point of 1 rotation and no zero offset. A discontinuity point of 0.5 rotations moves it to 180° from the line on the casing. The line itself does not move. A zero offset moves it too: see [Zero offsets and the discontinuity point](encoders.md#zero-offsets-and-the-discontinuity-point). If the encoder passes it anywhere inside the mechanism's travel, two different mechanism positions give the same reading and YAMS cannot tell them apart.
 
 <figure><img src="../../../.gitbook/assets/smc-encoder-hard-stops.gif" alt="Animation of a disabled arm being pushed by hand. Its 1:1 absolute encoder is drawn with a white line on its casing and one on its bearing. It reads minus 180 to 180 degrees, so its discontinuity point is 180 degrees from the line on the casing. With a hard stop at 150 degrees the arm stops there and YAMS keeps reporting the right angle. With only a soft limit at 150 degrees the arm is pushed past it and past the discontinuity point, where the reading jumps by 360 degrees to minus 155."><figcaption><p>A hard stop keeps the encoder away from its discontinuity point. A soft limit does not, because it does nothing while the robot is disabled.</p></figcaption></figure>
 
@@ -84,20 +84,20 @@ An absolute encoder should only be used when careful installation guarantees tha
 
 * **Adequate hard stops.** The mechanism must be physically unable to leave the range. [Soft limits](limits-and-protection.md#withsoftlimits) are not enough: they do nothing when the robot is disabled and pushed by hand, and the encoder is read when the robot boots.
 * **Less than one encoder turn of travel.** The travel between the hard stops must be less than one rotation of the encoder. A 1:1 encoder on a mechanism that turns all the way round, or more, cannot meet this.
-* **The discontinuity point outside the travel.** On a 1:1 encoder, [`withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))`](#withexternalencoderdiscontinuitypoint) should be sufficient. On a geared encoder, also install it so that the encoder never reaches its discontinuity point anywhere between the hard stops, with some margin at both ends. Move the mechanism from one hard stop to the other by hand and watch the white lines to check.
+* **The discontinuity point outside the travel.** On a 1:1 encoder, [`withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))`](encoders.md#withexternalencoderdiscontinuitypoint) should be sufficient. On a geared encoder, also install it so that the encoder never reaches its discontinuity point anywhere between the hard stops, with some margin at both ends. Move the mechanism from one hard stop to the other by hand and watch the white lines to check.
 
 {% hint style="success" %}
-**Without gearing, a discontinuity point of 0.5 rotations should be sufficient.** With [`withExternalEncoderDiscontinuityPoint(Rotations.of(1))`](#withexternalencoderdiscontinuitypoint) the reading goes from 0 to 360° and wraps at the line on the casing. With `Rotations.of(0.5)` it goes from -180° to 180° and wraps 180° from the line. The line on the casing does not move, only the discontinuity point does. With a [zero offset](#zero-offsets-and-the-discontinuity-point) set at the mechanism's zero, the discontinuity point is 180° from the mechanism's zero, so a 1:1 mechanism that stays within 180° of its zero never reaches it.
+**Without gearing, a discontinuity point of 0.5 rotations should be sufficient.** With [`withExternalEncoderDiscontinuityPoint(Rotations.of(1))`](encoders.md#withexternalencoderdiscontinuitypoint) the reading goes from 0 to 360° and wraps at the line on the casing. With `Rotations.of(0.5)` it goes from -180° to 180° and wraps 180° from the line. The line on the casing does not move, only the discontinuity point does. With a [zero offset](encoders.md#zero-offsets-and-the-discontinuity-point) set at the mechanism's zero, the discontinuity point is 180° from the mechanism's zero, so a 1:1 mechanism that stays within 180° of its zero never reaches it.
 {% endhint %}
 
-<figure><img src="../../../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm's zero in both panels. With 1 rotation the discontinuity point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. With 0.5 rotations the discontinuity point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>With 1 rotation the discontinuity point is at the line on the casing. With 0.5 rotations it is 180° from it, and the line has not moved.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm&#x27;s zero in both panels. With 1 rotation the discontinuity point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. With 0.5 rotations the discontinuity point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>With 1 rotation the discontinuity point is at the line on the casing. With 0.5 rotations it is 180° from it, and the line has not moved.</p></figcaption></figure>
 
-[Gearing the encoder](#withexternalencodergearing) is where this needs real care, because the encoder then turns further than the mechanism and the discontinuity point setting alone is no longer enough. [That section](#only-gear-an-absolute-encoder-if-it-cannot-wrap) has its own animation.
+[Gearing the encoder](encoders.md#withexternalencodergearing) is where this needs real care, because the encoder then turns further than the mechanism and the discontinuity point setting alone is no longer enough. [That section](encoders.md#only-gear-an-absolute-encoder-if-it-cannot-wrap) has its own animation.
 
 **Supported on every motor controller.** Every controller accepts an external encoder, but only ones it can read itself. An encoder from another vendor cannot be used.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
+| TalonFX               | TalonFXS              | SPARK MAX / Flex                                  | Thrifty Nova                                                    |
+| --------------------- | --------------------- | ------------------------------------------------- | --------------------------------------------------------------- |
 | ✅ `CANcoder`, `CANdi` | ✅ `CANcoder`, `CANdi` | ✅ its own absolute, alternate or external encoder | ✅ data port absolute or quadrature encoder, Thrifty CAN encoder |
 
 ## `withExternalEncoderGearing`
@@ -113,11 +113,11 @@ The number is how many times the encoder turns for one turn of the mechanism: `2
 
 ### Only gear an absolute encoder if it cannot wrap
 
-Gearing an absolute encoder up gives finer resolution, but it also uses up the encoder's one turn faster, so it reaches its [discontinuity point](#keep-the-discontinuity-point-outside-the-travel) sooner.
+Gearing an absolute encoder up gives finer resolution, but it also uses up the encoder's one turn faster, so it reaches its [discontinuity point](encoders.md#keep-the-discontinuity-point-outside-the-travel) sooner.
 
 <figure><img src="../../../.gitbook/assets/smc-encoder-gearing-wrap.gif" alt="Animation of the same arm moving between hard stops 120 degrees apart, read through two encoder gearings. Each absolute encoder is drawn with a white line on its casing and a white line on its bearing, which line up at the discontinuity point. With a gearing of 2 the encoder turns 240 degrees, the lines never meet, and YAMS always reports the right angle. With a gearing of 4 the encoder needs 480 degrees, the lines meet partway through the travel, and YAMS then reports an angle 90 degrees too low."><figcaption><p>The same arm and hard stops. Both use a discontinuity point of 1 rotation, at the line on the casing. With a gearing of 2 the white lines never meet. With a gearing of 4 they do, and the reported angle is wrong.</p></figcaption></figure>
 
-Encoder gearing can and should be used on an absolute encoder **only** when careful installation guarantees that it never wraps anywhere in the range of motion. The [three conditions for every absolute encoder](#keep-the-discontinuity-point-outside-the-travel) still apply, and the second one gets stricter: the travel between the hard stops, **multiplied by the gearing**, must be less than one rotation. In the animation, 120° x 2 = 240° fits and 120° x 4 = 480° does not.
+Encoder gearing can and should be used on an absolute encoder **only** when careful installation guarantees that it never wraps anywhere in the range of motion. The [three conditions for every absolute encoder](encoders.md#keep-the-discontinuity-point-outside-the-travel) still apply, and the second one gets stricter: the travel between the hard stops, **multiplied by the gearing**, must be less than one rotation. In the animation, 120° x 2 = 240° fits and 120° x 4 = 480° does not.
 
 If you cannot guarantee that, mount the encoder 1:1 on the mechanism's output, where a discontinuity point of 0.5 rotations should be sufficient.
 
@@ -141,41 +141,41 @@ A negative offset is wrapped into the positive range for you. The distance versi
 
 **Not supported everywhere.** On a quadrature encoder it throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ | ✅ | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |
+| TalonFX | TalonFXS | SPARK MAX / Flex          | Thrifty Nova                      |
+| ------- | -------- | ------------------------- | --------------------------------- |
+| ✅       | ✅        | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |
 
 ### Zero offsets and the discontinuity point
 
 The zero offset and the discontinuity point work together, and the order matters: **the offset is applied first, and the range is applied to the result**. So the discontinuity point is measured from the encoder's zero, not from the line on the casing.
 
-<figure><img src="../../../.gitbook/assets/smc-encoder-zero-offset-discontinuity.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its discontinuity point is opposite that, inside the arm's travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the discontinuity point have both moved a quarter turn, the discontinuity point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the discontinuity point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-encoder-zero-offset-discontinuity.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its discontinuity point is opposite that, inside the arm&#x27;s travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the discontinuity point have both moved a quarter turn, the discontinuity point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the discontinuity point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
 
-| Zero offset | Discontinuity point of 1 rotation | Discontinuity point of 0.5 rotations |
-| --- | --- | --- |
-| None | Wraps where the white lines line up | Wraps 180° from where the white lines line up |
-| Set at the mechanism's zero | Wraps at the mechanism's zero | Wraps 180° from the mechanism's zero |
+| Zero offset                 | Discontinuity point of 1 rotation   | Discontinuity point of 0.5 rotations          |
+| --------------------------- | ----------------------------------- | --------------------------------------------- |
+| None                        | Wraps where the white lines line up | Wraps 180° from where the white lines line up |
+| Set at the mechanism's zero | Wraps at the mechanism's zero       | Wraps 180° from the mechanism's zero          |
 
 What this means in practice:
 
 * **The white lines tell you where the wrap is only when there is no zero offset.** Once an offset is set, work from the mechanism's zero instead.
 * **Set the zero offset first, then choose the discontinuity point.** With the offset at the mechanism's zero and a discontinuity point of 0.5 rotations, a 1:1 encoder wraps as far from zero as it can, however it was installed.
-* **A geared encoder is still limited to one turn.** The same rule applies to the encoder's own shaft: 180° of the encoder is `180° / gearing` of the mechanism. See [Only gear an absolute encoder if it cannot wrap](#only-gear-an-absolute-encoder-if-it-cannot-wrap).
+* **A geared encoder is still limited to one turn.** The same rule applies to the encoder's own shaft: 180° of the encoder is `180° / gearing` of the mechanism. See [Only gear an absolute encoder if it cannot wrap](encoders.md#only-gear-an-absolute-encoder-if-it-cannot-wrap).
 
 #### Where each motor controller applies them
 
 The discontinuity point only moves with the zero offset because the offset is applied first. That is the case on every encoder YAMS supports:
 
-| Encoder | Zero offset applied | Discontinuity point applied |
-| --- | --- | --- |
-| `CANcoder`, `CANdi` (TalonFX, TalonFXS) | On the encoder | On the encoder, after the offset |
-| SPARK absolute encoder, REV CAN encoder | On the SPARK or the encoder | On the SPARK or the encoder, after the offset |
-| Nova data port absolute encoder, Thrifty CAN encoder | On the Nova or the encoder | By YAMS, on the reading the device has already offset |
+| Encoder                                              | Zero offset applied         | Discontinuity point applied                           |
+| ---------------------------------------------------- | --------------------------- | ----------------------------------------------------- |
+| `CANcoder`, `CANdi` (TalonFX, TalonFXS)              | On the encoder              | On the encoder, after the offset                      |
+| SPARK absolute encoder, REV CAN encoder              | On the SPARK or the encoder | On the SPARK or the encoder, after the offset         |
+| Nova data port absolute encoder, Thrifty CAN encoder | On the Nova or the encoder  | By YAMS, on the reading the device has already offset |
 
 YAMS has a unit test for this, `ZeroOffsetDiscontinuityPointTest`. With a zero offset of 90° it checks, for every one of these encoders in simulation, that 120° reads 120° with a discontinuity point of 0.5 rotations and that 300° reads 300° with 1 rotation. Neither would hold if the discontinuity point had stayed where it was.
 
 {% hint style="warning" %}
-**Gearing does not move the discontinuity point.** The zero offset is given in mechanism angle and converted for you, but the discontinuity point is always 0.5 or 1 rotation of the **encoder's own shaft**. On a geared encoder that is `180° / gearing` or `360° / gearing` of the mechanism from zero, not 180° or 360°. A SPARK raises an alert when gearing and a discontinuity point are set together, to say that the discontinuity point is not moved by the gearing and the wrapping will not be uniform. Take that alert seriously: see [Only gear an absolute encoder if it cannot wrap](#only-gear-an-absolute-encoder-if-it-cannot-wrap).
+**Gearing does not move the discontinuity point.** The zero offset is given in mechanism angle and converted for you, but the discontinuity point is always 0.5 or 1 rotation of the **encoder's own shaft**. On a geared encoder that is `180° / gearing` or `360° / gearing` of the mechanism from zero, not 180° or 360°. A SPARK raises an alert when gearing and a discontinuity point are set together, to say that the discontinuity point is not moved by the gearing and the wrapping will not be uniform. Take that alert seriously: see [Only gear an absolute encoder if it cannot wrap](encoders.md#only-gear-an-absolute-encoder-if-it-cannot-wrap).
 {% endhint %}
 
 {% hint style="info" %}
@@ -184,8 +184,8 @@ An offset you apply yourself is different. If you leave the encoder's zero offse
 
 The order comes from the vendors' own documentation:
 
-* **CTRE** ([`MagnetSensorConfigs`](https://api.ctr-electronics.com/phoenix6/stable/java/com/ctre/phoenix6/configs/MagnetSensorConfigs.html)): the magnet offset "is added to the reported position", and the discontinuity point "determines the point at which the absolute sensor wraps around, keeping the absolute position (after offset) in the range [x-1, x)".
-* **REV** ([`AbsoluteEncoderConfig`](https://codedocs.revrobotics.com/java/com/revrobotics/spark/config/absoluteencoderconfig)): the zero offset is "the position that is reported as zero", and with zero centering "the position will be reported in the range (-0.5, 0.5], instead of the default range [0, 1)". REV does not spell out the order, but a range centered on the reported zero means the wrap is half a turn from the offset zero. REVLib deprecates zero centering in 2027 in favor of `rangeOffset`, which is what YAMS gives a SPARK's absolute encoder: "Set the offset of the range about zero of the absolute encoder."
+* **CTRE** ([`MagnetSensorConfigs`](https://api.ctr-electronics.com/phoenix6/stable/java/com/ctre/phoenix6/configs/MagnetSensorConfigs.html)): the magnet offset "is added to the reported position", and the discontinuity point "determines the point at which the absolute sensor wraps around, keeping the absolute position (after offset) in the range \[x-1, x)".
+* **REV** ([`AbsoluteEncoderConfig`](https://codedocs.revrobotics.com/java/com/revrobotics/spark/config/absoluteencoderconfig)): the zero offset is "the position that is reported as zero", and with zero centering "the position will be reported in the range (-0.5, 0.5], instead of the default range \[0, 1)". REV does not spell out the order, but a range centered on the reported zero means the wrap is half a turn from the offset zero. REVLib deprecates zero centering in 2027 in favor of `rangeOffset`, which is what YAMS gives a SPARK's absolute encoder: "Set the offset of the range about zero of the absolute encoder."
 
 ## `withExternalEncoderDiscontinuityPoint`
 
@@ -202,23 +202,21 @@ Only `0.5` and `1` rotations are accepted. Like the zero offset, it is for absol
 
 **Not supported everywhere.** On a quadrature encoder it throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ | ✅ | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |
+| TalonFX | TalonFXS | SPARK MAX / Flex          | Thrifty Nova                      |
+| ------- | -------- | ------------------------- | --------------------------------- |
+| ✅       | ✅        | ⚠️ absolute encoders only | ⚠️ absolute and CAN encoders only |
 
 ## `withUseExternalFeedbackEncoder`
 
 Chooses which encoder the closed loop controller follows. The default is `true`: the external encoder, when there is one.
 
-<figure><img src="../../../.gitbook/assets/smc-external-feedback.png" alt="Two panels. With the option on, the default, the PID follows the external encoder. With it off, the PID follows the built in encoder and the external encoder only sets the built in encoder's starting position."><figcaption><p>The external encoder as the feedback sensor, or only as the starting point.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-external-feedback.png" alt="Two panels. With the option on, the default, the PID follows the external encoder. With it off, the PID follows the built in encoder and the external encoder only sets the built in encoder&#x27;s starting position."><figcaption><p>The external encoder as the feedback sensor, or only as the starting point.</p></figcaption></figure>
 
 ```java
 .withUseExternalFeedbackEncoder(false)
 ```
 
 ## `withFeedbackSynchronizationThreshold`
-
-
 
 When the loop follows the built in encoder, re-seeds it from the external encoder whenever the two disagree by more than this.
 
@@ -233,11 +231,10 @@ It is not available for distance mechanisms: it throws a `SmartMotorControllerCo
 
 **Not supported everywhere.** Where it is not supported it throws an `IllegalArgumentException` on a TalonFX or TalonFXS, and a `SmartMotorControllerConfigurationException` on a SPARK.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ❌ | ❌ | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                |
+| ------- | -------- | --------------------------------------------------------------------------------- | --------------------------- |
+| ❌       | ❌        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
 
-
-## Code Reference
+## Code reference
 
 * [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)

@@ -8,7 +8,7 @@ Every `SwerveDriveConfig` option, with a graphic and an example, is on the [Swer
 
 ## How a swerve drive works
 
-<figure><img src="../.gitbook/assets/mech-swerve-how.png" alt="A flow diagram. You ask for a ChassisVelocities with vx, vy and omega. The kinematics, built from the module locations, turn it into four module states, a speed and an angle each. Odometry combines wheel travel and the gyro into the robot's pose, which feeds field relative driving, auto-align and paths."><figcaption><p>From one chassis velocity to four wheels, and back to a pose.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/mech-swerve-how.png" alt="A flow diagram. You ask for a ChassisVelocities with vx, vy and omega. The kinematics, built from the module locations, turn it into four module states, a speed and an angle each. Odometry combines wheel travel and the gyro into the robot&#x27;s pose, which feeds field relative driving, auto-align and paths."><figcaption><p>From one chassis velocity to four wheels, and back to a pose.</p></figcaption></figure>
 
 You tell the drive how the whole robot should move, as a `ChassisVelocities`: forward speed, sideways speed and turn rate. The drive's kinematics, built from where each module is, turn that into a speed and an angle for every wheel. Each [swerve module](swerve-module.md) then steers and drives its own wheel.
 
@@ -100,13 +100,13 @@ SwerveDrive drive = new SwerveDrive(config);
 
 `SwerveDrive` has the same commands and functions in Commands v2 and Commands v3.
 
-| Command or function | Commands v2 | Commands v3 | What it does |
-| --- | --- | --- | --- |
-| `drive(Supplier<ChassisVelocities>)` | ✅ | ✅ | Drives with **robot relative** speeds until interrupted. |
-| `driveToPose(Pose2d)` | ✅ | ✅ | Drives to a pose with the [auto-align controllers](mechanism-configs/swerve-drive-config.md#auto-align-controllers) until interrupted, then stops the drive. |
-| `driveToPose(Pose2d, Distance, Angle)` | ✅ | ✅ | The same, ending once the robot is within the tolerances. |
-| `isNear(Pose2d, Distance, Angle)` | ✅ | ✅ | Whether the robot is within the tolerances of a pose. |
-| `stop()` | ✅ | ✅ | Commands zero speed. |
+| Command or function                    | Commands v2 | Commands v3 | What it does                                                                                                                                                 |
+| -------------------------------------- | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `drive(Supplier<ChassisVelocities>)`   | ✅           | ✅           | Drives with **robot relative** speeds until interrupted.                                                                                                     |
+| `driveToPose(Pose2d)`                  | ✅           | ✅           | Drives to a pose with the [auto-align controllers](mechanism-configs/swerve-drive-config.md#auto-align-controllers) until interrupted, then stops the drive. |
+| `driveToPose(Pose2d, Distance, Angle)` | ✅           | ✅           | The same, ending once the robot is within the tolerances.                                                                                                    |
+| `isNear(Pose2d, Distance, Angle)`      | ✅           | ✅           | Whether the robot is within the tolerances of a pose.                                                                                                        |
+| `stop()`                               | ✅           | ✅           | Commands zero speed.                                                                                                                                         |
 
 Field relative driving from a controller is a command you write around a [`SwerveInputStream`](swerve-input-stream.md):
 
@@ -176,26 +176,26 @@ public class SwerveMechanism implements Mechanism
 
 These set what the drive does and return at once. They are what the commands above are built on.
 
-| Function | What it does |
-| --- | --- |
-| `setFieldRelativeChassisSpeeds(ChassisVelocities)` | Drive with speeds measured against the field. This is what a `SwerveInputStream` gives you. |
+| Function                                           | What it does                                                                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `setFieldRelativeChassisSpeeds(ChassisVelocities)` | Drive with speeds measured against the field. This is what a `SwerveInputStream` gives you.                        |
 | `setRobotRelativeChassisSpeeds(ChassisVelocities)` | Drive with speeds measured against the robot. An overload adds a feedforward force per module, for path followers. |
-| `setSwerveModuleStates(SwerveModuleVelocity[])` | Set every module directly, skipping the kinematics. |
-| `lockPose()` | Turn the wheels into an X so the robot is hard to push. |
-| `resetOdometry(Pose2d)` | Tell the drive where it is, and set the gyro to that heading. |
-| `zeroGyro()` | Make the direction the robot faces now the new zero heading. |
-| `addVisionMeasurement(Pose2d, double)` | Correct the pose estimate with a vision measurement. |
+| `setSwerveModuleStates(SwerveModuleVelocity[])`    | Set every module directly, skipping the kinematics.                                                                |
+| `lockPose()`                                       | Turn the wheels into an X so the robot is hard to push.                                                            |
+| `resetOdometry(Pose2d)`                            | Tell the drive where it is, and set the gyro to that heading.                                                      |
+| `zeroGyro()`                                       | Make the direction the robot faces now the new zero heading.                                                       |
+| `addVisionMeasurement(Pose2d, double)`             | Correct the pose estimate with a vision measurement.                                                               |
 
 ## Asking where it is
 
-| Function | Returns |
-| --- | --- |
-| `getPose()` | The estimated position and heading on the field. |
-| `getRobotRelativeSpeed()`, `getFieldRelativeSpeed()` | How the robot is moving now. |
-| `getModuleStates()`, `getModulePositions()` | Each wheel's speed and angle, and how far it has rolled. |
-| `getGyroRotation3d()` | The robot's attitude from the gyro. |
-| `getDistanceFromPose(Pose2d)`, `getAngleDifferenceFromPose(Pose2d)` | How far the robot is from a pose. |
-| `getField2d()` | The `Field2d` the drive publishes its pose to. Use this one instead of making your own. |
+| Function                                                            | Returns                                                                                 |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `getPose()`                                                         | The estimated position and heading on the field.                                        |
+| `getRobotRelativeSpeed()`, `getFieldRelativeSpeed()`                | How the robot is moving now.                                                            |
+| `getModuleStates()`, `getModulePositions()`                         | Each wheel's speed and angle, and how far it has rolled.                                |
+| `getGyroRotation3d()`                                               | The robot's attitude from the gyro.                                                     |
+| `getDistanceFromPose(Pose2d)`, `getAngleDifferenceFromPose(Pose2d)` | How far the robot is from a pose.                                                       |
+| `getField2d()`                                                      | The `Field2d` the drive publishes its pose to. Use this one instead of making your own. |
 
 ## Configuring and tuning a swerve drive, step by step
 
@@ -223,7 +223,7 @@ Turn the robot counter-clockwise by hand and watch the heading. It must go up. I
 {% step %}
 #### Tune the modules
 
-Tune the azimuth motors, then the drive motors, with the swerve tuning command: see [Tune the swerve modules](live-tuning/README.md#tune-the-swerve-modules). Always start on the real robot, lifted with its wheels clear of the blocks. Tuning in simulation first is great practice, but it is not enough by itself: do not rely on simulated gains for the first run of the real modules.
+Tune the azimuth motors, then the drive motors, with the swerve tuning command: see [Tune the swerve modules](live-tuning/#tune-the-swerve-modules). Always start on the real robot, lifted with its wheels clear of the blocks. Tuning in simulation first is great practice, but it is not enough by itself: do not rely on simulated gains for the first run of the real modules.
 {% endstep %}
 
 {% step %}
@@ -241,7 +241,7 @@ Drive in a straight line while spinning. If the path bends, set [`withDiscretiza
 {% step %}
 #### Tune auto-align last
 
-Tune the translation and rotation controllers once the robot drives well by hand: see [Tune auto-align](live-tuning/README.md#tune-auto-align).
+Tune the translation and rotation controllers once the robot drives well by hand: see [Tune auto-align](live-tuning/#tune-auto-align).
 {% endstep %}
 {% endstepper %}
 
@@ -285,11 +285,11 @@ config.withGyroOffset(Degrees.of(90))
 
 If the gyro is not mounted flat, the robot turning shows up as the gyro's roll or pitch instead of its yaw. `withGyroHeadingAxis(GyroAxis)` tells `SwerveDriveConfig` which gyro axis points up through the robot. `GyroAxis` lives in `yams.core.mechanisms.config.enums` and has three values:
 
-| `GyroAxis` | Gyro axis pointing up | Use when                                                  |
-| ---------- | --------------------- | --------------------------------------------------------- |
-| `YAW`      | Z                     | The gyro is mounted flat. This is the default.            |
-| `ROLL`     | X                     | The gyro is on its side, with its Y axis to robot left.   |
-| `PITCH`    | Y                     | The gyro is on its side, with its X axis to robot front.  |
+| `GyroAxis` | Gyro axis pointing up | Use when                                                 |
+| ---------- | --------------------- | -------------------------------------------------------- |
+| `YAW`      | Z                     | The gyro is mounted flat. This is the default.           |
+| `ROLL`     | X                     | The gyro is on its side, with its Y axis to robot left.  |
+| `PITCH`    | Y                     | The gyro is on its side, with its X axis to robot front. |
 
 ```java
 import yams.core.mechanisms.config.enums.GyroAxis;
@@ -398,12 +398,12 @@ Each module's drive `SmartMotorController` converts its share of the `Force[]` i
 
 `SwerveDrive` has a built-in field relative auto-align.
 
-| Method | What it does |
-| --- | --- |
-| `driveToPose(Pose2d)` | Returns a `Command` that drives to the pose until it is interrupted, then stops the drive. |
+| Method                                 | What it does                                                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `driveToPose(Pose2d)`                  | Returns a `Command` that drives to the pose until it is interrupted, then stops the drive.                                               |
 | `driveToPose(Pose2d, Distance, Angle)` | Returns a `Command` that drives to the pose and ends once the robot is within the distance and heading tolerances, then stops the drive. |
-| `isNear(Pose2d, Distance, Angle)` | Whether the robot is within the distance and heading tolerances of the pose. |
-| `driveToPoseSetpoint(Pose2d)` | Computes the `ChassisVelocities` that drive toward the pose, for use in your own command. |
+| `isNear(Pose2d, Distance, Angle)`      | Whether the robot is within the distance and heading tolerances of the pose.                                                             |
+| `driveToPoseSetpoint(Pose2d)`          | Computes the `ChassisVelocities` that drive toward the pose, for use in your own command.                                                |
 
 The commands and `driveToPoseSetpoint` use the translation and rotation `PIDController`s from `SwerveDriveConfig.withTranslationController(...)` and `withRotationController(...)`. Each command is a Commands v2 or Commands v3 `Command`, depending on which `SwerveDrive` you use, and all of them exist in both.
 
@@ -418,7 +418,7 @@ driver.b().onTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO), Centimete
 Use the version with tolerances whenever something has to happen after the robot arrives. The version without them never ends on its own.
 
 {% hint style="success" %}
-The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/README.md#swerve-drive).
+The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/#swerve-drive).
 {% endhint %}
 
 ## Telemetry Verbosity
@@ -483,6 +483,6 @@ SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
 
 `SwerveDriveTelemetryConfig(TelemetryVerbosity)` is a shorthand constructor equivalent to `new SwerveDriveTelemetryConfig().withTelemetryVerbosity(verbosity)`, useful when you're about to layer more `with*()` calls on top anyway. See [Telemetry](../understanding/telemetry.md) for the shared telemetry architecture these configs build on.
 
-## Code Reference
+## Code reference
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/SwerveSubsystem.java" %}

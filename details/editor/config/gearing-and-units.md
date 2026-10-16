@@ -16,7 +16,7 @@ These options tell YAMS how the motor's rotation becomes the mechanism's movemen
 
 The reduction between the rotor and the mechanism.
 
-<figure><img src="../../../.gitbook/assets/smc-gearing.png" alt="A motor rotor drives a gearbox with 3 to 1 and 4 to 1 stages, 12 to 1 in total, which drives the mechanism's output shaft. Twelve rotor rotations are one mechanism rotation. GearBox.fromReductionStages(3, 4) and withGearing(12) mean the same."><figcaption><p>A 12:1 reduction in two stages.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-gearing.png" alt="A motor rotor drives a gearbox with 3 to 1 and 4 to 1 stages, 12 to 1 in total, which drives the mechanism&#x27;s output shaft. Twelve rotor rotations are one mechanism rotation. GearBox.fromReductionStages(3, 4) and withGearing(12) mean the same."><figcaption><p>A 12:1 reduction in two stages.</p></figcaption></figure>
 
 ```java
 .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4))) // 3:1 then 4:1
@@ -61,7 +61,6 @@ Call it after `withGearing`: it changes the gearing that is already set. Continu
 
 **Supported on:** every supported motor controller.
 
-
-## Code Reference
+## Code reference
 
 * [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)

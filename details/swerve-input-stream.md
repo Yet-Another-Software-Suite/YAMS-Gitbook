@@ -94,7 +94,7 @@ C++ has `Of(drive, x, y)` plus constructors taking a rotation axis or two headin
 
 ## Mutations Apply Immediately
 
-<figure><img src="../.gitbook/assets/sis-mutations.gif" alt="Animation of a robot aiming at a speaker target. When the left bumper is pressed the stream's aim target is changed to the amp, and the robot turns to face the amp without the drive command being touched"><figcaption><p>Changing the aim target from a button. The drive command keeps running.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/sis-mutations.gif" alt="Animation of a robot aiming at a speaker target. When the left bumper is pressed the stream&#x27;s aim target is changed to the amp, and the robot turns to face the amp without the drive command being touched"><figcaption><p>Changing the aim target from a button. The drive command keeps running.</p></figcaption></figure>
 
 Every `with*()` method mutates the stream in place and returns `this`; none of them return a new copy. That matters because a `SwerveInputStream` is usually stored once and read by a long-lived drive command. Calling a mutator on that same reference later, from anywhere else in your code, changes what the already-running default command does on its very next loop; you never need to rebuild the stream or call `setDefaultCommand(...)` again.
 
@@ -111,7 +111,7 @@ new Trigger(driver::getLeftBumperButton).onTrue(Commands.runOnce(() ->
 Pressing the left bumper swaps the aim target from the speaker to the amp. The default command keeps reading the exact same `input` instance; it just starts computing `ChassisVelocities` toward a different pose the moment the mutation happens.
 
 {% hint style="info" %}
-`clone()` is the one method here that doesn't mutate: it returns an independent copy, useful for deriving a second variant of a stream from a shared base configuration without one affecting the other. See [Copying a Stream](#copying-a-stream) below.
+`clone()` is the one method here that doesn't mutate: it returns an independent copy, useful for deriving a second variant of a stream from a shared base configuration without one affecting the other. See [Copying a Stream](swerve-input-stream.md#copying-a-stream) below.
 {% endhint %}
 
 ## From Stick to Velocity
@@ -120,13 +120,13 @@ Every loop, `get()` runs the stick values through the same steps, in this order:
 
 <figure><img src="../.gitbook/assets/swerve-input-stream-pipeline.png" alt="A raw stick value of 0.60 goes through a 0.05 deadband to become 0.579, is scaled by 0.8 to 0.463, is cubed to 0.099, and is multiplied by a maximum velocity of 4.5 meters per second to give 0.45 meters per second"><figcaption><p>A 60% push, step by step.</p></figcaption></figure>
 
-| Step | Method | What it does |
-| --- | --- | --- |
-| Deadband | `withDeadband(...)` | Ignores small values near the center, then rescales the rest to the full range. |
-| Scale | `withScaleTranslation(...)`, `withScaleRotation(...)` | Multiplies by a constant. |
-| Cube | `withCubeTranslationControllerAxis()`, `withCubeRotationControllerAxis()` | Raises to the third power for finer control near the center. |
-| Alliance flip | `withAllianceRelativeControl()` | Turns translation 180 degrees on the red alliance. |
-| Maximum velocity | `withMaximumLinearVelocity(...)`, `withMaximumAngularVelocity(...)` | Turns the result into meters per second and radians per second. |
+| Step             | Method                                                                    | What it does                                                                    |
+| ---------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Deadband         | `withDeadband(...)`                                                       | Ignores small values near the center, then rescales the rest to the full range. |
+| Scale            | `withScaleTranslation(...)`, `withScaleRotation(...)`                     | Multiplies by a constant.                                                       |
+| Cube             | `withCubeTranslationControllerAxis()`, `withCubeRotationControllerAxis()` | Raises to the third power for finer control near the center.                    |
+| Alliance flip    | `withAllianceRelativeControl()`                                           | Turns translation 180 degrees on the red alliance.                              |
+| Maximum velocity | `withMaximumLinearVelocity(...)`, `withMaximumAngularVelocity(...)`       | Turns the result into meters per second and radians per second.                 |
 
 {% hint style="warning" %}
 The scale is applied **before** the cube. With `withScaleTranslation(0.8)` and the cube enabled, a full stick gives `0.8³ = 0.512` of the maximum velocity, not `0.8`.
@@ -178,7 +178,7 @@ input.withControllerRotationAxis(() -> -driver.getRightX());
 
 ### `withControllerHeadingAxis`
 
-`withControllerHeadingAxis(DoubleSupplier, DoubleSupplier)` sets the pair of axes whose direction becomes a target heading. It does nothing on its own: the heading is used by [`withHeadingControl`](#withheadingcontrol) in `HEADING` mode.
+`withControllerHeadingAxis(DoubleSupplier, DoubleSupplier)` sets the pair of axes whose direction becomes a target heading. It does nothing on its own: the heading is used by [`withHeadingControl`](swerve-input-stream.md#withheadingcontrol) in `HEADING` mode.
 
 <figure><img src="../.gitbook/assets/sis-heading-axis.gif" alt="Animation of the right stick moving all the way around its edge while a robot on the field turns to face the same direction. Stick up is 0 degrees, stick left is 90 degrees, stick down is 180 degrees and stick right is minus 90 degrees"><figcaption><p>Two axes set a direction, and the robot turns to face it.</p></figcaption></figure>
 
@@ -262,7 +262,7 @@ A stream is always in exactly one of four internal modes: `ANGULAR_VELOCITY` (th
 
 #### `withHeadingControl`
 
-`withHeadingControl(trigger)` enables `HEADING` while `trigger` reports true, snapping to a heading derived from [`withControllerHeadingAxis(x, y)`](#withcontrollerheadingaxis) instead of rotating at a velocity. The robot stops turning while the heading stick is inside the deadband.
+`withHeadingControl(trigger)` enables `HEADING` while `trigger` reports true, snapping to a heading derived from [`withControllerHeadingAxis(x, y)`](swerve-input-stream.md#withcontrollerheadingaxis) instead of rotating at a velocity. The robot stops turning while the heading stick is inside the deadband.
 
 <figure><img src="../.gitbook/assets/sis-heading.gif" alt="Animation of the right stick moving in an arc around its edge, from straight up round to the left, back through the top and round to the right. The robot turns with it, always facing the direction the stick points, a moment behind"><figcaption><p><code>HEADING</code> mode: as the right stick moves around, the robot turns to face where it points.</p></figcaption></figure>
 
@@ -285,7 +285,7 @@ input.withHeading(() -> Degrees.of(90))
 
 ### Aim At a Target
 
-`withAim(Supplier<Pose2d> targetPose, BooleanSupplier trigger)` enables `AIM` while `trigger` reports true, rotating to face `targetPose` while translation keeps working normally. See [Mutations Apply Immediately](#mutations-apply-immediately) above for an example that retargets it live.
+`withAim(Supplier<Pose2d> targetPose, BooleanSupplier trigger)` enables `AIM` while `trigger` reports true, rotating to face `targetPose` while translation keeps working normally. See [Mutations Apply Immediately](swerve-input-stream.md#mutations-apply-immediately) above for an example that retargets it live.
 
 <figure><img src="../.gitbook/assets/sis-aim.gif" alt="Animation of a robot driven left and right by the left stick while it stays facing a target on the field"><figcaption><p><code>AIM</code> mode: the left stick drives, the robot keeps facing the target.</p></figcaption></figure>
 
@@ -323,7 +323,7 @@ The lookahead assumes the robot keeps its current velocity, so it works best whi
 input.withAimFeedforward(new SimpleMotorFeedforward(0, 0.1));
 ```
 
-**How to use it:** hold the aim button and drive sideways past the target while you watch the heading, or [`aimLock`](#aim-lock). If the robot trails the target, start with a small `kV` and raise it until it keeps up. Too much makes the heading overshoot and wobble. `kS` and `kA` can usually stay at 0.
+**How to use it:** hold the aim button and drive sideways past the target while you watch the heading, or [`aimLock`](swerve-input-stream.md#aim-lock). If the robot trails the target, start with a small `kV` and raise it until it keeps up. Too much makes the heading overshoot and wobble. `kS` and `kA` can usually stay at 0.
 
 The feedforward does not remove the lag completely, and it is no substitute for a rotation controller that is tuned well. Tune the controller in [`SwerveDriveConfig`](mechanism-configs/swerve-drive-config.md) first.
 
@@ -356,16 +356,16 @@ The lock only updates while the stream is being read, and it is false whenever a
 
 Two methods expose the pieces the aim mode is made of:
 
-| Method | Returns |
-| ------ | ------- |
-| `getTargetVector(Pose2d)` | The field relative vector from the robot to a target, from the looked ahead position if a lookahead is set. |
+| Method                            | Returns                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `getTargetVector(Pose2d)`         | The field relative vector from the robot to a target, from the looked ahead position if a lookahead is set.   |
 | `calculateAngularVelocity(Angle)` | The angular velocity that turns the robot to a heading, from the rotation controller and the aim feedforward. |
 
 ### Translation Only
 
 `withTranslationOnly(trigger)` enables `TRANSLATION_ONLY` while `trigger` reports true, locking the current heading and suppressing rotation entirely:
 
-<figure><img src="../.gitbook/assets/sis-translation-only.gif" alt="Animation of a robot driving across the field while the right stick is wiggled. The robot's heading stays at 30 degrees the whole time"><figcaption><p><code>TRANSLATION_ONLY</code> mode: the right stick is ignored and the heading is held.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/sis-translation-only.gif" alt="Animation of a robot driving across the field while the right stick is wiggled. The robot&#x27;s heading stays at 30 degrees the whole time"><figcaption><p><code>TRANSLATION_ONLY</code> mode: the right stick is ignored and the heading is held.</p></figcaption></figure>
 
 ```java
 input.withTranslationOnly(driver::getStartButton);
@@ -429,7 +429,7 @@ new Trigger(driver::getLeftBumperButton)
 
 ## Copying a Stream
 
-`clone()` is the only method on this page that doesn't mutate the original; it returns an independent copy that shares the base stream's configuration at the moment it was called. Changing the copy afterward, or changing the original, doesn't affect the other. A clone has no [telemetry](#telemetry-and-live-tuning); call `withTelemetry` on it if it needs its own.
+`clone()` is the only method on this page that doesn't mutate the original; it returns an independent copy that shares the base stream's configuration at the moment it was called. Changing the copy afterward, or changing the original, doesn't affect the other. A clone has no [telemetry](swerve-input-stream.md#telemetry-and-live-tuning); call `withTelemetry` on it if it needs its own.
 
 ```java
 SwerveInputStream headingStream = input.clone();
@@ -439,11 +439,11 @@ SwerveInputStream headingStream = input.clone();
 
 Telemetry is off until you call `withTelemetry(name, verbosity)` on a stream. It publishes every time the stream is read with `get()`, so there is nothing to call each loop. `getTelemetry()` returns the stream's `SwerveInputStreamTelemetry` as an `Optional`.
 
-| Verbosity | Publishes                                                                                 |
-| --------- | ----------------------------------------------------------------------------------------- |
-| `LOW`     | The current drive mode                                                                    |
-| `MID`     | Also the stream's configuration, read-only                                                |
-| `HIGH`    | Also editable copies of the configuration, and a `Live Tuning` command on the dashboard  |
+| Verbosity | Publishes                                                                               |
+| --------- | --------------------------------------------------------------------------------------- |
+| `LOW`     | The current drive mode                                                                  |
+| `MID`     | Also the stream's configuration, read-only                                              |
+| `HIGH`    | Also editable copies of the configuration, and a `Live Tuning` command on the dashboard |
 
 Call `withTelemetry` last, after the rest of the configuration, so the dashboard starts with the configured values. Calling it again replaces the stream's telemetry, and `getTelemetry().get().close()` stops publishing it, e.g. when replacing a stream with another of the same name.
 
@@ -521,17 +521,17 @@ At `HIGH`, values edited on the dashboard are applied to the stream every loop w
 
 `mode` (the current drive mode: `ANGULAR_VELOCITY`, `HEADING`, `AIM` or `TRANSLATION_ONLY`) is published to `/SwerveInputStream/<name>/` at every verbosity. At `MID` (`MEDIUM` in C++) and `HIGH`, the values below are also published there read-only. At `HIGH` they are published as tunable values under `/Tuning/SwerveInputStream/<name>/`, with the command at `/Tuning/SwerveInputStream/<name>/Live Tuning`.
 
-| Topic                | Type    | Range  | Description                                                                                      |
-| -------------------- | ------- | ------ | ------------------------------------------------------------------------------------------------ |
-| `deadband`           | double  | [0, 1) | Controller axis deadband                                                                         |
-| `translationScale`   | double  | (0, 1] | Translation axis scaling factor                                                                  |
-| `rotationScale`      | double  | (0, 1] | Rotation axis scaling factor                                                                     |
-| `maxLinearVelocity`  | double  | > 0    | Maximum chassis linear velocity (m/s). Starts at the drive config's maximum and overrides it     |
-| `maxAngularVelocity` | double  | > 0    | Maximum chassis angular velocity (rad/s). Starts at the drive config's maximum and overrides it  |
-| `translationCube`    | boolean | -      | Enable cubic translation response curve                                                          |
-| `rotationCube`       | boolean | -      | Enable cubic rotation response curve                                                             |
-| `allianceRelative`   | boolean | -      | Enable alliance-relative translation flip                                                        |
-| `robotRelative`      | boolean | -      | Enable robot-relative control                                                                    |
+| Topic                | Type    | Range   | Description                                                                                     |
+| -------------------- | ------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `deadband`           | double  | \[0, 1) | Controller axis deadband                                                                        |
+| `translationScale`   | double  | (0, 1]  | Translation axis scaling factor                                                                 |
+| `rotationScale`      | double  | (0, 1]  | Rotation axis scaling factor                                                                    |
+| `maxLinearVelocity`  | double  | > 0     | Maximum chassis linear velocity (m/s). Starts at the drive config's maximum and overrides it    |
+| `maxAngularVelocity` | double  | > 0     | Maximum chassis angular velocity (rad/s). Starts at the drive config's maximum and overrides it |
+| `translationCube`    | boolean | -       | Enable cubic translation response curve                                                         |
+| `rotationCube`       | boolean | -       | Enable cubic rotation response curve                                                            |
+| `allianceRelative`   | boolean | -       | Enable alliance-relative translation flip                                                       |
+| `robotRelative`      | boolean | -       | Enable robot-relative control                                                                   |
 
 The output velocities are not published: reading them would call `get()` a second time each loop, which runs the heading controller twice. Log the speeds you send to the drive instead.
 
@@ -539,12 +539,12 @@ The output velocities are not published: reading them would call `get()` a secon
 Once the values feel right, copy them from NetworkTables back into the stream's `with*()` calls in code. Values edited live are not persisted. For competition, use `TelemetryVerbosity.LOW`; in Java `getTelemetry().get().close()` stops publishing, and in C++ `WithTelemetry(name, TelemetryVerbosity::NONE)` does.
 {% endhint %}
 
-| Issue                     | Solution                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| Telemetry not appearing   | Check the stream was given `withTelemetry` and is read with `get()` every loop     |
-| Changes don't apply       | Start the `Live Tuning` command; it only exists at `TelemetryVerbosity.HIGH`       |
-| A dashboard value snaps back | The value is outside the allowed range in the table above                       |
+| Issue                        | Solution                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| Telemetry not appearing      | Check the stream was given `withTelemetry` and is read with `get()` every loop |
+| Changes don't apply          | Start the `Live Tuning` command; it only exists at `TelemetryVerbosity.HIGH`   |
+| A dashboard value snaps back | The value is outside the allowed range in the table above                      |
 
-## Code Reference
+## Code reference
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/SwerveSubsystem.java" %}

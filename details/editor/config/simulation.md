@@ -54,9 +54,8 @@ How often the simulated physics are stepped. The default is 20 ms, and it is ind
 
 ## Running the simulation
 
-A mechanism class steps its motor's simulation for you. A `SmartMotorController` used without one needs `simIterate()` called from `simulationPeriodic()`: see [simulation without a mechanism](../README.md#simulation-without-a-mechanism). Every simulated motor also draws from the shared [battery simulation](../../../understanding/battery-simulation.md).
+A mechanism class steps its motor's simulation for you. A `SmartMotorController` used without one needs `simIterate()` called from `simulationPeriodic()`: see [simulation without a mechanism](../#simulation-without-a-mechanism). Every simulated motor also draws from the shared [battery simulation](../../../understanding/battery-simulation.md).
 
-
-## Code Reference
+## Code reference
 
 * [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)

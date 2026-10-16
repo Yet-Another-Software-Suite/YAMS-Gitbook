@@ -31,16 +31,15 @@ Angles on an `Arm` are measured from level: 0° is parallel to the ground and 90
 
 ## What else an arm needs
 
-| For | Use |
-| --- | --- |
-| The physical stops | [`withHardLimits`](shared-options.md#withhardlimits) on `ArmConfig` |
-| The limits the motor obeys | [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) on the motor config |
+| For                            | Use                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| The physical stops             | [`withHardLimits`](shared-options.md#withhardlimits) on `ArmConfig`                                           |
+| The limits the motor obeys     | [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) on the motor config              |
 | The arm's weight in simulation | [`withMomentOfInertia(length, mass)`](../editor/config/simulation.md#withmomentofinertia) on the motor config |
-| Holding against gravity | [`ArmFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kG` |
-| An absolute encoder | [How do I use absolute encoders on my Arm?](../../how-to/how-do-i-use-absolute-encoders-on-my-arm.md) |
+| Holding against gravity        | [`ArmFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kG`                                 |
+| An absolute encoder            | [How do I use absolute encoders on my Arm?](../../how-to/how-do-i-use-absolute-encoders-on-my-arm.md)         |
 
-
-## Code Reference
+## Code reference
 
 * `ArmConfig`
 * `Arm`

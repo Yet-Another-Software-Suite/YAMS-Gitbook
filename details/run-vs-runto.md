@@ -6,20 +6,20 @@ icon: play
 
 Understanding when to use `run()` versus `runTo()` is critical for building reliable robot control. Choosing the wrong one leads to unexpected behavior, especially when combined with default commands.
 
-The examples on this page use Commands v2 (`yams.commands2.mechanisms.*`). The Commands v3 mechanisms (`yams.commands3.mechanisms.*`) have the same `run()` and `runTo()` methods and they behave the same way; see [Commands v3](#commands-v3) for the differences in how you compose and bind them.
+The examples on this page use Commands v2 (`yams.commands2.mechanisms.*`). The Commands v3 mechanisms (`yams.commands3.mechanisms.*`) have the same `run()` and `runTo()` methods and they behave the same way; see [Commands v3](run-vs-runto.md#commands-v3) for the differences in how you compose and bind them.
 
-## Quick Reference
+## Quick reference
 
-| Method | Command Ends? | Motor Stops? | Best For |
-|--------|--------------|--------------|----------|
-| `run(setpoint)` | Never (runs until interrupted) | No | Continuous control, teleop |
-| `runTo(setpoint)` | When goal reached | **No** | Autonomous sequences, one-shot movements |
+| Method            | Command Ends?                  | Motor Stops? | Best For                                 |
+| ----------------- | ------------------------------ | ------------ | ---------------------------------------- |
+| `run(setpoint)`   | Never (runs until interrupted) | No           | Continuous control, teleop               |
+| `runTo(setpoint)` | When goal reached              | **No**       | Autonomous sequences, one-shot movements |
 
 {% hint style="danger" %}
 **Critical**: Neither `run()` nor `runTo()` stops the motor when the command ends. The `SmartMotorController` continues sending the last request. This is by design for smooth control, but can cause unexpected behavior if not understood.
 {% endhint %}
 
-## run() - Continuous Control
+## run() - Continuous control
 
 Use `run()` when you expect the command to run **indefinitely** until interrupted by another command.
 
@@ -34,14 +34,14 @@ public Command setHeight(Distance height) {
 }
 ```
 
-### When to Use run()
+### When to use run()
 
-- **Teleop button bindings** with `whileTrue()` - command runs while button is held
-- **Default commands** - these should run forever by definition
-- **Holding position** - when you want to actively maintain a setpoint
-- **Velocity control** - flywheels that spin until told otherwise
+* **Teleop button bindings** with `whileTrue()` - command runs while button is held
+* **Default commands** - these should run forever by definition
+* **Holding position** - when you want to actively maintain a setpoint
+* **Velocity control** - flywheels that spin until told otherwise
 
-### Example: Teleop Elevator Control
+### Example: Teleop elevator control
 
 ```java
 // RobotContainer.java
@@ -60,13 +60,14 @@ private void configureBindings() {
 ```
 
 **What happens:**
+
 1. Robot starts, default command runs, elevator goes to 0m
 2. Driver presses A, `setHeight(0.5m)` interrupts default, elevator goes to 0.5m
 3. Driver releases A, command is cancelled, default command resumes, elevator returns to 0m
 
 This works correctly because `run()` never ends on its own - it's always interrupted by something else.
 
-## runTo() - Goal-Based Control
+## runTo() - Goal-based control
 
 Use `runTo()` when you want the command to **end automatically** when the mechanism reaches its goal.
 
@@ -82,17 +83,17 @@ public Command setHeightAndStop(Distance height, Distance tolerance) {
 }
 ```
 
-### When to Use runTo()
+### When to use runTo()
 
-- **Autonomous routines** - move to position, then do the next thing
-- **Sequential commands** - `moveArm.andThen(shoot).andThen(moveArmBack)`
-- **One-shot movements** - press button once to go to a preset
+* **Autonomous routines** - move to position, then do the next thing
+* **Sequential commands** - `moveArm.andThen(shoot).andThen(moveArmBack)`
+* **One-shot movements** - press button once to go to a preset
 
 {% hint style="warning" %}
 **Important**: `runTo()` requires a tolerance parameter to determine when the goal is reached. Choose a tolerance appropriate for your mechanism (e.g., `Centimeters.of(2)` for an elevator, `Degrees.of(1)` for an arm). The command ends once the mechanism has stayed within the tolerance for 0.1 seconds (a rising-edge debounce on the `near()` trigger).
 {% endhint %}
 
-### Example: Autonomous Sequence
+### Example: Autonomous sequence
 
 ```java
 // Autonomous command sequence
@@ -112,7 +113,7 @@ public Command autoScoreHigh() {
 }
 ```
 
-## The Default Command Pitfall
+## The default command pitfall
 
 {% hint style="danger" %}
 **This is the most common mistake with `runTo()`!**
@@ -120,7 +121,7 @@ public Command autoScoreHigh() {
 
 When `runTo()` finishes (because the goal was reached), the command scheduler looks for another command to run. If you have a **default command** set, it will immediately take over.
 
-### The Problem
+### The problem
 
 ```java
 // RobotContainer.java - PROBLEMATIC CODE
@@ -136,11 +137,13 @@ private void configureBindings() {
 ```
 
 **What the programmer expects:**
+
 1. Press A
 2. Elevator goes to 1 meter
 3. Elevator stays at 1 meter
 
 **What actually happens:**
+
 1. Press A
 2. `setHeightAndStop(1.0m)` starts running
 3. Elevator moves toward 1 meter
@@ -148,7 +151,7 @@ private void configureBindings() {
 5. **Default command immediately starts**, commanding 0 meters
 6. Elevator goes back down to 0 meters
 
-### Solution 1: Use run() Instead
+### Solution 1: Use run() instead
 
 If you want the mechanism to stay at the commanded position, use `run()`:
 
@@ -159,7 +162,7 @@ m_driverController.a().onTrue(m_elevator.setHeight(Meters.of(1.0)));
 
 Now the `run()` command never ends on its own, so the default command never gets a chance to run. The elevator will stay at 1 meter until another command is scheduled.
 
-### Solution 2: No Default Command
+### Solution 2: No default command
 
 If you don't need a default command, don't set one:
 
@@ -178,7 +181,7 @@ private void configureBindings() {
 
 Since there's no default command, when `runTo()` ends, nothing else runs. The `SmartMotorController` keeps sending the last setpoint, holding position.
 
-### Solution 3: Use whileTrue() for Momentary Control
+### Solution 3: Use whileTrue() for momentary control
 
 If you want the mechanism to return to a home position when not commanded, use `whileTrue()`:
 
@@ -195,7 +198,7 @@ private void configureBindings() {
 
 This makes the intent clear: hold the button to hold the position.
 
-### Solution 4: Use Triggers for State-Based Control
+### Solution 4: Use triggers for state-based control
 
 Following [command-based best practices](https://bovlb.github.io/frc-tips/commands/best-practices.html), use triggers to control behavior:
 
@@ -223,17 +226,17 @@ private void configureBindings() {
 }
 ```
 
-## Understanding Motor Behavior
+## Understanding motor behavior
 
 Both `run()` and `runTo()` set the `SmartMotorController`'s setpoint. When the command ends:
 
-- The **command** stops running
-- The **SmartMotorController** does NOT stop
-- The motor continues driving toward the last setpoint
+* The **command** stops running
+* The **SmartMotorController** does NOT stop
+* The motor continues driving toward the last setpoint
 
 This is intentional! It allows for smooth transitions between commands without the mechanism "going limp" between commands.
 
-### If You Need to Stop the Motor
+### If you need to stop the motor
 
 If you actually want to stop motor output when a command ends, use `finallyDo()`:
 
@@ -282,11 +285,11 @@ public Command autoRoutine() {
 
 With the Commands v3 vendordep, import the mechanisms from `yams.commands3.mechanisms` and `Command`/`Trigger` from `org.wpilib.command3`. The method names are the same, but they are built as coroutines:
 
-| Method | Commands v3 behavior |
-|--------|----------------------|
-| `run(setpoint)`, `setAngle()`, `setHeight()` | A `while (true)` loop that sets the setpoint and calls `coroutine.yield()`. Never ends on its own. |
-| `runTo(setpoint, tolerance)` | Sets the setpoint once, then waits with `coroutine.waitUntil(near(setpoint, tolerance).debounce(...))`. Ends when the goal is reached. |
-| `set(dutycycle)`, `setVoltage(volts)` | A `while (true)` loop that stops the closed loop controller, and restarts it when the command is canceled. |
+| Method                                       | Commands v3 behavior                                                                                                                   |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `run(setpoint)`, `setAngle()`, `setHeight()` | A `while (true)` loop that sets the setpoint and calls `coroutine.yield()`. Never ends on its own.                                     |
+| `runTo(setpoint, tolerance)`                 | Sets the setpoint once, then waits with `coroutine.waitUntil(near(setpoint, tolerance).debounce(...))`. Ends when the goal is reached. |
+| `set(dutycycle)`, `setVoltage(volts)`        | A `while (true)` loop that stops the closed loop controller, and restarts it when the command is canceled.                             |
 
 The motor still keeps its last request when a command ends, and the default command pitfall still applies: when `runTo()` ends, the mechanism's default command takes over.
 
@@ -357,17 +360,17 @@ public Command setHeightAndStopMotor(Distance height, Distance tolerance) {
 }
 ```
 
-## Common Pitfalls Summary
+## Common pitfalls summary
 
-| Pitfall | Symptom | Solution |
-|---------|---------|----------|
-| `runTo()` with default command | Mechanism returns to default position after reaching goal | Use `run()` or remove default command |
-| Using `onTrue()` with `run()` expecting it to end | Command runs forever, can't do anything else | Use `runTo()` for finite commands |
-| Assuming motor stops when command ends | Mechanism drifts or holds unexpected position | Understand that `SmartMotorController` continues |
-| Tolerance smaller than the steady-state error | `runTo()` never ends because goal is never "reached" | Pass a larger tolerance to `runTo()` or tune the controller |
-| Tolerance too tight | `runTo()` ends and restarts repeatedly (oscillation) | Increase tolerance or add debounce |
+| Pitfall                                           | Symptom                                                   | Solution                                                    |
+| ------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------- |
+| `runTo()` with default command                    | Mechanism returns to default position after reaching goal | Use `run()` or remove default command                       |
+| Using `onTrue()` with `run()` expecting it to end | Command runs forever, can't do anything else              | Use `runTo()` for finite commands                           |
+| Assuming motor stops when command ends            | Mechanism drifts or holds unexpected position             | Understand that `SmartMotorController` continues            |
+| Tolerance smaller than the steady-state error     | `runTo()` never ends because goal is never "reached"      | Pass a larger tolerance to `runTo()` or tune the controller |
+| Tolerance too tight                               | `runTo()` ends and restarts repeatedly (oscillation)      | Increase tolerance or add debounce                          |
 
-## Decision Flowchart
+## Decision flowchart
 
 ```
 Do you want the command to end automatically?
@@ -382,7 +385,7 @@ Do you want the command to end automatically?
         └── NO → runTo() is fine
 ```
 
-## Best Practices
+## Best practices
 
 1. **Default commands should use `run()`** - They run forever by definition (in Commands v3, also give them `Command.LOWEST_PRIORITY`)
 2. **Teleop with `whileTrue()` should use `run()`** - Natural pairing
@@ -391,8 +394,8 @@ Do you want the command to end automatically?
 5. **Consider state-based control** - Use triggers instead of complex command logic
 6. **Test both paths** - Test what happens when commands end, not just when they run
 
-## Further Reading
+## Further reading
 
-- [Command-Based Best Practices](https://bovlb.github.io/frc-tips/commands/best-practices.html) - Comprehensive guide on command-based architecture
-- [WPILib Command Scheduler](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html) - How commands are scheduled
-- [Default Commands](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html#default-commands) - Official documentation on default commands
+* [Command-Based Best Practices](https://bovlb.github.io/frc-tips/commands/best-practices.html) - Comprehensive guide on command-based architecture
+* [WPILib Command Scheduler](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html) - How commands are scheduled
+* [Default Commands](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html#default-commands) - Official documentation on default commands

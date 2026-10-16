@@ -10,7 +10,7 @@ Every option on this page is used on the real robot and in simulation.
 
 ## The two motors
 
-A module is built from a drive `SmartMotorController` and an azimuth `SmartMotorController`, each with its own [`SmartMotorControllerConfig`](../editor/config/README.md).
+A module is built from a drive `SmartMotorController` and an azimuth `SmartMotorController`, each with its own [`SmartMotorControllerConfig`](../editor/config/).
 
 ```java
 SwerveModuleConfig config = new SwerveModuleConfig(driveMotor, azimuthMotor);
@@ -33,14 +33,14 @@ config.withLocation(Meters.of(0.42), Degrees.of(45)); // distance and angle from
 
 ## The absolute encoder
 
-<figure><img src="../../.gitbook/assets/mech-module-absolute-encoder.png" alt="Two panels. Zero must be with the wheel pointing forward and its bevel gear facing the robot's left. To find the offset, point every wheel forward with bevels to the left, read each absolute encoder, and use that reading, here 64 degrees, as that module's offset."><figcaption><p>Zero is the wheel pointing forward with the bevel to the left.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mech-module-absolute-encoder.png" alt="Two panels. Zero must be with the wheel pointing forward and its bevel gear facing the robot&#x27;s left. To find the offset, point every wheel forward with bevels to the left, read each absolute encoder, and use that reading, here 64 degrees, as that module&#x27;s offset."><figcaption><p>Zero is the wheel pointing forward with the bevel to the left.</p></figcaption></figure>
 
-| Option | What it does |
-| --- | --- |
-| `withAbsoluteEncoder(Object)` | An absolute encoder from the **same vendor** as the azimuth motor, read by the motor controller. |
-| `withAbsoluteEncoder(Supplier<Angle>)` | An absolute encoder from **any vendor**, read by your code. |
-| `withAbsoluteEncoderOffset(Angle)` | Makes the encoder read 0 when the wheel points forward with the bevel to the left. |
-| `withAbsoluteEncoderGearing(GearBox)` | For an encoder that is not 1:1 with the azimuth. |
+| Option                                 | What it does                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `withAbsoluteEncoder(Object)`          | An absolute encoder from the **same vendor** as the azimuth motor, read by the motor controller. |
+| `withAbsoluteEncoder(Supplier<Angle>)` | An absolute encoder from **any vendor**, read by your code.                                      |
+| `withAbsoluteEncoderOffset(Angle)`     | Makes the encoder read 0 when the wheel points forward with the bevel to the left.               |
+| `withAbsoluteEncoderGearing(GearBox)`  | For an encoder that is not 1:1 with the azimuth.                                                 |
 
 ```java
 config.withAbsoluteEncoder(new CANcoder(11, new CANBus(CANPort.CAN_S0)))
@@ -107,10 +107,9 @@ Names the module and chooses what it publishes. The name appears under the drive
 config.withTelemetry("frontleft", TelemetryVerbosity.HIGH);
 ```
 
-[Module Telemetry](../swerve-module.md#module-telemetry) lists the keys, and [tuning the swerve modules](../live-tuning/README.md#tune-the-swerve-modules) uses them.
+[Module Telemetry](../swerve-module.md#module-telemetry) lists the keys, and [tuning the swerve modules](../live-tuning/#tune-the-swerve-modules) uses them.
 
-
-## Code Reference
+## Code reference
 
 * `SwerveModuleConfig`
 * `SwerveModule`

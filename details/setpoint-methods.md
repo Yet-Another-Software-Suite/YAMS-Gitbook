@@ -10,22 +10,22 @@ The command helpers come from the mechanism classes in `yams.commands2.mechanism
 
 ## Overview
 
-| Approach | Example | Returns | Use Case |
-|----------|---------|---------|----------|
-| **Command Helpers** | `arm.run(Degrees.of(45))` | `Command` | Button bindings, autonomous sequences |
-| **Direct Setpoint Methods** | `arm.setMechanismPositionSetpoint(Degrees.of(45))` | `void` | Custom commands, AdvantageKit IO, low-level control |
+| Approach                    | Example                                            | Returns   | Use Case                                            |
+| --------------------------- | -------------------------------------------------- | --------- | --------------------------------------------------- |
+| **Command Helpers**         | `arm.run(Degrees.of(45))`                          | `Command` | Button bindings, autonomous sequences               |
+| **Direct Setpoint Methods** | `arm.setMechanismPositionSetpoint(Degrees.of(45))` | `void`    | Custom commands, AdvantageKit IO, low-level control |
 
-With the direct setpoint methods you also [start or stop the closed loop controller](#starting-and-stopping-the-systemcore-closed-loop) yourself. The command helpers do it for you.
+With the direct setpoint methods you also [start or stop the closed loop controller](setpoint-methods.md#starting-and-stopping-the-systemcore-closed-loop) yourself. The command helpers do it for you.
 
 <figure><img src="../.gitbook/assets/setpoint-two-ways.png" alt="Two paths to the same SmartMotorController. A command helper such as arm.run returns a Command that requires the subsystem; a button binding or auto sequence schedules it, and the scheduler stops it when another command needs the mechanism. A direct setpoint method such as arm.setMechanismPositionSetpoint returns nothing and sets the target at once; it is called from your own code, such as a custom command, an IO class or a state machine, and nothing is scheduled."><figcaption><p>Both paths end at the same motor controller.</p></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/setpoint-helper-vs-direct.gif" alt="Animation of the same arm moving to 45 degrees two ways. With the command helper arm.run, a command stays scheduled and owns the arm for as long as it runs. With the direct setpoint method there is one call that returns at once and nothing is scheduled. The arm moves and holds the same way in both."><figcaption><p>A helper gives you a <code>Command</code> that stays scheduled. A setpoint method is one call.</p></figcaption></figure>
 
-## Command Helper Methods
+## Command helper methods
 
 Command helpers are methods on Mechanism classes that return `Command` objects. These are the **recommended approach** for most use cases.
 
-### Why Use Command Helpers?
+### Why use command helpers?
 
 1. **Subsystem Requirements** - Commands automatically require their subsystem (or Commands v3 mechanism), preventing conflicts
 2. **Lifecycle Management** - Commands handle starting/stopping the closed loop controller
@@ -35,9 +35,9 @@ Command helpers are methods on Mechanism classes that return `Command` objects. 
 
 <figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
 
-### Available Command Helpers by Mechanism
+### Available command helpers by mechanism
 
-#### Arm / Pivot
+#### Arm / pivot
 
 ```java
 // Run continuously to an angle (use for teleop)
@@ -90,7 +90,7 @@ flywheel.set(0.8)
 flywheel.setVoltage(Volts.of(10))
 ```
 
-### Example: Button Bindings
+### Example: Button bindings
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -128,7 +128,7 @@ controller.leftBumper().onTrue(Command.noRequirements(coroutine -> {
 {% endtab %}
 {% endtabs %}
 
-## Direct Setpoint Methods
+## Direct setpoint methods
 
 Direct setpoint methods are inherited from `SmartMechanism` and set the motor controller's target immediately without returning a Command.
 
@@ -138,10 +138,10 @@ Direct setpoint methods are inherited from `SmartMechanism` and set the motor co
 * Before a position or velocity setpoint, call `arm.getMotorController().startClosedLoopController()`.
 * Before a voltage or duty cycle setpoint, call `arm.getMotorController().stopClosedLoopController()`.
 
-Get it wrong and the mechanism either ignores the setpoint or fights your output. See [Starting and stopping the SystemCore closed loop](#starting-and-stopping-the-systemcore-closed-loop).
+Get it wrong and the mechanism either ignores the setpoint or fights your output. See [Starting and stopping the SystemCore closed loop](setpoint-methods.md#starting-and-stopping-the-systemcore-closed-loop).
 {% endhint %}
 
-### SmartMechanism Setpoint Methods
+### SmartMechanism setpoint methods
 
 All Mechanism classes inherit these methods from `SmartMechanism`:
 
@@ -159,7 +159,7 @@ void setVoltageSetpoint(Voltage volts)              // Voltage control
 void setDutyCycleSetpoint(double dutyCycle)         // Duty cycle [-1, 1]
 ```
 
-### When to Use Direct Setpoint Methods
+### When to use direct setpoint methods
 
 1. **AdvantageKit IO Classes** - When implementing IO interfaces that don't use Commands
 2. **Custom Command Logic** - When building complex commands with custom execute() methods
@@ -180,7 +180,7 @@ public class ArmIOYAMS implements ArmIO {
 }
 ```
 
-### Example: Custom Command
+### Example: Custom command
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -321,17 +321,17 @@ How it fits together:
 
 Some closed loops run on the motor controller and some run on the SystemCore. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) lists which is which. A loop on the SystemCore is a piece of YAMS code that runs every control period and writes an output to the motor, and it keeps doing that until it is stopped. So with the direct setpoint methods, **you** have to start and stop it to match the kind of control you want:
 
-| You want | The SystemCore closed loop must be | Why |
-| --- | --- | --- |
-| Position or velocity control (`setMechanismPositionSetpoint`, `setMechanismVelocitySetpoint` and the measurement versions) | Running | A stopped loop does nothing with the setpoint, so the mechanism does not move to it |
-| Voltage or duty cycle control (`setVoltageSetpoint`, `setDutyCycleSetpoint`) | Stopped | A running loop writes its own output on its next run and overrides yours |
+| You want                                                                                                                   | The SystemCore closed loop must be | Why                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------- |
+| Position or velocity control (`setMechanismPositionSetpoint`, `setMechanismVelocitySetpoint` and the measurement versions) | Running                            | A stopped loop does nothing with the setpoint, so the mechanism does not move to it |
+| Voltage or duty cycle control (`setVoltageSetpoint`, `setDutyCycleSetpoint`)                                               | Stopped                            | A running loop writes its own output on its next run and overrides yours            |
 
 <pre class="language-java"><code class="lang-java"><strong>arm.getMotorController().startClosedLoopController(); // before position or velocity control
 </strong><strong>arm.getMotorController().stopClosedLoopController();  // before voltage or duty cycle control
 </strong></code></pre>
 
 {% hint style="info" %}
-The [command helpers](#command-helper-methods) already do this. `set(...)` and `setVoltage(...)` stop the closed loop while they run and start it again when they end. You only need to do it yourself when you use the direct setpoint methods.
+The [command helpers](setpoint-methods.md#command-helper-methods) already do this. `set(...)` and `setVoltage(...)` stop the closed loop while they run and start it again when they end. You only need to do it yourself when you use the direct setpoint methods.
 {% endhint %}
 
 The pattern is always the same: put the loop in the state your command needs when the command starts, and put it back when the command ends, however it ends.
@@ -398,38 +398,38 @@ public Command track(Supplier<Angle> angle) {
 **The same code is safe on every motor controller.** When the closed loop runs on the motor controller itself, there is no SystemCore loop, and both calls do nothing. So you can write commands this way without knowing where the loop runs, and they keep working if you change motor controller or profile later.
 {% endhint %}
 
-## Setpoint Method Support Matrix
+## Setpoint method support matrix
 
 Every Mechanism class inherits all of these methods, but not all of them make sense for every mechanism. "No" below means the method does not apply to that mechanism.
 
-### Position Setpoint Methods
+### Position setpoint methods
 
-| Method | Arm | Pivot | Elevator | FlyWheel |
-|--------|-----|-------|----------|----------|
-| `setMechanismPositionSetpoint(Angle)` | Yes | Yes | Yes | No |
-| `setMeasurementPositionSetpoint(Distance)` | No | No | Yes | No |
+| Method                                     | Arm | Pivot | Elevator | FlyWheel |
+| ------------------------------------------ | --- | ----- | -------- | -------- |
+| `setMechanismPositionSetpoint(Angle)`      | Yes | Yes   | Yes      | No       |
+| `setMeasurementPositionSetpoint(Distance)` | No  | No    | Yes      | No       |
 
-### Velocity Setpoint Methods
+### Velocity setpoint methods
 
-| Method | Arm | Pivot | Elevator | FlyWheel |
-|--------|-----|-------|----------|----------|
-| `setMechanismVelocitySetpoint(AngularVelocity)` | Yes | Yes | Yes | Yes |
-| `setMeasurementVelocitySetpoint(LinearVelocity)` | No | No | Yes | Yes* |
+| Method                                           | Arm | Pivot | Elevator | FlyWheel |
+| ------------------------------------------------ | --- | ----- | -------- | -------- |
+| `setMechanismVelocitySetpoint(AngularVelocity)`  | Yes | Yes   | Yes      | Yes      |
+| `setMeasurementVelocitySetpoint(LinearVelocity)` | No  | No    | Yes      | Yes\*    |
 
-*FlyWheel requires circumference to be configured for linear velocity.
+\*FlyWheel requires circumference to be configured for linear velocity.
 
-### Open Loop Setpoint Methods
+### Open loop setpoint methods
 
-| Method | Arm | Pivot | Elevator | FlyWheel |
-|--------|-----|-------|----------|----------|
-| `setVoltageSetpoint(Voltage)` | Yes | Yes | Yes | Yes |
-| `setDutyCycleSetpoint(double)` | Yes | Yes | Yes | Yes |
+| Method                         | Arm | Pivot | Elevator | FlyWheel |
+| ------------------------------ | --- | ----- | -------- | -------- |
+| `setVoltageSetpoint(Voltage)`  | Yes | Yes   | Yes      | Yes      |
+| `setDutyCycleSetpoint(double)` | Yes | Yes   | Yes      | Yes      |
 
 {% hint style="warning" %}
 **Linear Methods**: The `Distance` and `LinearVelocity` methods convert through the mechanism circumference in the `SmartMotorControllerConfig`. Calling one without a circumference configured (like `setMeasurementPositionSetpoint(Distance)` on an `Arm`) throws a `SmartMotorControllerConfigurationException`, and `FlyWheel.setMeasurementVelocitySetpoint(LinearVelocity)` throws a `FlyWheelConfigurationException` if the FlyWheel diameter is not set. Check the matrix above before using direct setpoint methods.
 {% endhint %}
 
-## Checking Position with near() and isNear()
+## Checking position with near() and isNear()
 
 To check if a mechanism is near a target, use `near()`, which returns a `Trigger`:
 
@@ -452,7 +452,7 @@ The `Trigger` factory used to be called `isNear()` and was renamed to `near()` t
 
 <figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
 
-### Using near() in Commands
+### Using near() in commands
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -487,11 +487,11 @@ if (arm.isNear(targetAngle, tolerance)) {
 {% endtab %}
 {% endtabs %}
 
-## Decision Guide
+## Decision guide
 
 <figure><img src="../.gitbook/assets/setpoint-decision.png" alt="A decision diagram. If the mechanism is controlled by a button binding or an autonomous sequence, use a command helper such as arm.run, arm.runTo or arm.setAngle. If it is controlled by a custom command, an IO class or a state machine, use a direct setpoint method such as arm.setMechanismPositionSetpoint, elevator.setMeasurementPositionSetpoint or arm.setVoltageSetpoint."><figcaption><p>Start from what is making the call.</p></figcaption></figure>
 
-## Best Practices
+## Best practices
 
 1. **Prefer Command Helpers** - They handle subsystem requirements and closed loop lifecycle
 2. **Use run() for Teleop** - Continuous control that responds to interruption
@@ -500,8 +500,8 @@ if (arm.isNear(targetAngle, tolerance)) {
 5. **Always Check Support** - Verify the method is supported before using direct setpoint methods
 6. **Use Triggers for State** - Use `near()`, `max()`, `min()` triggers instead of polling
 
-## See Also
+## See also
 
-- [run() vs runTo() Commands](run-vs-runto.md) - Important differences between continuous and goal-based commands
-- [AdvantageKit Integration](advantagekit-integration.md) - Using YAMS with AdvantageKit's IO pattern
-- [Live Tuning](live-tuning/README.md) - Units for all tunable parameters
+* [run() vs runTo() Commands](run-vs-runto.md) - Important differences between continuous and goal-based commands
+* [AdvantageKit Integration](advantagekit-integration.md) - Using YAMS with AdvantageKit's IO pattern
+* [Live Tuning](live-tuning/) - Units for all tunable parameters

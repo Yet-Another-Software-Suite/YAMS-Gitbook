@@ -21,13 +21,13 @@ YAMS integrates seamlessly with [AdvantageKit](https://docs.advantagekit.org/), 
 AdvantageKit is optional. YAMS works perfectly without it using its built-in telemetry system. Consider AdvantageKit if you want deterministic log replay capabilities.
 {% endhint %}
 
-## Architecture Overview
+## Architecture overview
 
 AdvantageKit uses an [IO interface pattern](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces) to separate hardware interaction from business logic. Traditionally, this requires separate IO implementations for real hardware and simulation:
 
 <figure><img src="../.gitbook/assets/akit-io-classes.png" alt="Two diagrams of a subsystem, its IO interface and the classes that implement it. Traditional AdvantageKit needs three IO classes for each mechanism: one with your motor and encoder code for the real robot, one with your physics simulation, and an empty one for log replay. With YAMS there are two: one class used on the real robot and in simulation, because the YAMS mechanism under it simulates itself, and the empty one for log replay."><figcaption><p>Traditional AdvantageKit needs three IO classes for each mechanism. With YAMS it is two.</p></figcaption></figure>
 
-## YAMS Simplification: One IO Class for Real and Sim
+## YAMS simplification: one IO class for real and sim
 
 **With YAMS, you don't need separate Real and Sim IO implementations.** Every `SmartMotorController` wrapper (TalonFXWrapper, SparkWrapper, etc.) and every Mechanism class (Arm, Elevator, FlyWheel, SwerveModule, SwerveDrive, etc.) includes **passive simulation** that runs automatically when `Robot.isSimulation()` returns true.
 
@@ -48,14 +48,14 @@ This means:
 
 The tutorial builds an arm, an elevator and a shooter with the IO layer pattern, one step per page:
 
-| Page | What it covers |
-| --- | --- |
-| [Step 1: Define the IO interface](advantagekit/io-interface.md) | The inputs each mechanism logs, and the AdvantageKit setup in `build.gradle`. |
-| [Step 2: Implement the IO class](advantagekit/io-implementation.md) | One IO class per mechanism that works on the real robot and in simulation. |
-| [Steps 3 and 4: The subsystem and RobotContainer](advantagekit/subsystem-and-robotcontainer.md) | The subsystem that uses the IO class, and wiring it up. |
-| [Log replay](advantagekit/log-replay.md) | Replaying a log, and the pattern in summary. |
-| [Swerve drive with AdvantageKit](advantagekit/swerve-drive.md) | The same pattern for a YAMS swerve drive. |
-| [Without an IO layer](advantagekit/direct-subsystem.md) | A simpler pattern that logs straight from the subsystem. |
+| Page                                                                                            | What it covers                                                                |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [Step 1: Define the IO interface](advantagekit/io-interface.md)                                 | The inputs each mechanism logs, and the AdvantageKit setup in `build.gradle`. |
+| [Step 2: Implement the IO class](advantagekit/io-implementation.md)                             | One IO class per mechanism that works on the real robot and in simulation.    |
+| [Steps 3 and 4: The subsystem and RobotContainer](advantagekit/subsystem-and-robotcontainer.md) | The subsystem that uses the IO class, and wiring it up.                       |
+| [Log replay](advantagekit/log-replay.md)                                                        | Replaying a log, and the pattern in summary.                                  |
+| [Swerve drive with AdvantageKit](advantagekit/swerve-drive.md)                                  | The same pattern for a YAMS swerve drive.                                     |
+| [Without an IO layer](advantagekit/direct-subsystem.md)                                         | A simpler pattern that logs straight from the subsystem.                      |
 
 ## Benefits of YAMS + AdvantageKit
 
@@ -68,7 +68,7 @@ The tutorial builds an arm, an elevator and a shooter with the IO layer pattern,
 | **Consistent Behavior**     | Same code paths execute in real and sim modes             |
 | **Flexible Hardware**       | Swap vendors by changing one IO class                     |
 
-## Further Reading
+## Further reading
 
 * [AdvantageKit Documentation](https://docs.advantagekit.org/)
 * [What is AdvantageKit?](https://docs.advantagekit.org/getting-started/what-is-advantagekit)

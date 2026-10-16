@@ -8,11 +8,11 @@ Every `SwerveModuleConfig` option, with a graphic and an example, is on the [Swe
 
 ## How a swerve module works
 
-<figure><img src="../.gitbook/assets/mech-module-how.png" alt="A swerve module seen from above, with its speed along the wheel and its angle. The drive motor uses velocity control to set how fast the wheel rolls. The azimuth motor uses position control with wrapping to set which way the wheel points. An absolute encoder tells the azimuth where the wheel is at startup. The module's state is a SwerveModuleVelocity, a speed and an angle."><figcaption><p>One module is a drive motor, an azimuth motor and an absolute encoder.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/mech-module-how.png" alt="A swerve module seen from above, with its speed along the wheel and its angle. The drive motor uses velocity control to set how fast the wheel rolls. The azimuth motor uses position control with wrapping to set which way the wheel points. An absolute encoder tells the azimuth where the wheel is at startup. The module&#x27;s state is a SwerveModuleVelocity, a speed and an angle."><figcaption><p>One module is a drive motor, an azimuth motor and an absolute encoder.</p></figcaption></figure>
 
 A module has one job: make its wheel roll at a speed, pointing at an angle. The drive motor runs velocity control for the speed, and the azimuth motor runs position control for the angle. An absolute encoder tells the azimuth which way the wheel points when the robot turns on, because the azimuth motor's own encoder starts at zero wherever the wheel happens to be.
 
-Both motors are ordinary [`SmartMotorController`s](editor/README.md), each with its own [`SmartMotorControllerConfig`](editor/config/README.md), so everything about gearing, gains and current limits applies to them unchanged.
+Both motors are ordinary [`SmartMotorController`s](editor/), each with its own [`SmartMotorControllerConfig`](editor/config/), so everything about gearing, gains and current limits applies to them unchanged.
 
 ## Commands v2, Commands v3 and functions
 
@@ -20,15 +20,15 @@ A `SwerveModule` has no commands of its own, and is the same class in Commands v
 
 You rarely call a module directly, but these are the functions it has:
 
-| Function | What it does |
-| --- | --- |
-| `setSwerveModuleState(SwerveModuleVelocity)` | Set the wheel's speed and angle. The [optimization, cosine compensation and velocity deadband](mechanism-configs/swerve-module-config.md) are applied first. An overload adds a drive feedforward force. |
-| `setAzimuthAngle(Rotation2d)` | Turn the wheel to an angle without driving it. |
-| `getState()` | The wheel's current speed and angle, and how fast the azimuth is turning. |
-| `getPosition()` | How far the wheel has rolled, and its angle. Used for odometry. |
-| `seedAzimuthEncoder()` | Set the azimuth motor's encoder from the absolute encoder. |
-| `getRawAbsoluteEncoderAngle()` | The absolute encoder's reading with no offset, for [finding the offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder). |
-| `getDriveMotorController()`, `getAzimuthMotorController()` | The two motors, for anything YAMS does not wrap. |
+| Function                                                   | What it does                                                                                                                                                                                             |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setSwerveModuleState(SwerveModuleVelocity)`               | Set the wheel's speed and angle. The [optimization, cosine compensation and velocity deadband](mechanism-configs/swerve-module-config.md) are applied first. An overload adds a drive feedforward force. |
+| `setAzimuthAngle(Rotation2d)`                              | Turn the wheel to an angle without driving it.                                                                                                                                                           |
+| `getState()`                                               | The wheel's current speed and angle, and how fast the azimuth is turning.                                                                                                                                |
+| `getPosition()`                                            | How far the wheel has rolled, and its angle. Used for odometry.                                                                                                                                          |
+| `seedAzimuthEncoder()`                                     | Set the azimuth motor's encoder from the absolute encoder.                                                                                                                                               |
+| `getRawAbsoluteEncoderAngle()`                             | The absolute encoder's reading with no offset, for [finding the offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder).                                                                 |
+| `getDriveMotorController()`, `getAzimuthMotorController()` | The two motors, for anything YAMS does not wrap.                                                                                                                                                         |
 
 `SwerveDrive.updateTelemetry()` and `SwerveDrive.simIterate()` update every module, so you do not call those on a module yourself.
 
@@ -79,13 +79,13 @@ Put the robot on blocks so that every wheel is clear of the blocks and of the gr
 {% step %}
 #### Tune the azimuth
 
-Step the wheel's angle with `NT:/Tuning/<name>/modules/azimuth/angle` and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/README.md#azimuth-motors).
+Step the wheel's angle with `NT:/Tuning/<name>/modules/azimuth/angle` and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/#azimuth-motors).
 {% endstep %}
 
 {% step %}
 #### Tune the drive
 
-Type the setpoint velocity into `NT:/Tuning/<name>/modules/drive/velocity`, find the drive's `kS` and `kV`, then add a little `kP`: see [Drive motors](live-tuning/README.md#drive-motors).
+Type the setpoint velocity into `NT:/Tuning/<name>/modules/drive/velocity`, find the drive's `kS` and `kV`, then add a little `kP`: see [Drive motors](live-tuning/#drive-motors).
 {% endstep %}
 
 {% step %}
@@ -221,9 +221,9 @@ Kinematics recomputes the raw desired angle from scratch every loop with no memo
 
 **What it costs.** The robot cannot move slower than the deadband:
 
-| Requested wheel speed | What the module does |
-| --- | --- |
-| Above the deadband | Drives at that speed and steers normally. |
+| Requested wheel speed    | What the module does                       |
+| ------------------------ | ------------------------------------------ |
+| Above the deadband       | Drives at that speed and steers normally.  |
 | At or below the deadband | Stops, and holds the angle it already has. |
 
 That matters whenever the robot is meant to creep:
@@ -238,7 +238,7 @@ If the robot stops short or will not creep, lower the deadband. If the wheels tw
 moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
 ```
 
-The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](../live-tuning/README.md#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
+The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](../live-tuning/#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
 
 ## Steer to Drive Coupling
 
@@ -285,6 +285,6 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 
 `SwerveDrive` computes one `SwerveModuleVelocity[]` per loop from the requested `ChassisVelocities` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where [optimization and cosine compensation](swerve-module.md#optimization-and-cosine-compensation) are actually applied, so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
 
-## Code Reference
+## Code reference
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/SwerveSubsystem.java" %}

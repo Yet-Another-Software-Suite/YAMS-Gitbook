@@ -2,7 +2,7 @@
 icon: database
 ---
 
-# DataLog Best Practices
+# DataLog best practices
 
 {% hint style="info" %}
 Using DataLog will increase your storage usage on the SystemCore and could have negative consequences if left unmanaged. Please review [WPILib's DataLog documentation](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog) for more information.
@@ -70,7 +70,7 @@ SmartMotorControllerTelemetryConfig telemetryConfig = new SmartMotorControllerTe
 
 This keeps full NT4 telemetry for pit testing and practice, then automatically drops NT4 traffic (while still writing to DataLog) once you're on the field at an event.
 
-## Swerve Drive is different
+## Swerve drive is different
 
 {% hint style="warning" %}
 `SwerveDriveConfig`/`SwerveModuleConfig` do **not** use `SmartMotorControllerTelemetryConfig`, they have their own `SwerveDriveTelemetryConfig`/`SwerveModuleTelemetryConfig`. The shape is the same (verbosity preset plus individual `with*()` fields, `withoutNetworkTables()`, `withDataLogName(...)`), but the DataLog name for both the drive-level fields (pose, gyro, chassis speeds, module states) and a module's absolute encoder angle has to go through the telemetry config, neither `SwerveDriveConfig` nor `SwerveModuleConfig` has a `withDataLogName(...)` of its own.

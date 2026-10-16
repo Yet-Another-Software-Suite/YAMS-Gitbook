@@ -1,5 +1,5 @@
 ---
-description: We will learn how to program an Arm!
+description: Learn how to program an Arm.
 ---
 
 # Arm
@@ -46,13 +46,13 @@ This `Arm` uses the following hardware and controls:
 
 Every step has a tab for **Java with Commands v2**, **Java with Commands v3** and **C++**.
 
-| Step | What you do |
-| --- | --- |
-| [Before you start](project-setup.md) | Create a WPILib project and install YAMS and REVLib. Skip this if you already have a project. |
-| [Step 1: The motor controller](arm/motor-controller.md) | Configure the `SparkMax` and wrap it in a `SmartMotorController`. |
-| [Step 2: The arm](arm/mechanism.md) | Describe the arm with an `ArmConfig` and create the `Arm`. |
-| [Step 3: Commands and buttons](arm/commands.md) | Turn the `Arm` into commands and bind them to controller buttons. |
-| [Step 4: Simulate it](arm/simulate.md) | Run the code on your computer and drive the arm with a controller. |
+| Step                                                    | What you do                                                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Before you start](project-setup.md)                    | Create a WPILib project and install YAMS and REVLib. Skip this if you already have a project. |
+| [Step 1: The motor controller](arm/motor-controller.md) | Configure the `SparkMax` and wrap it in a `SmartMotorController`.                             |
+| [Step 2: The arm](arm/mechanism.md)                     | Describe the arm with an `ArmConfig` and create the `Arm`.                                    |
+| [Step 3: Commands and buttons](arm/commands.md)         | Turn the `Arm` into commands and bind them to controller buttons.                             |
+| [Step 4: Simulate it](arm/simulate.md)                  | Run the code on your computer and drive the arm with a controller.                            |
 
 ## Complete Example
 

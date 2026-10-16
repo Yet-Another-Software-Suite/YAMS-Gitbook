@@ -1,5 +1,5 @@
 ---
-description: We will learn how to program an Elevator!
+description: Learn how to program an Elevator.
 ---
 
 # Elevator
@@ -36,7 +36,7 @@ This `Elevator` uses the following hardware and controls:
 
 * A `SparkMax` driving one NEO controls the `Elevator`
 * A `12:1` gearbox on the `Elevator`
-* #25 chain on a 22 tooth sprocket lifts the carriage
+* \#25 chain on a 22 tooth sprocket lifts the carriage
 * Holding the bottom face button (`A` on an Xbox controller) takes the `Elevator` to 0.5 m
 * Holding the right face button (`B` on an Xbox controller) takes the `Elevator` to 1 m
 * Holding the left face button (`X` on an Xbox controller) drives the `Elevator` up
@@ -49,13 +49,13 @@ This `Elevator` uses the following hardware and controls:
 
 Every step has a tab for **Java with Commands v2**, **Java with Commands v3** and **C++**.
 
-| Step | What you do |
-| --- | --- |
-| [Before you start](project-setup.md) | Create a WPILib project and install YAMS and REVLib. Skip this if you already have a project. |
-| [Step 1: The motor controller](elevator/motor-controller.md) | Configure the `SparkMax` and wrap it in a `SmartMotorController`. |
-| [Step 2: The elevator](elevator/mechanism.md) | Describe the elevator with an `ElevatorConfig` and create the `Elevator`. |
-| [Step 3: Commands and buttons](elevator/commands.md) | Turn the `Elevator` into commands and bind them to controller buttons. |
-| [Step 4: Simulate it](elevator/simulate.md) | Run the code on your computer and drive the elevator with a controller. |
+| Step                                                         | What you do                                                                                   |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| [Before you start](project-setup.md)                         | Create a WPILib project and install YAMS and REVLib. Skip this if you already have a project. |
+| [Step 1: The motor controller](elevator/motor-controller.md) | Configure the `SparkMax` and wrap it in a `SmartMotorController`.                             |
+| [Step 2: The elevator](elevator/mechanism.md)                | Describe the elevator with an `ElevatorConfig` and create the `Elevator`.                     |
+| [Step 3: Commands and buttons](elevator/commands.md)         | Turn the `Elevator` into commands and bind them to controller buttons.                        |
+| [Step 4: Simulate it](elevator/simulate.md)                  | Run the code on your computer and drive the elevator with a controller.                       |
 
 ## Complete Example
 

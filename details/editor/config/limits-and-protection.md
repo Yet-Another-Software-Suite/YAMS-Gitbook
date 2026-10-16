@@ -7,14 +7,14 @@ icon: shield-halved
 These options stop a mechanism or a motor from hurting itself or the rest of the robot.
 
 {% hint style="warning" %}
-Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](README.md#not-every-option-works-on-every-motor-controller) lists them all together.
+Not every option on this page is supported on every motor controller. Each option has a table showing where it works, and an option a controller cannot do throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup. Each option says which. The [config overview](./#not-every-option-works-on-every-motor-controller) lists them all together.
 {% endhint %}
 
 ## `withSoftLimits`
 
 The range the mechanism is allowed to move through.
 
-<figure><img src="../../../.gitbook/assets/smc-soft-limits.png" alt="A bar showing a mechanism's travel between two hard stops, with a lower and an upper soft limit a little inside them. The mechanism may move between the soft limits. A setpoint asked for beyond the upper limit is moved back to the limit."><figcaption><p>Soft limits sit a little inside the hard stops.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-soft-limits.png" alt="A bar showing a mechanism&#x27;s travel between two hard stops, with a lower and an upper soft limit a little inside them. The mechanism may move between the soft limits. A setpoint asked for beyond the upper limit is moved back to the limit."><figcaption><p>Soft limits sit a little inside the hard stops.</p></figcaption></figure>
 
 ```java
 .withSoftLimits(Degrees.of(-20), Degrees.of(100))
@@ -27,9 +27,9 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 
 **Not supported everywhere.**
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ | ✅ | ⚠️ only enforced in closed loop mode | ✅ |
+| TalonFX | TalonFXS | SPARK MAX / Flex                     | Thrifty Nova |
+| ------- | -------- | ------------------------------------ | ------------ |
+| ✅       | ✅        | ⚠️ only enforced in closed loop mode | ✅            |
 
 ## Current limits
 
@@ -46,9 +46,9 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 
 **Not supported everywhere.** `withSupplyCurrentLimit` is not available on SPARKs.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ | ✅ | ⚠️ stator limit only: a supply limit throws a `SmartMotorControllerConfigurationException` | ✅ |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                           | Thrifty Nova |
+| ------- | -------- | ------------------------------------------------------------------------------------------ | ------------ |
+| ✅       | ✅        | ⚠️ stator limit only: a supply limit throws a `SmartMotorControllerConfigurationException` | ✅            |
 
 ## Ramp rates
 
@@ -61,13 +61,13 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 .withClosedLoopRampRate(Seconds.of(0.1))
 ```
 
-A ramp rate is the last thing to reach for. It slows everything the motor does, including the closed loop controller's reactions. To cut a mechanism's power draw, try these first, in order: a [motion profile](motion-profiles.md) if one suits the mechanism, then a [supply current limit](#current-limits) where the motor controller has one, then a [stator current limit](#current-limits) where it does not. Use a ramp rate only if none of those is enough. [Limiting power consumption](../limiting-power-consumption.md#ramp-rates) explains how they behave.
+A ramp rate is the last thing to reach for. It slows everything the motor does, including the closed loop controller's reactions. To cut a mechanism's power draw, try these first, in order: a [motion profile](motion-profiles.md) if one suits the mechanism, then a [supply current limit](limits-and-protection.md#current-limits) where the motor controller has one, then a [stator current limit](limits-and-protection.md#current-limits) where it does not. Use a ramp rate only if none of those is enough. [Limiting power consumption](../limiting-power-consumption.md#ramp-rates) explains how they behave.
 
 **Not supported everywhere.**
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ✅ | ✅ | ✅ | ⚠️ one ramp rate for both: two different values throw a `SmartMotorControllerConfigurationException` |
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova                                                                                         |
+| ------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
+| ✅       | ✅        | ✅                | ⚠️ one ramp rate for both: two different values throw a `SmartMotorControllerConfigurationException` |
 
 ## `withVoltageCompensation`
 
@@ -82,8 +82,8 @@ Scales the output so a duty cycle means the same voltage whatever the battery vo
 **Not supported everywhere.** It throws an `IllegalArgumentException` on a TalonFX or TalonFXS. Use a voltage request instead of a duty cycle there.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
-| ❌ | ❌ | ✅ | ✅ |
+| ------- | -------- | ---------------- | ------------ |
+| ❌       | ❌        | ✅                | ✅            |
 
 ## `withTemperatureCutoff`
 
@@ -103,11 +103,10 @@ On a SPARK MAX or SPARK Flex with a **trapezoidal** profile, the cutoff does not
 
 **Not supported everywhere.** The cutoff is enforced by the closed loop running on the SystemCore, so it only works where the loop runs there. An [LQR controller](../lqr-controllers.md) always runs there, so the cutoff works with LQR on every motor controller.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| --- | --- | --- | --- |
+| TalonFX                                                 | TalonFXS                                                | SPARK MAX / Flex                                                                  | Thrifty Nova                |
+| ------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------- |
 | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
 
-
-## Code Reference
+## Code reference
 
 * [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)

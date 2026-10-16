@@ -8,12 +8,12 @@ Absolute encoders report the physical position of a mechanism within a single ro
 
 Each `SmartMotorController` wrapper only accepts the encoders from its own vendor ecosystem. `SparkWrapper` and `NovaWrapper` throw an `IllegalArgumentException` when given an encoder type they do not support.
 
-| Wrapper | Supported absolute encoders |
-|---|---|
-| `SparkWrapper` (SparkMax / SparkFlex) | `SparkAbsoluteEncoder` (`armMotor.getAbsoluteEncoder()`), `DetachedEncoder` |
-| `TalonFXWrapper` (TalonFX / Kraken) | `CANcoder`, `CANdi` |
-| `TalonFXSWrapper` (TalonFXS / Minion) | `CANcoder`, `CANdi` |
-| `NovaWrapper` (Thrifty Nova) | `FeedbackSensorType.ABS` (absolute encoder on the Nova's data port), Thrifty `CanEncoder` |
+| Wrapper                               | Supported absolute encoders                                                               |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `SparkWrapper` (SparkMax / SparkFlex) | `SparkAbsoluteEncoder` (`armMotor.getAbsoluteEncoder()`), `DetachedEncoder`               |
+| `TalonFXWrapper` (TalonFX / Kraken)   | `CANcoder`, `CANdi`                                                                       |
+| `TalonFXSWrapper` (TalonFXS / Minion) | `CANcoder`, `CANdi`                                                                       |
+| `NovaWrapper` (Thrifty Nova)          | `FeedbackSensorType.ABS` (absolute encoder on the Nova's data port), Thrifty `CanEncoder` |
 
 ## Check your inversion
 
@@ -43,8 +43,8 @@ If the gear ratio causes the encoder to exceed 1 rotation during the arm's range
 
 An absolute encoder wraps at its **discontinuity point**, the angle at which the reading jumps from its maximum value back to zero (or vice versa). There are two supported ranges:
 
-- `Rotations.of(1.0)`, range is **\[0, 1\]**; the encoder wraps at 1 rotation back to 0
-- `Rotations.of(0.5)`, range is **\[-0.5, 0.5\]**; the encoder wraps at ±0.5 rotations
+* `Rotations.of(1.0)`, range is **\[0, 1]**; the encoder wraps at 1 rotation back to 0
+* `Rotations.of(0.5)`, range is **\[-0.5, 0.5]**; the encoder wraps at ±0.5 rotations
 
 ```java
 .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
@@ -53,14 +53,14 @@ An absolute encoder wraps at its **discontinuity point**, the angle at which the
 ```
 
 {% hint style="info" %}
-If you don't set a discontinuity point, `SparkWrapper` and `NovaWrapper` use `Rotations.of(1.0)` (the **\[0, 1\]** range). Setting it explicitly is recommended for clarity on every wrapper. On a `SparkWrapper`, setting both `.withExternalEncoderGearing(...)` and a discontinuity point raises an alert, because the discontinuity point is not scaled by the gearing.
+If you don't set a discontinuity point, `SparkWrapper` and `NovaWrapper` use `Rotations.of(1.0)` (the **\[0, 1]** range). Setting it explicitly is recommended for clarity on every wrapper. On a `SparkWrapper`, setting both `.withExternalEncoderGearing(...)` and a discontinuity point raises an alert, because the discontinuity point is not scaled by the gearing.
 {% endhint %}
 
 {% hint style="warning" %}
 If the arm's physical range of motion crosses the discontinuity point, the position will jump mid-travel and break closed-loop control. If this happens, remove the encoder, rotate the bearing so the discontinuity point falls outside the arm's travel range, and remount.
 {% endhint %}
 
-<figure><img src="../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm's zero in both panels. With 1 rotation the discontinuity point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. With 0.5 rotations the discontinuity point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>With 1 rotation the discontinuity point is at the line on the casing. With 0.5 rotations it is 180° from it, and the line has not moved.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm&#x27;s zero in both panels. With 1 rotation the discontinuity point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. With 0.5 rotations the discontinuity point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>With 1 rotation the discontinuity point is at the line on the casing. With 0.5 rotations it is 180° from it, and the line has not moved.</p></figcaption></figure>
 
 ## Find your zero offset
 
@@ -76,7 +76,7 @@ The offset is applied to the absolute encoder itself (for example the CANcoder's
 
 To check the result, read the encoder back through the `SmartMotorController`: `getExternalEncoderMechanismPosition()` returns the absolute encoder's position in mechanism units (empty if there is no external encoder), and `getRelativeMechanismPosition()` returns the motor's built-in relative encoder position. With the offset set correctly, both should read about 0° with the arm horizontal.
 
-<figure><img src="../.gitbook/assets/smc-encoder-zero-offset-discontinuity.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its discontinuity point is opposite that, inside the arm's travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the discontinuity point have both moved a quarter turn, the discontinuity point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the discontinuity point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/smc-encoder-zero-offset-discontinuity.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its discontinuity point is opposite that, inside the arm&#x27;s travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the discontinuity point have both moved a quarter turn, the discontinuity point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the discontinuity point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
 
 ## Configure the simulation starting position
 
@@ -228,7 +228,7 @@ Imports for these examples: `SmartMotorControllerConfig` comes from `yams.comman
 
 The exact same external encoder setup described above works identically for `Pivot` mechanisms (turrets, wrists, and any other single-axis rotational mechanism). The configuration API and all five setup steps are unchanged, just substitute your `PivotConfig` and the appropriate wrapper.
 
-## Code Reference
+## Code reference
 
 The arm example demonstrates configuring an arm with a CANcoder as its external feedback encoder:
 
