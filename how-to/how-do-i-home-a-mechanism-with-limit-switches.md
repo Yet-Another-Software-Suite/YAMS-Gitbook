@@ -8,9 +8,13 @@ A relative encoder only knows how far the mechanism has moved since the robot tu
 
 Plug the switch into a SystemCore Smart IO port and read it with a `DigitalInput`. Wrap it in a [`Sensor`](../details/sensors.md), so that the simulation can press it at the hard stop, as the mechanism presses the real one.
 
+{% tabs %}
+{% tab title="Commands v2" %}
 ```java
 import static org.wpilib.units.Units.Degrees;
 
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.button.Trigger;
 import org.wpilib.hardware.discrete.DigitalInput;
 import yams.core.mechanisms.config.SensorConfig;
 import yams.core.motorcontrollers.simulation.Sensor;
@@ -28,25 +32,59 @@ private final Sensor lowerSwitch = new SensorConfig("ArmLowerSwitch")
         .map(sim -> sim.getMechanismPosition().lte(Degrees.of(-9.95)))
         .orElse(false), true)
     .getSensor();
-private boolean lowerSwitchWasPressed = false;
 
-@Override
-public void periodic() {
-  // Home on the switch as it is pressed, before anything reads the encoder.
-  boolean pressed = lowerSwitch.getAsBoolean("Pressed");
-  if (pressed && !lowerSwitchWasPressed) {
-    motor.setEncoderPosition(Degrees.of(-10));
-  }
-  lowerSwitchWasPressed = pressed;
-  arm.updateTelemetry();
+public ArmSubsystem() {
+  // Set the encoder to the hard stop once each time the switch is pressed.
+  new Trigger(this::isLowerSwitchPressed)
+      .onTrue(Commands.runOnce(() -> motor.setEncoderPosition(Degrees.of(-10))).withName("Arm Home LowerSwitch"));
+}
+
+public boolean isLowerSwitchPressed() {
+  return lowerSwitch.getAsBoolean("Pressed");
 }
 ```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+import static org.wpilib.units.Units.Degrees;
+
+import org.wpilib.command3.Command;
+import org.wpilib.command3.Trigger;
+import org.wpilib.hardware.discrete.DigitalInput;
+import yams.core.mechanisms.config.SensorConfig;
+import yams.core.motorcontrollers.simulation.Sensor;
+
+// The arm's hard stops: -10 degrees and 100 degrees.
+private final Arm arm = new Arm(armConfig, motor);
+
+// A normally open switch between the signal and power pins of Smart IO port 4.
+private final DigitalInput lowerSwitchInput = new DigitalInput(4);
+private final Sensor lowerSwitch = new SensorConfig("ArmLowerSwitch")
+    // The input reads high (true) while the switch is pressed.
+    .withField("Pressed", lowerSwitchInput::get, false)
+    // In simulation, the switch is pressed while the simulated arm is at its lower hard stop.
+    .withSimulatedValue("Pressed", () -> motor.getSimSupplier()
+        .map(sim -> sim.getMechanismPosition().lte(Degrees.of(-9.95)))
+        .orElse(false), true)
+    .getSensor();
+
+public ArmMechanism() {
+  // Set the encoder to the hard stop once each time the switch is pressed.
+  new Trigger(this::isLowerSwitchPressed)
+      .onTrue(Command.noRequirements(coroutine -> motor.setEncoderPosition(Degrees.of(-10))).named("Arm Home LowerSwitch"));
+}
+
+public boolean isLowerSwitchPressed() {
+  return lowerSwitch.getAsBoolean("Pressed");
+}
+```
+{% endtab %}
+{% endtabs %}
 
 For an elevator, compare the height and set it in meters: `smcConfig.convertFromMechanism(sim.getMechanismPosition()).lte(Meters.of(0.0005))` and `motor.setEncoderPosition(Meters.of(0))`.
 
-{% hint style="info" %}
-With Commands v3, the mechanism's `periodic()` is not called for you: call it from `Robot.robotPeriodic()`, before the scheduler runs.
-{% endhint %}
+The trigger runs its command once each time the switch goes from released to pressed, so the encoder is set once per press. The scheduler checks triggers every loop, which also reads the `Sensor` every loop, as its simulated values need.
 
 ## Common pitfalls
 
@@ -68,7 +106,7 @@ The motor controller stops the mechanism at its soft limits. A soft limit inside
 
 ### The encoder is set every loop
 
-Set the encoder once, as the switch is pressed, not every loop while it is held. A mechanism resting on its lower switch would otherwise send the motor controller a new position over CAN every 20 ms, and a Talon waits for each one to be acknowledged.
+Set the encoder once, as the switch is pressed, with `Trigger.onTrue`, not every loop while it is held (`whileTrue`, or an `if` in `periodic()`). A mechanism resting on its lower switch would otherwise send the motor controller a new position over CAN every 20 ms, and a Talon waits for each one to be acknowledged. A `Debouncer` does not do this: it delays a change until it has lasted a while, but stays `true` while the switch is held.
 
 ### The switch is not where the hard stop is
 
@@ -88,7 +126,7 @@ Press the simulated switch from where the simulated mechanism really is, `motor.
 
 ### The sensor is not read every loop
 
-A `Sensor`'s simulated values only apply when its field is read. Read it in `periodic()`, every loop, rather than only inside a command that may not be running.
+A `Sensor`'s simulated values only apply when its field is read. A trigger reads it every loop. If you read it yourself, read it every loop, rather than only inside a command that may not be running.
 
 ### Two devices share a Smart IO port
 
