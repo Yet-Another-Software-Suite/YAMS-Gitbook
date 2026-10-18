@@ -127,7 +127,7 @@ Declare the `Sensor` after `motor` (and the mechanism, if its lambda uses it). J
 
 ## How do I home a mechanism with a limit switch `Sensor`?
 
-Set the motor's encoder to the hard stop once the switch has been pressed for a moment. A `Trigger` debounced for 0.1 seconds turns true once the switch has stayed pressed that long, ignoring contact bounce and a mechanism that only taps the stop, and `onTrue` runs its command once as it does. The scheduler reads the `Sensor` every loop, as its simulated values need.
+Set the motor's encoder to the hard stop each time the switch is pressed. A `Trigger` runs its `onTrue` command once each time the switch goes from released to pressed, and the scheduler reads the `Sensor` every loop, as its simulated values need.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -140,7 +140,6 @@ public boolean isLowerSwitchPressed()
 public ArmSubsystem()
 {
   new Trigger(this::isLowerSwitchPressed)
-      .debounce(0.1)
       .onTrue(Commands.runOnce(() -> motor.setEncoderPosition(Degrees.of(-30))).withName("Arm Home LowerSwitch"));
 }
 ```
@@ -156,7 +155,6 @@ public boolean isLowerSwitchPressed()
 public ArmMechanism()
 {
   new Trigger(this::isLowerSwitchPressed)
-      .debounce(Seconds.of(0.1))
       .onTrue(Command.noRequirements(coroutine -> motor.setEncoderPosition(Degrees.of(-30)))
                      .named("Arm Home LowerSwitch"));
 }
