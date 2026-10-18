@@ -279,6 +279,8 @@ Each stage lifts the next one, so the carriage moves further than the part the m
 ```
 
 Call it after `withGearing`. See [`withCascadingElevatorStages`](editor/config/gearing-and-units.md#withcascadingelevatorstages). Every height you give and read is then the carriage's height.
+
+To show each stage on an AdvantageScope robot model, also give the `ElevatorConfig` the stages with [`withStages`](mechanism-configs/elevator-config.md#withstages), and publish `elevator.getCascadePose3d()`: every stage moves at once, each by its share of the carriage's height.
 {% endtab %}
 
 {% tab title="Continuous" %}
@@ -288,6 +290,8 @@ One rope or belt runs through every stage. The stages may rise in any order, but
 .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4)))
 .withDrumRadius(Inches.of(0.75))
 ```
+
+To show each stage on an AdvantageScope robot model, give the `ElevatorConfig` the stages with [`withStages`](mechanism-configs/elevator-config.md#withstages), and publish `elevator.getContinuousPose3d()`. It shows the carriage rising the whole of its travel first, then the stage below it, and so on. If your stages rise in another order, the carriage is still drawn at its height, but the stages below it are not.
 {% endtab %}
 {% endtabs %}
 

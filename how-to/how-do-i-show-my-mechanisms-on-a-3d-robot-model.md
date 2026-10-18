@@ -31,7 +31,7 @@ Give each mechanism a `MechanismPositionConfig`: where it is mounted on the robo
 | Mechanism                  | Where it is mounted                                    | Its pose                                                        |
 | -------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
 | `Arm`, `Pivot`             | The axis it turns about                                 | The axis, turned to its angle                                   |
-| `Elevator`                 | The carriage at zero height                             | The carriage, moved by its height along the elevator's angle    |
+| `Elevator`                 | The carriage at zero height                             | The carriage, moved by its height along the elevator's angle. `getCascadePose3d()` or `getContinuousPose3d()` for each stage: see [Elevator stages](#elevator-stages) |
 | `FlyWheel`                 | Its axle                                                | The axle, turned by the wheel's position                        |
 | `DoubleJointedArm`         | The lower arm's axis                                    | `getPose3d()` for the lower arm, `getUpperPose3d()` for the upper arm at the elbow |
 
@@ -134,6 +134,43 @@ wpi::telemetry::Log("Robot/Components", std::span<const wpi::math::Pose3d>{compo
 
 With AdvantageKit, record the same array with `Logger.recordOutput("Robot/Components", poses)`.
 
+### Elevator stages
+
+An elevator with moving stages has a component for each stage. Give its `ElevatorConfig` the stages with [`withStages`](../details/mechanism-configs/elevator-config.md#withstages): how many move, counting the carriage as the last, and how far each travels relative to the stage below it. Then publish the pose of each stage, in order from the stage nearest the fixed stage to the carriage:
+
+* `getCascadePose3d()` for a cascading elevator: every stage moves at once, each by its share of the carriage's height.
+* `getContinuousPose3d()` for a continuous elevator: the carriage rises the whole of its travel first, then the stage below it, and so on.
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+// Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
+new ElevatorConfig()
+    // ... the rest of the config
+    .withStages(3, List.of(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5)));
+
+// The first stage, the second stage, then the carriage, which is elevator.getPose3d().
+List<Pose3d> components = new ArrayList<>(elevator.getCascadePose3d());
+components.add(arm.getPose3d());
+Telemetry.log("Robot/Components", components.toArray(Pose3d[]::new), Pose3d.struct);
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+// Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
+m_elevatorConfig.WithStages(3, {0.6_m, 0.6_m, 0.5_m});
+
+// The first stage, the second stage, then the carriage, which is m_elevator->GetPose3d().
+std::vector<wpi::math::Pose3d> components = m_elevator->GetCascadePose3d();
+components.push_back(m_arm->GetPose3d());
+wpi::telemetry::Log("Robot/Components", std::span<const wpi::math::Pose3d>{components});
+```
+{% endtab %}
+{% endtabs %}
+
+Both need 2 or more stages: an elevator with only a carriage uses `getPose3d()`. Each stage is a component, zeroed like the carriage.
+
 ## 3. Export the model
 
 Export the robot from CAD without the moving parts as `model.glb`, and each moving part as its own file: `model_0.glb`, `model_1.glb`, and so on, in the order you publish their poses. Export every part where it is when the robot is at its starting position. [Converting Onshape & STEP Files to glTF](https://docs.advantagescope.org/more-features/custom-assets/gltf-convert) explains how.
@@ -162,6 +199,7 @@ AdvantageScope moves each component from where its `zeroedRotations` and `zeroed
 | -------------------- | --------------------------------------------------------------------------------------------- |
 | An arm or pivot      | Its axis at the origin, pointing along +X at 0° (+Y in the YZ plane)                          |
 | An elevator carriage | The carriage's reference point, the point you gave as its relative position, at the origin   |
+| An elevator stage    | As the carriage: the stage at zero height with the carriage's reference point at the origin  |
 | A flywheel           | Its axle at the origin                                                                        |
 | A part on another    | As for its own kind: its relative position is from its parent, not the robot                  |
 

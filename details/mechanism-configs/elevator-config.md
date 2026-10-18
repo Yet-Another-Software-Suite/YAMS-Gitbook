@@ -6,7 +6,7 @@ icon: elevator
 
 An elevator moves a carriage along a line. The [Elevators](../elevators.md) page shows a complete elevator.
 
-`ElevatorConfig` has the [shared options](shared-options.md) and three of its own.
+`ElevatorConfig` has the [shared options](shared-options.md) and four of its own.
 
 ## `withCarriageWeight`
 
@@ -31,7 +31,7 @@ new ElevatorConfig().withAngle(Degrees.of(50));
 ```
 
 {% hint style="warning" %}
-`withAngle` only changes the drawing. It does not reduce the gravity the simulation applies: a slanted elevator is simulated with full gravity, as if it were vertical.
+`withAngle` only changes the drawing, and the direction [`getPose3d()`](../../how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md) moves the carriage in. It does not reduce the gravity the simulation applies: a slanted elevator is simulated with full gravity, as if it were vertical.
 {% endhint %}
 
 **Used in:** simulation only.
@@ -49,6 +49,24 @@ new ElevatorConfig()
 A slide with no gravity needs no `kG`, so it will want [different simulation gains](../editor/config/simulation.md#withsimclosedloopcontroller-and-withsimfeedforward) from a vertical elevator.
 
 **Used in:** simulation only.
+
+## `withStages`
+
+The elevator's moving stages, counting the carriage as the last, and how far each travels relative to the stage below it, from the stage nearest the fixed stage to the carriage. `Elevator.getCascadePose3d()` and `getContinuousPose3d()` use them to give each stage's pose, to show the stages on an [AdvantageScope robot model](../../how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#elevator-stages).
+
+```java
+new ElevatorConfig()
+    // Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
+    .withStages(3, List.of(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5)));
+```
+
+1 stage, an elevator with only a carriage, is valid, but has no stage poses: both methods need 2 or more stages. `withStages` throws for fewer than 1 stage, a different number of heights than stages, or a height that is not positive.
+
+{% hint style="info" %}
+`withStages` does not change the gearing. A cascading elevator also needs [`withCascadingElevatorStages`](../editor/config/gearing-and-units.md#withcascadingelevatorstages) on its motor config, so the carriage's height is right: see [how the stages are rigged](../elevators.md#how-the-stages-are-rigged).
+{% endhint %}
+
+**Used in:** stage poses only.
 
 ## What else an elevator needs
 
