@@ -14,7 +14,7 @@ Two ways to have more than one motor move one mechanism: **tightly coupled** fol
 | Closed loop            | One, on the leader. Followers copy its output               | One on each motor, on its own encoder                                            |
 | Config                 | Only the leader has one                                     | Every motor has its own                                                          |
 | Vendors                | Same vendor as the leader                                   | Can be mixed                                                                     |
-| Voltage and duty cycle | Reach every motor                                           | **Not forwarded,** except stopping. The leader moves alone                       |
+| Voltage and duty cycle | Reach every motor                                           | **Not forwarded.** The leader moves alone, and the followers stop                |
 | Use it for             | Two motors on one gearbox, such as an elevator or a shooter | Two actuators that must arrive together, such as a cross bar lifted at both ends |
 | Mechanism classes      | Work with them                                              | Work with them: give the mechanism the leader                                    |
 
@@ -147,19 +147,31 @@ Call `UpdateTelemetry()` and `SimIterate()` on each follower, as on the arm.
 | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | A position or velocity setpoint, such as from `arm.setAngle(...)` or `flywheel.run(...)`                                              | Are sent the same setpoint, and each reaches it with its own closed loop                          |
 | A change from live tuning: gains, feedforward, motion profile, current limits, ramp rates, soft limits, gearing or closed loop slot | Are given the same change                                                                         |
-| A duty cycle of 0, which stops it                                                                                                    | Stop too                                                                                          |
-| Any other duty cycle or voltage, such as from `arm.set(...)`, `arm.setVoltage(...)` or SysId                                         | **Are not sent it.** The leader moves alone                                                       |
+| A duty cycle of 0, which stops it                                                                                                    | Stop too\*                                                                                        |
+| Any other duty cycle or voltage, such as from `arm.set(...)`, `arm.setVoltage(...)` or SysId                                         | **Are not sent it.** The leader moves alone, and the followers are stopped\*                      |
 | `setEncoderPosition(...)`, such as when zeroing or homing                                                                            | **Are not sent it.** Set each follower's encoder yourself                                         |
 | `updateTelemetry()` and `simIterate()`                                                                                               | **Are not updated.** Call them on each follower yourself                                          |
 | Its starting config                                                                                                                  | **Are not given it.** Each follower only has its own config                                       |
 
+\* A follower whose closed loop runs on the SystemCore only stops in YAMS releases after v2026.10.15. See the first pitfall below.
+
 ### Common pitfalls
 
+* **The follower doesn't stop (YAMS v2026.10.15 and earlier).** A follower's closed loop runs on the SystemCore when it is a Thrifty Nova, a SPARK with an exponential profile, or any motor controller with an LQR. In YAMS v2026.10.15 and earlier, stopping the leader doesn't stop that loop, so the follower keeps driving to the last setpoint: on through `arm.set(0)`, and against the leader through `arm.set(...)`, `arm.setVoltage(...)` and SysId. Later releases stop it with the leader. Until you update, stop the follower's closed loop yourself while the leader is driven at a duty cycle or voltage:
+
+  ```java
+  arm.set(dutyCycle)
+      .beforeStarting(() -> {
+        rightMotor.stopClosedLoopController();
+        rightMotor.setDutyCycle(0);
+      })
+      .finallyDo(rightMotor::startClosedLoopController);
+  ```
 * **The follower does nothing in simulation, and logs nothing.** Call `updateTelemetry()` and `simIterate()` on each follower, every loop.
 * **The follower doesn't follow the profile.** The leader sends the follower the final setpoint, so a follower needs the same motion profile as the leader, and the same gearing, gains and feedforward, or it gets there at a different speed.
 * **The follower drives the wrong way.** Each motor is inverted in its own config, with `withMotorInverted`. Motors on opposite sides of a mechanism usually face each other, so one of them is inverted.
 * **The two sides fight.** Nothing keeps the motors together except the mechanism: each one only follows its own encoder. If they start at different positions, or one side slips, they pull against each other through the mechanism. Give every motor the same starting position, and when you zero or home the mechanism, set every motor's encoder.
-* **Manual control moves only one side.** A voltage or duty cycle, such as manual control with a joystick or a SysId routine, only drives the leader. Command each motor yourself, or characterize one side with the other side unpowered.
+* **Manual control moves only one side.** A voltage or duty cycle, such as manual control with a joystick or a SysId routine, only drives the leader, and the followers are stopped. Command each motor yourself, or characterize one side with the other side unpowered.
 
 ### Motors that need different setpoints
 

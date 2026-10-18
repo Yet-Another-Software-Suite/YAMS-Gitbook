@@ -103,7 +103,7 @@ There are two kinds of follower. **Tightly coupled** followers are motors on the
 Each loosely coupled follower is sent the leader's position and velocity setpoints, and reaches them with its own closed loop. A mechanism class works with them: give it the leader.
 
 {% hint style="warning" %}
-Loosely coupled followers are **not** sent voltage or duty cycle requests, except a duty cycle of 0 to stop. They are not sent `setEncoderPosition`, and are not updated with the leader: call `updateTelemetry()` and `simIterate()` on each one. [What reaches the followers](config/followers.md#what-reaches-the-followers) has the full list.
+Loosely coupled followers are **not** sent voltage or duty cycle requests: they stop while the leader is driven at one. A follower whose closed loop runs on the SystemCore (a Thrifty Nova, a SPARK with an exponential profile, or anything with an LQR) only stops in YAMS releases after v2026.10.15. They are not sent `setEncoderPosition`, and are not updated with the leader: call `updateTelemetry()` and `simIterate()` on each one. [What reaches the followers](config/followers.md#what-reaches-the-followers) has the full list.
 {% endhint %}
 
 ## You don't have to rely on YAMS to configure your SMC
