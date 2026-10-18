@@ -199,7 +199,7 @@ AdvantageScope moves each component from where its `zeroedRotations` and `zeroed
 | -------------------- | --------------------------------------------------------------------------------------------- |
 | An arm or pivot      | Its axis at the origin, pointing along +X at 0° (+Y in the YZ plane)                          |
 | An elevator carriage | The carriage's reference point, the point you gave as its relative position, at the origin   |
-| An elevator stage    | As the carriage: the stage at zero height with the carriage's reference point at the origin  |
+| An elevator stage    | The stage as it sits with the elevator down, moved by the same offset as the carriage         |
 | A flywheel           | Its axle at the origin                                                                        |
 | A part on another    | As for its own kind: its relative position is from its parent, not the robot                  |
 
