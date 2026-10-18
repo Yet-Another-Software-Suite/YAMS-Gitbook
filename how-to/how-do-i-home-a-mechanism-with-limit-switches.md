@@ -34,9 +34,10 @@ private final Sensor lowerSwitch = new SensorConfig("ArmLowerSwitch")
     .getSensor();
 
 public ArmSubsystem() {
-  // Keep the encoder at the hard stop while the switch is pressed.
+  // Set the encoder to the hard stop once the switch has been pressed for 0.1 seconds.
   new Trigger(this::isLowerSwitchPressed)
-      .whileTrue(Commands.run(() -> motor.setEncoderPosition(Degrees.of(-10))).withName("Arm Home LowerSwitch"));
+      .debounce(0.1)
+      .onTrue(Commands.runOnce(() -> motor.setEncoderPosition(Degrees.of(-10))).withName("Arm Home LowerSwitch"));
 }
 
 public boolean isLowerSwitchPressed() {
@@ -48,6 +49,7 @@ public boolean isLowerSwitchPressed() {
 {% tab title="Commands v3" %}
 ```java
 import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.Seconds;
 
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Trigger;
@@ -70,14 +72,10 @@ private final Sensor lowerSwitch = new SensorConfig("ArmLowerSwitch")
     .getSensor();
 
 public ArmMechanism() {
-  // Keep the encoder at the hard stop while the switch is pressed.
+  // Set the encoder to the hard stop once the switch has been pressed for 0.1 seconds.
   new Trigger(this::isLowerSwitchPressed)
-      .whileTrue(Command.noRequirements(coroutine -> {
-        while (true) {
-          motor.setEncoderPosition(Degrees.of(-10));
-          coroutine.yield();
-        }
-      }).named("Arm Home LowerSwitch"));
+      .debounce(Seconds.of(0.1))
+      .onTrue(Command.noRequirements(coroutine -> motor.setEncoderPosition(Degrees.of(-10))).named("Arm Home LowerSwitch"));
 }
 
 public boolean isLowerSwitchPressed() {
@@ -89,7 +87,7 @@ public boolean isLowerSwitchPressed() {
 
 For an elevator, compare the height and set it in meters: `smcConfig.convertFromMechanism(sim.getMechanismPosition()).lte(Meters.of(0.0005))` and `motor.setEncoderPosition(Meters.of(0))`.
 
-The trigger runs its command every loop while the switch is pressed, and cancels it when the switch is released, so the encoder stays at the hard stop for as long as the mechanism presses the switch. The scheduler checks triggers every loop, which also reads the `Sensor` every loop, as its simulated values need.
+The debounced trigger turns true once the switch has stayed pressed for 0.1 seconds, and `onTrue` runs its command once as it does, so the encoder is set once per press, after the mechanism has settled against the hard stop. The scheduler checks triggers every loop, which also reads the `Sensor` every loop, as its simulated values need.
 
 ## Common pitfalls
 
@@ -109,9 +107,13 @@ Check the switch before trusting it: press it by hand and watch the field on you
 
 The motor controller stops the mechanism at its soft limits. A soft limit inside the hard stop stops the mechanism before it reaches the switch, so the switch only homes the mechanism when it is already resting there, such as when the robot turns on. Put the soft limit at the hard stop, or drive the mechanism onto the switch with a homing command that moves it slowly.
 
-### The encoder is only set as the switch is pressed
+### The encoder is set too often, or too soon
 
-Home with `whileTrue`, not `onTrue`. `onTrue` sets the encoder once, as the switch is pressed, so anything that moves the encoder while the mechanism rests on the switch, such as the encoder drifting or the mechanism being pushed against its hard stop, stays wrong until the switch is pressed again. `whileTrue` sets it every loop while the switch is held. A `Debouncer` does not replace either: it delays a change until it has lasted a while.
+Home with a debounced trigger and `onTrue`: `.debounce(0.1).onTrue(...)`.
+
+* **Not every loop.** `whileTrue`, or an `if` in `periodic()`, sets the encoder every loop while the switch is held. A mechanism often rests on its lower switch for most of a match, so that's a write to the motor controller every 20 ms, and a Talon waits for each one to be acknowledged. It also holds the encoder at the hard stop while the switch is pressed, so the encoder doesn't follow the mechanism through the last bit of the switch's travel.
+* **Not on the first touch.** Without a debounce, contact bounce, electrical noise, or a mechanism that taps the stop and bounces off can home it. The debounce waits until the switch has stayed pressed, when the mechanism is resting against the hard stop.
+* **On the rising edge.** `onFalse` homes as the mechanism leaves the switch, where the switch releases. That depends on which way the mechanism moves and on the switch's hysteresis, so it is less repeatable.
 
 ### The switch is not where the hard stop is
 
