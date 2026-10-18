@@ -34,9 +34,9 @@ private final Sensor lowerSwitch = new SensorConfig("ArmLowerSwitch")
     .getSensor();
 
 public ArmSubsystem() {
-  // Set the encoder to the hard stop once each time the switch is pressed.
+  // Keep the encoder at the hard stop while the switch is pressed.
   new Trigger(this::isLowerSwitchPressed)
-      .onTrue(Commands.runOnce(() -> motor.setEncoderPosition(Degrees.of(-10))).withName("Arm Home LowerSwitch"));
+      .whileTrue(Commands.run(() -> motor.setEncoderPosition(Degrees.of(-10))).withName("Arm Home LowerSwitch"));
 }
 
 public boolean isLowerSwitchPressed() {
@@ -70,9 +70,14 @@ private final Sensor lowerSwitch = new SensorConfig("ArmLowerSwitch")
     .getSensor();
 
 public ArmMechanism() {
-  // Set the encoder to the hard stop once each time the switch is pressed.
+  // Keep the encoder at the hard stop while the switch is pressed.
   new Trigger(this::isLowerSwitchPressed)
-      .onTrue(Command.noRequirements(coroutine -> motor.setEncoderPosition(Degrees.of(-10))).named("Arm Home LowerSwitch"));
+      .whileTrue(Command.noRequirements(coroutine -> {
+        while (true) {
+          motor.setEncoderPosition(Degrees.of(-10));
+          coroutine.yield();
+        }
+      }).named("Arm Home LowerSwitch"));
 }
 
 public boolean isLowerSwitchPressed() {
@@ -84,7 +89,7 @@ public boolean isLowerSwitchPressed() {
 
 For an elevator, compare the height and set it in meters: `smcConfig.convertFromMechanism(sim.getMechanismPosition()).lte(Meters.of(0.0005))` and `motor.setEncoderPosition(Meters.of(0))`.
 
-The trigger runs its command once each time the switch goes from released to pressed, so the encoder is set once per press. The scheduler checks triggers every loop, which also reads the `Sensor` every loop, as its simulated values need.
+The trigger runs its command every loop while the switch is pressed, and cancels it when the switch is released, so the encoder stays at the hard stop for as long as the mechanism presses the switch. The scheduler checks triggers every loop, which also reads the `Sensor` every loop, as its simulated values need.
 
 ## Common pitfalls
 
@@ -104,9 +109,9 @@ Check the switch before trusting it: press it by hand and watch the field on you
 
 The motor controller stops the mechanism at its soft limits. A soft limit inside the hard stop stops the mechanism before it reaches the switch, so the switch only homes the mechanism when it is already resting there, such as when the robot turns on. Put the soft limit at the hard stop, or drive the mechanism onto the switch with a homing command that moves it slowly.
 
-### The encoder is set every loop
+### The encoder is only set as the switch is pressed
 
-Set the encoder once, as the switch is pressed, with `Trigger.onTrue`, not every loop while it is held (`whileTrue`, or an `if` in `periodic()`). A mechanism resting on its lower switch would otherwise send the motor controller a new position over CAN every 20 ms, and a Talon waits for each one to be acknowledged. A `Debouncer` does not do this: it delays a change until it has lasted a while, but stays `true` while the switch is held.
+Home with `whileTrue`, not `onTrue`. `onTrue` sets the encoder once, as the switch is pressed, so anything that moves the encoder while the mechanism rests on the switch, such as the encoder drifting or the mechanism being pushed against its hard stop, stays wrong until the switch is pressed again. `whileTrue` sets it every loop while the switch is held. A `Debouncer` does not replace either: it delays a change until it has lasted a while.
 
 ### The switch is not where the hard stop is
 

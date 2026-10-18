@@ -127,7 +127,7 @@ Declare the `Sensor` after `motor` (and the mechanism, if its lambda uses it). J
 
 ## How do I home a mechanism with a limit switch `Sensor`?
 
-Set the motor's encoder to the hard stop each time the switch is pressed. A `Trigger` runs its command once each time the switch goes from released to pressed, and the scheduler reads the `Sensor` every loop, as its simulated values need.
+Keep the motor's encoder at the hard stop while the switch is pressed. A `Trigger` with `whileTrue` runs its command every loop while the switch is pressed and cancels it when the switch is released, and the scheduler reads the `Sensor` every loop, as its simulated values need.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -140,7 +140,7 @@ public boolean isLowerSwitchPressed()
 public ArmSubsystem()
 {
   new Trigger(this::isLowerSwitchPressed)
-      .onTrue(Commands.runOnce(() -> motor.setEncoderPosition(Degrees.of(-30))).withName("Arm Home LowerSwitch"));
+      .whileTrue(Commands.run(() -> motor.setEncoderPosition(Degrees.of(-30))).withName("Arm Home LowerSwitch"));
 }
 ```
 {% endtab %}
@@ -155,8 +155,13 @@ public boolean isLowerSwitchPressed()
 public ArmMechanism()
 {
   new Trigger(this::isLowerSwitchPressed)
-      .onTrue(Command.noRequirements(coroutine -> motor.setEncoderPosition(Degrees.of(-30)))
-                     .named("Arm Home LowerSwitch"));
+      .whileTrue(Command.noRequirements(coroutine -> {
+                       while (true)
+                       {
+                         motor.setEncoderPosition(Degrees.of(-30));
+                         coroutine.yield();
+                       }
+                     }).named("Arm Home LowerSwitch"));
 }
 ```
 {% endtab %}
