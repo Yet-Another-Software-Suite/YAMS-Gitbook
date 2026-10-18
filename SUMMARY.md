@@ -56,6 +56,7 @@
 
 * [How do I enable battery discharge simulation?](how-to/how-do-i-enable-battery-discharge-simulation.md)
 * [How do I view my DataLog in AdvantageScope?](how-to/how-do-i-view-my-datalog-in-advantagescope.md)
+* [How do I show my mechanisms on a 3D robot model?](how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md)
 
 ## Understanding
 
