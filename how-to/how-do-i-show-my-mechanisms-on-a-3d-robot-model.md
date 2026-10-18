@@ -39,7 +39,7 @@ A part turns about the axis normal to its movement plane:
 
 * **XZ** (the default), such as an arm that swings up over the front of the robot. At 0° the part points forward (+X), and a positive angle turns it up.
 * **YZ**, such as an arm that swings up over the side of the robot. At 0° the part points left (+Y), and a positive angle turns it up.
-* **XY**, such as a turret. At 0° the part points forward (+X), and a positive angle turns it left.
+* **XY**, such as a turret. At 0° the part points forward (+X), and a positive angle turns it left. A `Pivot` is in the XY plane unless you give it a `MechanismPositionConfig`.
 
 {% tabs %}
 {% tab title="Java" %}
@@ -189,7 +189,7 @@ AdvantageScope gives the first pose to `model_0.glb`, the second to `model_1.glb
 
 ### A turret swings up instead of turning
 
-A `Pivot` turns in its movement plane, which is XZ by default. Set a turret's plane to `Plane.XY`.
+A `Pivot` turns in the XY plane, like a turret, unless you give it your own `MechanismPositionConfig`. A new `MechanismPositionConfig` is in the XZ plane, so set `withMovementPlane(Plane.XY)` on the one you give a turret.
 
 ### A part on another mechanism doesn't move with it
 
