@@ -14,8 +14,9 @@ Two ways to have more than one motor move one mechanism: **tightly coupled** fol
 | Closed loop            | One, on the leader. Followers copy its output               | One on each motor, on its own encoder                                            |
 | Config                 | Only the leader has one                                     | Every motor has its own                                                          |
 | Vendors                | Same vendor as the leader                                   | Can be mixed                                                                     |
-| Voltage and duty cycle | Reach every motor                                           | **Not forwarded.** The leader moves alone                                        |
+| Voltage and duty cycle | Reach every motor                                           | **Not forwarded,** except stopping. The leader moves alone                       |
 | Use it for             | Two motors on one gearbox, such as an elevator or a shooter | Two actuators that must arrive together, such as a cross bar lifted at both ends |
+| Mechanism classes      | Work with them                                              | Work with them: give the mechanism the leader                                    |
 
 ## `withFollowers`
 
@@ -36,22 +37,133 @@ Pass the vendor's motor object, not a `SmartMotorController`. The boolean is whe
 
 ## `withLooselyCoupledFollowers`
 
-Loosely coupled followers, for motors that are not on the same shaft but must arrive at the same place, such as two linear actuators joined by a cross bar. Each follower is a full `SmartMotorController` with its own config and its own closed loop, and is sent the leader's position and velocity setpoints.
+Loosely coupled followers are for motors that are not on the same shaft or gearbox but must arrive at the same place: an intake arm driven from both sides, two linear actuators joined by a cross bar, or a shooter with a wheel on each end. Each follower is a full `SmartMotorController` with its own config, its own encoder and its own closed loop. The leader sends it every position and velocity setpoint it is given.
 
-```java
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this) /* ... */;
-SmartMotorController right = new TalonFXWrapper(rightTalon, DCMotor.getKrakenX60(1), config.clone());
-SmartMotorController left  = new SparkWrapper(leftSpark, DCMotor.getNEO(1),
-                                              config.withLooselyCoupledFollowers(right));
-```
-
-**You can mix brands.** Because each motor closes its own loop, a loosely coupled follower can be any supported motor controller, whatever the leader is. The example above has a SPARK leading a TalonFX.
+**You can mix brands.** Because each motor closes its own loop, a loosely coupled follower can be any supported motor controller, whatever the leader is, such as a SPARK leading a TalonFX.
 
 **Supported on:** every supported motor controller.
 
-{% hint style="danger" %}
-Loosely coupled followers are only sent position and velocity setpoints. Voltage and duty cycle requests are **not** forwarded, so driving the leader with a raw voltage moves the leader alone.
-{% endhint %}
+### Use them with a mechanism class
+
+A mechanism class such as `Arm`, `Elevator` or `FlyWheel` works with loosely coupled followers. Give the mechanism the leader, and name the followers in the leader's config. The mechanism's commands, such as `arm.setAngle(...)`, then move every motor.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="subsystems/IntakeArmSubsystem.java" %}
+```java
+public class IntakeArmSubsystem extends SubsystemBase {
+
+  // The right side of the arm. Declare a follower before the leader, which names it.
+  private final SparkMax rightSpark = new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless);
+  private final SmartMotorController rightMotor = new SparkWrapper(rightSpark, DCMotor.getNEO(1),
+      new SmartMotorControllerConfig(this)
+          .withControlMode(ControlMode.CLOSED_LOOP)
+          .withClosedLoopController(50, 0, 0)
+          .withSimClosedLoopController(50, 0, 0)
+          .withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+          .withFeedforward(new ArmFeedforward(0, 0, 0))
+          .withSimFeedforward(new ArmFeedforward(0, 0, 0))
+          .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+          // The right motor faces the other way, so it is inverted here, in its own config.
+          .withMotorInverted(true)
+          .withZeroPower(MotorMode.BRAKE)
+          .withStatorCurrentLimit(Amps.of(40))
+          .withStartingPosition(Degrees.of(-5))
+          .withSoftLimits(Degrees.of(-20), Degrees.of(30))
+          .withTelemetry("IntakeArmRightMotor", TelemetryVerbosity.HIGH));
+
+  // The left side of the arm: the leader, which the Arm drives.
+  private final SparkMax leftSpark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+  private final SmartMotorController leftMotor = new SparkWrapper(leftSpark, DCMotor.getNEO(1),
+      new SmartMotorControllerConfig(this)
+          .withControlMode(ControlMode.CLOSED_LOOP)
+          .withClosedLoopController(50, 0, 0)
+          .withSimClosedLoopController(50, 0, 0)
+          .withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+          .withFeedforward(new ArmFeedforward(0, 0, 0))
+          .withSimFeedforward(new ArmFeedforward(0, 0, 0))
+          .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+          .withMotorInverted(false)
+          .withZeroPower(MotorMode.BRAKE)
+          .withStatorCurrentLimit(Amps.of(40))
+          .withStartingPosition(Degrees.of(-5))
+          .withSoftLimits(Degrees.of(-20), Degrees.of(30))
+          .withTelemetry("IntakeArmLeftMotor", TelemetryVerbosity.HIGH)
+          // The right motor is sent every position and velocity setpoint the left motor is given.
+          .withLooselyCoupledFollowers(rightMotor));
+
+  private final Arm arm = new Arm(new ArmConfig()
+      .withHardLimits(Degrees.of(-25), Degrees.of(35))
+      .withLength(Meters.of(0.5))
+      .withTelemetry("IntakeArm", TelemetryVerbosity.HIGH),
+      leftMotor);
+
+  public Command setAngle(Angle angle) {
+    // Moves both motors.
+    return arm.setAngle(angle);
+  }
+
+  @Override
+  public void periodic() {
+    arm.updateTelemetry();
+    // The Arm only updates the leader. Update each follower yourself.
+    rightMotor.updateTelemetry();
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    arm.simIterate();
+    rightMotor.simIterate();
+  }
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+The same as Commands v2, with `SmartMotorControllerConfig` and `Arm` from `yams.commands3`, and the class a `Mechanism`. A `Mechanism` has no periodic hook, so call `updateTelemetry()` and `simIterate()` on the arm and on each follower from `Robot.robotPeriodic()`.
+{% endtab %}
+
+{% tab title="C++" %}
+Create each follower before the leader, and name it in the leader's config:
+
+```cpp
+m_rightMotor.emplace(&m_rightSpark, wpi::math::DCMotor::NEO(1), &m_rightConfig);
+
+m_leftConfig
+    // ... config options
+    .WithLooselyCoupledFollowers({&m_rightMotor.value()});  // the right motor is sent the left motor's setpoints
+
+m_leftMotor.emplace(&m_leftSpark, wpi::math::DCMotor::NEO(1), &m_leftConfig);
+```
+
+Call `UpdateTelemetry()` and `SimIterate()` on each follower, as on the arm.
+{% endtab %}
+{% endtabs %}
+
+### What reaches the followers
+
+| The leader is given                                                                                                                  | The followers                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| A position or velocity setpoint, such as from `arm.setAngle(...)` or `flywheel.run(...)`                                              | Are sent the same setpoint, and each reaches it with its own closed loop                          |
+| A change from live tuning: gains, feedforward, motion profile, current limits, ramp rates, soft limits, gearing or closed loop slot | Are given the same change                                                                         |
+| A duty cycle of 0, which stops it                                                                                                    | Stop too                                                                                          |
+| Any other duty cycle or voltage, such as from `arm.set(...)`, `arm.setVoltage(...)` or SysId                                         | **Are not sent it.** The leader moves alone                                                       |
+| `setEncoderPosition(...)`, such as when zeroing or homing                                                                            | **Are not sent it.** Set each follower's encoder yourself                                         |
+| `updateTelemetry()` and `simIterate()`                                                                                               | **Are not updated.** Call them on each follower yourself                                          |
+| Its starting config                                                                                                                  | **Are not given it.** Each follower only has its own config                                       |
+
+### Common pitfalls
+
+* **The follower does nothing in simulation, and logs nothing.** Call `updateTelemetry()` and `simIterate()` on each follower, every loop.
+* **The follower doesn't follow the profile.** The leader sends the follower the final setpoint, so a follower needs the same motion profile as the leader, and the same gearing, gains and feedforward, or it gets there at a different speed.
+* **The follower drives the wrong way.** Each motor is inverted in its own config, with `withMotorInverted`. Motors on opposite sides of a mechanism usually face each other, so one of them is inverted.
+* **The two sides fight.** Nothing keeps the motors together except the mechanism: each one only follows its own encoder. If they start at different positions, or one side slips, they pull against each other through the mechanism. Give every motor the same starting position, and when you zero or home the mechanism, set every motor's encoder.
+* **Manual control moves only one side.** A voltage or duty cycle, such as manual control with a joystick or a SysId routine, only drives the leader. Command each motor yourself, or characterize one side with the other side unpowered.
+
+### Motors that need different setpoints
+
+Loosely coupled followers are sent the leader's setpoints exactly. When the motors need different ones, such as two flywheels spinning at different speeds, command each `SmartMotorController` yourself: see [How do I control a Mechanism without a Mechanism Class?](../../../how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md) and the [double flywheel tutorial](../../../tutorials/double-flywheel/spin-and-followers.md).
 
 ## Code reference
 

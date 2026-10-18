@@ -1,18 +1,14 @@
 ---
 description: >-
-  Sometimes you have "loosely mechanically coupled" design which requires you to
-  control both motors independently instead of using one as a follower.
+  Control each SmartMotorController yourself, such as when the motors of one
+  mechanism need different setpoints.
 ---
 
 # How do I control a Mechanism without a Mechanism Class?
 
-YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel`, etc.) assume a tightly coupled system where all motors share a single gearbox or linkage. Loosely coupled mechanisms, where multiple motors operate on different axes but you still want YAMS's telemetry, current limiting, and profiling, are best controlled through `SmartMotorController` directly. This page explains when to take that path and how to do it.
+YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel`, etc.) drive one motor, along with its followers. Motors on one shaft or gearbox are [followers](../details/editor/config/followers.md#withfollowers). Motors that aren't, but must move together, such as one on each side of an intake arm, are [loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers), and still work with a mechanism class.
 
-{% hint style="danger" %}
-Mechanism classes are meant to be used with "tightly coupled" mechanisms where the Mechanism has 1 or more motor controlling it on a connected shaft, gearbox, or other linkage.
-
-**IF** your mechanism is "loosely coupled", you **CAN** still use YAMS. **HOWEVER** you have to create and control the `SmartMotorController` directly as shown below.
-{% endhint %}
+Control each `SmartMotorController` yourself, as this page shows, when the motors need different setpoints, such as two flywheels spinning at different speeds, or when one subsystem holds more than one mechanism, such as a shooter and an indexer. You still get YAMS's telemetry, current limiting and profiling.
 
 <figure><img src="../.gitbook/assets/smc-followers.png" alt="Two panels. Tightly coupled, withFollowers: a leader and a follower are on one shaft or gearbox and the follower copies the leader's output. The motors are mechanically locked, there is one closed loop and one config, the followers are the same vendor as the leader, and voltage and duty cycle reach every motor. Loosely coupled, withLooselyCoupledFollowers: two separate motors joined only by the mechanism get the same setpoint and each runs its own PID. They are not mechanically locked, each has its own closed loop and config, vendors can be mixed, and voltage and duty cycle are not forwarded, so the leader moves alone."><figcaption><p>Tightly coupled followers share a shaft. Loosely coupled followers are separate motors.</p></figcaption></figure>
 
@@ -357,7 +353,7 @@ public class ExampleMechanism implements Mechanism {
 {% hint style="info" %}
 For Commands v2, `SmartMotorControllerConfig` and `Elevator` come from `yams.commands2.config` and `yams.commands2.mechanisms`. `SmartMotorController`, `SparkWrapper`, `ElevatorConfig`, the gearing classes and the enums come from `yams.core`. With Commands v3, use the `yams.commands3` classes and write the commands as coroutines on your `Mechanism` instead of `startRun(...)` and `run(...)`.
 
-If both motors should simply chase the same position or velocity setpoint, `SmartMotorControllerConfig.withLooselyCoupledFollowers(SmartMotorController...)` forwards those requests for you. Keep at most one YAMS mechanism class per subsystem so live tuning keeps working.
+If both motors should simply chase the same position or velocity setpoint, make one a [loosely coupled follower](../details/editor/config/followers.md#withlooselycoupledfollowers) of the other instead. Keep at most one YAMS mechanism class per subsystem so live tuning keeps working.
 {% endhint %}
 
 {% hint style="success" %}

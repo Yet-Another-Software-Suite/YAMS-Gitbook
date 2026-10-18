@@ -100,8 +100,10 @@ There are two kinds of follower. **Tightly coupled** followers are motors on the
 
 ### Loosely Coupled Follower Motors
 
-{% hint style="danger" %}
-Loosely coupled followers **DO NOT** forward Voltage, or DutyCycle requests.
+Each loosely coupled follower is sent the leader's position and velocity setpoints, and reaches them with its own closed loop. A mechanism class works with them: give it the leader.
+
+{% hint style="warning" %}
+Loosely coupled followers are **not** sent voltage or duty cycle requests, except a duty cycle of 0 to stop. They are not sent `setEncoderPosition`, and are not updated with the leader: call `updateTelemetry()` and `simIterate()` on each one. [What reaches the followers](config/followers.md#what-reaches-the-followers) has the full list.
 {% endhint %}
 
 ## You don't have to rely on YAMS to configure your SMC
