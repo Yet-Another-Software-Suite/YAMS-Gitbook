@@ -136,7 +136,7 @@ With AdvantageKit, record the same array with `Logger.recordOutput("Robot/Compon
 
 ### Elevator stages
 
-An elevator with moving stages has a component for each stage. Give its `ElevatorConfig` the stages with [`withStages`](../details/mechanism-configs/elevator-config.md#withstages): how many move, counting the carriage as the last, and how far each travels relative to the stage below it. Then publish the pose of each stage, in order from the stage nearest the fixed stage to the carriage:
+An elevator with moving stages has a component for each stage. Give its `ElevatorConfig` the stages with [`withStages`](../details/mechanism-configs/elevator-config.md#withstages): how many move, counting the carriage as the last, and how far each travels relative to the stage below it. The heights must add up to the elevator's maximum height, and without hard limits they set it. Then publish the pose of each stage, in order from the stage nearest the fixed stage to the carriage:
 
 * `getCascadePose3d()` for a cascading elevator: every stage moves at once, each by its share of the carriage's height.
 * `getContinuousPose3d()` for a continuous elevator: the carriage rises the whole of its travel first, then the stage below it, and so on.

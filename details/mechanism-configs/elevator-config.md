@@ -62,6 +62,14 @@ new ElevatorConfig()
 
 1 stage, an elevator with only a carriage, is valid, but has no stage poses: both methods need 2 or more stages. `withStages` throws for fewer than 1 stage, a different number of heights than stages, or a height that is not positive.
 
+The stages carry the carriage from the bottom to the top, so they also give the elevator's height: without [`withHardLimits`](shared-options.md#withhardlimits), the elevator goes from 0 to the stage heights' total, which `getStageHeightTotal()` returns. With hard limits as well, the stage heights must add up to the maximum height, or the `Elevator` throws an `ElevatorConfigurationException` saying how far apart they are.
+
+```java
+new ElevatorConfig()
+    // 0 m to 1.7 m, from the stages. No withHardLimits needed.
+    .withStages(3, List.of(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5)));
+```
+
 {% hint style="info" %}
 `withStages` does not change the gearing. A cascading elevator also needs [`withCascadingElevatorStages`](../editor/config/gearing-and-units.md#withcascadingelevatorstages) on its motor config, so the carriage's height is right: see [how the stages are rigged](../elevators.md#how-the-stages-are-rigged).
 {% endhint %}
