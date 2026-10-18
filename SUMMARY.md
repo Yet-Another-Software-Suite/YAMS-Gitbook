@@ -39,6 +39,7 @@
 * [How do I shoot on the move?](how-to/how-do-i-shoot-on-the-move.md)
 * [How do I use absolute encoders on my Arm?](how-to/how-do-i-use-absolute-encoders-on-my-arm.md)
 * [How do I home a mechanism with limit switches?](how-to/how-do-i-home-a-mechanism-with-limit-switches.md)
+* [How do I control a mechanism that carries a game piece?](how-to/how-do-i-control-a-mechanism-that-carries-a-game-piece.md)
 * [How do I control a Mechanism without a Mechanism Class?](how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md)
 
 ## How-to: Motor controllers and sensors

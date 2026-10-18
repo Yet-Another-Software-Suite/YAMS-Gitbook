@@ -418,7 +418,7 @@ kV only acts while the setpoint is moving, so it is tuned with the profile. Run 
 {% step %}
 #### Check it everywhere
 
-Test near both limits, straight up, level, and holding a game piece. If the loaded arm needs different gains, put them in a second [slot](editor/config/closed-loop-control.md#slots).
+Test near both limits, straight up, level, and holding a game piece. If the loaded arm needs different gains, put them in a second [slot](editor/config/closed-loop-control.md#slots). [How do I control a mechanism that carries a game piece?](../how-to/how-do-i-control-a-mechanism-that-carries-a-game-piece.md) explains how much the gains change, and how to switch them.
 {% endstep %}
 {% endstepper %}
 
