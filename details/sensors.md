@@ -101,3 +101,69 @@ public void setBeamBreakWhenArmIsLow()
 ```
 {% endtab %}
 {% endtabs %}
+
+## How do I simulate a sensor the mechanism triggers?
+
+Some sensors are triggered by the mechanism itself, like a limit switch at a hard stop, or a beam break the arm passes through. Simulate those from where the simulated mechanism really is, rather than from what its encoder says. The motor's sim supplier (`SmartMotorController.getSimSupplier()`) has the simulated mechanism's position. It is empty on a real robot, so the condition is `false` there.
+
+```java
+private final DigitalInput lowerSwitchInput = new DigitalInput(4);
+private final Sensor lowerSwitch = new SensorConfig("ArmLowerSwitch")
+  .withField("Pressed", lowerSwitchInput::get, false)
+  // Pressed while the simulated arm is within 0.05° of its lower hard stop at -30°.
+  .withSimulatedValue("Pressed", () -> motor.getSimSupplier()
+      .map(sim -> sim.getMechanismPosition().lte(Degrees.of(-29.95)))
+      .orElse(false), true)
+  .getSensor();
+```
+
+For an elevator, convert the simulated position to a height with the motor controller's config: `smcConfig.convertFromMechanism(sim.getMechanismPosition())`.
+
+A real limit switch is pressed by the mechanism, not by its encoder. If the encoder is off, say after a belt skips, a switch simulated from the encoder (`arm.isNear(...)`) is pressed in the wrong place. One simulated from the sim supplier is pressed at the hard stop, as the real one is.
+
+{% hint style="warning" %}
+Declare the `Sensor` after `motor` (and the mechanism, if its lambda uses it). Java does not let a field's initializer use a field declared after it, even inside a lambda.
+{% endhint %}
+
+## How do I home a mechanism with a limit switch `Sensor`?
+
+Set the motor's encoder to the hard stop each time the switch is pressed. A `Trigger` runs its command once each time the switch goes from released to pressed, and the scheduler reads the `Sensor` every loop, as its simulated values need.
+
+{% tabs %}
+{% tab title="Commands v2" %}
+```java
+public boolean isLowerSwitchPressed()
+{
+  return lowerSwitch.getAsBoolean("Pressed");
+}
+
+public ArmSubsystem()
+{
+  new Trigger(this::isLowerSwitchPressed)
+      .onTrue(Commands.runOnce(() -> motor.setEncoderPosition(Degrees.of(-30))).withName("Arm Home LowerSwitch"));
+}
+```
+{% endtab %}
+
+{% tab title="Commands v3" %}
+```java
+public boolean isLowerSwitchPressed()
+{
+  return lowerSwitch.getAsBoolean("Pressed");
+}
+
+public ArmMechanism()
+{
+  new Trigger(this::isLowerSwitchPressed)
+      .onTrue(Command.noRequirements(coroutine -> motor.setEncoderPosition(Degrees.of(-30)))
+                     .named("Arm Home LowerSwitch"));
+}
+```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+A SystemCore Smart IO port has a pull-down resistor, unlike a roboRIO's pull-up. A normally open switch wired between the signal and power pins reads `true` while it is pressed, so its field is `input::get`, not `!input.get()`.
+{% endhint %}
+
+[YAMG](https://yamg.yassrobotics.com) generates all of this when you turn on **Homing**. For the wiring and the common pitfalls, see [How do I home a mechanism with limit switches?](../how-to/how-do-i-home-a-mechanism-with-limit-switches.md)
