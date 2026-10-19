@@ -50,6 +50,8 @@ How often the simulated physics are stepped. The default is 20 ms, and it is ind
 .withSimulationPeriod(Milliseconds.of(5))
 ```
 
+Each `simIterate()` call steps the physics by exactly this period, so it must match how often `simIterate()` is called. To step every 1 ms, as fast as a closed loop on the motor controller runs, call it from a `Notifier`: see [How do I run a high fidelity simulation?](../../../how-to/how-do-i-run-a-high-fidelity-simulation.md)
+
 <figure><img src="../../../.gitbook/assets/smc-simulation.png" alt="Two graphs. Simulated speed: a small moment of inertia spins up quickly and a large one more slowly, set by withMomentOfInertia. Simulated position: 20 millisecond steps, the default, make a coarse staircase and 5 millisecond steps make a finer curve, set by withSimulationPeriod."><figcaption><p>Moment of inertia and simulation period.</p></figcaption></figure>
 
 ## Running the simulation
