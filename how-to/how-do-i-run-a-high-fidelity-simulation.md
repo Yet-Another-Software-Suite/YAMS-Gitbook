@@ -34,7 +34,11 @@ This only changes simulation. Nothing on this page has any effect on the real ro
 * **SPARK MAX and SPARK Flex.** PID and trapezoidal profiles run on the motor controller. YAMS already runs the SPARK's simulated loop once per millisecond inside every step, but the mechanism's velocity is frozen for the whole step. At 1 ms every run of the loop gets a fresh one.
 * **Thrifty Nova, and exponential profiles or [LQR](../details/editor/lqr-controllers.md) on any motor controller.** The loop runs on the SystemCore, every closed loop control period. Those loops gain nothing from a faster simulation period apart from smoother physics.
 
-## Step 1: Set the simulation period to 1 ms
+## Set it up
+
+{% stepper %}
+{% step %}
+#### Set the simulation period to 1 ms
 
 Add `withSimulationPeriod` to the `SmartMotorControllerConfig` of every motor the `Notifier` will step. For a swerve drive that is the drive motor and the azimuth motor of every module.
 
@@ -60,7 +64,10 @@ The simulated supply current filter and the shared [battery simulation](../under
 **The simulation period must match how often `simIterate()` is called.** Each call moves the simulated mechanism forward by exactly one simulation period, however much time has really passed. With a 20 ms period called every 1 ms, the mechanism moves 20 times faster than real time. With a 1 ms period called every 20 ms, it moves 20 times slower.
 {% endhint %}
 
-## Step 2: Step the simulation from a `Notifier`
+{% endstep %}
+
+{% step %}
+#### Step the simulation from a `Notifier`
 
 Create a `Notifier` that calls `simIterate()` every millisecond, and only start it in simulation. Then take `simIterate()` out of `simulationPeriodic()`. If both call it, the mechanism is stepped twice and moves faster than real time.
 
@@ -178,7 +185,10 @@ void ArmSubsystem::Periodic() {
 
 The same pattern works for every mechanism class, and for a `SmartMotorController` used without one: call its `simIterate()` from the `Notifier`. A mechanism class also updates its Mechanism2d drawing on every step, and an `Arm` or `Pivot` enforces its simulated hard limits there too, so those keep up with the physics. For a swerve drive, call the drive's `simIterate()` from the `Notifier`.
 
-## Step 3: Check your simulation gains
+{% endstep %}
+
+{% step %}
+#### Check your simulation gains
 
 Gains that were tuned against 20 ms physics may now behave differently, usually better. If you set [`withSimClosedLoopController`](../details/editor/config/simulation.md#withsimclosedloopcontroller-and-withsimfeedforward) softer than the real gains to stop oscillation in simulation, try the real gains again first.
 
@@ -186,6 +196,9 @@ Nothing else needs to change:
 
 * **Leave `withClosedLoopControlPeriod` alone.** It sets how often a loop on the SystemCore runs, not the physics. An LQR controller must keep the default 20 ms.
 * **Leave the real-robot config alone.** `withSimulationPeriod` is ignored on the robot.
+
+{% endstep %}
+{% endstepper %}
 
 ## Things to know
 
