@@ -148,12 +148,68 @@ In a cascading elevator every stage is rigged to the one below it, so every stag
 
 #### Continuous elevators
 
-In a continuous elevator one rope runs through every stage, so the stage with the least friction and load, the carriage, moves first. Use `getContinuousPose3d()`: the carriage rises the whole of its travel first, then the stage below it, and so on out to the stage nearest the fixed stage. Going down it is the other way round: the stage nearest the fixed stage lowers first, and the carriage last. With the same stages, a carriage at 0.85 m has risen its whole 0.5 m and stage 2 the other 0.35 m, so stage 1 is at 0 m, stage 2 at 0.35 m and the carriage at 0.85 m.
+In a continuous elevator one rope runs through every stage, so the stages move one at a time, and the order depends on how it is rigged. Most FRC continuous elevators move the carriage last: the stage nearest the fixed stage rises the whole of its travel first, then the next, and the carriage last. Some move the carriage first instead.
 
-<figure><img src="../.gitbook/assets/howto-elevator-continuous-stages.gif" alt="Animation of a continuous elevator with a fixed stage, stage 1, stage 2 and a carriage, rising from 0 to 1.7 meters and back down. The carriage rises its whole 0.5 meters first while the stages stay down, then stage 2 rises its 0.6 meters, then stage 1. Coming down, stage 1 lowers first, then stage 2, then the carriage."><figcaption><p>A continuous elevator: the carriage moves its whole travel first, then each stage below it in turn.</p></figcaption></figure>
+**Carriage first.** Use `getContinuousPose3d()`: the carriage rises the whole of its travel first, then the stage below it, and so on out to the stage nearest the fixed stage. Going down, the stage nearest the fixed stage lowers first, and the carriage last. With the same stages, a carriage at 0.85 m has risen its whole 0.5 m and stage 2 the other 0.35 m, so stage 1 is at 0 m, stage 2 at 0.35 m and the carriage at 0.85 m.
+
+<figure><img src="../.gitbook/assets/howto-elevator-continuous-stages.gif" alt="Animation of a continuous elevator with a fixed stage, stage 1, stage 2 and a carriage, rising from 0 to 1.7 meters and back down. The carriage rises its whole 0.5 meters first while the stages stay down, then stage 2 rises its 0.6 meters, then stage 1. Coming down, stage 1 lowers first, then stage 2, then the carriage."><figcaption><p>A continuous elevator that moves the carriage first, with <code>getContinuousPose3d()</code>.</p></figcaption></figure>
+
+**Carriage last.** Work out the poses from the elevator's height and its `ElevatorConfig`. From the stage nearest the fixed stage out, each stage takes as much of the height as it can travel, and the carriage takes the rest, so it is always at the elevator's height. Going down, the carriage lowers first, and the stage nearest the fixed stage last. With the same stages, a carriage at 0.85 m has stage 1 at the top of its 0.6 m, and stage 2 the other 0.25 m, so stage 1 is at 0.6 m, and stage 2 and the carriage are both at 0.85 m.
+
+<figure><img src="../.gitbook/assets/howto-elevator-continuous-carriage-last-stages.gif" alt="Animation of a continuous elevator with a fixed stage, stage 1, stage 2 and a carriage, rising from 0 to 1.7 meters and back down. Stage 1 rises its whole 0.6 meters first, carrying stage 2 and the carriage with it, then stage 2 rises its 0.6 meters, then the carriage its 0.5 meters. Coming down, the carriage lowers first, then stage 2, then stage 1."><figcaption><p>A continuous elevator that moves the carriage last, the usual rigging in FRC.</p></figcaption></figure>
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+/**
+ * The pose of each moving stage of a continuous elevator that moves the carriage last, from the stage
+ * nearest the fixed stage to the carriage.
+ */
+public static List<Pose3d> getCarriageLastPose3d(Elevator elevator, ElevatorConfig config) {
+  List<Distance> stageHeights = config.getStageHeights();
+  double remaining = elevator.getHeight().in(Meters);
+  double stageHeight = 0;
+  List<Pose3d> poses = new ArrayList<>(stageHeights.size());
+  for (int stage = 0; stage < stageHeights.size(); stage++) {
+    // Each stage takes as much of the height as it can travel, and the carriage takes the rest.
+    double extension = stage == stageHeights.size() - 1
+                       ? remaining
+                       : Math.min(Math.max(remaining, 0), stageHeights.get(stage).in(Meters));
+    remaining -= extension;
+    stageHeight += extension;
+    poses.add(config.getMechanismPositionConfig().getTranslatedPose(Meters.of(stageHeight), config.getAngle()));
+  }
+  return poses;
+}
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+// The pose of each moving stage of a continuous elevator that moves the carriage last, from the stage
+// nearest the fixed stage to the carriage.
+std::vector<wpi::math::Pose3d> GetCarriageLastPose3d(const Elevator& elevator, const ElevatorConfig& config) {
+  const auto& stageHeights = config.GetStageHeights();
+  wpi::units::meter_t remaining = elevator.GetHeight();
+  wpi::units::meter_t stageHeight{0};
+  std::vector<wpi::math::Pose3d> poses;
+  for (size_t stage = 0; stage < stageHeights.size(); stage++) {
+    // Each stage takes as much of the height as it can travel, and the carriage takes the rest.
+    wpi::units::meter_t extension = stage == stageHeights.size() - 1
+                                        ? remaining
+                                        : std::clamp(remaining, 0_m, stageHeights[stage]);
+    remaining -= extension;
+    stageHeight += extension;
+    poses.push_back(config.GetMechanismPositionConfig().GetTranslatedPose(stageHeight, config.GetAngle()));
+  }
+  return poses;
+}
+```
+{% endtab %}
+{% endtabs %}
 
 {% hint style="info" %}
-A real continuous elevator doesn't always move its stages in exactly this order, since friction and the weight of what it carries decide which stage moves. The order here is the usual one, and it always puts the carriage at the elevator's height.
+A real continuous elevator doesn't always move its stages in exactly this order, since friction and the weight of what it carries decide which stage moves. Watch your elevator move and use the order it usually moves in. Either way the carriage is always at the elevator's height.
 {% endhint %}
 
 #### Publishing the stages
@@ -169,7 +225,7 @@ new ElevatorConfig()
     .withStages(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5));
 
 // The first stage, the second stage, then the carriage, which is elevator.getPose3d().
-// A continuous elevator uses elevator.getContinuousPose3d() instead.
+// A continuous elevator uses elevator.getContinuousPose3d(), or getCarriageLastPose3d(elevator, config), instead.
 List<Pose3d> components = new ArrayList<>(elevator.getCascadePose3d());
 components.add(arm.getPose3d());
 Telemetry.log("Robot/Components", components.toArray(Pose3d[]::new), Pose3d.struct);
@@ -182,7 +238,7 @@ Telemetry.log("Robot/Components", components.toArray(Pose3d[]::new), Pose3d.stru
 m_elevatorConfig.WithStages(0.6_m, 0.6_m, 0.5_m);
 
 // The first stage, the second stage, then the carriage, which is m_elevator->GetPose3d().
-// A continuous elevator uses m_elevator->GetContinuousPose3d() instead.
+// A continuous elevator uses m_elevator->GetContinuousPose3d(), or GetCarriageLastPose3d(*m_elevator, m_elevatorConfig), instead.
 std::vector<wpi::math::Pose3d> components = m_elevator->GetCascadePose3d();
 components.push_back(m_arm->GetPose3d());
 wpi::telemetry::Log("Robot/Components", std::span<const wpi::math::Pose3d>{components});
