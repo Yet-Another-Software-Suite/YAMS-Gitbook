@@ -52,7 +52,7 @@ A slide with no gravity needs no `kG`, so it will want [different simulation gai
 
 ## `withStages`
 
-How far each moving stage travels relative to the stage below it, from the stage nearest the fixed stage to the carriage, which is the last. Give one height for each stage that moves: the number of heights is the number of stages. `Elevator.getCascadePose3d()` and `getContinuousPose3d()` use them to give each stage's pose, to show the stages on an [AdvantageScope robot model](../../how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#elevator-stages).
+How far each moving stage travels relative to the stage below it, from the stage nearest the fixed stage to the carriage, which is the last. Give one height for each stage that moves: the number of heights is the number of stages. `Elevator.getCascadePose3d()` and `getContinuousPose3d(carriageFirst)` use them to give each stage's pose, to show the stages on an [AdvantageScope robot model](../../how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#elevator-stages).
 
 ```java
 new ElevatorConfig()

@@ -291,7 +291,7 @@ One rope or belt runs through every stage. The stages may rise in any order, but
 .withDrumRadius(Inches.of(0.75))
 ```
 
-To show each stage on an AdvantageScope robot model, give the `ElevatorConfig` the stages with [`withStages`](mechanism-configs/elevator-config.md#withstages), and publish `elevator.getContinuousPose3d()`. It shows the carriage rising the whole of its travel first, then the stage below it, and so on. If your stages rise in another order, the carriage is still drawn at its height, but the stages below it are not.
+To show each stage on an AdvantageScope robot model, give the `ElevatorConfig` the stages with [`withStages`](mechanism-configs/elevator-config.md#withstages), and publish `elevator.getContinuousPose3d(carriageFirst)`. Pass `true` if the carriage rises the whole of its travel first, then the stage below it, and so on, or `false` if the stage nearest the fixed stage rises first and the carriage last. Watch your elevator move to see which it is.
 {% endtab %}
 {% endtabs %}
 
