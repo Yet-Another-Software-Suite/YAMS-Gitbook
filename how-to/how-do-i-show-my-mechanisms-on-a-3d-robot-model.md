@@ -136,7 +136,7 @@ With AdvantageKit, record the same array with `Logger.recordOutput("Robot/Compon
 
 ### Elevator stages
 
-An elevator with moving stages has a component for each stage. Give its `ElevatorConfig` the stages with [`withStages`](../details/mechanism-configs/elevator-config.md#withstages): how many move, counting the carriage as the last, and how far each travels relative to the stage below it. The heights must add up to the elevator's maximum height, and without hard limits they set it. Then publish the pose of each stage, in order from the stage nearest the fixed stage to the carriage:
+An elevator with moving stages has a component for each stage. Give its `ElevatorConfig` the stages with [`withStages`](../details/mechanism-configs/elevator-config.md#withstages): how far each moving stage travels relative to the stage below it, one height for each stage, the carriage last. The heights must add up to the elevator's maximum height, and without hard limits they set it. Then publish the pose of each stage, in order from the stage nearest the fixed stage to the carriage:
 
 * `getCascadePose3d()` for a cascading elevator: every stage moves at once, each by its share of the carriage's height.
 * `getContinuousPose3d()` for a continuous elevator: the carriage rises the whole of its travel first, then the stage below it, and so on.
@@ -147,7 +147,7 @@ An elevator with moving stages has a component for each stage. Give its `Elevato
 // Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
 new ElevatorConfig()
     // ... the rest of the config
-    .withStages(3, List.of(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5)));
+    .withStages(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5));
 
 // The first stage, the second stage, then the carriage, which is elevator.getPose3d().
 List<Pose3d> components = new ArrayList<>(elevator.getCascadePose3d());
@@ -159,7 +159,7 @@ Telemetry.log("Robot/Components", components.toArray(Pose3d[]::new), Pose3d.stru
 {% tab title="C++" %}
 ```cpp
 // Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
-m_elevatorConfig.WithStages(3, {0.6_m, 0.6_m, 0.5_m});
+m_elevatorConfig.WithStages(0.6_m, 0.6_m, 0.5_m);
 
 // The first stage, the second stage, then the carriage, which is m_elevator->GetPose3d().
 std::vector<wpi::math::Pose3d> components = m_elevator->GetCascadePose3d();

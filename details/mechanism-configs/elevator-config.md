@@ -52,22 +52,22 @@ A slide with no gravity needs no `kG`, so it will want [different simulation gai
 
 ## `withStages`
 
-The elevator's moving stages, counting the carriage as the last, and how far each travels relative to the stage below it, from the stage nearest the fixed stage to the carriage. `Elevator.getCascadePose3d()` and `getContinuousPose3d()` use them to give each stage's pose, to show the stages on an [AdvantageScope robot model](../../how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#elevator-stages).
+How far each moving stage travels relative to the stage below it, from the stage nearest the fixed stage to the carriage, which is the last. Give one height for each stage that moves: the number of heights is the number of stages. `Elevator.getCascadePose3d()` and `getContinuousPose3d()` use them to give each stage's pose, to show the stages on an [AdvantageScope robot model](../../how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#elevator-stages).
 
 ```java
 new ElevatorConfig()
     // Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
-    .withStages(3, List.of(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5)));
+    .withStages(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5));
 ```
 
-1 stage, an elevator with only a carriage, is valid, but has no stage poses: both methods need 2 or more stages. `withStages` throws for fewer than 1 stage, a different number of heights than stages, or a height that is not positive.
+1 stage, an elevator with only a carriage, is valid, but has no stage poses: both methods need 2 or more stages. `withStages` throws for no heights, or a height that is not positive.
 
 The stages carry the carriage from the bottom to the top, so they also give the elevator's height: without [`withHardLimits`](shared-options.md#withhardlimits), the elevator goes from 0 to the stage heights' total, which `getStageHeightTotal()` returns. With hard limits as well, the stage heights must add up to the maximum height, or the `Elevator` throws an `ElevatorConfigurationException` saying how far apart they are.
 
 ```java
 new ElevatorConfig()
     // 0 m to 1.7 m, from the stages. No withHardLimits needed.
-    .withStages(3, List.of(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5)));
+    .withStages(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5));
 ```
 
 {% hint style="info" %}
