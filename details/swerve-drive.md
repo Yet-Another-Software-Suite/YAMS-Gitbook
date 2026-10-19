@@ -449,10 +449,14 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 | Modules drive velocity (tunable, shared)   | `modules/drive/velocity`            |       |       |    ✓   |
 | Modules drive tuning enabled (tunable)     | `modules/drive/enabled`             |       |       |    ✓   |
 | Modules drive in place (tunable)           | `modules/drive/inplace`             |       |       |    ✓   |
+| Modules drive voltage (tunable, shared)    | `modules/drive/voltage/setpoint`    |       |       |    ✓   |
+| Modules drive voltage enabled (tunable)    | `modules/drive/voltage/enabled`     |       |       |    ✓   |
 | Modules azimuth P/I/D (tunable, shared)    | `modules/azimuth/feedback/p,i,d`    |       |       |    ✓   |
 | Modules azimuth kS/kV/kA (tunable, shared) | `modules/azimuth/feedforward/s,v,a` |       |       |    ✓   |
 | Modules azimuth angle (tunable, shared)    | `modules/azimuth/angle`             |       |       |    ✓   |
 | Modules azimuth tuning enabled (tunable)   | `modules/azimuth/enabled`           |       |       |    ✓   |
+| Modules azimuth voltage (tunable, shared)  | `modules/azimuth/voltage/setpoint`  |       |       |    ✓   |
+| Modules azimuth voltage enabled (tunable)  | `modules/azimuth/voltage/enabled`   |       |       |    ✓   |
 
 {% hint style="info" %}
 `autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and `autoalign/enabled`, and the `modules/drive/*`/`modules/azimuth/*` tuning fields, only take effect while the `Mechanisms/<name>/tuning` command is scheduled, since that's the loop that actually reads them. Publishing values to them with the tuning command idle has no effect on the robot.

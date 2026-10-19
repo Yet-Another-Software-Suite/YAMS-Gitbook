@@ -562,6 +562,8 @@ Check this in simulation first. With the real motor, gearing and mass in the con
 
 `<name>` is the name given to `SwerveDriveConfig.withTelemetry(name, ...)`. The keys are published at `TelemetryVerbosity.HIGH`.
 
+Only one mode drives the robot at a time. Auto-align outranks drive tuning, and drive tuning outranks azimuth tuning: turning on a mode turns the ones below it back off, in NetworkTables too, so the dashboard shows what is actually running.
+
 {% hint style="warning" %}
 The tuning command is only published when both a translation and a rotation controller are set with `withTranslationController(...)` and `withRotationController(...)`. Nothing you type is applied unless the command is running.
 {% endhint %}
@@ -578,7 +580,7 @@ The command is published through `CommandTunable`. Set `NT:/Mechanisms/<name>/tu
 {% endtab %}
 {% endtabs %}
 
-Starting the command resets the translation and rotation PID controllers.
+Starting the command resets the translation and rotation PID controllers. Stopping it turns every mode off and holds the wheels where they are.
 
 ### Tune the swerve modules
 
@@ -612,6 +614,8 @@ Always start on the real robot with it lifted on blocks, and every wheel clear o
 | `modules/azimuth/angle` | Degrees | Target angle for every module. |
 | `modules/azimuth/feedback/p`, `i`, `d` | PID gains | Azimuth motor feedback gains. |
 | `modules/azimuth/feedforward/s`, `v`, `a` | Feedforward gains | Azimuth motor kS, kV, kA. |
+| `modules/azimuth/voltage/enabled` | Boolean | Turn the azimuth motors at `voltage/setpoint` instead of holding the angle. See [Characterize the modules](#characterize-the-modules). |
+| `modules/azimuth/voltage/setpoint` | Volts | Voltage for every azimuth motor. |
 
 Watch one azimuth motor's `mechanism/position` against its `closedloop/setpoint/position`, or the module arrows on the Swerve tab.
 
@@ -668,6 +672,8 @@ Copy the gains into the azimuth motor's `withClosedLoopController(...)` and `wit
 | `modules/drive/inplace` | Boolean | `false`: every module points at 0° and the robot drives straight. `true`: the modules point tangent to the robot center and the robot spins in place. |
 | `modules/drive/feedback/p`, `i`, `d` | PID gains | Drive motor feedback gains. |
 | `modules/drive/feedforward/s`, `v`, `a` | Feedforward gains | Drive motor kS, kV, kA. |
+| `modules/drive/voltage/enabled` | Boolean | Drive the drive motors at `voltage/setpoint` instead of the velocity. See [Characterize the modules](#characterize-the-modules). |
+| `modules/drive/voltage/setpoint` | Volts | Voltage for every drive motor. |
 
 Watch one drive motor's `measurement/velocity` against its `closedloop/setpoint/velocity`. The gains start at the first module's configured values.
 
@@ -718,6 +724,23 @@ Copy the gains into the drive motor's `withClosedLoopController(...)` and `withF
 <figure><img src="../../.gitbook/assets/module-drive-tuning.png" alt="AdvantageScope with modules/drive/enabled on and every module driving at minus 3 meters per second"><figcaption><p>In AdvantageScope: every module driving at the typed velocity.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/module-drive-inplace.gif" alt="With modules/drive/inplace true, raising the velocity spins the chassis faster in place"><figcaption><p>In AdvantageScope: spinning in place with <code>modules/drive/inplace</code>.</p></figcaption></figure>
+
+### Characterize the modules
+
+Instead of tuning by hand, the modules can be driven at a voltage and the gains worked out from how they move, the way WPILib's SysId does. While drive or azimuth tuning is on, set its `voltage/enabled` to `true` and type a voltage into `voltage/setpoint`:
+
+* **Drive:** every drive motor runs at the voltage, without its closed loop. The wheels point forward, or around the robot with `modules/drive/inplace`, and are not optimized, so they always drive the same way.
+* **Azimuth:** every azimuth motor turns at the voltage, without its closed loop, and the drive motors are held still.
+
+A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, so YAMS stops it while the voltage is on and starts it again when the voltage turns off. The setpoint you typed is sent again then, or the wheels are held where they are if no mode is on.
+
+{% hint style="info" %}
+The YAGSL config generator's [Quick Start Guide](https://config.yagsl.com/guide) uses these keys in its Live mode: **Auto**, next to the gain fields, runs a slow ramp and a quick step each way, fits the feedforward, works out the feedback with an LQR, and fills in all six gains. The feedback depends on how often the closed loop runs, which each motor controller publishes as `closedloop/period` at `TelemetryVerbosity.HIGH`.
+{% endhint %}
+
+{% hint style="warning" %}
+A voltage has no speed limit. On a real robot, do this on blocks with every wheel clear, and keep the voltage low.
+{% endhint %}
 
 ### Tune auto-align
 
