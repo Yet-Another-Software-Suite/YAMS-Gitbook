@@ -351,7 +351,7 @@ Sometimes you want no closed loop at all, just a voltage: to find the voltage th
 | You type | Units | What it is |
 | --- | --- | --- |
 | `voltage/enabled` | Boolean | Drive the motor at `voltage/setpoint` while `true`. |
-| `voltage/setpoint` | Volts | The voltage. Set back to `0` when `voltage/enabled` turns on, and applied each time you change it while `voltage/enabled` is `true`. It is not applied while `voltage/enabled` is `false`. |
+| `voltage/setpoint` | Volts | The voltage. Set back to `0` when `voltage/enabled` turns on, and sent to the motor and its loosely coupled followers every loop while `voltage/enabled` is `true`, even when it has not changed. It is not applied while `voltage/enabled` is `false`. |
 
 <figure><img src="../../.gitbook/assets/live-tuning-voltage.png" alt="Three steps. Closed loop: the leader and its loosely coupled follower hold the setpoint. Voltage on: both closed loops stop and the leader and the follower are driven at voltage/setpoint. Voltage off, or the Live Tuning command ends: the voltage goes to 0, both closed loops start again and the setpoint is sent again"><figcaption><p>The closed loop hands over to the voltage, and back again.</p></figcaption></figure>
 
@@ -367,7 +367,7 @@ As in [Use it](#use-it). The voltage is only applied while the command runs.
 
 Set `voltage/enabled` to `true`. YAMS stops the closed loop and starts the motor at 0 V, with `voltage/setpoint` set back to `0`, so nothing moves until you type a voltage. A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, which is why it is stopped.
 
-Now type a small voltage, such as `1`, into `voltage/setpoint`. It is sent each time you change it.
+Now type a small voltage, such as `1`, into `voltage/setpoint`. It is sent every loop, so the motor keeps outputting it until you change it.
 {% endstep %}
 
 {% step %}
