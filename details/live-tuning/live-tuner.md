@@ -34,7 +34,13 @@ Once connected, the badge shows the host and the robot's mode. Enable the robot,
 If your browser asks whether the page may connect to devices on your local network, allow it. The robot and the simulation are on your local network.
 {% endhint %}
 
-## Step 1: Pick the mechanism
+## Tune a mechanism
+
+The Live Tuner's numbered steps unlock one after another. Each one has to be finished, or skipped where that is allowed, before the next.
+
+{% stepper %}
+{% step %}
+#### Pick the mechanism
 
 Choose the motor controller under **Telemetry name**, and the subsystem (Commands v2) or mechanism (Commands v3) whose `Live Tuning` command it belongs to. The lists are filled in from what the robot publishes under `NT:/Tuning`, so a motor controller only shows up once live tuning is [turned on](README.md#turn-it-on) for it.
 
@@ -43,14 +49,18 @@ Set **Type** to the kind of mechanism. Position setpoints are in meters for an e
 <figure><img src="../../.gitbook/assets/live-tuner-mechanism.png" alt="Step 1 with Elevator/ElevatorMotor as the telemetry name, ElevatorSubsystem as the Live Tuning command and Elevator as the type, so setpoints are in meters"><figcaption><p>The elevator motor, its subsystem's <code>Live Tuning</code> command, and the Elevator type.</p></figcaption></figure>
 
 Changing anything in this step resets every confirmation below it.
+{% endstep %}
 
-## Step 2: Go through the pre-motion checklist
+{% step %}
+#### Go through the pre-motion checklist
 
 Nothing moves until every item is ticked. **Current trip** stops Live Tuning if the stator current stays above it for 250 ms, which catches a stalled or jammed mechanism.
 
 <figure><img src="../../.gitbook/assets/live-tuner-checklist.png" alt="The pre-motion checklist with all four items ticked, and the current trip set to 40 A"><figcaption><p>Every item confirmed, with a 40 A current trip.</p></figcaption></figure>
+{% endstep %}
 
-## Step 3: Check the inversions
+{% step %}
+#### Check the inversions
 
 This step drives the motor at a small voltage, with no closed loop, to check that a positive voltage moves the mechanism in its positive direction and that the position reading goes the same way.
 
@@ -67,8 +77,10 @@ Then drive it the other way. Once both directions are ticked, press **Set 0 V** 
 <figure><img src="../../.gitbook/assets/live-tuner-inversions-done.png" alt="Holding -1 V with both Positive voltage moves up and Negative voltage moves down ticked, and Finish check enabled"><figcaption><p>Both directions checked.</p></figcaption></figure>
 
 If the position goes the wrong way, stop and fix `withMotorInverted(...)`, or the encoder inversion, in the robot code before going on.
+{% endstep %}
 
-## Step 4: Verify the range of motion
+{% step %}
+#### Verify the range of motion
 
 The Live Tuner only sends setpoints inside a range that the mechanism has actually been driven across. There are two ways to set it:
 
@@ -84,8 +96,10 @@ Once both ends are marked, press **Finish verification**.
 <figure><img src="../../.gitbook/assets/live-tuner-range-verified.png" alt="Step 4 verified from 0.017 m to 1.000 m, with a note that the lower end was marked where the elevator stopped against its hard stop, just short of 0 m"><figcaption><p>Verified from 0.017 m to 1.000 m. The elevator stopped on its hard stop just short of 0 m, so the lower end was marked there.</p></figcaption></figure>
 
 Live Tuning stops if the mechanism leaves the verified range.
+{% endstep %}
 
-## Step 5: Live tune
+{% step %}
+#### Live tune
 
 Press **Start Live Tuning**. This starts the subsystem's `Live Tuning` command, so the setpoints and gains you send are applied every loop.
 
@@ -93,7 +107,7 @@ Send a setpoint by typing it, with the slider, or with **Lower**, **25%**, **Mid
 
 <figure><img src="../../.gitbook/assets/live-tuner-live-tune.png" alt="After sending Mid, the graph shows the elevator rising from its bottom stop and settling on the 0.508 m setpoint"><figcaption><p>Sent <strong>Mid</strong>, and the elevator settles on it.</p></figcaption></figure>
 
-### Change the gains
+**Change the gains**
 
 The **Gains** card shows the values the robot publishes under `NT:/Tuning`. Type a new value and press **Enter** to apply it.
 
@@ -105,11 +119,13 @@ While the elevator held still, the output read about 0.6 V: that is the voltage 
 
 [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does.
 
-### Alternate between two setpoints
+**Alternate between two setpoints**
 
 Turn on **Alternate setpoints** to switch between **Setpoint A** and **Setpoint B** every 5 seconds. Each step is the same, so you can change a gain and compare the next step with the last one.
 
 <figure><img src="../../.gitbook/assets/live-tuner-alternate.png" alt="Alternate setpoints on, switching between 0.262 m and 0.754 m: the graph shows the elevator stepping up and back down"><figcaption><p>Stepping between 0.262 m and 0.754 m.</p></figcaption></figure>
+{% endstep %}
+{% endstepper %}
 
 ## Stop
 
