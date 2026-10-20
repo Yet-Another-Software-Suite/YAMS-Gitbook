@@ -29,6 +29,7 @@ Give the motor's telemetry `TelemetryVerbosity.HIGH`. That is all most robots ne
 | --- | --- |
 | `withTelemetry(name, TelemetryVerbosity.HIGH)` | Registered for you |
 | `withTelemetry(name, telemetryConfig)` with a `SmartMotorControllerTelemetryConfig` | Registered for you |
+| A mechanism, such as an `Arm`, `Elevator`, `Pivot` or `FlyWheel`, with `withTelemetry(...)` on its own config too | Registered for you, for the mechanism's motor controllers |
 | You call `setupTelemetry(NetworkTable, NetworkTable)` yourself (Java) | Call `setupLiveTuning()` afterwards, see below |
 | C++ with `TelemetryVerbosity::HIGH` and a subsystem on the config | Registered for you when `SetupTelemetry()` runs |
 
@@ -278,6 +279,13 @@ All of these keys start with `closedloop/motionprofile/`.
 | `motor/inverted` | Boolean | `mechanism/velocity` | Flips the motor direction. Positive voltage should give a positive velocity. |
 | `encoder/inverted` | Boolean | `mechanism/position` | Flips the encoder direction. |
 {% endtab %}
+
+{% tab title="Voltage" %}
+| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
+| --- | --- | --- | --- |
+| `voltage/enabled` | Boolean | `motor/outputVoltage` | Drive the motor at `voltage/setpoint` instead of the closed loop. See [Drive a motor at a voltage](#drive-a-motor-at-a-voltage). |
+| `voltage/setpoint` | Volts | `mechanism/velocity`, `current/stator` | The voltage for the motor and its loosely coupled followers. |
+{% endtab %}
 {% endtabs %}
 
 {% hint style="info" %}
@@ -335,6 +343,59 @@ In YAMS, `ArmFeedforward` uses rotations for kV and kA, like the other feedforwa
 On the dashboard, the trapezoidal values are typed in RPM and RPM per second, as in the Motion profile tab above.
 
 </details>
+
+## Drive a motor at a voltage
+
+Sometimes you want no closed loop at all, just a voltage: to find the voltage that just starts a mechanism moving, to check that a positive voltage moves it the way you expect, or to see how fast it goes at 3 V. Every motor controller with `TelemetryVerbosity.HIGH` has two keys for this under `NT:/Tuning/<Mechanism>/<Motor>/`:
+
+| You type | Units | What it is |
+| --- | --- | --- |
+| `voltage/enabled` | Boolean | Drive the motor at `voltage/setpoint` while `true`. |
+| `voltage/setpoint` | Volts | The voltage. Set back to `0` when `voltage/enabled` turns on, and applied each time you change it while `voltage/enabled` is `true`. It is not applied while `voltage/enabled` is `false`. |
+
+<figure><img src="../../.gitbook/assets/live-tuning-voltage.png" alt="Three steps. Closed loop: the leader and its loosely coupled follower hold the setpoint. Voltage on: both closed loops stop and the leader and the follower are driven at voltage/setpoint. Voltage off, or the Live Tuning command ends: the voltage goes to 0, both closed loops start again and the setpoint is sent again"><figcaption><p>The closed loop hands over to the voltage, and back again.</p></figcaption></figure>
+
+{% stepper %}
+{% step %}
+#### Start the `Live Tuning` command
+
+As in [Use it](#use-it). The voltage is only applied while the command runs.
+{% endstep %}
+
+{% step %}
+#### Turn it on, then type a voltage
+
+Set `voltage/enabled` to `true`. YAMS stops the closed loop and starts the motor at 0 V, with `voltage/setpoint` set back to `0`, so nothing moves until you type a voltage. A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, which is why it is stopped.
+
+Now type a small voltage, such as `1`, into `voltage/setpoint`. It is sent each time you change it.
+{% endstep %}
+
+{% step %}
+#### Watch it move
+
+Graph `mechanism/velocity` (or `measurement/velocity`), `motor/outputVoltage` and `current/stator`. Raise or lower `voltage/setpoint` a little at a time.
+{% endstep %}
+
+{% step %}
+#### Turn it off
+
+Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts again, and the setpoint it held before is sent again, so the mechanism goes back to it.
+{% endstep %}
+{% endstepper %}
+
+**Setpoints typed while the voltage is on are skipped.** A value typed into `closedloop/setpoint/position` or `closedloop/setpoint/velocity` then is not saved for later. Type it again once the voltage is off. Gains, limits and the other tunable values are applied as soon as you type them, even while the voltage is on.
+
+**Loosely coupled followers** are driven at the same voltage. A follower is normally sent its leader's setpoints and runs its own closed loop, so it is not sent a voltage the leader is driven at. With `voltage/enabled` on, YAMS stops the followers' closed loops with the leader's and sends each follower the voltage itself. Each follower's own inversion still applies. Turning the voltage off starts the followers' closed loops again and sends them the setpoint with the leader's.
+
+**When the `Live Tuning` command ends**, because you stopped it or another command for the subsystem or mechanism interrupted it, the voltage stops too. YAMS turns the voltage off, sets `voltage/enabled` back to `false` so the voltage is not applied again as soon as the command starts again, and the closed loop holds the setpoint.
+
+{% hint style="warning" %}
+A voltage has no speed limit and no motion profile. Start low, keep the mechanism away from its hard stops, and keep a hand on disable. On an arm or elevator, a voltage too small to hold it up lets it fall.
+{% endhint %}
+
+{% hint style="info" %}
+Live tuning needs `ControlMode.CLOSED_LOOP`. The voltage keys are published at `TelemetryVerbosity.HIGH`, or with `withCustom(DoubleTelemetryField.TunableVoltage, true)` and `withCustom(BooleanTelemetryField.TunableVoltageEnabled, true)` on a `SmartMotorControllerTelemetryConfig`.
+{% endhint %}
 
 ## Tuning order
 
@@ -419,7 +480,7 @@ A constant force spring pulls the carriage up with about the same force at every
 
 <figure><img src="../../.gitbook/assets/live-tuning-spring.png" alt="Three elevators. With no spring the motor holds all of the weight and kG is large and positive. With a spring that matches the carriage weight, kG is close to zero. With a stronger spring the motor has to hold the carriage down and kG is negative"><figcaption><p>kG is what is left for the motor to do after the spring.</p></figcaption></figure>
 
-Do not copy kG from a calculation or from the robot before the springs went on. Measure it:
+Do not copy kG from a calculation or from the robot before the springs went on. Measure it. The steps below type the voltages into `closedloop/feedforward/kG`; you can type them into [`voltage/setpoint`](#drive-a-motor-at-a-voltage) with `voltage/enabled` on instead, which takes the closed loop out of the way without zeroing any gains:
 
 <figure><img src="../../.gitbook/assets/live-tuning-spring-test.png" alt="A bar chart of two voltages: plus 1.1 volts just makes the carriage creep up and minus 0.5 volts just makes it creep down. kG is halfway between them, 0.3 volts. kS is half the gap between them, 0.8 volts"><figcaption><p>Two voltages give kG and kS. Example values.</p></figcaption></figure>
 
