@@ -365,7 +365,7 @@ As in [Use it](#use-it). The voltage is only applied while the command runs.
 {% step %}
 #### Type a voltage, then turn it on
 
-Type a small voltage, such as `1`, into `voltage/setpoint`, then set `voltage/enabled` to `true`. YAMS stops the closed loop and drives the motor at the voltage every loop. A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, which is why it is stopped.
+Type a small voltage, such as `1`, into `voltage/setpoint`, then set `voltage/enabled` to `true`. YAMS stops the closed loop and sends the motor the voltage, and sends it again whenever you change `voltage/setpoint`. A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, which is why it is stopped.
 {% endstep %}
 
 {% step %}
@@ -377,7 +377,7 @@ Graph `mechanism/velocity` (or `measurement/velocity`), `motor/outputVoltage` an
 {% step %}
 #### Turn it off
 
-Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts again, and the setpoint it held before is sent again, so the mechanism goes back to it. A setpoint you typed into `closedloop/setpoint/position` or `closedloop/setpoint/velocity` while the voltage was on is applied now, not before.
+Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts again, and the setpoint it held before is sent again, so the mechanism goes back to it. Nothing else is applied while the voltage is on, so anything you typed meanwhile, such as a setpoint or a gain, is applied now, not before.
 {% endstep %}
 {% endstepper %}
 
