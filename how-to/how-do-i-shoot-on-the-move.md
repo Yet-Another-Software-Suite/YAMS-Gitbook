@@ -483,7 +483,7 @@ public class SwerveMechanism implements Mechanism {
     drive.updateTelemetry();
   }
 
-  /** Call this from Robot.simulationPeriodic(). */
+  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
   public void simulationPeriodic() {
     // Runs the physics simulation of all eight motors.
     drive.simIterate();
@@ -719,7 +719,7 @@ public class ShooterMechanism implements Mechanism {
     shooter.updateTelemetry();
   }
 
-  /** Call this from Robot.simulationPeriodic(). */
+  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
   public void simulationPeriodic() {
     // Runs the flywheel's physics simulation.
     shooter.simIterate();
@@ -869,7 +869,7 @@ public class FeederMechanism implements Mechanism {
     feeder.updateTelemetry();
   }
 
-  /** Call this from Robot.simulationPeriodic(). */
+  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
   public void simulationPeriodic() {
     feeder.simIterate();
   }
@@ -1119,9 +1119,12 @@ import first.robot.mechanisms.ExampleMechanism;
 import first.robot.mechanisms.FeederMechanism;
 import first.robot.mechanisms.ShooterMechanism;
 import first.robot.mechanisms.SwerveMechanism;
+import java.util.ArrayList;
+import java.util.List;
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
+import org.wpilib.system.Notifier;
 import org.wpilib.telemetry.Telemetry;
 
 public class Robot extends OpModeRobot {
@@ -1135,6 +1138,8 @@ public class Robot extends OpModeRobot {
 
   // The scheduler that runs every command.
   private final Scheduler scheduler = Scheduler.getDefault();
+  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
+  private final List<Notifier> simulationNotifiers = new ArrayList<>();
 
   /** The shot for where the robot is, and how it is moving, right now. */
   ShotCalculator.Shot shot() {
@@ -1160,11 +1165,20 @@ public class Robot extends OpModeRobot {
   }
 
   @Override
-  public void simulationPeriodic() {
-    // Runs every loop, in simulation only.
-    drive.simulationPeriodic();
-    shooter.simulationPeriodic();
-    feeder.simulationPeriodic();
+  public void simulationInit() {
+    // Runs once, when the simulation starts.
+    // Run each mechanism's simulation in its own Notifier, every robot loop.
+    startSimulation("Drive", drive::simulationPeriodic);
+    startSimulation("Shooter", shooter::simulationPeriodic);
+    startSimulation("Feeder", feeder::simulationPeriodic);
+  }
+
+  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
+  private void startSimulation(String name, Runnable simulationPeriodic) {
+    Notifier notifier = new Notifier(simulationPeriodic);
+    notifier.setName(name + " Simulation");
+    notifier.startPeriodic(getPeriod());
+    simulationNotifiers.add(notifier);
   }
 }
 ```

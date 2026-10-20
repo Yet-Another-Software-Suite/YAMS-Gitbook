@@ -18,7 +18,7 @@ Open the command palette with <kbd>Ctrl+Shift+P</kbd> and run **WPILib: Simulate
 
 The buttons are bound in the `ExampleTeleop` op mode, so that is the op mode to run when you enable.
 
-If the simulated mechanism never moves, check that `Robot.java` has a `simulationPeriodic()` that calls the mechanism's `simulationPeriodic()`.
+If the simulated mechanism never moves, check that `Robot.java` has a `simulationInit()` that calls `startSimulation(...)` for the mechanism.
 {% endtab %}
 
 {% tab title="C++" %}

@@ -121,7 +121,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-The same as Commands v2, with `SmartMotorControllerConfig` and `Arm` from `yams.commands3`, and the class a `Mechanism`. A `Mechanism` has no periodic hook, so call `updateTelemetry()` and `simIterate()` on the arm and on each follower from `Robot.robotPeriodic()`.
+The same as Commands v2, with `SmartMotorControllerConfig` and `Arm` from `yams.commands3`, and the class a `Mechanism`. A `Mechanism` has no periodic hook, so call `updateTelemetry()` on the arm and on each follower from `Robot.robotPeriodic()`, and run their `simIterate()` in a `Notifier`, started from `Robot.simulationInit()`, as in [Where the tutorials put things](../../../tutorials/project-setup.md#where-the-tutorials-put-things).
 {% endtab %}
 
 {% tab title="C++" %}

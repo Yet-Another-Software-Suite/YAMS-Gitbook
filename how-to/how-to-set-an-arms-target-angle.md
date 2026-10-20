@@ -270,7 +270,7 @@ public class ExampleMechanism implements Mechanism {
   }
 
   public void simulationPeriodic() {
-    // A Commands v3 Mechanism has no periodic hook: call this from Robot.robotPeriodic() in simulation
+    // A Commands v3 Mechanism has no periodic hook: Robot.simulationInit() runs this in its own Notifier
     arm.simIterate();
   }
 }
@@ -361,10 +361,12 @@ import first.robot.mechanisms.ExampleMechanism;
 
 import static org.wpilib.units.Units.Degrees;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandNiDsXboxController;
 import org.wpilib.framework.OpModeRobot;
-import org.wpilib.framework.RobotBase;
+import org.wpilib.system.Notifier;
 
 /**
  * With Commands v3 there is no RobotContainer. The robot's mechanisms and controllers are declared
@@ -377,6 +379,8 @@ public class Robot extends OpModeRobot {
   public final CommandNiDsXboxController driverController = new CommandNiDsXboxController(0);
 
   private final Scheduler scheduler = Scheduler.getDefault();
+  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
+  private final List<Notifier> simulationNotifiers = new ArrayList<>();
 
   public Robot() {
     // Set the default command to force the arm to go to 0.
@@ -387,10 +391,22 @@ public class Robot extends OpModeRobot {
   public void robotPeriodic() {
     // A Mechanism has no periodic hook, so update it before the scheduler runs.
     exampleMechanism.periodic();
-    if (RobotBase.isSimulation()) {
-      exampleMechanism.simulationPeriodic();
-    }
     scheduler.run();
+  }
+
+  @Override
+  public void simulationInit() {
+    // Runs once, when the simulation starts.
+    // Run each mechanism's simulation in its own Notifier, every robot loop.
+    startSimulation("Example Mechanism", exampleMechanism::simulationPeriodic);
+  }
+
+  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
+  private void startSimulation(String name, Runnable simulationPeriodic) {
+    Notifier notifier = new Notifier(simulationPeriodic);
+    notifier.setName(name + " Simulation");
+    notifier.startPeriodic(getPeriod());
+    simulationNotifiers.add(notifier);
   }
 }
 ```

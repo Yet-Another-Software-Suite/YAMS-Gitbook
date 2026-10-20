@@ -159,7 +159,7 @@ public class SwerveMechanism implements Mechanism
     drive.updateTelemetry(); // also updates the pose estimate
   }
 
-  public void simulationPeriodic() // call from Robot.robotPeriodic() in simulation
+  public void simulationPeriodic() // Robot.simulationInit() runs this in its own Notifier
   {
     drive.simIterate();
   }

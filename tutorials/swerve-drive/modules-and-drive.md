@@ -318,7 +318,7 @@ In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for yo
 In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it. `Robot.java` has the two functions you need:
 
 * **`robotPeriodic()`** runs every loop, on the robot and in simulation. Call the mechanism's `periodic()` here, before `scheduler.run()`, so that the commands see fresh values.
-* **`simulationPeriodic()`** runs every loop in simulation only, right after `robotPeriodic()`. The template does not have it yet, so add it, and call the mechanism's `simulationPeriodic()` here.
+* **`simulationInit()`** runs once, when the simulation starts. The template does not have it yet, so add it, and start the mechanism's `simulationPeriodic()` here with `startSimulation(...)`, which runs it in its own `Notifier` every loop, in simulation only. That keeps the simulation from adding to the robot loop's time, as [Where the tutorials put things](../project-setup.md#where-the-tutorials-put-things) explains.
 
 Every mechanism you add to the robot gets one line in each of the two.
 
@@ -354,7 +354,7 @@ public void periodic() {
   drive.updateTelemetry();
 }
 
-/** Call this from Robot.simulationPeriodic(). */
+/** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
 public void simulationPeriodic() {
   // Runs the physics simulation of all eight motors.
   drive.simIterate();
@@ -366,6 +366,9 @@ public void simulationPeriodic() {
 
 {% code title="Robot.java" %}
 ```java
+import java.util.ArrayList;
+import java.util.List;
+import org.wpilib.system.Notifier;
 import org.wpilib.telemetry.Telemetry;
 import first.robot.mechanisms.SwerveMechanism;
 
@@ -376,6 +379,8 @@ public class Robot extends OpModeRobot {
 
   // The scheduler that runs every command.
   private final Scheduler scheduler = Scheduler.getDefault();
+  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
+  private final List<Notifier> simulationNotifiers = new ArrayList<>();
 
   // ...
 
@@ -390,9 +395,18 @@ public class Robot extends OpModeRobot {
   }
 
   @Override
-  public void simulationPeriodic() {
-    // Runs every loop, in simulation only.
-    drive.simulationPeriodic();
+  public void simulationInit() {
+    // Runs once, when the simulation starts.
+    // Run each mechanism's simulation in its own Notifier, every robot loop.
+    startSimulation("Drive", drive::simulationPeriodic);
+  }
+
+  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
+  private void startSimulation(String name, Runnable simulationPeriodic) {
+    Notifier notifier = new Notifier(simulationPeriodic);
+    notifier.setName(name + " Simulation");
+    notifier.startPeriodic(getPeriod());
+    simulationNotifiers.add(notifier);
   }
 }
 ```
@@ -564,7 +578,7 @@ public class SwerveSubsystem extends SubsystemBase {
 {% tab title="Java, Commands v3" %}
 The highlighted lines are new in this step.
 
-Nothing calls a periodic method on a Commands v3 `Mechanism`, so give the class its own `periodic()` and `simulationPeriodic()` and create the mechanism in `Robot.java`. Then call its `periodic()` from `Robot.robotPeriodic()`, before the scheduler runs, and its `simulationPeriodic()` from `Robot.simulationPeriodic()`.
+Nothing calls a periodic method on a Commands v3 `Mechanism`, so give the class its own `periodic()` and `simulationPeriodic()` and create the mechanism in `Robot.java`. Then call its `periodic()` from `Robot.robotPeriodic()`, before the scheduler runs, and start its `simulationPeriodic()` in its own `Notifier` from `Robot.simulationInit()`.
 
 <pre class="language-java" data-title="mechanisms/SwerveMechanism.java" data-line-numbers><code class="lang-java">package first.robot.mechanisms;
 
@@ -683,7 +697,7 @@ public class SwerveMechanism implements Mechanism {
 </strong><strong>    drive.updateTelemetry();
 </strong><strong>  }
 </strong>
-<strong>  /** Call this from Robot.simulationPeriodic(). */
+<strong>  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
 </strong><strong>  public void simulationPeriodic() {
 </strong><strong>    // Runs the physics simulation of all eight motors.
 </strong><strong>    drive.simIterate();
@@ -695,10 +709,13 @@ public class SwerveMechanism implements Mechanism {
 
 <pre class="language-java" data-title="Robot.java" data-line-numbers><code class="lang-java">package first.robot;
 
-import org.wpilib.command3.Scheduler;
+<strong>import java.util.ArrayList;
+</strong><strong>import java.util.List;
+</strong>import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
-<strong>import org.wpilib.telemetry.Telemetry;
+<strong>import org.wpilib.system.Notifier;
+</strong><strong>import org.wpilib.telemetry.Telemetry;
 </strong>import first.robot.constants.DriverConstants;
 <strong>import first.robot.mechanisms.SwerveMechanism;
 </strong>import first.robot.mechanisms.ExampleMechanism;
@@ -711,6 +728,8 @@ public class Robot extends OpModeRobot {
 
 <strong>  // The scheduler that runs every command.
 </strong><strong>  private final Scheduler scheduler = Scheduler.getDefault();
+</strong><strong>  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
+</strong><strong>  private final List&#x3C;Notifier> simulationNotifiers = new ArrayList&#x3C;>();
 </strong>
   public Robot() {}
 
@@ -725,11 +744,20 @@ public class Robot extends OpModeRobot {
 </strong><strong>  }
 </strong>
 <strong>  @Override
-</strong><strong>  public void simulationPeriodic() {
-</strong><strong>    // Runs every loop, in simulation only.
-</strong><strong>    drive.simulationPeriodic();
-</strong>  }
-}
+</strong><strong>  public void simulationInit() {
+</strong><strong>    // Runs once, when the simulation starts.
+</strong><strong>    // Run each mechanism's simulation in its own Notifier, every robot loop.
+</strong><strong>    startSimulation("Drive", drive::simulationPeriodic);
+</strong><strong>  }
+</strong>
+<strong>  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
+</strong><strong>  private void startSimulation(String name, Runnable simulationPeriodic) {
+</strong><strong>    Notifier notifier = new Notifier(simulationPeriodic);
+</strong><strong>    notifier.setName(name + " Simulation");
+</strong><strong>    notifier.startPeriodic(getPeriod());
+</strong><strong>    simulationNotifiers.add(notifier);
+</strong><strong>  }
+</strong>}
 </code></pre>
 {% endtab %}
 

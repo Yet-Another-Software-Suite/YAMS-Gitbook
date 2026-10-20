@@ -341,7 +341,7 @@ public class ExampleMechanism implements Mechanism {
   }
 
   public void simulationPeriodic() {
-    // A Commands v3 Mechanism has no periodic hook: call this from Robot.robotPeriodic() in simulation
+    // A Commands v3 Mechanism has no periodic hook: Robot.simulationInit() runs this in its own Notifier
     leftSparkSmartMotorController.simIterate();
     rightSparkSmartMotorController.simIterate();
   }
