@@ -351,7 +351,7 @@ Sometimes you want no closed loop at all, just a voltage: to find the voltage th
 | You type | Units | What it is |
 | --- | --- | --- |
 | `voltage/enabled` | Boolean | Drive the motor at `voltage/setpoint` while `true`. |
-| `voltage/setpoint` | Volts | The voltage. You can change it while `voltage/enabled` is `true`. |
+| `voltage/setpoint` | Volts | The voltage. You can change it while `voltage/enabled` is `true`. It is not applied while `voltage/enabled` is `false`. |
 
 <figure><img src="../../.gitbook/assets/live-tuning-voltage.png" alt="Three steps. Closed loop: the leader and its loosely coupled follower hold the setpoint. Voltage on: both closed loops stop and the leader and the follower are driven at voltage/setpoint. Voltage off, or the Live Tuning command ends: the voltage goes to 0, both closed loops start again and the setpoint is sent again"><figcaption><p>The closed loop hands over to the voltage, and back again.</p></figcaption></figure>
 
@@ -365,7 +365,7 @@ As in [Use it](#use-it). The voltage is only applied while the command runs.
 {% step %}
 #### Type a voltage, then turn it on
 
-Type a small voltage, such as `1`, into `voltage/setpoint`, then set `voltage/enabled` to `true`. YAMS stops the closed loop and sends the motor the voltage, and sends it again whenever you change `voltage/setpoint`. A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, which is why it is stopped.
+Type a small voltage, such as `1`, into `voltage/setpoint`, then set `voltage/enabled` to `true`. YAMS stops the closed loop and sends the motor the voltage straight away, and sends it again whenever you change `voltage/setpoint`. A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, which is why it is stopped.
 {% endstep %}
 
 {% step %}
@@ -377,9 +377,11 @@ Graph `mechanism/velocity` (or `measurement/velocity`), `motor/outputVoltage` an
 {% step %}
 #### Turn it off
 
-Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts again, and the setpoint it held before is sent again, so the mechanism goes back to it. Nothing else is applied while the voltage is on, so anything you typed meanwhile, such as a setpoint or a gain, is applied now, not before.
+Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts again, and the setpoint it held before is sent again, so the mechanism goes back to it.
 {% endstep %}
 {% endstepper %}
+
+**Setpoints wait for the closed loop.** While the voltage is on, a value typed into `closedloop/setpoint/position` or `closedloop/setpoint/velocity` is skipped, not saved for later. Type it again once the voltage is off. Gains, limits and the other tunable values are applied as soon as you type them, even while the voltage is on.
 
 **Loosely coupled followers** are driven at the same voltage. A follower is normally sent its leader's setpoints and runs its own closed loop, so it is not sent a voltage the leader is driven at. With `voltage/enabled` on, YAMS stops the followers' closed loops with the leader's and sends each follower the voltage itself. Each follower's own inversion still applies. Turning the voltage off starts the followers' closed loops again and sends them the setpoint with the leader's.
 
