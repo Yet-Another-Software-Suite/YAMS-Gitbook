@@ -381,7 +381,7 @@ Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts 
 {% endstep %}
 {% endstepper %}
 
-**Setpoints wait for the closed loop.** While the voltage is on, a value typed into `closedloop/setpoint/position` or `closedloop/setpoint/velocity` is skipped, not saved for later. Type it again once the voltage is off. Gains, limits and the other tunable values are applied as soon as you type them, even while the voltage is on.
+**Setpoints typed while the voltage is on are skipped.** A value typed into `closedloop/setpoint/position` or `closedloop/setpoint/velocity` then is not saved for later. Type it again once the voltage is off. Gains, limits and the other tunable values are applied as soon as you type them, even while the voltage is on.
 
 **Loosely coupled followers** are driven at the same voltage. A follower is normally sent its leader's setpoints and runs its own closed loop, so it is not sent a voltage the leader is driven at. With `voltage/enabled` on, YAMS stops the followers' closed loops with the leader's and sends each follower the voltage itself. Each follower's own inversion still applies. Turning the voltage off starts the followers' closed loops again and sends them the setpoint with the leader's.
 
