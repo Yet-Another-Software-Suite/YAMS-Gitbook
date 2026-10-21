@@ -64,7 +64,7 @@ YAMS maven artifacts are served from `https://cdn.yassrobotics.com/`.
 
 The quickest way to get started is [YAMG](https://yamg.yassrobotics.com/), the Yet Another Mechanisms Generator. Fill in a form about your mechanism and it writes the code for you, ready to copy into your project.
 
-<figure><img src=".gitbook/assets/yamg.png" alt="The YAMG website generating an arm. On the left, the form: subsystem name ArmSubsystem, mechanism type Arm, Use YAMS turned on, Commands v2, and the motor configuration with a SparkMAX and a NEO. On the right, the generated ArmSubsystem.java with its SmartMotorControllerConfig, in tabs next to Robot.java and RobotContainer.java, with Copy, Save File, Copy Link and Download All buttons. A WPILib 2026 and WPILib 2027 toggle is at the top right."><figcaption><p>YAMG generating an arm with YAMS.</p></figcaption></figure>
+<figure><img src=".gitbook/assets/yamg.png" alt="The YAMG website, in the YASS style, generating an arm. On the left, the form: subsystem name ArmSubsystem, mechanism type Arm, Use YAMS turned on, Commands v2, and the motor configuration with a SparkMAX and a NEO. On the right, the generated ArmSubsystem.java with its SparkMax and SmartMotorControllerConfig, in tabs next to Robot.java and RobotContainer.java, with Copy, Save File, Copy Link and Download All buttons. A WPILib 2026 and WPILib 2027 toggle is at the top right."><figcaption><p>YAMG generating an arm with YAMS.</p></figcaption></figure>
 
 1. Pick your WPILib version with the toggle at the top right: 2027, or 2026 for a 2026 project.
 2. Turn on **Use YAMS**. Without it, YAMG writes code that uses only WPILib and the motor controller's vendor library.
