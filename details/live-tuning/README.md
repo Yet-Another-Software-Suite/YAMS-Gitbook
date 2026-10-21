@@ -4,7 +4,7 @@ icon: plug-circle-plus
 
 # Live tuning
 
-Live tuning lets you change gains, motion profiles and limits from a dashboard while the robot is enabled, and see the result straight away. It works over NetworkTables with AdvantageScope or Elastic.
+Live tuning lets you change gains, motion profiles and limits from a dashboard while the robot is enabled, and see the result straight away. It works over NetworkTables with AdvantageScope, Elastic, or the [YAMS Live Tuner](https://tuning.yassrobotics.com/) in your browser.
 
 <figure><img src="../../.gitbook/assets/live-tuning-loop.png" alt="A loop: the dashboard sends tunable values under NT:/Tuning to the Live Tuning command, which applies them to the SmartMotorController every loop, and telemetry under NT:/Mechanisms flows back to the dashboard"><figcaption><p>Change a number, watch the graph, change it again.</p></figcaption></figure>
 
@@ -142,6 +142,140 @@ The `Live Tuning` command requires the subsystem or mechanism, so the controller
 <figure><img src="../../.gitbook/assets/new_liveutinging.gif" alt="Starting the Live Tuning command and editing a tunable value on the dashboard"><figcaption><p>Starting the command and changing a value.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/AScopeLiveTuningExample.gif" alt="Tuning a mechanism in AdvantageScope while the robot is enabled"><figcaption><p>Tuning while the robot is enabled.</p></figcaption></figure>
+
+## Tune in your browser with the YAMS Live Tuner
+
+The [YAMS Live Tuner](https://tuning.yassrobotics.com/) is a web page for live tuning YAMS elevators, arms, pivots and flywheels. It walks you through a safety checklist, an inversion check and a check of the range of motion before anything moves under closed loop, then lets you send setpoints and edit the gains while you watch the graph.
+
+It connects to the simulation on `localhost`, to a robot by team number, or to any other host. The page is served over HTTPS but talks to the robot with `ws://`, which Chromium based browsers such as Chrome and Edge allow for local network addresses. They may ask for permission to access devices on your local network.
+
+{% hint style="info" %}
+No robot code to hand? Open [tuning.yassrobotics.com/?demo](https://tuning.yassrobotics.com/?demo) to try it on a robot simulated in the page.
+{% endhint %}
+
+{% tabs %}
+{% tab title="Elevators" %}
+{% stepper %}
+{% step %}
+#### Connect to the simulation
+
+Start the robot code in simulation. With Commands v3, each mechanism's simulation runs in its own `Notifier` ([Where the tutorials put things](../../tutorials/project-setup.md#where-the-tutorials-put-things)). Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, press **Connect**, and enable the robot in the simulated Driver Station.
+{% endstep %}
+{% step %}
+#### Pick the mechanism
+
+Under **Mechanism**, pick the motor's telemetry name, the mechanism's Live Tuning command, and its type. The BroncBotz 2025 example's elevator is `Elevator/ElevatorMotor`, with the `Elevator` command, as an **Elevator**. Setpoints are in meters.
+{% endstep %}
+{% step %}
+#### Go through the pre-motion checklist
+
+Confirm each item, and set the **Current trip**: stator current above it for 250 ms stops the tuner.
+{% endstep %}
+{% step %}
+#### Check the inversions
+
+Press **Start voltage control** and drive the mechanism with a small voltage each way. The tuner checks that positive voltage moves it in its positive direction. Gravity pulls an elevator down, so it can need a little more voltage to move up than down.
+{% endstep %}
+{% step %}
+#### Verify the range of motion
+
+Drive to each end of travel with **Find ends by driving**, or type a range into **Enter range and test it** and hold the drive buttons until each end is reached. Live Tuning then keeps every setpoint inside that range, and stops if the mechanism leaves it.
+{% endstep %}
+{% step %}
+#### Live tune
+
+Press **Start Live Tuning**. Send setpoints with the buttons (**Lower**, **25%**, **Mid**, **75%**, **Upper**), the slider, or by typing one, or turn on **Alternate setpoints** to switch between two every 5 seconds. Edit the gains under **Gains** and press Enter to apply them. Press Space at any time to stop.
+
+Start with kG: raise it until the elevator holds still on its own. Then raise kP until it reaches each setpoint without overshooting. [What to tune and what to watch](#what-to-tune-and-what-to-watch) goes through every value.
+{% endstep %}
+{% endstepper %}
+
+<figure><img src="../../.gitbook/assets/live-tuner-commands3-elevator.gif" alt="The YAMS Live Tuner live tuning the elevator of the BroncBotz 2025 Commands v3 example in simulation: with kP cut to a fifth the elevator lags its setpoints, and with kP put back it follows them"><figcaption><p>The BroncBotz 2025 Commands v3 example's elevator in simulation. kP starts at a fifth of its value, then goes back.</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Arms and pivots" %}
+{% stepper %}
+{% step %}
+#### Connect to the simulation
+
+Start the robot code in simulation. With Commands v3, each mechanism's simulation runs in its own `Notifier` ([Where the tutorials put things](../../tutorials/project-setup.md#where-the-tutorials-put-things)). Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, press **Connect**, and enable the robot in the simulated Driver Station.
+{% endstep %}
+{% step %}
+#### Pick the mechanism
+
+Under **Mechanism**, pick the motor's telemetry name, the mechanism's Live Tuning command, and its type. The BroncBotz 2025 example's arm is `CoralArm/CoralArmMotor`, with the `CoralArm` command, as an **Arm**. The BroncBotz 2026 example's turret is `Turret/TurretMotor`, with the `Turret` command, as a **Pivot**. Setpoints are in degrees.
+{% endstep %}
+{% step %}
+#### Go through the pre-motion checklist
+
+Confirm each item, and set the **Current trip**: stator current above it for 250 ms stops the tuner.
+{% endstep %}
+{% step %}
+#### Check the inversions
+
+Press **Start voltage control** and drive the mechanism with a small voltage each way. The tuner checks that positive voltage moves it in its positive direction. Near horizontal, gravity can be stronger than a small voltage on an arm. Try a little more voltage before changing an inversion.
+{% endstep %}
+{% step %}
+#### Verify the range of motion
+
+Drive to each end of travel with **Find ends by driving**, or type a range into **Enter range and test it** and hold the drive buttons until each end is reached. Live Tuning then keeps every setpoint inside that range, and stops if the mechanism leaves it.
+A continuous pivot has no end of travel, so it has no range to verify.
+{% endstep %}
+{% step %}
+#### Live tune
+
+Press **Start Live Tuning**. Send setpoints with the buttons (**Lower**, **25%**, **Mid**, **75%**, **Upper**), the slider, or by typing one, or turn on **Alternate setpoints** to switch between two every 5 seconds. Edit the gains under **Gains** and press Enter to apply them. Press Space at any time to stop.
+
+On an arm, start with kG: raise it until the arm holds still when it is horizontal. A pivot has no kG. Then raise kP until the mechanism reaches each setpoint without overshooting. [What to tune and what to watch](#what-to-tune-and-what-to-watch) goes through every value.
+{% endstep %}
+{% endstepper %}
+
+<figure><img src="../../.gitbook/assets/live-tuner-commands3-arm.gif" alt="The YAMS Live Tuner live tuning the coral arm of the BroncBotz 2025 Commands v3 example in simulation: with kP cut to a fifth the arm sags below its setpoint, and with kP put back it follows it"><figcaption><p>The BroncBotz 2025 Commands v3 example's coral arm in simulation. With kP at a fifth of its value, gravity holds the arm below its setpoint.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/live-tuner-commands3-pivot.gif" alt="The YAMS Live Tuner live tuning the turret of the BroncBotz 2026 Commands v3 example in simulation: with kP cut to a fifth the turret creeps toward its setpoints, and with kP put back it reaches them"><figcaption><p>The BroncBotz 2026 Commands v3 example's turret, a pivot, in simulation. kP starts at a fifth of its value, then goes back.</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Flywheels" %}
+{% stepper %}
+{% step %}
+#### Connect to the simulation
+
+Start the robot code in simulation. With Commands v3, each mechanism's simulation runs in its own `Notifier` ([Where the tutorials put things](../../tutorials/project-setup.md#where-the-tutorials-put-things)). Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, press **Connect**, and enable the robot in the simulated Driver Station.
+{% endstep %}
+{% step %}
+#### Pick the mechanism
+
+Under **Mechanism**, pick the motor's telemetry name, the mechanism's Live Tuning command, and its type. The BroncBotz 2026 example's kicker is `Kicker/KickerMotor`, with the `Kicker` command, as a **Flywheel**. Setpoints are in RPM.
+{% endstep %}
+{% step %}
+#### Go through the pre-motion checklist
+
+Confirm each item, and set the **Current trip**: stator current above it for 250 ms stops the tuner.
+
+Also set the **Max speed (RPM)**. Every velocity setpoint is clamped to it.
+{% endstep %}
+{% step %}
+#### Check the inversions
+
+Press **Start voltage control** and drive the mechanism with a small voltage each way. The tuner checks that positive voltage moves it in its positive direction. A flywheel keeps spinning after you let go, so set 0 V and let it stop before you drive it the other way.
+{% endstep %}
+{% step %}
+#### Skip the range of motion
+
+A flywheel spins continuously, so it has no range to verify. The max speed caps it instead.
+{% endstep %}
+{% step %}
+#### Live tune
+
+Press **Start Live Tuning**. Send speeds with the buttons (**Idle (0)**, then a quarter, half, three quarters and all of the max speed), the slider, or by typing one, or turn on **Alternate setpoints** to switch between two every 5 seconds. Edit the gains under **Gains** and press Enter to apply them. Press Space at any time to stop.
+
+Start with kV: raise or lower it until the measured speed settles on the setpoint. Then add kP to recover speed quickly after each shot. [What to tune and what to watch](#what-to-tune-and-what-to-watch) goes through every value.
+{% endstep %}
+{% endstepper %}
+
+<figure><img src="../../.gitbook/assets/live-tuner-commands3-flywheel.gif" alt="The YAMS Live Tuner live tuning the kicker of the BroncBotz 2026 Commands v3 example in simulation: with kV too low the kicker settles below each setpoint, and with the right kV it settles on it"><figcaption><p>The BroncBotz 2026 Commands v3 example's kicker in simulation. With kV at 0.25 it runs slow; at 0.374 it settles on each setpoint.</p></figcaption></figure>
+{% endtab %}
+{% endtabs %}
 
 ## NetworkTables keys
 

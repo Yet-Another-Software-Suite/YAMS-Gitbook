@@ -47,6 +47,7 @@ Congratulations on successfully programming your Shooter! :tada::tada:
 ## Where to go next
 
 * Tune the gains while the simulation runs: [Live tuning](../../details/live-tuning/README.md)
+* Tune it in your browser with the [YAMS Live Tuner](https://tuning.yassrobotics.com/): [Tune in your browser with the YAMS Live Tuner](../../details/live-tuning/README.md#tune-in-your-browser-with-the-yams-live-tuner)
 * See everything the mechanism can do: [Shooters](../../details/shooters.md) and [FlyWheelConfig](../../details/mechanism-configs/flywheel-config.md)
 * Look at what the mechanism publishes: [Telemetry](../../understanding/telemetry.md)
 * Keep your configs tidy as the robot grows: [Organizing configs in constants](../../details/config-organization.md)
