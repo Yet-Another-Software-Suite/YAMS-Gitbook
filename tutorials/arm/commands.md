@@ -492,7 +492,7 @@ public class ArmMechanism implements Mechanism {
     arm.updateTelemetry();
   }
 
-  /** Call this from Robot.simulationPeriodic(). */
+  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
   public void simulationPeriodic() {
     // Runs the arm's physics simulation.
     arm.simIterate();
@@ -504,9 +504,12 @@ public class ArmMechanism implements Mechanism {
 
 <strong>import static org.wpilib.units.Units.Degrees;
 </strong>
+import java.util.ArrayList;
+import java.util.List;
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.button.CommandGamepad;
 import org.wpilib.framework.OpModeRobot;
+import org.wpilib.system.Notifier;
 import org.wpilib.telemetry.Telemetry;
 import first.robot.constants.DriverConstants;
 import first.robot.mechanisms.ArmMechanism;
@@ -520,6 +523,8 @@ public class Robot extends OpModeRobot {
 
   // The scheduler that runs every command.
   private final Scheduler scheduler = Scheduler.getDefault();
+  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
+  private final List&#x3C;Notifier> simulationNotifiers = new ArrayList&#x3C;>();
 
 <strong>  public Robot() {
 </strong><strong>    // When no other command is using the arm, hold it at 0 degrees.
@@ -537,9 +542,18 @@ public class Robot extends OpModeRobot {
   }
 
   @Override
-  public void simulationPeriodic() {
-    // Runs every loop, in simulation only.
-    arm.simulationPeriodic();
+  public void simulationInit() {
+    // Runs once, when the simulation starts.
+    // Run each mechanism's simulation in its own Notifier, every robot loop.
+    startSimulation("Arm", arm::simulationPeriodic);
+  }
+
+  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
+  private void startSimulation(String name, Runnable simulationPeriodic) {
+    Notifier notifier = new Notifier(simulationPeriodic);
+    notifier.setName(name + " Simulation");
+    notifier.startPeriodic(getPeriod());
+    simulationNotifiers.add(notifier);
   }
 }
 </code></pre>

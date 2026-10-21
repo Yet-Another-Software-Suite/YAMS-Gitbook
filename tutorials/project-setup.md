@@ -113,12 +113,14 @@ The template gives you `Robot.java`, `ExampleTeleop.java` and a `mechanisms` fol
 A Commands v3 mechanism `implements Mechanism`. Nothing calls a periodic method on it for you, so each tutorial gives the class a `periodic()` and a `simulationPeriodic()`, and `Robot.java` calls them:
 
 * `Robot.robotPeriodic()` runs every loop, on the robot and in simulation. It calls each mechanism's `periodic()`, runs the scheduler, and then publishes the scheduler so that a dashboard shows which commands are running.
-* `Robot.simulationPeriodic()` runs every loop in simulation only. It calls each mechanism's `simulationPeriodic()`.
+* `Robot.simulationInit()` runs once, when the simulation starts. It starts each mechanism's `simulationPeriodic()` in its own `Notifier`, which runs it every loop, in simulation only.
 
 With an arm and an elevator on the robot, `Robot.java` ends up with this:
 
 ```java
 private final Scheduler scheduler = Scheduler.getDefault();
+// Each mechanism's simulation Notifier, kept so that it is not garbage collected.
+private final List<Notifier> simulationNotifiers = new ArrayList<>();
 
 @Override
 public void robotPeriodic() {
@@ -129,13 +131,31 @@ public void robotPeriodic() {
 }
 
 @Override
-public void simulationPeriodic() {
-  arm.simulationPeriodic();
-  elevator.simulationPeriodic();
+public void simulationInit() {
+  // Runs once, when the simulation starts.
+  // Run each mechanism's simulation in its own Notifier, every robot loop.
+  startSimulation("Arm", arm::simulationPeriodic);
+  startSimulation("Elevator", elevator::simulationPeriodic);
+}
+
+/** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
+private void startSimulation(String name, Runnable simulationPeriodic) {
+  Notifier notifier = new Notifier(simulationPeriodic);
+  notifier.setName(name + " Simulation");
+  notifier.startPeriodic(getPeriod());
+  simulationNotifiers.add(notifier);
 }
 ```
 
 Forget the first and the mechanism publishes no telemetry and ignores live tuning. Forget the second and it never moves in simulation.
+
+{% hint style="success" %}
+Run each mechanism's simulation in its own `Notifier`, as above, instead of calling it from `Robot.simulationPeriodic()`. The simulation then runs on its own thread, so it does not add to the time each robot loop takes, and every mechanism keeps stepping at a steady rate even when a loop runs long.
+
+This needs a YAMS release newer than 2026.10.19, which makes the shared battery simulation safe to use from several threads. With an older release, call each mechanism's `simulationPeriodic()` from `Robot.simulationPeriodic()` instead.
+
+With AdvantageKit, keep calling it from `Robot.simulationPeriodic()`, so that the simulation stays in step with the log.
+{% endhint %}
 
 YAMS for Commands v3 lives in `yams.commands3` where the Commands v2 pages say `yams.commands2`. Everything in `yams.core` is shared.
 {% endtab %}

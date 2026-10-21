@@ -141,7 +141,7 @@ public class ArmMechanism implements Mechanism {
 ```
 {% endcode %}
 
-Remove the `arm.simulationPeriodic()` call from `Robot.simulationPeriodic()`, and the `simulationPeriodic()` method from `ArmMechanism`.
+Remove the arm's `startSimulation(...)` call from `Robot.simulationInit()`, and the `simulationPeriodic()` method from `ArmMechanism`.
 {% endtab %}
 
 {% tab title="C++" %}

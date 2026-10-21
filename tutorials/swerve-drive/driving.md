@@ -709,7 +709,7 @@ public class SwerveMechanism implements Mechanism {
     drive.updateTelemetry();
   }
 
-  /** Call this from Robot.simulationPeriodic(). */
+  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
   public void simulationPeriodic() {
     // Runs the physics simulation of all eight motors.
     drive.simIterate();
