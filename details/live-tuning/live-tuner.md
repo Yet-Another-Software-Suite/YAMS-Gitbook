@@ -111,7 +111,7 @@ Send a setpoint by typing it, with the slider, or with **Lower**, **25%**, **Mid
 
 **Change the gains**
 
-The **Gains** card shows the values the robot publishes under `NT:/Tuning`. Type a new value and press **Enter** to apply it. [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does. On an elevator, start with kG: the output while it holds still is the voltage it takes to hold the carriage up against gravity. Then raise kP until it reaches each setpoint without overshooting.
+The **Gains** card shows the values the robot publishes under `NT:/Tuning`. Type a new value: it is applied as soon as you click away, or press **Enter**. **Esc** puts the old value back. [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does. On an elevator, start with kG: the output while it holds still is the voltage it takes to hold the carriage up against gravity. Then raise kP until it reaches each setpoint without overshooting.
 
 <figure><img src="../../.gitbook/assets/live-tuner-elevator-gains.png" alt="The Gains card: kP 33.966, kI 0, kD 0; kS 0.21471 V, kV 10.39, kA 0, kG 0.23861 V; max velocity 1 m/s, max acceleration 0.5 m/s²; stator limit 40 A and closed-loop ramp 0 s"><figcaption><p>The elevator's gains, motion profile and limits.</p></figcaption></figure>
 
@@ -197,7 +197,7 @@ Send a setpoint by typing it, with the slider, or with **Lower**, **25%**, **Mid
 
 **Change the gains**
 
-The **Gains** card shows the values the robot publishes under `NT:/Tuning`. Type a new value and press **Enter** to apply it. [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does. On an arm, start with kG: raise it until the arm holds still when it is horizontal. A pivot has no kG. Then raise kP until the mechanism reaches each setpoint without overshooting.
+The **Gains** card shows the values the robot publishes under `NT:/Tuning`. Type a new value: it is applied as soon as you click away, or press **Enter**. **Esc** puts the old value back. [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does. On an arm, start with kG: raise it until the arm holds still when it is horizontal. A pivot has no kG. Then raise kP until the mechanism reaches each setpoint without overshooting.
 
 <figure><img src="../../.gitbook/assets/live-tuner-arm-gains.png" alt="The coral arm's Gains card with its feedback, feedforward, motion profile and limits"><figcaption><p>The coral arm's gains.</p></figcaption></figure>
 
@@ -268,7 +268,7 @@ Send a speed by typing it, with the slider, or with **Idle (0)** and the buttons
 
 **Change the gains**
 
-The **Gains** card shows the values the robot publishes under `NT:/Tuning`. Type a new value and press **Enter** to apply it. [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does. On a flywheel, start with kV: raise or lower it until the measured speed settles on the setpoint. Then add kP to recover speed quickly after each shot.
+The **Gains** card shows the values the robot publishes under `NT:/Tuning`. Type a new value: it is applied as soon as you click away, or press **Enter**. **Esc** puts the old value back. [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does. On a flywheel, start with kV: raise or lower it until the measured speed settles on the setpoint. Then add kP to recover speed quickly after each shot.
 
 <figure><img src="../../.gitbook/assets/live-tuner-flywheel-gains.png" alt="The kicker's Gains card: kP 0, kI 0, kD 0; kS 0, kV 0.374, kA 0; stator limit 40 A and closed-loop ramp 0 s"><figcaption><p>kV at 0.374.</p></figcaption></figure>
 
