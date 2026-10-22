@@ -62,6 +62,10 @@ In C++ there is no explicit call.
 </details>
 
 {% hint style="info" %}
+Tuning an elevator, arm, pivot or flywheel? The [YAMS Live Tuner](live-tuner.md) walks you through checking the mechanism, then sends setpoints and gains while you watch a graph.
+{% endhint %}
+
+{% hint style="info" %}
 Using CTRE TalonFX or TalonFXS motors? Phoenix Tuner X can connect to your simulation too. See [TunerX in simulation](tunerx-in-simulation.md).
 {% endhint %}
 
