@@ -209,6 +209,20 @@ All telemetry values in YAMS are logged with specific units. Understanding these
 | `current/stator`                                 | Amps (A)                                   | Current through the motor windings          |
 | `motor/temperature`                              | Fahrenheit (°F)                            | Motor temperature                           |
 
+### LQR units
+
+A motor controller configured with an [LQR](../details/editor/lqr-controllers.md) publishes its values at `HIGH`, in place of kP, kI and kD, and only the ones its type uses. They use the same units as the tunable setpoints.
+
+| NetworkTables key                                                                   | Unit                                               | Description                                      |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| `closedloop/lqr/qelms/position`                                                     | Degrees, or meters for an elevator                 | Position error tolerance. Arm and elevator only  |
+| `closedloop/lqr/qelms/velocity`                                                     | RPM, or m/s for an elevator                        | Velocity error tolerance                         |
+| `closedloop/lqr/relms`                                                              | Volts (V)                                          | Control effort tolerance                         |
+| `closedloop/lqr/model/position`, `closedloop/lqr/model/velocity`                    | Degrees and RPM, or meters and m/s for an elevator | Model standard deviations. Position: arm and elevator only |
+| `closedloop/lqr/encoder/position`                                                   | Degrees, or meters for an elevator                 | Encoder standard deviation. Arm and elevator only |
+| `closedloop/lqr/encoder/velocity`                                                   | RPM                                                | Encoder standard deviation. Flywheel only        |
+| `closedloop/lqr/maxVoltage`                                                         | Volts (V)                                          | Most voltage the LQR outputs                     |
+
 ### Linear mechanism units
 
 When a mechanism has a circumference (from `.withMechanismCircumference()`, or one of the `.withWheelDiameter()`, `.withWheelRadius()` or `.withDrumRadius()` helpers), the linear keys are published too:
