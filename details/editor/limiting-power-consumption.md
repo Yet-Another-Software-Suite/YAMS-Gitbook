@@ -2,7 +2,7 @@
 icon: bolt-lightning
 ---
 
-# Limiting Power Consumption
+# Limiting power consumption
 
 ## Current limits
 
@@ -23,7 +23,7 @@ CTRE has excellent documentation explaining the relationship between the supply 
 
 If your mechanism interacts with a game element or has a chance of getting stuck a current limit **WILL** cause the mechanism to stutter until the current is back below the limit. This can cause strains on the mechanism as it constantly starts then stops but it could save your motor controller and prevent brownouts because your mechanism will not be able to pull more power than necessary.
 
-### Setting Current Limits in YAMS
+### Setting current limits in YAMS
 
 ```java
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
@@ -31,7 +31,7 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withSupplyCurrentLimit(Amps.of(40)) // Current to the motor controller
 ```
 
-## Ramp Rates
+## Ramp rates
 
 Ramp rates is the minimum time it takes for a motor to go from 0% to 100% power to the motor.
 
@@ -54,7 +54,7 @@ These ramp rates are applied whenever the motor controller is in the appropriate
 The Thrifty Nova has a single ramp rate for open and closed loop control. `NovaWrapper` throws a `SmartMotorControllerConfigurationException` if the two ramp rates differ, so set only one of them, or both to the same value.
 {% endhint %}
 
-### Setting Ramp Rates in YAMS
+### Setting ramp rates in YAMS
 
 ```java
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)

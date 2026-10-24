@@ -217,7 +217,7 @@ An arm that does not know where it is when the robot turns on has to be started 
 YAMS reads an absolute encoder through the motor controller, so it must be one that motor controller supports: see [Encoders](editor/config/encoders.md#withexternalencoder). For any other encoder, read it yourself and call `SmartMotorController.setEncoderPosition` once at startup.
 {% endhint %}
 
-[How do I use absolute encoders on my Arm?](../how-to/how-do-i-use-absolute-encoders-on-my-arm.md) has a complete example for each vendor, including the [zero offset](editor/config/encoders.md#withexternalencoderzerooffset) that makes the encoder read 0 when the arm is level.
+[How do I use absolute encoders on my arm?](../how-to/how-do-i-use-absolute-encoders-on-my-arm.md) has a complete example for each vendor, including the [zero offset](editor/config/encoders.md#withexternalencoderzerooffset) that makes the encoder read 0 when the arm is level.
 
 ## Arms with a brake
 

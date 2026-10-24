@@ -33,23 +33,23 @@
 
 ## How-to: Mechanisms
 
-* [How to set an Arm's target Angle?](how-to/how-to-set-an-arms-target-angle.md)
-* [How to set an Elevator's target Height?](how-to/how-to-set-an-elevators-target-height.md)
-* [How to shoot with a Shooter?](how-to/how-to-shoot-with-a-shooter.md)
+* [How do I set an arm's target angle?](how-to/how-to-set-an-arms-target-angle.md)
+* [How do I set an elevator's target height?](how-to/how-to-set-an-elevators-target-height.md)
+* [How do I shoot with a shooter?](how-to/how-to-shoot-with-a-shooter.md)
 * [How do I shoot on the move?](how-to/how-do-i-shoot-on-the-move.md)
-* [How do I use absolute encoders on my Arm?](how-to/how-do-i-use-absolute-encoders-on-my-arm.md)
+* [How do I use absolute encoders on my arm?](how-to/how-do-i-use-absolute-encoders-on-my-arm.md)
 * [How do I home a mechanism with limit switches?](how-to/how-do-i-home-a-mechanism-with-limit-switches.md)
 * [How do I control a mechanism that carries a game piece?](how-to/how-do-i-control-a-mechanism-that-carries-a-game-piece.md)
-* [How do I control a Mechanism without a Mechanism Class?](how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md)
+* [How do I control a mechanism without a mechanism class?](how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md)
 
 ## How-to: Motor controllers and sensors
 
 * [How do I use a vendor hardware config?](how-to/how-do-i-use-a-vendor-hardware-config.md)
 * [How do I use a DCMotor that isn't in WPILib?](how-to/how-do-i-use-a-dcmotor-that-isnt-in-wpilib.md)
-* [How to find your mechanism circumference?](how-to/how-to-find-your-mechanism-circumference.md)
+* [How do I find my mechanism's circumference?](how-to/how-to-find-your-mechanism-circumference.md)
 * [How do I use exponential profiles?](how-to/how-do-i-use-exponential-profiles.md)
-* [How to disable linear closed loop control?](how-to/how-to-disable-linear-closed-loop-control.md)
-* [How do I sense activity based off of the current?](how-to/how-do-i-sense-activity-based-off-of-the-current.md)
+* [How do I turn off linear closed loop control?](how-to/how-to-disable-linear-closed-loop-control.md)
+* [How do I sense activity from the motor current?](how-to/how-do-i-sense-activity-based-off-of-the-current.md)
 * [How do I use a gyro mounted on its side?](how-to/how-do-i-use-a-gyro-mounted-on-its-side.md)
 
 ## How-to: Simulation and logging

@@ -1,4 +1,4 @@
-# How to set an Elevator's target Height?
+# How do I set an elevator's target height?
 
 `Elevator` setpoints are expressed as `Distance` values (meters, inches, etc.). The motion profile limits how fast the elevator accelerates to the target, so commanding a large height change won't slam the carriage into the top hard stop if your profile parameters are tuned correctly.
 
@@ -659,7 +659,7 @@ Press **Teleoperated** in **Robot State** then you can use your controller like 
 
 <figure><img src="../.gitbook/assets/Robot Simulation 2025-08-30 18-37-59.gif" alt=""><figcaption></figcaption></figure>
 
-Congratulations on successfully programming your Elevator!! :tada::tada:
+Congratulations on programming your Elevator! :tada::tada:
 
 {% hint style="info" %}
 **Using Commands v3?** Use the Commands v3 tabs above. A v3 `Mechanism` has no `periodic()` hook, so `Robot.robotPeriodic()` calls `updateTelemetry()` and `simIterate()` through the mechanism, and the button bindings live in an opmode instead of a `RobotContainer`. See `examples/commands3/simple_robot-2027` in the YAMS repo for a complete robot.

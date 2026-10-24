@@ -2,9 +2,9 @@
 icon: chart-line
 ---
 
-# Exponential Profiles
+# Exponential profiles
 
-## What is a Motion Profile?
+## What is a motion profile?
 
 A motion profile is a trajectory that defines how a mechanism should move from one position to another over time. Instead of commanding a mechanism to instantly jump to a target position (which would require infinite acceleration), motion profiles generate a smooth path that respects the physical limitations of your system.
 
@@ -14,11 +14,11 @@ Motion profiles output a series of intermediate setpoints (position and velocity
 * **Smooth transitions** - No jerky movements that stress mechanical components
 * **Controlled acceleration** - Prevents excessive current draw and brownouts
 
-## Trapezoidal vs Exponential Profiles
+## Trapezoidal vs exponential profiles
 
 <figure><img src="../../.gitbook/assets/exponential-profile-compare.png" alt="Two graphs. Setpoint velocity over time: a trapezoidal profile ramps in a straight line to a flat top, an exponential profile rises quickly and curves over near top speed. Acceleration against speed: the motor's available acceleration falls to zero at top speed, the exponential profile follows it, and the trapezoidal profile asks for a constant acceleration the motor cannot give at high speed"><figcaption><p>The two profiles, and why the motor can follow one more easily than the other.</p></figcaption></figure>
 
-### Trapezoidal Profiles
+### Trapezoidal profiles
 
 Trapezoidal profiles are the most common type. The name comes from the trapezoidal shape of the velocity-time graph.
 
@@ -35,7 +35,7 @@ Trapezoidal profiles are the most common type. The name comes from the trapezoid
 * When the motor cannot actually provide the commanded acceleration
 * When current limiting reduces available torque
 
-### Exponential Profiles
+### Exponential profiles
 
 Exponential profiles model how DC motors actually behave. Instead of assuming constant acceleration, they account for the motor's torque-speed curve and the system's physical dynamics.
 
@@ -52,7 +52,7 @@ Exponential profiles are named for the exponential approach to maximum velocity,
 
 <figure><img src="../../.gitbook/assets/exponential-profile-tracking.gif" alt="Animation of a 12 volt motor following each profile. With the trapezoidal profile the measured velocity falls behind the setpoint as the speed rises and the motor saturates at 12 volts. With the exponential profile the measured velocity stays on the setpoint"><figcaption><p>A simulated 12 V motor following each profile. The trapezoidal profile asks for more than the motor has left at speed.</p></figcaption></figure>
 
-## The Physics Behind Exponential Profiles
+## The physics behind exponential profiles
 
 DC motors produce torque proportional to current. However, as the motor spins faster, back-EMF reduces the effective voltage across the windings, which reduces current and therefore torque.
 
@@ -75,7 +75,7 @@ $$\alpha = \frac{V - kS - kV \cdot \omega}{kA}$$
 
 This shows that as velocity (ω) increases, the available acceleration (α) decreases. This is the fundamental insight that exponential profiles capture.
 
-## When to Use Each Profile Type
+## When to use each profile type
 
 | Situation                               | Recommended Profile      | Why                                                                                                                          |
 | --------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -91,7 +91,7 @@ This shows that as velocity (ω) increases, the available acceleration (α) decr
 **Rule of thumb**: If your mechanism works well with trapezoidal profiles, keep using them. Switch to exponential profiles when you encounter disturbance rejection issues or when you want the profile to better match your motor's capabilities.
 {% endhint %}
 
-## Exponential Profiles in YAMS
+## Exponential profiles in YAMS
 
 YAMS provides `ExponentialProfilePIDController` (`yams.core.math.ExponentialProfilePIDController`), which combines an exponential motion profile with a PID controller and has factory methods for the profile's constraints. In a `SmartMotorControllerConfig` you set the PID gains with `withClosedLoopController(kP, kI, kD)` and the profile with `withExponentialProfile(constraints)`, instead of a trapezoidal profile (`withTrapezoidalProfile`) or no profile at all.
 
@@ -120,11 +120,11 @@ From there you adjust kV and kA directly, either [live](#refining-the-profile-li
 .withExponentialProfile(Volts.of(10), RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(8))
 ```
 
-### Creating Constraints
+### Creating constraints
 
 YAMS provides factory methods to create exponential profile constraints for common mechanism types:
 
-#### For Elevators
+#### For elevators
 
 ```java
 ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.createElevatorConstraints(
@@ -136,7 +136,7 @@ ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.cre
 );
 ```
 
-#### For Arms
+#### For arms
 
 ```java
 ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.createArmConstraints(
@@ -148,7 +148,7 @@ ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.cre
 );
 ```
 
-#### For Flywheels
+#### For flywheels
 
 ```java
 ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.createFlywheelConstraints(
@@ -160,7 +160,7 @@ ExponentialProfile.Constraints constraints = ExponentialProfilePIDController.cre
 );
 ```
 
-#### Custom Constraints
+#### Custom constraints
 
 If the factory methods don't fit your use case, you can create constraints directly:
 
@@ -190,7 +190,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withTelemetry("Elevator", TelemetryVerbosity.HIGH);
 ```
 
-## Tuning Exponential Profiles
+## Tuning exponential profiles
 
 ### Step 1: Get a starting kV and kA
 
@@ -328,7 +328,7 @@ Live values are lost when the robot code restarts, so copy them into the config:
 {% endstep %}
 {% endstepper %}
 
-### Step 2: Set Maximum Voltage
+### Step 2: Set maximum voltage
 
 The maximum voltage determines how aggressively the profile will command the mechanism. Consider:
 
@@ -336,7 +336,7 @@ The maximum voltage determines how aggressively the profile will command the mec
 * **10V** - Leaves headroom for PID corrections
 * **8V** - Conservative, good for testing
 
-### Step 3: Tune PID Gains
+### Step 3: Tune PID gains
 
 With a good feedforward ([Step 4](#step-4-add-feedforward)), the feedforward does most of the work. The PID handles:
 
@@ -344,7 +344,7 @@ With a good feedforward ([Step 4](#step-4-add-feedforward)), the feedforward doe
 * **kI** - Usually not needed with good feedforward. Use only if steady-state error persists
 * **kD** - Dampens oscillations. Add if mechanism oscillates around target
 
-### Step 4: Add Feedforward
+### Step 4: Add feedforward
 
 The profile only plans the move. It does not drive the motor: the voltage that follows the plan comes from the feedforward and the PID. So an exponential profile still needs a full feedforward:
 
@@ -374,7 +374,7 @@ The profile only plans the move. It does not drive the motor: the voltage that f
 **The profile's kV and kA are not the feedforward's kV and kA.** The profile's pair only shape the plan. The feedforward's pair turn that plan into voltage. CTRE's Motion Magic Expo example sets both, the gain slot's `kV` and `kA` and the profile's `MotionMagicExpo_kV` and `MotionMagicExpo_kA`, and YAMS keeps them separate in the same way. [Feedforward](config/feedforward.md) covers finding the feedforward's values.
 {% endhint %}
 
-## Motor Controller Support
+## Motor controller support
 
 | Motor Controller         | Trapezoidal Profile      | Exponential Profile           | Notes                       |
 | ------------------------ | ------------------------ | ----------------------------- | --------------------------- |
@@ -387,7 +387,7 @@ The profile only plans the move. It does not drive the motor: the voltage that f
 When exponential profiles run on the SystemCore, there's slightly more latency compared to on-device execution. However, the profile calculation is still very fast and suitable for most mechanisms.
 {% endhint %}
 
-## Common Issues and Solutions
+## Common issues and solutions
 
 ### Profile is too slow
 
@@ -413,7 +413,7 @@ When exponential profiles run on the SystemCore, there's slightly more latency c
 * Account for friction with kS in feedforward
 * Check current limits aren't restricting torque
 
-## Example: Complete Elevator with Exponential Profile
+## Example: Complete Elevator with exponential profile
 
 ```java
 public class ElevatorSubsystem extends SubsystemBase {
@@ -478,7 +478,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 }
 ```
 
-## Further Reading
+## Further reading
 
 * [CTRE Motion Magic Expo Documentation](https://v6.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo) - CTRE's explanation of exponential profiles
 * [How do I use Exponential Profiles?](../../how-to/how-do-i-use-exponential-profiles.md) - Quick how-to guide

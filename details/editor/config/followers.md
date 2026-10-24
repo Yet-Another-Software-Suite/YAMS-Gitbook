@@ -175,7 +175,7 @@ Call `UpdateTelemetry()` and `SimIterate()` on each follower, as on the arm.
 
 ### Motors that need different setpoints
 
-Loosely coupled followers are sent the leader's setpoints exactly. When the motors need different ones, such as two flywheels spinning at different speeds, command each `SmartMotorController` yourself: see [How do I control a Mechanism without a Mechanism Class?](../../../how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md) and the [double flywheel tutorial](../../../tutorials/double-flywheel/spin-and-followers.md).
+Loosely coupled followers are sent the leader's setpoints exactly. When the motors need different ones, such as two flywheels spinning at different speeds, command each `SmartMotorController` yourself: see [How do I control a mechanism without a mechanism class?](../../../how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md) and the [double flywheel tutorial](../../../tutorials/double-flywheel/spin-and-followers.md).
 
 ## Code reference
 

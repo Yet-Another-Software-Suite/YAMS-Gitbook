@@ -4,7 +4,7 @@ description: >-
   mechanism need different setpoints.
 ---
 
-# How do I control a Mechanism without a Mechanism Class?
+# How do I control a mechanism without a mechanism class?
 
 YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel`, etc.) drive one motor, along with its followers. Motors on one shaft or gearbox are [followers](../details/editor/config/followers.md#withfollowers). Motors that aren't, but must move together, such as one on each side of an intake arm, are [loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers), and still work with a mechanism class.
 
@@ -18,7 +18,7 @@ Subsystems given when you create the `SmartMotorControllerConfig` are only used 
 
 ## Controlling an Elevator without Elevator.run()
 
-IF you know how to use Command Based Programming well enough you can create your own commands and control the `SmartMotorController` without the Mechanism but remember to create the Mechanism and Mechanism config because it will modify and re-apply the `SmartMotorControllerConfig` &#x20;
+If you're comfortable with command-based programming, you can write your own commands and control the `SmartMotorController` without the mechanism. Still create the mechanism and its config, because the mechanism modifies and re-applies the `SmartMotorControllerConfig`.
 
 The following example shows exactly how you can recreate the commands used in YAMS without using the helpful functions to create them in the first place and could allow you to use multiple mechanisms in the same Subsystem if you needed it. (For example a shooter and indexer)
 

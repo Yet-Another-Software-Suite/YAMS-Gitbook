@@ -2,7 +2,7 @@
 icon: car-side
 ---
 
-# Swerve Drive
+# Swerve drive
 
 Every `SwerveDriveConfig` option, with a graphic and an example, is on the [SwerveDriveConfig](mechanism-configs/swerve-drive-config.md) page under this one.
 
@@ -18,7 +18,7 @@ Going the other way, the drive adds up how far each wheel has rolled and combine
 
 Every other mechanism in YAMS (`Arm`, `Elevator`, `Pivot`, `FlyWheel`) wraps a single `SmartMotorController`. `SwerveDrive` is a mechanism made of mechanisms: it owns an array of `SwerveModule`s, and each `SwerveModule` owns two `SmartMotorController`s of its own (drive and azimuth). `SwerveDriveConfig` is where the two levels meet: you build each `SwerveModule` (and its own `SwerveModuleConfig`) first, then hand the finished modules to `SwerveDriveConfig`, which derives the robot's kinematics automatically from where you told each module it physically sits.
 
-## Basic Swerve Config
+## Basic swerve config
 
 Given the [tutorial](../tutorials/swerve-drive.md), here is the shape of a four-module config. Modules are ordered clockwise from front-left: FL, FR, BL, BR.
 
@@ -245,7 +245,7 @@ Tune the translation and rotation controllers once the robot drives well by hand
 {% endstep %}
 {% endstepper %}
 
-## Module Location Drives the Kinematics
+## Module location drives the kinematics
 
 `SwerveModuleConfig.withLocation(front, left)` (or `withDistanceFromCenterOfRotation`) is not just bookkeeping. `SwerveDrive` builds its `SwerveDriveKinematics` directly from the locations of every module you pass it, so the drive/rotate math is always correct for your specific chassis dimensions without you ever constructing a `SwerveDriveKinematics` yourself.
 
@@ -266,7 +266,7 @@ Every module needs its location set before it's handed to `SwerveDriveConfig`. A
 
 The `withOptimization(true)` seen in the config above is a per-module flag, not a drive-level one. See [Optimization and Cosine Compensation](swerve-module.md#optimization-and-cosine-compensation) on the Swerve Module page for what it (and its counterpart `withCosineCompensation`) actually does.
 
-## Gyro Integration and Field vs. Robot Relative Speeds
+## Gyro integration and field vs. robot relative speeds
 
 `SwerveDriveConfig.withGyro(Supplier<Rotation3d>)` is what lets `SwerveDrive` convert between field-relative and robot-relative `ChassisVelocities` (WPILib 2027's name for `ChassisSpeeds`). The supplier returns the gyro's full attitude, such as `pigeon::getRotation3d` or `imu::getRotation3d`: its yaw is the robot's heading, and its roll and pitch are the robot's tilt. Internally, `SwerveDrive` always drives the modules with robot-relative speeds; `setFieldRelativeChassisSpeeds` just rotates the requested speeds into the robot frame using the current heading before handing them to the same code path robot-relative callers use.
 
@@ -281,7 +281,7 @@ config.withGyroOffset(Degrees.of(90))
       .withGyroInverted(true);
 ```
 
-### Gyros Mounted on Their Side
+### Gyros mounted on their side
 
 If the gyro is not mounted flat, the robot turning shows up as the gyro's roll or pitch instead of its yaw. `withGyroHeadingAxis(GyroAxis)` tells `SwerveDriveConfig` which gyro axis points up through the robot. `GyroAxis` lives in `yams.core.mechanisms.config.enums` and has three values:
 
@@ -300,7 +300,7 @@ config.withGyro(pigeon::getRotation3d)
 
 The gyro's attitude is rotated into the robot's frame first, then `withGyroInverted` and `withGyroOffset` are applied to the resulting heading.
 
-### Reading the Heading
+### Reading the heading
 
 `SwerveDrive.getGyroRotation3d()` (and `SwerveDriveConfig.getGyroRotation3d()`) returns the robot's attitude after the heading axis, inversion and offset are applied. Its yaw (`getZ()`, or `toRotation2d()`) is the heading, wrapped to +/-180 degrees, and its roll and pitch are the robot's tilt. In simulation, `SwerveDrive.getGyroRotation3d()` returns the simulated heading with no tilt.
 
@@ -331,7 +331,7 @@ SwerveInputStream input =
 setDefaultCommand(run(() -> drive.setFieldRelativeChassisSpeeds(input.get())));
 ```
 
-## Locking the Wheels (X Pattern)
+## Locking the wheels (X pattern)
 
 `SwerveDrive.lockPose()` turns every wheel to point at the robot center (each module's angle from its `withLocation(...)`) without driving it. On a rectangular chassis the four wheels form an X, so the robot resists being pushed. Call it every loop for as long as the lock should hold:
 
@@ -364,7 +364,7 @@ In Java each module is locked through `SwerveModule.setAzimuthAngle(Rotation2d)`
 `lockPose()` is not compatible with AdvantageKit, like the other `SwerveDrive` methods that command the modules directly.
 {% endhint %}
 
-## PathPlanner Integration and Feedforward Forces
+## PathPlanner integration and feedforward forces
 
 `setRobotRelativeChassisSpeeds` has an overload that accepts a per-module drive-wheel feedforward `Force[]` (FL, FR, BL, BR order, matching module order) alongside the `ChassisVelocities`:
 
@@ -421,7 +421,7 @@ Use the version with tolerances whenever something has to happen after the robot
 The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/#swerve-drive).
 {% endhint %}
 
-## Telemetry Verbosity
+## Telemetry verbosity
 
 Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish, from pose and gyro angle at `LOW` up to full desired/measured chassis speeds and module states at `HIGH`. Each level includes everything the level below it publishes.
 
@@ -466,7 +466,7 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 The `modules/drive/*` and `modules/azimuth/*` fields are **shared across every module**, not per-module. There is no way to tune a single module's PID or setpoint independently through this mechanism; it applies the same gains and setpoint to all modules on the drive at once.
 {% endhint %}
 
-### Using `SwerveDriveTelemetryConfig` Directly
+### Using `SwerveDriveTelemetryConfig` directly
 
 Pass a `SwerveDriveTelemetryConfig` instead of a verbosity level when you need finer control than a preset gives you, such as disabling the auto-align tuning fields, or routing telemetry to a DataLog instead of NetworkTables during competition:
 

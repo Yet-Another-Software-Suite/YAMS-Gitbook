@@ -1,4 +1,4 @@
-# How to find your mechanism circumference?
+# How do I find my mechanism's circumference?
 
 YAMS converts between rotational encoder counts and real-world linear distance using a mechanism's circumference. Getting this value right is critical: an incorrect circumference causes every position setpoint to be off by a constant factor, making closed-loop control impossible to tune.
 

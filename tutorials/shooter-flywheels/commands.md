@@ -777,4 +777,4 @@ The `atSpeed` method added in this step returns a `Trigger`. Nothing in this tut
 
 <figure><img src="../../.gitbook/assets/howto-shooter-at-speed.gif" alt="Animation of a flywheel spinning up to 3000 RPM and shooting two balls, with a band of 100 RPM around the setpoint. Each shot drops the speed by several hundred RPM, and it overshoots and rings as it recovers. A lane for the at speed trigger is true inside the band, including for an instant each time the speed passes through it. A lane for the feeder, which uses the trigger with a 0.1 second debounce, is only true once the speed has stayed in the band, so the second ball is not fed until the wheel has settled."><figcaption><p>Each shot slows the wheel and it rings as it recovers. The tolerance band and a debounce keep the feeder off until it has settled.</p></figcaption></figure>
 
-[How to shoot with a Shooter?](../../how-to/how-to-shoot-with-a-shooter.md) shows how to bind a feeder to it.
+[How do I shoot with a shooter?](../../how-to/how-to-shoot-with-a-shooter.md) shows how to bind a feeder to it.

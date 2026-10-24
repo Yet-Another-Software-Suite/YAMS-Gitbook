@@ -42,7 +42,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 
 <figure><img src="../../.gitbook/assets/Robot Simulation 2025-08-30 18-37-59.gif" alt=""><figcaption></figcaption></figure>
 
-Congratulations on successfully programming your Elevator! :tada::tada:
+Congratulations on programming your Elevator! :tada::tada:
 
 ## Where to go next
 

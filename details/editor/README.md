@@ -20,19 +20,19 @@ layout:
     visible: true
 ---
 
-# Smart Motor Controllers
+# Smart motor controllers
 
-## A quick primer on Motors and Motor Controllers
+## A quick primer on motors and motor controllers
 
 {% embed url="https://youtu.be/0BfR_viZSmQ" %}
 
 {% embed url="https://youtu.be/pIKvQX5p1PE" %}
 
-The presentation from the video series continues onto PID, Feedforward, and Motion Profiles as well!
+The presentation from the video series continues onto PID, feedforward and motion profiles.
 
 {% file src="../../.gitbook/assets/Motors.pdf" %}
 
-## The difference between Rotor, Mechanism, and Measurement
+## The difference between rotor, mechanism, and measurement
 
 <figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
 
@@ -54,7 +54,7 @@ Everything about a motor is described by a `SmartMotorControllerConfig`: gearing
 Not every option works on every motor controller. See [which options are not supported everywhere](config/README.md#not-every-option-works-on-every-motor-controller).
 {% endhint %}
 
-## Previous Configurations
+## Previous configurations
 
 YAMS resets the motor controller's previous configuration by default, so settings left over from another run cannot turn into a headache. [`withResetPreviousConfig`](config/motor-basics.md#withresetpreviousconfig) changes that.
 
@@ -65,7 +65,7 @@ Power optimization can be done with [supply, and stator current limits, ramp rat
 ## Tuning our closed loop controllers
 
 {% hint style="info" %}
-## Motion Profiles
+## Motion profiles
 
 The rule of thumb is:
 
@@ -98,7 +98,7 @@ There are two kinds of follower. **Tightly coupled** followers are motors on the
 
 <figure><img src="../../.gitbook/assets/smc-followers.png" alt="Two panels. Tightly coupled, withFollowers: a leader and a follower are on one shaft or gearbox and the follower copies the leader's output. The motors are mechanically locked, there is one closed loop and one config, the followers are the same vendor as the leader, and voltage and duty cycle reach every motor. Loosely coupled, withLooselyCoupledFollowers: two separate motors joined only by the mechanism get the same setpoint and each runs its own PID. They are not mechanically locked, each has its own closed loop and config, vendors can be mixed, and voltage and duty cycle are not forwarded, so the leader moves alone."><figcaption><p>Tightly coupled followers share a shaft. Loosely coupled followers are separate motors.</p></figcaption></figure>
 
-### Loosely Coupled Follower Motors
+### Loosely coupled follower motors
 
 Each loosely coupled follower is sent the leader's position and velocity setpoints, and reaches them with its own closed loop. A mechanism class works with them: give it the leader.
 
@@ -115,7 +115,7 @@ YAMS is not the only way to configure your SmartMotorController! You can always 
 (SparkFlexConfig)smartMotorController.getMotorControllerConfig();
 ```
 
-## Some Mechanism config options modify SMC configs
+## Some mechanism config options modify SMC configs
 
 Mechanism options like `.withSoftLimits` often will call the `SmartMotorControllerConfig.withSoftLimits` and do nothing else. This is to provide a seamless configuration for relevant areas in different configs.
 
@@ -137,6 +137,6 @@ Mechanism options like `.withSoftLimits` often will call the `SmartMotorControll
   }
 ```
 
-## Passing a Vendor Config
+## Passing a vendor config
 
 `SmartMotorControllerConfig` can start from a vendor config that you supply, so vendor specific settings can be set alongside the YAMS options. See [`withVendorConfig`](config/motor-basics.md#withvendorconfig).

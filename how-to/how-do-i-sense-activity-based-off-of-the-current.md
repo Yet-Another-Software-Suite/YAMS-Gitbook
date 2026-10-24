@@ -1,4 +1,4 @@
-# How do I sense activity based off of the current?
+# How do I sense activity from the motor current?
 
 Current sensing lets your robot detect when a mechanism is stalling against a hard stop, for example, an elevator that has fully descended or a claw that has fully closed, without requiring a dedicated limit switch. Because `SmartMotorController` exposes stator current, you can wire a `Trigger` directly to a current threshold, which is useful when a sensor was never installed or when adding one mid-season is not practical.
 

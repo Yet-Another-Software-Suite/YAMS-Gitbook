@@ -10,7 +10,7 @@ An `Elevator` moves a carriage along a line: a lift, a telescoping climber, or a
 
 <figure><img src="../.gitbook/assets/mech-elevator-how.png" alt="A motor drives a gearbox, set by withGearing, which turns a drum or sprocket, set by withDrumRadius, which pulls a carriage up a rail. One drum rotation lifts the carriage one circumference, so the height is the drum rotations times the circumference and you work in meters."><figcaption><p>A rotating motor becomes a distance.</p></figcaption></figure>
 
-The motor turns a drum or sprocket through a gearbox, and the drum pulls the carriage. One rotation of the drum moves the carriage one circumference, so once YAMS knows the [drum size](editor/config/gearing-and-units.md#withmechanismcircumference) you can work in meters and never think about rotations. [How to find your mechanism circumference?](../how-to/how-to-find-your-mechanism-circumference.md) covers measuring it.
+The motor turns a drum or sprocket through a gearbox, and the drum pulls the carriage. One rotation of the drum moves the carriage one circumference, so once YAMS knows the [drum size](editor/config/gearing-and-units.md#withmechanismcircumference) you can work in meters and never think about rotations. [How do I find my mechanism's circumference?](../how-to/how-to-find-your-mechanism-circumference.md) covers measuring it.
 
 A vertical elevator has to hold its carriage up, which is what the `kG` term of [`ElevatorFeedforward`](editor/config/feedforward.md#withfeedforward) is for.
 

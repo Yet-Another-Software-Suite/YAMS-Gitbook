@@ -2,7 +2,7 @@
 icon: gear
 ---
 
-# Swerve Module
+# Swerve module
 
 Every `SwerveModuleConfig` option, with a graphic and an example, is on the [SwerveModuleConfig](mechanism-configs/swerve-module-config.md) page under this one.
 
@@ -95,7 +95,7 @@ If the robot's position creeps when the wheels only steer, set [`withCouplingRat
 {% endstep %}
 {% endstepper %}
 
-## A Fully Configured Module
+## A fully configured module
 
 Here's every `SwerveModuleConfig` option from this page in one place, the sections below explain each call:
 
@@ -117,7 +117,7 @@ SwerveModule fl = new SwerveModule(moduleConfig);
 `withWheelRadius(Distance)`/`withWheelDiameter(Distance)` also exist on `SwerveModuleConfig`, but the source recommends setting wheel size on the drive motor's `SmartMotorControllerConfig` instead (see [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config)), so they're left out above.
 {% endhint %}
 
-## Two Motors, One Module
+## Two motors, one module
 
 A `SwerveModule` pairs exactly two `SmartMotorController`s: a drive motor (velocity control, drives the wheel) and an azimuth motor (position control, steers the wheel). `SwerveModuleConfig`'s constructor takes both directly:
 
@@ -137,7 +137,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig();
 moduleConfig.withSmartMotorController(driveSMC, azimuthSMC);
 ```
 
-## Absolute Encoder Wiring
+## Absolute encoder wiring
 
 Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting position" to assume, the wheel could be facing any direction when the robot powers on. That's why `SwerveModule` reads the absolute encoder and seeds the azimuth motor's relative encoder from it at construction time (`seedAzimuthEncoder()`), rather than requiring a homing routine.
 
@@ -191,7 +191,7 @@ Angle angle = moduleConfig.getAbsoluteEncoderAngle();
 Angle raw = moduleConfig.getRawAbsoluteEncoderAngle().get();
 ```
 
-## Optimization and Cosine Compensation
+## Optimization and cosine compensation
 
 Two `SwerveModuleConfig` flags exist purely to make a module track its setpoint more efficiently:
 
@@ -205,13 +205,13 @@ moduleConfig.withOptimization(true)
 
 Both are safe to leave enabled for essentially every swerve module; they exist as flags mainly so you can disable them while debugging module behavior in isolation. `SwerveModuleConfig.getOptimizedState(...)` is what `SwerveModule.setSwerveModuleState(...)` calls every loop to apply both before commanding the motors.
 
-### The Flip-Decision Feedback Loop
+### The flip-decision feedback loop
 
 When optimization is enabled, the module decides every loop whether to flip 180 degrees (and reverse the drive) or steer straight to the target.
 
 Kinematics recomputes the raw desired angle from scratch every loop with no memory of a prior flip, and a wheel that is still turning can sit near 90 degrees from both orientations of a target that keeps moving, such as a path starting off in a new direction. Choosing by the measured angle alone would reverse the wheel back and forth. `SwerveModuleConfig` therefore remembers `lastCommandedAngle`, the orientation it last actually sent, and keeps that orientation unless the other one is better by more than 30 degrees of hysteresis (see `SwerveModuleVelocityWithAzimuth.optimize(...)`). That avoids the module chattering between two headings.
 
-## Velocity Deadband
+## Velocity deadband
 
 `SwerveModuleConfig.withVelocityDeadband(LinearVelocity)` sets a wheel speed at or below which the module stops and holds its current angle, instead of steering to the angle the kinematics ask for. The default is 0.1 m/s.
 
@@ -240,7 +240,7 @@ moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
 
 The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](../live-tuning/#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
 
-## Steer to Drive Coupling
+## Steer to drive coupling
 
 On most modules the drive gearing turns the wheel when the azimuth rotates, even with the drive motor still, so steering alone would drive the wheel and skew its speed and odometry. `withCouplingRatio(...)` compensates for this the same way the CTRE swerve API does: the drive setpoint includes the motion steering causes, and that motion is removed from the measured wheel speed and distance.
 
@@ -250,7 +250,7 @@ moduleConfig.withCouplingRatio(3.5); // drive motor rotations per azimuth rotati
 
 `withCouplingRatio(GearBox)` takes the same ratio as a `GearBox` from the drive motor (input) to the azimuth (output). A ratio of `0` disables compensation.
 
-## Module Telemetry
+## Module telemetry
 
 `SwerveModuleConfig.withTelemetry(name, TelemetryVerbosity)` (or the `SwerveModuleTelemetryConfig` overload for finer control) is separate from the parent drive's telemetry, but `SwerveDrive` wires it up for you: `SwerveDriveTelemetry.setupTelemetry(...)` calls `SwerveModule.setupTelemetry(driveName)` for every module, which nests each module's NetworkTables entries under `Mechanisms/<driveName>/modules/<moduleName>`.
 
@@ -263,7 +263,7 @@ moduleConfig.withCouplingRatio(3.5); // drive motor rotations per azimuth rotati
 
 See [Telemetry](../understanding/telemetry.md) for how struct-encoded fields and verbosity presets work across YAMS generally.
 
-### Using `SwerveModuleTelemetryConfig` Directly
+### Using `SwerveModuleTelemetryConfig` directly
 
 Pass a `SwerveModuleTelemetryConfig` instead of a verbosity level when you need to route a single module's telemetry somewhere specific, such as nesting its DataLog entries under the same prefix as the parent drive:
 
@@ -281,7 +281,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
 
 `SwerveModuleTelemetryConfig(TelemetryVerbosity)` is a shorthand constructor equivalent to `new SwerveModuleTelemetryConfig().withTelemetryVerbosity(verbosity)`.
 
-## How SwerveDrive Uses Each Module
+## How SwerveDrive uses each module
 
 `SwerveDrive` computes one `SwerveModuleVelocity[]` per loop from the requested `ChassisVelocities` via kinematics, then calls `setSwerveModuleState(...)` on each module. That call is also where [optimization and cosine compensation](swerve-module.md#optimization-and-cosine-compensation) are actually applied, so the state `SwerveDrive` asked for and the state a module actually drives to can differ slightly by design.
 

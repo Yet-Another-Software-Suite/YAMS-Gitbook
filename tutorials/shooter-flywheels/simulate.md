@@ -42,7 +42,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 
 <figure><img src="../../.gitbook/assets/Robot Simulation 2025-09-09 09-05-32.gif" alt=""><figcaption></figcaption></figure>
 
-Congratulations on successfully programming your Shooter! :tada::tada:
+Congratulations on programming your Shooter! :tada::tada:
 
 ## Where to go next
 

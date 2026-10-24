@@ -40,7 +40,7 @@ How far the mechanism travels in one rotation of its output. Setting it lets you
 .withDrumRadius(Inches.of(0.25), 22)      // chain pitch and sprocket teeth
 ```
 
-All of these set the same value. Use whichever matches what you can measure. [How to find your mechanism circumference?](../../../how-to/how-to-find-your-mechanism-circumference.md) covers the measuring.
+All of these set the same value. Use whichever matches what you can measure. [How do I find my mechanism's circumference?](../../../how-to/how-to-find-your-mechanism-circumference.md) covers the measuring.
 
 Several options need it first and throw a `SmartMotorControllerConfigurationException` without it: distance `withSoftLimits`, distance `withExternalEncoderZeroOffset`, and anything else that takes a `Distance`.
 

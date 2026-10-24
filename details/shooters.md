@@ -202,7 +202,7 @@ shooter.near(RPM.of(3000), RPM.of(50)).whileTrue(feeder.feed()); // only feed at
 
 ## Shooting
 
-A shot is two flywheels working together: the shooter spins up, and a feeder pushes the game piece in once the shooter is at speed. Use `near(...)` on the shooter to gate the feeder, as above. [How to shoot with a Shooter?](../how-to/how-to-shoot-with-a-shooter.md) walks through it, and [Double FlyWheel](../tutorials/double-flywheel.md) covers two wheels spinning at different speeds.
+A shot is two flywheels working together: the shooter spins up, and a feeder pushes the game piece in once the shooter is at speed. Use `near(...)` on the shooter to gate the feeder, as above. [How do I shoot with a shooter?](../how-to/how-to-shoot-with-a-shooter.md) walks through it, and [Double FlyWheel](../tutorials/double-flywheel.md) covers two wheels spinning at different speeds.
 
 ## When a flywheel will not reach its speed
 

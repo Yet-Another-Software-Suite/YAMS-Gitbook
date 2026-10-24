@@ -4,7 +4,7 @@ description: Make the robot project that every tutorial starts from.
 
 # Create a project and install YAMS
 
-Every tutorial starts from the same place: a WPILib command based project with YAMS installed. This page makes one.
+Every tutorial starts from the same place: a WPILib command-based project with YAMS installed. This page makes one.
 
 Each tutorial page has a tab for **Java with Commands v2**, **Java with Commands v3** and **C++**. Pick the one you want now, because it decides which project template and which YAMS vendordep you need.
 
@@ -52,7 +52,7 @@ Filled in, it looks something like this. The screenshots on this page show the J
 
 <figure><img src="../.gitbook/assets/image (6).png" alt=""><figcaption></figcaption></figure>
 
-You now have a command based robot project.
+You now have a command-based robot project.
 
 <figure><img src="../.gitbook/assets/image (10).png" alt=""><figcaption></figcaption></figure>
 

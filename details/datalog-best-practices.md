@@ -5,7 +5,7 @@ icon: database
 # DataLog best practices
 
 {% hint style="info" %}
-Using DataLog will increase your storage usage on the SystemCore and could have negative consequences if left unmanaged. Please review [WPILib's DataLog documentation](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog) for more information.
+Using DataLog will increase your storage usage on the SystemCore and could have negative consequences if left unmanaged. Review [WPILib's DataLog documentation](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog) for more information.
 {% endhint %}
 
 Every YAMS telemetry field is published to NetworkTables by default. Separately, you can opt any field into a WPILib `DataLog`, the same file format read by AdvantageScope offline, and the one WPILib's `DataLogManager` automatically saves to a USB drive or the SystemCore's local storage during a match. This page covers how to control both destinations independently, and calls out the one place, `SwerveDrive`, where the rules are different.

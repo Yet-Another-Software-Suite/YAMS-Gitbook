@@ -156,7 +156,7 @@ An elevator has to know how far the carriage moves for each turn of the output s
 
 A **cascading** elevator also needs its number of stages, with `withCascadingElevatorStages(2)` in Java or `WithCascadingElevatorStages(2)` in C++.
 
-Want the details? [How to find your mechanism circumference?](../../how-to/how-to-find-your-mechanism-circumference.md)
+Want the details? [How do I find my mechanism's circumference?](../../how-to/how-to-find-your-mechanism-circumference.md)
 
 ## 3. PID and feedforward
 

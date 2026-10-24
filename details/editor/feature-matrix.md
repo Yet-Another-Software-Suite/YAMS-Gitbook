@@ -191,7 +191,7 @@ This is every option against every motor controller. What each option does, with
 | Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova |
 | ----------------------- | ------- | -------- | ------------- | ---- |
 | Voltage Compensation    | ❌       | ❌        | ✅             | ✅ |
-| Closed Loop Max Voltage | ✅       | ✅        | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ✅ |
+| Closed Loop Max Voltage | ✅       | ✅        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ✅ |
 
 {% hint style="warning" %}
 **Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an `IllegalArgumentException` if voltage compensation is configured; it's supported on `SparkWrapper` and `NovaWrapper`.
@@ -227,7 +227,7 @@ This is every option against every motor controller. What each option does, with
 | PID Controller          | ✅               | ✅               | ✅                                                      | ⚠️ (SystemCore)                 |
 | [LQR Controller](lqr-controllers.md)          | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore)                                        | ⚠️ (SystemCore)                 |
 | Closed Loop Tolerance   | ❌               | ❌               | ✅ (not with [LQR](lqr-controllers.md))                                       | ✅ (not with [LQR](lqr-controllers.md))                |
-| Control Period Override | ❌               | ❌               | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
+| Control Period Override | ❌               | ❌               | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 | Closed Loop Slots       | ⚠️ (`SLOT_0` to `SLOT_2`) | ⚠️ (`SLOT_0` to `SLOT_2`) | ✅ | ✅ |
 
 {% hint style="warning" %}
@@ -262,7 +262,7 @@ This is every option against every motor controller. What each option does, with
 | ElevatorFeedforward    | ✅       | ✅        | ✅             | ✅ |
 | Simulation Feedforward | ✅       | ✅        | ✅             | ✅ |
 
-### Soft Limits
+### Soft limits
 
 | Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova |
 | -------------------- | ------- | -------- | ------------- | ---- |
@@ -278,7 +278,7 @@ This is every option against every motor controller. What each option does, with
 | External Encoder Inversion   | ✅       | ✅        | ✅                                                      | ✅ |
 | External Encoder Zero Offset | ✅       | ✅        | ✅                                                      | ⚠️ (absolute and CAN encoders only) |
 | Use External for Feedback    | ✅       | ✅        | ✅                                                      | ✅ |
-| Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
+| Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 
 **Supported External Encoder Types:**
 
@@ -322,11 +322,11 @@ This is every option against every motor controller. What each option does, with
 | Custom Sim Supplier  | ✅       | ✅        | ✅             | ✅ |
 | External Encoder Sim | ✅       | ✅        | ✅             | ✅ |
 
-### Safety Features
+### Safety features
 
 | Feature            | TalonFX | TalonFXS | SparkMax/Flex                              | Nova |
 | ------------------ | ------- | -------- | ------------------------------------------ | ---- |
-| Temperature Cutoff | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an Exponential Profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
+| Temperature Cutoff | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 
 {% hint style="warning" %}
 **Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an [LQR controller](lqr-controllers.md) on any motor controller, an Exponential Profile on a `SparkWrapper`, and always on a `NovaWrapper`. With PID or a profile that runs on the motor controller, it does not work.
@@ -425,7 +425,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 SmartMotorController smc = new SparkWrapper(spark, DCMotor.getNEO(1), config);
 ```
 
-### Thrifty Nova with a CAN Encoder
+### Thrifty Nova with a CAN encoder
 
 ```java
 Nova nova = new Nova(0, 3, MotorType.NEO);   // CAN bus 0, CAN ID 3

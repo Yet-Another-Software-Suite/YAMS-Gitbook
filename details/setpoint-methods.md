@@ -2,7 +2,7 @@
 icon: sliders
 ---
 
-# Setpoint Methods vs Command Helpers
+# Setpoint methods vs command helpers
 
 YAMS Mechanism classes provide two ways to control mechanisms: **direct setpoint methods** inherited from `SmartMechanism`, and **command helper methods** that return `Command` objects. Understanding when to use each is key to writing clean, effective robot code.
 

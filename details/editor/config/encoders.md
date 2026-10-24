@@ -70,7 +70,7 @@ Attaches an external encoder. It must be one the motor controller can read direc
 .withExternalEncoder(new CANcoder(5, new CANBus(CANPort.CAN_S0)))
 ```
 
-The encoders each wrapper accepts are listed in the [feature matrix](../feature-matrix.md#external-encoders). [How do I use absolute encoders on my Arm?](../../../how-to/how-do-i-use-absolute-encoders-on-my-arm.md) has a complete example for each vendor.
+The encoders each wrapper accepts are listed in the [feature matrix](../feature-matrix.md#external-encoders). [How do I use absolute encoders on my arm?](../../../how-to/how-do-i-use-absolute-encoders-on-my-arm.md) has a complete example for each vendor.
 
 ### Keep the discontinuity point outside the travel
 

@@ -229,7 +229,7 @@ bool DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minut
 {% endtab %}
 {% endtabs %}
 
-Want the details? [How to shoot with a Shooter?](../../how-to/how-to-shoot-with-a-shooter.md) does the same for one flywheel.
+Want the details? [How do I shoot with a shooter?](../../how-to/how-to-shoot-with-a-shooter.md) does the same for one flywheel.
 
 ## 4. Create it and bind the buttons
 

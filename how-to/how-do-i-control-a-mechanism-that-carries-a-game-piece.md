@@ -59,7 +59,7 @@ A **telescoping arm**, or an arm with a wrist, moves its center of mass as it ex
 
 ### Shooter flywheel
 
-A game piece passes through the flywheel rather than staying on it. Its `kV` does not change. The flywheel slows as it shoots, and `kP` and the flywheel's own inertia bring it back up. See [How to shoot with a Shooter?](how-to-shoot-with-a-shooter.md).
+A game piece passes through the flywheel rather than staying on it. Its `kV` does not change. The flywheel slows as it shoots, and `kP` and the flywheel's own inertia bring it back up. See [How do I shoot with a shooter?](how-to-shoot-with-a-shooter.md).
 
 ## Measure the gains with the game piece
 
@@ -134,7 +134,7 @@ public ArmMechanism() {
 {% endtab %}
 {% endtabs %}
 
-`hasGamePiece()` is whatever tells you the mechanism has a game piece: a beam break, a distance sensor, or the intake's current, as in [How do I sense activity based off of the current?](how-do-i-sense-activity-based-off-of-the-current.md). The slot takes effect with the next setpoint, and a mechanism's commands send a setpoint every loop.
+`hasGamePiece()` is whatever tells you the mechanism has a game piece: a beam break, a distance sensor, or the intake's current, as in [How do I sense activity from the motor current?](how-do-i-sense-activity-based-off-of-the-current.md). The slot takes effect with the next setpoint, and a mechanism's commands send a setpoint every loop.
 
 [Loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers) are switched to the same slot. Give each follower the same slots in its own config.
 

@@ -207,7 +207,7 @@ Chooses whether the controller works in rotations or in meters.
 
 <figure><img src="../../../.gitbook/assets/smc-linear-units.png" alt="Two panels. Angle based, the default: error is measured in rotations, kP is in volts per rotation and profile limits are in rotations per second, for arms, pivots, turrets and flywheels. Distance based: error in meters, kP in volts per meter and profile limits in meters per second, for elevators and other linear mechanisms."><figcaption><p>The units the gains and limits are in.</p></figcaption></figure>
 
-It turns on by itself when you give a distance profile, a distance exponential profile or an `ElevatorFeedforward`, and it only takes effect when a [circumference](gearing-and-units.md#withmechanismcircumference) is set. [How to disable linear closed loop control?](../../../how-to/how-to-disable-linear-closed-loop-control.md) explains when to turn it off.
+It turns on by itself when you give a distance profile, a distance exponential profile or an `ElevatorFeedforward`, and it only takes effect when a [circumference](gearing-and-units.md#withmechanismcircumference) is set. [How do I turn off linear closed loop control?](../../../how-to/how-to-disable-linear-closed-loop-control.md) explains when to turn it off.
 
 **Supported on:** every supported motor controller.
 

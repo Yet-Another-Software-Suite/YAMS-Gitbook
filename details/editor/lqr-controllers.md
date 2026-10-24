@@ -2,7 +2,7 @@
 icon: chart-line
 ---
 
-# LQR Controllers
+# LQR controllers
 
 ## What is LQR?
 
@@ -14,7 +14,7 @@ icon: chart-line
 
 <figure><img src="../../.gitbook/assets/lqr-loop.png" alt="Before the match, your model of the motor, gearing and moment of inertia, together with your error tolerances and control effort, go into LQR, which computes feedback gains. Every 20 milliseconds on the SystemCore, the encoder reading passes through a Kalman filter, the gains multiply the error between the setpoint and the estimate, and the result is the motor voltage"><figcaption><p>You supply the model and the priorities. LQR supplies the gains.</p></figcaption></figure>
 
-## Why Use LQR?
+## Why use LQR?
 
 ### Advantages
 
@@ -23,21 +23,21 @@ icon: chart-line
 3. **Optimal Performance**: Mathematically minimizes a cost function you define
 4. **Consistent Behavior**: Gains are derived from physics, making them more predictable across different setpoints
 
-### When to Consider LQR
+### When to consider LQR
 
 - **Complex mechanisms** where PID tuning is difficult
 - **High-performance requirements** where optimal response matters
 - **Educational settings** where understanding control theory is valuable
 - **Mechanisms with well-characterized models** (accurate mass, inertia, motor constants)
 
-### When PID May Be Better
+### When PID may be better
 
 - **Simple mechanisms** that tune easily with PID
 - **Limited modeling data** (unknown mass, inertia, etc.)
 - **Quick prototyping** where tuning time is limited
 - **Mechanisms with significant nonlinearities** that LQR's linear model can't capture
 
-## LQR Execution in YAMS
+## LQR execution in YAMS
 
 {% hint style="warning" %}
 **Important**: LQR controllers are **not natively supported** by any motor controller hardware. When you configure an LQR controller in YAMS, the closed loop control **always runs on the SystemCore**. The wrapper starts a `Notifier` that calls `SmartMotorController.iterateClosedLoopController()` every closed loop control period (20 ms by default), so you never call it yourself.
@@ -54,7 +54,7 @@ Motor controller vendors (CTRE, REV, ThriftyBot) implement PID controllers on th
 
 These operations are beyond what current motor controller firmware supports.
 
-### Performance Implications
+### Performance implications
 
 | Aspect | Motor Controller PID | SystemCore LQR |
 |--------|---------------------|-------------|
@@ -71,7 +71,7 @@ For most FRC mechanisms (arms, elevators), the 50Hz update rate is sufficient. L
 
 In YAMS, you create an `LQRConfig` to specify your mechanism type and tuning parameters, then create an `LQRController` from that config, and finally pass it to `SmartMotorControllerConfig.withClosedLoopController()`.
 
-### LQRConfig Overview
+### LQRConfig overview
 
 `LQRConfig` requires three core parameters:
 - **DCMotor**: The motor model (e.g., `DCMotor.getKrakenX60(1)`)
@@ -83,7 +83,7 @@ Then you specify the mechanism type with one of:
 - `.withArm()` - For position-controlled arms
 - `.withElevator()` - For position-controlled elevators
 
-### Flywheel LQR Configuration
+### Flywheel LQR configuration
 
 Flywheels use a single-state model (velocity only):
 
@@ -112,7 +112,7 @@ LQRController flywheelLQR = new LQRController(flywheelLQRConfig);
 | `encoderTrust` | RadiansPerSecond | Standard deviation of encoder readings. **Lower** = trust encoder more. |
 | `controlEffort` | Volts | How much to penalize voltage usage. **Increase** for gentler control. |
 
-### Arm LQR Configuration
+### Arm LQR configuration
 
 Arms use a two-state model (position and velocity):
 
@@ -144,7 +144,7 @@ LQRController armLQR = new LQRController(armLQRConfig);
 | `modelVelocityTrust` | RadiansPerSecond | Model velocity uncertainty. |
 | `encoderPositionTrust` | Radians | Encoder measurement uncertainty. |
 
-### Elevator LQR Configuration
+### Elevator LQR configuration
 
 Elevators use a two-state linear model (position and velocity in meters):
 
@@ -208,7 +208,7 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withTelemetry("LQRArm", TelemetryVerbosity.HIGH);
 ```
 
-## Advanced LQR Options
+## Advanced LQR options
 
 ### Aggressiveness
 
@@ -220,7 +220,7 @@ LQRConfig config = new LQRConfig(motor, gearing, moi)
     .withAggressiveness(10.0);  // Higher = more aggressive, typical range 1-20
 ```
 
-### Measurement Delay Compensation
+### Measurement delay compensation
 
 If your sensors have significant latency, compensate with:
 
@@ -230,7 +230,7 @@ LQRConfig config = new LQRConfig(motor, gearing, moi)
     .withMeasurementDelay(Milliseconds.of(25));  // Compensate for 25ms delay
 ```
 
-### Loop Period
+### Loop period
 
 `LQRConfig` uses a 20ms (50Hz) period for its discrete-time calculations (see `LQRConfig.getPeriod()`), which matches the default closed loop control period of the `Notifier` that runs the controller. There is currently no setter for the LQR period, so keep the default closed loop control period when using LQR.
 
@@ -267,7 +267,7 @@ This is useful for:
 - Comparing LQR vs PID performance
 - Using LQR's model-based approach to inform PID tuning
 
-## Complete Example: LQR Arm
+## Complete example: LQR Arm
 
 ```java
 public class LQRArmSubsystem extends SubsystemBase {
@@ -291,7 +291,7 @@ public class LQRArmSubsystem extends SubsystemBase {
                 RadiansPerSecond.of(0.1),
                 Radians.of(0.005)             // Trust the encoder
             )
-            .withControlEffort(Volts.of(10)) // Slightly aggressive
+            .withControlEffort(Volts.of(10)) // A little gentler than the full 12 V
             .withMaxVoltage(Volts.of(12));
         
         // Create the LQR controller
@@ -340,34 +340,34 @@ public class LQRArmSubsystem extends SubsystemBase {
 **Critical**: LQR runs on the SystemCore, in a `Notifier` that calls `SmartMotorController.iterateClosedLoopController()`. The wrapper starts it when the control mode is `ControlMode.CLOSED_LOOP`, whether or not you use a mechanism class. LQR does not support a closed loop tolerance: `withClosedLoopTolerance` together with an `LQRController` throws an `IllegalArgumentException`.
 {% endhint %}
 
-## Tuning Strategy
+## Tuning strategy
 
-<figure><img src="../../.gitbook/assets/lqr-knobs.png" alt="Three step responses. Gentle, with a position tolerance of 0.2 radians and a control effort of 12 volts, is slow and uses little voltage. Balanced, with 0.1 radians, is quick and settles cleanly. Aggressive, with 0.02 radians and a control effort of 6 volts, is fastest and saturates the motor"><figcaption><p>The two settings you will change most. Illustrative responses.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/lqr-knobs.png" alt="Three step responses. Gentle, with a position tolerance of 0.2 radians and a control effort of 6 volts, is slow and uses little voltage. Balanced, with 0.1 radians and 12 volts, is quick and settles cleanly. Aggressive, with 0.02 radians and 12 volts, is fastest and saturates the motor"><figcaption><p>The two settings you will change most. Illustrative responses.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/lqr-tuning.gif" alt="Animation of an arm making the same 90 degree move three times: gentle, where it is slow and uses little voltage; aggressive, where it overshoots and the voltage saturates; and balanced, where it is quick and settles cleanly"><figcaption><p>The same move with three sets of priorities. Illustrative, not a recording.</p></figcaption></figure>
 
-### Starting Point
+### Starting point
 
-1. **Begin with conservative settings**:
+1. **Begin with the balanced settings**:
    - Position qelms: `Radians.of(0.1)` or `Meters.of(0.05)`
    - Velocity qelms: `RadiansPerSecond.of(1.0)` or `MetersPerSecond.of(0.5)`
-   - Control effort: `Volts.of(12)` (full battery = least aggressive)
+   - Control effort: `Volts.of(12)`, the full battery. The control effort is how much voltage LQR treats as acceptable, so a lower value makes it gentler.
 
 2. **Trust values** (standard deviations):
    - Model trust: Start with small values (0.01) if your model is accurate
    - Encoder trust: Use values based on your encoder resolution and noise
 
-### Increasing Responsiveness
+### Increasing responsiveness
 
 - **Decrease** position qelms (e.g., `Radians.of(0.1)` → `Radians.of(0.05)`)
+- **Increase** control effort, up to the battery's 12 V (e.g., `Volts.of(8)` → `Volts.of(12)`)
+
+### Reducing oscillation
+
 - **Decrease** control effort (e.g., `Volts.of(12)` → `Volts.of(8)`)
-
-### Reducing Oscillation
-
-- **Increase** control effort (e.g., `Volts.of(8)` → `Volts.of(12)`)
 - **Decrease** velocity qelms to penalize velocity errors more
 
-### Always Test in Simulation First
+### Always test in simulation first
 
 LQR can behave very differently with small parameter changes. Always validate in simulation before testing on the real robot.
 
@@ -377,28 +377,27 @@ LQR can behave very differently with small parameter changes. Always validate in
 
 **Symptoms**: Mechanism oscillates around setpoint
 **Solutions**:
-- Increase control effort (R) to reduce aggressiveness
+- Decrease control effort to make it gentler
 - Decrease velocity qelms to penalize velocity errors
-- Add or increase feedforward kD term
 - Check for mechanical issues (backlash, friction)
 
-### Slow Response
+### Slow response
 
 **Symptoms**: Mechanism responds too slowly to setpoint changes
 **Solutions**:
-- Decrease control effort (R)
+- Increase control effort, up to 12 V
 - Decrease position qelms to penalize position errors more
 - Verify motion profile constraints aren't too conservative
 
-### Steady-State Error
+### Steady-state error
 
 **Symptoms**: Mechanism doesn't quite reach setpoint
 **Solutions**:
 - Verify feedforward is properly tuned (especially kG for arms/elevators)
-- Check that closed loop tolerance isn't too large
+- Decrease position qelms, so a small position error costs more
 - Ensure model parameters (mass, inertia, gearing) are accurate
 
-### Model Mismatch
+### Model mismatch
 
 **Symptoms**: Simulation works but real robot doesn't
 **Solutions**:
@@ -407,7 +406,7 @@ LQR can behave very differently with small parameter changes. Always validate in
 - Measure kV and kA on the real mechanism and compare them with the model, see [Measuring kV and kA](exponential-profiles.md#measuring-kv-and-ka)
 - Account for friction and other losses in feedforward
 
-## LQR vs PID Quick Reference
+## LQR vs PID quick reference
 
 | Aspect | PID | LQR |
 |--------|-----|-----|

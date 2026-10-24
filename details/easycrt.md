@@ -46,7 +46,7 @@ CRT is not the only way to find the absolute angle of your turret and you should
 * An absolute encoder with a 1:1 reduction
   * Optionally add a slightly less than 1:1 pinon on a second absolute encoder and find how many turns there are algebraically.
 
-## EasyCRT Guide
+## EasyCRT guide
 
 `EasyCRT` finds the absolute angle of a mechanism that turns more than once, usually a turret, from two absolute encoders. Each encoder sits on a pinion with a different tooth count, and both pinions mesh with the same gear. Neither encoder knows the angle on its own, but the pair of readings is unique over a much longer travel than either one.
 
@@ -555,7 +555,7 @@ Two failures are worth seeing in motion.
 | Symptom | Likely cause |
 | ------- | ------------ |
 | Always empty | An encoder is not zeroed at the mechanism's zero, or one encoder counts the wrong way. |
-| Empty in some positions only | Backlash or a loose pinion is using up the margin. See the margin section. |
+| Empty in some positions only | Backlash or a loose pinion is using up the margin. See [Margin: how much backlash is too much](#margin-how-much-backlash-is-too-much). |
 | Empty at the ends of travel | The mechanism is past the travel you gave, or the travel is the whole unique range. |
 | Angle is off by a fixed amount | Encoder A's zero is off. The result follows encoder A. |
 | Angle is off by a whole number of pinion turns | The readings were taken while moving, or encoder B's zero is off. |

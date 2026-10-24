@@ -42,7 +42,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 
 <figure><img src="../../.gitbook/assets/armTest2.gif" alt=""><figcaption></figcaption></figure>
 
-Congratulations on successfully programming your Arm! :tada::tada:
+Congratulations on programming your Arm! :tada::tada:
 
 ## Where to go next
 
