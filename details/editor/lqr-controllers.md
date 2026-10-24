@@ -367,6 +367,59 @@ public class LQRArmSubsystem extends SubsystemBase {
 - **Decrease** control effort (e.g., `Volts.of(12)` → `Volts.of(8)`)
 - **Decrease** velocity qelms to penalize velocity errors more
 
+### Tune it live
+
+You can change every value above while the robot runs, with [live tuning](../live-tuning/README.md). With `TelemetryVerbosity.HIGH`, a motor controller configured with an LQR publishes the LQR's values under `NT:/Tuning/<Mechanism>/<Motor>/closedloop/lqr/` in place of kP, kI and kD. Start the `Live Tuning` command, then type a value, and the LQR is rebuilt with it on the next loop.
+
+| Field, under `closedloop/lqr/` | `LQRConfig` value | Flywheel | Arm | Elevator |
+| --- | --- | --- | --- | --- |
+| `qelms/position` | Position qelms | | Degrees | Meters |
+| `qelms/velocity` | Velocity qelms | RPM | RPM | m/s |
+| `relms` | Control effort | Volts | Volts | Volts |
+| `model/position` | Model position trust | | Degrees | Meters |
+| `model/velocity` | Model velocity trust | RPM | RPM | m/s |
+| `encoder/position` | Encoder position trust | | Degrees | Meters |
+| `encoder/velocity` | Encoder trust | RPM | | |
+| `maxVoltage` | Max voltage | Volts | Volts | Volts |
+
+The fields use the same units as the tunable setpoints, and start at the values in your config. A field your LQR type does not use is not published.
+
+{% stepper %}
+{% step %}
+#### Tune the feedforward first
+
+The LQR only replaces kP, kI and kD. kG, kS, kV and kA are still added to its output, and still tuned as in [Tuning order](../live-tuning/README.md#tuning-order). An arm or elevator whose kG is wrong ends up short of the setpoint, whatever the LQR does.
+{% endstep %}
+
+{% step %}
+#### Set the response with the qelms and control effort
+
+Command small moves, or a speed on a flywheel, and change one value at a time:
+
+* Too slow: lower `qelms/position` (on a flywheel, `qelms/velocity`), or raise `relms` up to 12 V.
+* Overshoots or rings: lower `qelms/velocity` on an arm or elevator, or lower `relms`.
+* `motor/outputVoltage` pinned at the limit: the LQR is asking for more than the motor has, so raise the qelms or lower `relms`.
+{% endstep %}
+
+{% step %}
+#### Change the trust values last, if at all
+
+`model/` and `encoder/` set how the Kalman filter weighs the model against the encoder. Leave them unless the output is noisy, in which case raise `encoder/position` (on a flywheel, `encoder/velocity`), or the estimate lags the real mechanism, in which case raise `model/position` and `model/velocity`.
+{% endstep %}
+
+{% step %}
+#### Copy the values into your config
+
+Live tuning changes nothing in your code. Write the values down and put them in your `LQRConfig`. In Java, the units carry over: `Degrees.of(...)`, `RPM.of(...)`, `Meters.of(...)`, `MetersPerSecond.of(...)` and `Volts.of(...)`. In C++, `WithQElems`, `WithStateStdDevs` and `WithMeasurementStdDevs` take radians, rad/s, meters and m/s, so convert the degrees and RPM first.
+{% endstep %}
+{% endstepper %}
+
+{% hint style="info" %}
+**Every value must be above 0.** A change rebuilds the LQR from all the fields, starting from the old LQR's state estimate, so the output does not jump and the mechanism keeps holding its setpoint. A value the LQR cannot use, such as a tolerance of 0, leaves it as it was, with a warning on the Driver Station naming the motor.
+{% endhint %}
+
+The [`lqr_mechanisms` example](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/lqr_mechanisms) has an LQR arm and an LQR flywheel to practice on in simulation, for Commands v2 and Commands v3. The [YAMS Live Tuner](https://tuning.yassrobotics.com/) shows these fields as an **LQR** group.
+
 ### Always test in simulation first
 
 LQR can behave very differently with small parameter changes. Always validate in simulation before testing on the real robot.

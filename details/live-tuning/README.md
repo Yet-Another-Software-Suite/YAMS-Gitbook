@@ -110,6 +110,8 @@ Commands v3 commands are not dashboard widgets themselves, so YAMS publishes the
 The command requires the mechanism and runs a `while (true)` loop that applies the dashboard values and calls `coroutine.yield()` each loop.
 {% endtab %}
 {% endtabs %}
+
+The command takes over from the default command. If that default command coasts the motor with a duty cycle or voltage, it stopped a closed loop that runs on the SystemCore, such as an LQR or an exponential profile. The `Live Tuning` command starts it again, holding the setpoint the motor controller had.
 {% endstep %}
 
 {% step %}
@@ -232,6 +234,28 @@ For a velocity mechanism such as a flywheel, compare `mechanism/velocity` with `
 Gains are in volts per rotation of error (per meter for linear mechanisms). See [Gain units](#gain-units) below.
 {% endtab %}
 
+{% tab title="LQR" %}
+A motor controller configured with an [LQR](../editor/lqr-controllers.md) has no kP, kI or kD fields. It publishes the LQR's own values in their place, under `closedloop/lqr/`. They only appear when the config has an LQR, and only the ones its type uses.
+
+| You type (`NT:/Tuning`) | Flywheel | Arm | Elevator | Watch (`NT:/Mechanisms`) | Why |
+| --- | --- | --- | --- | --- | --- |
+| `closedloop/lqr/qelms/position` | | Degrees | Meters | `mechanism/position` vs `closedloop/setpoint/position` | The position error you tolerate. Lower it to close position error harder. |
+| `closedloop/lqr/qelms/velocity` | RPM | RPM | m/s | `mechanism/velocity` vs `closedloop/setpoint/velocity` | The velocity error you tolerate. Lower it to damp overshoot, or on a flywheel to reach speed faster. |
+| `closedloop/lqr/relms` | Volts | Volts | Volts | `motor/outputVoltage` | The voltage the LQR treats as acceptable. Lower it for a gentler response. |
+| `closedloop/lqr/model/position` | | Degrees | Meters | `mechanism/position` | How far you trust the model's position. |
+| `closedloop/lqr/model/velocity` | RPM | RPM | m/s | `mechanism/velocity` | How far you trust the model's velocity. |
+| `closedloop/lqr/encoder/position` | | Degrees | Meters | `mechanism/position` | How noisy the encoder's position is. |
+| `closedloop/lqr/encoder/velocity` | RPM | | | `mechanism/velocity` | How noisy the encoder's velocity is. |
+| `closedloop/lqr/maxVoltage` | Volts | Volts | Volts | `motor/outputVoltage` | The most voltage the LQR outputs. |
+
+* **Units:** the same as the tunable setpoints, so an arm's tolerance of `5` is 5 degrees. The fields start at the values in your `LQRConfig`.
+* **Retuning:** a change rebuilds the LQR from every field. The new LQR starts from the old one's state estimate, so the output doesn't jump, and it keeps holding the setpoint.
+* **Bad values:** every value must be above 0. One the LQR can't use leaves it as it was, with a warning on the Driver Station naming the motor.
+* **The feedforward is still tuned as usual.** The LQR only replaces kP, kI and kD. kS, kV, kG and kA are added on top of its output.
+
+See [Tune it live](../editor/lqr-controllers.md#tune-it-live) for the order to change them in.
+{% endtab %}
+
 {% tab title="Feedforward" %}
 | You type (`NT:/Tuning`) | Watch (`NT:/Mechanisms`) | Why |
 | --- | --- | --- |
@@ -330,6 +354,21 @@ For position control the error is in rotations of the mechanism (or meters with 
 | `kA` | V/(rot/s²) | V/(rot/s²) | V/(m/s²) |
 
 In YAMS, `ArmFeedforward` uses rotations for kV and kA, like the other feedforward types.
+
+</details>
+
+<details>
+
+<summary>LQR values</summary>
+
+| Field, under `closedloop/lqr/` | Flywheel | Arm | Elevator |
+| --- | --- | --- | --- |
+| `qelms/position`, `model/position`, `encoder/position` | Not used | Degrees | Meters |
+| `qelms/velocity`, `model/velocity` | RPM | RPM | m/s |
+| `encoder/velocity` | RPM | Not used | Not used |
+| `relms`, `maxVoltage` | Volts | Volts | Volts |
+
+In code, `LQRConfig` keeps these in radians, rad/s, meters and m/s. YAMS converts them for the dashboard.
 
 </details>
 
@@ -460,6 +499,10 @@ Tune in the middle of the travel, away from the hard stops, and keep the soft li
 {% endhint %}
 {% endtab %}
 {% endtabs %}
+
+{% hint style="info" %}
+**With an LQR**, tune the feedforward the same way, then the `closedloop/lqr/` fields where these steps say kP and kD. See [Tune it live](../editor/lqr-controllers.md#tune-it-live).
+{% endhint %}
 
 ### Motion profiles on arms and elevators
 
