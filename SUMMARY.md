@@ -100,6 +100,7 @@
 * [Telemetry](understanding/telemetry.md)
 * [DataLog best practices](details/datalog-best-practices.md)
 * [Live tuning](details/live-tuning/README.md)
+  * [YAMS Live Tuner](details/live-tuning/live-tuner.md)
   * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
 * [EasyCRT](details/easycrt.md)
 * [AdvantageKit Integration](details/advantagekit-integration.md)
