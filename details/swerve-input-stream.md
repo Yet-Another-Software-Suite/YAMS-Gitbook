@@ -323,7 +323,7 @@ The lookahead assumes the robot keeps its current velocity, so it works best whi
 input.withAimFeedforward(new SimpleMotorFeedforward(0, 0.1));
 ```
 
-**How to use it:** hold the aim button and drive sideways past the target while you watch the heading, or [`aimLock`](swerve-input-stream.md#aim-lock). If the robot trails the target, start with a small `kV` and raise it until it keeps up. Too much makes the heading overshoot and wobble. `kS` and `kA` can usually stay at 0.
+**How to use it:** hold the aim button and drive sideways past the target while you watch the heading, or [`aimLock`](swerve-input-stream.md#aim-lock). With telemetry at `MID` or above, graph the [rotation controller's measurement against its setpoint](#rotation-controller-inputs) to see the lag. If the robot trails the target, start with a small `kV` and raise it until it keeps up. Too much makes the heading overshoot and wobble. `kS` and `kA` can usually stay at 0.
 
 The feedforward does not remove the lag completely, and it is no substitute for a rotation controller that is tuned well. Tune the controller in [`SwerveDriveConfig`](mechanism-configs/swerve-drive-config.md) first.
 
@@ -439,13 +439,28 @@ SwerveInputStream headingStream = input.clone();
 
 Telemetry is off until you call `withTelemetry(name, verbosity)` on a stream. It publishes every time the stream is read with `get()`, so there is nothing to call each loop. `getTelemetry()` returns the stream's `SwerveInputStreamTelemetry` as an `Optional`.
 
-| Verbosity | Publishes                                                                               |
-| --------- | --------------------------------------------------------------------------------------- |
-| `LOW`     | The current drive mode                                                                  |
-| `MID`     | Also the stream's configuration, read-only                                              |
-| `HIGH`    | Also editable copies of the configuration, and a `Live Tuning` command on the dashboard |
+| Verbosity | Publishes                                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `LOW`     | The current drive mode                                                                                              |
+| `MID`     | Also the stream's configuration, read-only, and the [rotation controller's inputs](#rotation-controller-inputs) |
+| `HIGH`    | Also editable copies of the configuration, and a `Live Tuning` command on the dashboard                             |
 
 Call `withTelemetry` last, after the rest of the configuration, so the dashboard starts with the configured values. Calling it again replaces the stream's telemetry, and `getTelemetry().get().close()` stops publishing it, e.g. when replacing a stream with another of the same name.
+
+### Rotation controller inputs
+
+`HEADING`, `AIM` and `TRANSLATION_ONLY` turn the robot with the drive's rotation controller. At `MID` and above, the stream publishes what it gives that controller on every read, under `SwerveInputStream/<name>/rotationController`:
+
+| Key           | Value                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------- |
+| `measurement` | The robot's heading, in radians in the gyro's frame                                   |
+| `setpoint`    | The heading being turned to, in radians in the gyro's frame: the aim heading in `AIM` |
+
+Both are `NaN` on reads in `ANGULAR_VELOCITY`, which doesn't use the controller, so a graph shows a gap rather than a stale value.
+
+Graph the two together while you hold the aim or heading button. The gap between them is the controller's error: a measurement that is slow to reach the setpoint needs more `kP`, and one that overshoots and wobbles needs less `kP` or some `kD`. Tune the gains in [`SwerveDriveConfig`](mechanism-configs/swerve-drive-config.md#auto-align-controllers).
+
+`getRotationControllerMeasurement()` and `getRotationControllerSetpoint()` return the same values as `Optional<Angle>`s, empty when the last `get()` didn't use the controller. C++ has `GetRotationControllerMeasurement()` and `GetRotationControllerSetpoint()`, returning `std::optional<wpi::units::radian_t>`.
 
 {% tabs %}
 {% tab title="Commands v2" %}
