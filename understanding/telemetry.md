@@ -25,7 +25,9 @@ While the code runs, YAMS publishes to NetworkTables, which dashboards such as A
 
 Every mechanism draws itself in a `Mechanism2d`, at `NT:/Mechanisms/<Mechanism>/mechanism`. It is the window you open in the Sim GUI or AdvantageScope in the tutorials' "Simulate it" step. It is published on the real robot too, but everything it shows is also in the numeric values, so you don't need it there.
 
-Besides the mechanism itself, it draws short lines at its limits and its setpoint:
+<figure><img src="../.gitbook/assets/telemetry-mechanism2d.png" alt="The Sim GUI window /Mechanisms/Arm/mechanism for the Arm tutorial's arm, at its starting angle of minus 5 degrees. The arm is an orange line from the center of the window to its right edge, with a thinner white setpoint line on top of it. An enlarged view of the pivot shows four short lines: green and pink above the arm for the upper hard and soft limits, and yellow and red below it for the lower soft and hard limits."><figcaption><p>The Arm tutorial's arm in the Sim GUI, with the pivot enlarged on the right.</p></figcaption></figure>
+
+Besides the mechanism itself, it draws a white line for the setpoint and short lines at its limits:
 
 | Color | Shows |
 | --- | --- |
