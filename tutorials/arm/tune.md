@@ -16,8 +16,101 @@ You change one number at a time on a dashboard and watch a graph. Nothing is sav
 ## Before you start
 
 * Start the simulation and enable **Teleoperated**, as in [step 4](simulate.md). The arm holds 0 degrees (level).
-* Open [AdvantageScope](https://docs.advantagescope.org/) and connect it to the simulation (**File > Connect to Simulator**).
-* Do not press any of the arm's buttons while you tune. A button runs another arm command, which stops live tuning. If that happens, start it again as in part 1.
+* Do not press any of the arm's buttons while you tune. A button runs another arm command, which stops live tuning. If that happens, start live tuning again.
+
+Then tune with the YAMS Live Tuner, or by typing the values in AdvantageScope and Elastic. Both change the same values, so pick one.
+
+{% tabs %}
+{% tab title="YAMS Live Tuner" %}
+The [YAMS Live Tuner](../../details/live-tuning/live-tuner.md) is a web page that walks you through it: it checks the arm before anything moves, then you send setpoints and change gains while watching a graph.
+
+{% stepper %}
+{% step %}
+### Connect
+
+Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, and press **Connect**. If your browser asks whether the page may connect to devices on your local network, allow it.
+
+**Check it:** the badge in the header shows `localhost`, with the robot enabled in Teleop.
+{% endstep %}
+
+{% step %}
+### Pick the arm
+
+1. Under **Telemetry name**, choose `Arm/ArmMotor`: the names from the arm's and the motor's `withTelemetry`.
+2. Under **Live Tuning command**, choose `ArmSubsystem` (Commands v2 and C++) or `ArmMechanism` (Commands v3).
+3. Set **Type** to **Arm**. Setpoints are in degrees.
+4. Press **Continue**.
+
+**Check it:** the telemetry card shows the arm's angle, near 0 degrees.
+{% endstep %}
+
+{% step %}
+### Checklist and inversions
+
+1. Tick every item on the pre-motion checklist, leave **Current trip (A)** at 40, and press **Continue**.
+2. Tick the confirmation and press **Start voltage control**.
+3. Type `1` under **Type a voltage** and press **Enter**. The arm swings up. Gravity pulls on it most when it is level, so if it does not move, try `2`.
+4. Type `0`, then press **Finish check**.
+
+**Check it:** **Positive voltage moves forward** was ticked when the arm swung up. If the Live Tuner warns that the angle went the wrong way, the motor or encoder inversion in step 1 is wrong.
+{% endstep %}
+
+{% step %}
+### Set the range of motion
+
+Choose **Enter range manually**. The ends start at the soft limits from step 1, -20 and 30 degrees, so press **Use this range**.
+
+**Check it:** the Live tune card opens.
+{% endstep %}
+
+{% step %}
+### Start live tuning and find kG
+
+Press **Start Live Tuning**. The setpoints and gains you send are now applied to the arm every loop.
+
+`kG` is the voltage it takes to hold the arm level against gravity. YAMS scales it by the cosine of the angle, so the arm gets all of it when level and none when it points straight up or down. With `kG` at 0, only `kP` holds the arm up, so the arm sags a little below its setpoint.
+
+1. On the **Setpoints** tab, type `0` and press **Send**.
+2. Once the arm has stopped, read its output voltage on the telemetry card. Say it reads `0.9`.
+3. Type that voltage into **kG** on the Settings card's **Gains** tab, and press **Enter**.
+
+**Check it:** the measured angle moves up onto the setpoint on the graph and stays there.
+{% endstep %}
+
+{% step %}
+### Tune kP and kD
+
+1. Turn on **Alternate setpoints**, with **Setpoint A** at `-5` and **Setpoint B** at `15`. The arm now moves between them every 5 seconds.
+2. Watch each move on the graph and change **kP** on the **Gains** tab:
+   * It is slow, or stops short: double `kP`.
+   * It overshoots and swings back and forth: lower `kP` by about a third.
+3. If it still overshoots a little at a `kP` that is quick enough, raise **kD** a little at a time, starting at `1`.
+
+A change that made it worse? Press **was** under the value to put the last one back.
+
+<figure><img src="../../.gitbook/assets/live-tuning-response.png" alt="Three step responses: kP too low rises slowly and stops short, about right settles quickly on the setpoint, kP too high overshoots and rings"><figcaption><p>What the angle looks like on the graph after each setpoint change.</p></figcaption></figure>
+
+**Check it:** after each change of setpoint the arm gets there within a second or so and stops without swinging.
+{% endstep %}
+
+{% step %}
+### Tune the motion profile and kV
+
+The motion profile limits how fast the arm moves and speeds up. On the **Gains** tab, **Max velocity** and **Max acceleration** are in degrees per second, 90 and 45 from step 1, with the RPM YAMS uses shown under each.
+
+1. With **Alternate setpoints** still on, raise **Max velocity** and **Max acceleration** a step at a time.
+2. Stop raising them when the measured angle falls behind the setpoint while it moves, or the stator current on the graph jumps.
+3. Raise **kV** until the measured angle follows the setpoint during a move, instead of falling behind and catching up at the end. `kV` only acts while the arm moves.
+
+**Check it:** the arm follows the setpoint through each move and arrives without lagging. Press **Space** to stop when you are done.
+{% endstep %}
+{% endstepper %}
+{% endtab %}
+
+{% tab title="AdvantageScope and Elastic" %}
+You type each value into its NetworkTables key yourself, and graph the arm in AdvantageScope.
+
+Open [AdvantageScope](https://docs.advantagescope.org/) and connect it to the simulation (**File > Connect to Simulator**).
 
 {% stepper %}
 {% step %}
@@ -25,25 +118,8 @@ You change one number at a time on a dashboard and watch a graph. Nothing is sav
 
 YAMS gives the arm a `Live Tuning` command. While it runs, numbers you type on the dashboard are applied to the arm straight away.
 
-{% tabs %}
-{% tab title="Java, Commands v2" %}
-The command is published at `NT:/Tuning/ArmSubsystem/Live Tuning`, named after the subsystem.
-
-In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ArmSubsystem/Live Tuning` to a tab and press its button.
-{% endtab %}
-
-{% tab title="Java, Commands v3" %}
-The command is published at `NT:/Tuning/ArmMechanism/Live Tuning`, named after the mechanism.
-
-Set the boolean `NT:/Tuning/ArmMechanism/Live Tuning/running` to `true`. In AdvantageScope, first turn on tuning mode (part 2), then click the value to change it.
-{% endtab %}
-
-{% tab title="C++" %}
-The command is published at `NT:/Tuning/ArmSubsystem/Live Tuning`, named after the subsystem.
-
-In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ArmSubsystem/Live Tuning` to a tab and press its button.
-{% endtab %}
-{% endtabs %}
+* **Commands v2 and C++:** the command is published at `NT:/Tuning/ArmSubsystem/Live Tuning`, named after the subsystem. In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ArmSubsystem/Live Tuning` to a tab and press its button.
+* **Commands v3:** the command is published at `NT:/Tuning/ArmMechanism/Live Tuning`, named after the mechanism. Set the boolean `NT:/Tuning/ArmMechanism/Live Tuning/running` to `true`. In AdvantageScope, first turn on tuning mode (step 2), then click the value to change it.
 
 **Check it:** the command shows as running. The arm keeps holding 0 degrees.
 {% endstep %}
@@ -118,9 +194,11 @@ The motion profile limits how fast the arm moves and speeds up: 90 degrees per s
 
 For more on each value, see [Tuning order](../../details/live-tuning/README.md#tuning-order).
 {% endstep %}
+{% endstepper %}
+{% endtab %}
+{% endtabs %}
 
-{% step %}
-### Copy the numbers into your code
+## Copy the numbers into your code
 
 Dashboard changes are lost when the code restarts. Write the numbers you ended up with into the config from step 1. In simulation they go into the `Sim` versions.
 
@@ -176,14 +254,13 @@ Copy the motion profile limits into `WithTrapezoidProfile` too, converted back t
 The numbers above are an example. Use the ones you found.
 
 **Check it:** restart the simulation and enable it. The arm holds 0 degrees without sagging, and the A and B buttons move it smoothly.
-{% endstep %}
-{% endstepper %}
 
 ## If it did not work
 
-* **Typing a value does nothing.** Turn on AdvantageScope's tuning mode, check the `Live Tuning` command is still running, and check you typed under `NT:/Tuning`, not `NT:/Mechanisms`.
-* **Live tuning stopped on its own.** A button press, or the default command, took over the arm. Start it again.
+* **AdvantageScope: typing a value does nothing.** Turn on AdvantageScope's tuning mode, check the `Live Tuning` command is still running, and check you typed under `NT:/Tuning`, not `NT:/Mechanisms`.
+* **Live Tuner: the arm is not in the Telemetry name list.** Check the simulation is running and you connected to **Simulation**. The list only fills in once the robot code has started.
+* **Live tuning stopped on its own.** A button press, or the default command, took over the arm. On the Live Tuner, the current trip, leaving the range of motion, or pressing Space also stops it. Start it again.
 * **The arm swings harder and harder.** `kP` is too high. Lower it, or disable and restart the simulation.
-* **The numbers were gone after a restart.** They only last until the code stops. Copy them into your code as in part 6.
+* **The numbers were gone after a restart.** They only last until the code stops. Copy them into your code, as in [Copy the numbers into your code](#copy-the-numbers-into-your-code).
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).

@@ -18,8 +18,103 @@ If you did [the arm's tune step](../arm/tune.md), this is the same except for gr
 ## Before you start
 
 * Start the simulation and enable **Teleoperated**, as in [step 4](simulate.md). The carriage rests at 0 m.
-* Open [AdvantageScope](https://docs.advantagescope.org/) and connect it to the simulation (**File > Connect to Simulator**).
-* Do not press any of the elevator's buttons while you tune. A button runs another elevator command, which stops live tuning. If that happens, start it again as in part 1.
+* Do not press any of the elevator's buttons while you tune. A button runs another elevator command, which stops live tuning. If that happens, start live tuning again.
+
+Then tune with the YAMS Live Tuner, or by typing the values in AdvantageScope and Elastic. Both change the same values, so pick one.
+
+{% tabs %}
+{% tab title="YAMS Live Tuner" %}
+The [YAMS Live Tuner](../../details/live-tuning/live-tuner.md) is a web page that walks you through it: it checks the elevator before anything moves, then you send setpoints and change gains while watching a graph.
+
+{% stepper %}
+{% step %}
+### Connect
+
+Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, and press **Connect**. If your browser asks whether the page may connect to devices on your local network, allow it.
+
+**Check it:** the badge in the header shows `localhost`, with the robot enabled in Teleop.
+{% endstep %}
+
+{% step %}
+### Pick the elevator
+
+1. Under **Telemetry name**, choose `Elevator/ElevatorMotor`: the names from the elevator's and the motor's `withTelemetry`.
+2. Under **Live Tuning command**, choose `ElevatorSubsystem` (Commands v2 and C++) or `ElevatorMechanism` (Commands v3).
+3. Set **Type** to **Elevator**. Setpoints are in meters.
+4. Press **Continue**.
+
+**Check it:** the telemetry card shows the carriage at 0 m.
+{% endstep %}
+
+{% step %}
+### Checklist and inversions
+
+1. Tick every item on the pre-motion checklist, leave **Current trip (A)** at 40, and press **Continue**.
+2. Tick the confirmation and press **Start voltage control**.
+3. Type `1` under **Type a voltage** and press **Enter**. The carriage rises. Gravity pulls it down, so it can need more voltage to rise than to fall.
+4. Type `0`, then press **Finish check**.
+
+**Check it:** **Positive voltage moves up** was ticked when the carriage rose. If the Live Tuner warns that the height went the wrong way, the motor or encoder inversion in step 1 is wrong.
+{% endstep %}
+
+{% step %}
+### Set the range of motion
+
+Choose **Enter range manually**. The ends start at the soft limits from step 1, 0 and 2 meters, so press **Use this range**.
+
+**Check it:** the Live tune card opens.
+{% endstep %}
+
+{% step %}
+### Start live tuning and find kG
+
+Press **Start Live Tuning**. The setpoints and gains you send are now applied to the elevator every loop.
+
+`kG` is the voltage it takes to hold the carriage still against gravity. Gravity pulls just as hard at every height, so one `kG` is right everywhere. With `kG` at 0, only `kP` holds the carriage up, so it sags below its setpoint.
+
+1. On the **Setpoints** tab, type `1` and press **Send**. The carriage rises, then settles below 1 m: about 0.85 m with the placeholder `kP`.
+2. Once it has stopped, read its output voltage on the telemetry card. For this elevator it reads about `0.6`.
+3. Type that voltage into **kG** on the Settings card's **Gains** tab, and press **Enter**.
+
+**Check it:** the measured height moves up onto the 1 m setpoint on the graph and stays there. Send `0.5`, then `1.5`: the carriage holds each one without sagging.
+{% endstep %}
+
+{% step %}
+### Tune kP and kD
+
+`kP` is how hard the motor pushes for each meter of error. A `kP` of 4 is only 0.04 volts for each centimeter, which is why the carriage sagged so far.
+
+1. Turn on **Alternate setpoints**, with **Setpoint A** at `0.5` and **Setpoint B** at `1`. The carriage now moves between them every 5 seconds.
+2. Watch each move on the graph and change **kP** on the **Gains** tab:
+   * It lags behind the setpoint, or stops a few centimeters short: double `kP` (8, then 16, and so on).
+   * It overshoots and bounces: lower `kP` by about a third.
+3. If it still overshoots a little at a `kP` that is quick enough, raise **kD** a little at a time, starting at `0.5`.
+
+A change that made it worse? Press **was** under the value to put the last one back.
+
+<figure><img src="../../.gitbook/assets/live-tuning-response.png" alt="Three step responses: kP too low rises slowly and stops short, about right settles quickly on the setpoint, kP too high overshoots and rings"><figcaption><p>What the height looks like on the graph after each setpoint change.</p></figcaption></figure>
+
+**Check it:** after each change of setpoint the carriage follows the setpoint closely and stops on it, within a centimeter or so, without bouncing.
+{% endstep %}
+
+{% step %}
+### Tune the motion profile and kV
+
+The motion profile limits how fast the carriage moves and speeds up. On the **Gains** tab, **Max velocity** and **Max acceleration** are 0.5 m/s and 0.5 m/s² from step 1.
+
+1. Set **Setpoint B** to `1.5`, then raise **Max velocity** and **Max acceleration** a step at a time.
+2. Stop raising them when the measured height falls behind the setpoint while it moves, or the stator current on the graph jumps. This NEO and 12:1 gearing can lift the carriage at about 1.1 m/s at most, so keep **Max velocity** well below that.
+3. Raise **kV** until the measured height follows the setpoint during a move, instead of falling behind and catching up at the end. For this elevator it ends up near `10`: about 12 volts divided by the 1.1 m/s top speed.
+
+**Check it:** the carriage follows the setpoint through each move and arrives without lagging. Press **Space** to stop when you are done.
+{% endstep %}
+{% endstepper %}
+{% endtab %}
+
+{% tab title="AdvantageScope and Elastic" %}
+You type each value into its NetworkTables key yourself, and graph the elevator in AdvantageScope.
+
+Open [AdvantageScope](https://docs.advantagescope.org/) and connect it to the simulation (**File > Connect to Simulator**).
 
 {% stepper %}
 {% step %}
@@ -27,25 +122,8 @@ If you did [the arm's tune step](../arm/tune.md), this is the same except for gr
 
 YAMS gives the elevator a `Live Tuning` command. While it runs, numbers you type on the dashboard are applied to the elevator straight away.
 
-{% tabs %}
-{% tab title="Java, Commands v2" %}
-The command is published at `NT:/Tuning/ElevatorSubsystem/Live Tuning`, named after the subsystem.
-
-In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ElevatorSubsystem/Live Tuning` to a tab and press its button.
-{% endtab %}
-
-{% tab title="Java, Commands v3" %}
-The command is published at `NT:/Tuning/ElevatorMechanism/Live Tuning`, named after the mechanism.
-
-Set the boolean `NT:/Tuning/ElevatorMechanism/Live Tuning/running` to `true`. In AdvantageScope, first turn on tuning mode (part 2), then click the value to change it.
-{% endtab %}
-
-{% tab title="C++" %}
-The command is published at `NT:/Tuning/ElevatorSubsystem/Live Tuning`, named after the subsystem.
-
-In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ElevatorSubsystem/Live Tuning` to a tab and press its button.
-{% endtab %}
-{% endtabs %}
+* **Commands v2 and C++:** the command is published at `NT:/Tuning/ElevatorSubsystem/Live Tuning`, named after the subsystem. In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ElevatorSubsystem/Live Tuning` to a tab and press its button.
+* **Commands v3:** the command is published at `NT:/Tuning/ElevatorMechanism/Live Tuning`, named after the mechanism. Set the boolean `NT:/Tuning/ElevatorMechanism/Live Tuning/running` to `true`. In AdvantageScope, first turn on tuning mode (step 2), then click the value to change it.
 
 **Check it:** the command shows as running. The carriage stays at 0 m.
 {% endstep %}
@@ -118,9 +196,11 @@ The motion profile limits how fast the carriage moves and speeds up: 0.5 m/s and
 
 For more on each value, see [Tuning order](../../details/live-tuning/README.md#tuning-order).
 {% endstep %}
+{% endstepper %}
+{% endtab %}
+{% endtabs %}
 
-{% step %}
-### Copy the numbers into your code
+## Copy the numbers into your code
 
 Dashboard changes are lost when the code restarts. Write the numbers you ended up with into the config from step 1. In simulation they go into the `Sim` versions.
 
@@ -179,16 +259,15 @@ Copy the motion profile limits into `WithLinearTrapezoidProfile` too.
 The numbers above are an example. Use the ones you found.
 
 **Check it:** restart the simulation and enable it. Hold **A** and **B**: the carriage goes to 0.5 m and 1 m smoothly and stops on each without sagging.
-{% endstep %}
-{% endstepper %}
 
 ## If it did not work
 
-* **Typing a value does nothing.** Turn on AdvantageScope's tuning mode, check the `Live Tuning` command is still running, and check you typed under `NT:/Tuning`, not `NT:/Mechanisms`.
-* **Live tuning stopped on its own.** A button press, or the default command, took over the elevator. Start it again.
+* **AdvantageScope: typing a value does nothing.** Turn on AdvantageScope's tuning mode, check the `Live Tuning` command is still running, and check you typed under `NT:/Tuning`, not `NT:/Mechanisms`.
+* **Live Tuner: the elevator is not in the Telemetry name list.** Check the simulation is running and you connected to **Simulation**. The list only fills in once the robot code has started.
+* **Live tuning stopped on its own.** A button press, or the default command, took over the elevator. On the Live Tuner, the current trip, leaving the range of motion, or pressing Space also stops it. Start it again.
 * **The carriage sits on the bottom stop and will not rise.** The setpoint is still 0 m. Type a height first, then read the voltage.
 * **The carriage bounces harder and harder.** `kP` is too high. Lower it, or disable and restart the simulation.
-* **The numbers were gone after a restart.** They only last until the code stops. Copy them into your code as in part 6.
+* **The numbers were gone after a restart.** They only last until the code stops. Copy them into your code, as in [Copy the numbers into your code](#copy-the-numbers-into-your-code).
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).
 
