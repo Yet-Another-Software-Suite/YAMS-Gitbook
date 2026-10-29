@@ -106,6 +106,41 @@ NetworkTables only shows what is happening now. To look back at a match afterwar
 
 Both are set on `SmartMotorControllerTelemetryConfig`. `MechanismTelemetry` does the work: every mechanism, and every `SwerveModule`, owns one, and it sends the same values to both destinations.
 
+To record the arm from the [Arm tutorial](../tutorials/arm.md), give its motor a telemetry config with a DataLog name, in place of the `TelemetryVerbosity` it was given:
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+// What the arm motor publishes: the MID fields, live and to a DataLog.
+SmartMotorControllerTelemetryConfig armMotorTelemetry = new SmartMotorControllerTelemetryConfig()
+    .withTelemetryVerbosity(TelemetryVerbosity.MID)
+    .withDataLogName("Arm/ArmMotor");
+
+SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    // ... the rest of the config from the tutorial
+    .withTelemetry("ArmMotor", armMotorTelemetry);
+```
+
+`SmartMotorControllerTelemetryConfig` is in `yams.core.telemetry`.
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+// What the arm motor publishes: the MID fields, live and to a DataLog.
+yams::telemetry::SmartMotorControllerTelemetryConfig armMotorTelemetry;
+armMotorTelemetry
+    .WithTelemetryVerbosity(Cfg::TelemetryVerbosity::MID)
+    .WithDataLogName("Arm/ArmMotor");
+
+m_smcConfig
+    // ... the rest of the config from the tutorial
+    .WithTelemetry("ArmMotor", armMotorTelemetry);
+```
+{% endtab %}
+{% endtabs %}
+
+Every field the config turns on is then also written to the DataLog under `Arm/ArmMotor`. Only the values you read are logged; the values you can type under `NT:/Tuning` are not. To log during matches without filling NetworkTables, add `.withoutNetworkTables()` to the telemetry config. Live tuning then has nothing to edit, so leave it off while you tune.
+
 {% hint style="success" %}
 Set a DataLog name for competition matches. It is one line, and it means you can see what actually happened on the field.
 {% endhint %}
