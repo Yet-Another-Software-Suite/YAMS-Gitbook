@@ -55,10 +55,11 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 
 1. Tick every item on the pre-motion checklist, leave **Current trip (A)** at 40, and press **Continue**.
 2. Tick the confirmation and press **Start voltage control**.
-3. Type `1` under **Type a voltage** and press **Enter**. The carriage rises. Gravity pulls it down, so it can need more voltage to rise than to fall.
-4. Type `0`, then press **Finish check**.
+3. Drag the voltage slider all the way to the right and hold it. The carriage rises. Let go once **Positive voltage moves up** is ticked: the slider goes back to 0 V.
+4. If the carriage does not move with the slider all the way to the right, select the number at the slider's right end, 1.00 V to start with, and raise it a little. The number at the left end sets how far the slider goes the other way. Gravity pulls the carriage down, so it can need more voltage to rise than to fall.
+5. Press **Finish check**.
 
-<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-inversions.png" alt="Holding a typed 1 V: Positive voltage moves up is ticked and Finish check is enabled"><figcaption><p>At 1 V the carriage rises, so <strong>Positive voltage moves up</strong> is ticked.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-inversions.png" alt="Holding 1 V: Positive voltage moves up is ticked and Finish check is enabled"><figcaption><p>At 1 V the carriage rises, so <strong>Positive voltage moves up</strong> is ticked.</p></figcaption></figure>
 
 **Check it:** **Positive voltage moves up** was ticked when the carriage rose. If the Live Tuner warns that the height went the wrong way, the motor or encoder inversion in step 1 is wrong.
 {% endstep %}
@@ -80,13 +81,13 @@ Press **Start Live Tuning**. The setpoints and gains you send are now applied to
 
 `kG` is the voltage it takes to hold the carriage still against gravity. Gravity pulls just as hard at every height, so one `kG` is right everywhere. With `kG` at 0, only `kP` holds the carriage up, so it sags below its setpoint.
 
-1. On the **Setpoints** tab, type `1` and press **Send**. The carriage rises, then settles below 1 m: about 0.85 m with the placeholder `kP`.
+1. On the **Setpoints** tab, press **Mid**: 1 m, halfway up the 0 to 2 m range. The carriage rises, then settles below 1 m: about 0.85 m with the placeholder `kP`.
 2. Once it has stopped, read its output voltage on the telemetry card. For this elevator it reads about `0.6`.
 3. Type that voltage into **kG** on the Settings card's **Gains** tab, and press **Enter**.
 
 <figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-kg.png" alt="Live tuning the elevator at a 1 m setpoint after kG is set to 0.6: the measured height climbs from about 0.85 m onto the setpoint, with the output at 0.67 V"><figcaption><p>With kG at 0.6 V, the carriage climbs from where it sagged onto the 1 m setpoint.</p></figcaption></figure>
 
-**Check it:** the measured height moves up onto the 1 m setpoint on the graph and stays there. Send `0.5`, then `1.5`: the carriage holds each one without sagging.
+**Check it:** the measured height moves up onto the 1 m setpoint on the graph and stays there. Press **25%** (0.5 m), then **75%** (1.5 m): the carriage holds each one without sagging.
 {% endstep %}
 
 {% step %}

@@ -40,7 +40,7 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 
 1. Under **Telemetry name**, choose `Shooter/ShooterMotor`: the names from the flywheel's and the motor's `withTelemetry`.
 2. Under **Live Tuning command**, choose `ShooterSubsystem` (Commands v2 and C++) or `ShooterMechanism` (Commands v3).
-3. Set **Type** to **Flywheel**, and leave **Second flywheel** at **None**. Speeds are in RPM, both where you type and on the graph.
+3. Set **Type** to **Flywheel**, and leave **Second flywheel** at **None**. Speeds are in RPM, both on the slider and on the graph.
 4. Press **Continue**.
 
 <figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-mechanism.png" alt="The Mechanism step with Shooter/ShooterMotor as the telemetry name, ShooterSubsystem as the Live Tuning command, Flywheel as the type and None as the second flywheel"><figcaption><p>The tutorial shooter: its motor, its subsystem's <code>Live Tuning</code> command, and the Flywheel type.</p></figcaption></figure>
@@ -53,12 +53,13 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 
 1. Tick every item on the pre-motion checklist, leave **Current trip (A)** at 40, and press **Continue**.
 2. Tick the confirmation and press **Start voltage control**.
-3. Type `0.5` under **Type a voltage** and press **Enter**. The wheel spins up.
-4. Type `0`, then press **Finish check**.
+3. Drag the voltage slider to the right and hold it. The wheel spins up. Let go once **Positive voltage moves forward** is ticked: the slider goes back to 0 V and the wheel coasts down.
+4. If the wheel does not move with the slider all the way to the right, select the number at the slider's right end, 1.00 V to start with, and raise it a little. The number at the left end sets how far the slider goes the other way.
+5. Press **Finish check**.
 
 A flywheel has no range of motion, so the Live tune card opens next.
 
-<figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-inversions.png" alt="Holding a typed 0.5 V: the speed reads 160 RPM, Positive voltage moves forward is ticked, and Finish check is enabled"><figcaption><p>At 0.5 V the wheel spins forward.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-inversions.png" alt="Holding 0.5 V: the speed reads 160 RPM, Positive voltage moves forward is ticked, and Finish check is enabled"><figcaption><p>At 0.5 V the wheel spins forward.</p></figcaption></figure>
 
 **Check it:** **Positive voltage moves forward** was ticked when the wheel spun up. If the Live Tuner warns that the speed went the wrong way, the motor or encoder inversion in step 1 is wrong.
 {% endstep %}
@@ -71,10 +72,10 @@ Press **Start Live Tuning**. The speeds and gains you send are now applied to th
 `kV` is how many volts the motor needs for each rotation per second of wheel speed. Get it right and the wheel reaches the setpoint on feedforward alone.
 
 1. On the Settings card's **Gains** tab, type `0` into **kP** and `0` into **kV**. Now nothing drives the wheel.
-2. On the **Setpoints** tab, type `3000` and press **Send**. The wheel stays still.
+2. On the **Setpoints** tab, press **3000 RPM**. The wheel stays still.
 3. Type `0.1` into **kV**. The wheel spins up, but settles well below 3000 RPM.
 4. Raise **kV** a little at a time until the measured speed settles on the setpoint. For this NEO and 1.5:1 gearing it ends up near `0.19`. If the wheel settles above the setpoint, `kV` is too high: lower it.
-5. Send `2000`. The wheel should settle on it too, with the same `kV`.
+5. Press **2000 RPM**. The wheel should settle on it too, with the same `kV`.
 
 <figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-kv.png" alt="Live tuning the flywheel at a 3000 RPM setpoint with kP at 0: after kV is raised from 0.1 to 0.19 the speed jumps from about 1600 RPM to 3048 RPM, just above the setpoint"><figcaption><p>kV raised from 0.1 to 0.19: the speed climbs from about 1600 RPM to just above 3000 RPM. A little lower and it settles on it.</p></figcaption></figure>
 
