@@ -29,7 +29,7 @@ Every direction on a swerve module follows WPILib's convention: angles are count
 | Absolute encoder | Its reading goes up as the wheel turns counter-clockwise | The encoder's own direction setting, such as a `CANcoder`'s sensor direction in Phoenix Tuner X, or `withExternalEncoderInverted(...)` for an encoder passed with `withAbsoluteEncoder(Object)` |
 | Gyro | The heading goes up as the robot turns counter-clockwise | [`withGyroInverted`](swerve-drive-config.md#the-gyro) on the `SwerveDriveConfig` |
 
-A wheel that points the right way but rolls backward is usually not inverted: its absolute encoder offset is 180 degrees off. [Step 4: On the real robot](../../tutorials/swerve-drive/real-robot.md#4-check-the-directions) checks each direction in turn.
+A wheel that points the right way but rolls backward is usually not inverted: its absolute encoder offset is 180 degrees off. [Step 4: On the real robot](../../tutorials/swerve-drive/real-robot.md#check-the-directions) checks each direction in turn.
 
 ## `withLocation`
 
@@ -82,7 +82,7 @@ The absolute encoder's reading when the wheel points straight forward with its b
 config.withAbsoluteEncoderOffset(Degrees.of(64));
 ```
 
-**The rule:** the offset is the raw reading itself, with the same sign. Point the wheel forward, bevel gear left, read `NT:/Mechanisms/<drive name>/modules/<module name>/encoder` (the raw reading in degrees, with no offset applied), and pass that number. Every module has its own. If a module then drives backward while the others drive forward, its bevel gear faced right when you read it: add 180 degrees. [Step 4: On the real robot](../../tutorials/swerve-drive/real-robot.md#3-set-the-absolute-encoder-offsets) walks through it.
+**The rule:** the offset is the raw reading itself, with the same sign. Point the wheel forward, bevel gear left, read `NT:/Mechanisms/<drive name>/modules/<module name>/encoder` (the raw reading in degrees, with no offset applied), and pass that number. Every module has its own. If a module then drives backward while the others drive forward, its bevel gear faced right when you read it: add 180 degrees. [Step 4: On the real robot](../../tutorials/swerve-drive/real-robot.md#set-the-absolute-encoder-offsets) walks through it.
 
 ### `withAbsoluteEncoderGearing`
 

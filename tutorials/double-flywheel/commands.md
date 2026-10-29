@@ -11,7 +11,9 @@ One command sets both velocity setpoints, so the two wheels always change togeth
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
 {% endhint %}
 
-## 1. One command for both wheels
+{% stepper %}
+{% step %}
+### One command for both wheels
 
 A single command sets both velocity setpoints every loop, so the two wheels always change together.
 
@@ -70,8 +72,10 @@ wpi::cmd::CommandPtr DoubleFlywheelSubsystem::SetFlywheelSpeeds(
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
 
-## 2. Preset shots
+{% step %}
+### Preset shots
 
 Each preset is that one command with two speeds filled in. Stop is different: it sets a duty cycle of 0, so the wheels coast down. A 0 RPM setpoint would also stop them, but the closed loop would brake them hard to get there.
 
@@ -189,8 +193,10 @@ wpi::cmd::CommandPtr DoubleFlywheelSubsystem::StopFlywheels() {
 {% endtabs %}
 
 **For your robot:** Change the speeds to the shots your robot needs, and add a preset for each one.
+{% endstep %}
 
-## 3. Know when it is ready
+{% step %}
+### Know when it is ready
 
 This `Trigger` is true while both wheels are at their speeds, so that you can hold the feeder back until the shooter is ready. It works like `atSpeed` in [the shooter tutorial](../shooter-flywheels/commands.md#knowing-when-it-is-up-to-speed): bind a feeder command to it, or use it in a command sequence. Nothing in this tutorial uses it yet.
 
@@ -245,8 +251,10 @@ wpi::cmd::Trigger DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revoluti
 {% endtabs %}
 
 Want the details? [How do I shoot with a shooter?](../../how-to/how-to-shoot-with-a-shooter.md) does the same for one flywheel.
+{% endstep %}
 
-## 4. Create it and bind the buttons
+{% step %}
+### Create it and bind the buttons
 
 `onTrue` starts a shot with one press. The shot keeps running after the button is released, until another shot or the stop button replaces it.
 
@@ -301,6 +309,8 @@ driverController.FaceUp().OnTrue(doubleFlywheel.StopFlywheels());
 {% endtabs %}
 
 **For your robot:** Pick your own buttons.
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

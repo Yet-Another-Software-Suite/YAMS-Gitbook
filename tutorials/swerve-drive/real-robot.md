@@ -13,7 +13,9 @@ Do the checks in order. Each one ends with **What you should see** and **If not*
 Keep one person at the Driver Station, ready to disable the robot, every time it is enabled. **Enter** disables it and **Space** stops it at once.
 {% endhint %}
 
-## 1. Put the robot on blocks
+{% stepper %}
+{% step %}
+### Put the robot on blocks
 
 Put the robot on blocks so that every wheel is clear of the blocks and of the ground, and can spin and steer freely. Use a charged battery. Deploy the code with **WPILib: Deploy Robot Code** from the command palette (<kbd>Ctrl+Shift+P</kbd>).
 
@@ -24,8 +26,10 @@ In Commands v3, pick the `ExampleTeleop` op mode before you enable.
 **What you should see:** the code starts without errors in the Driver Station, and `NT:/Mechanisms/swerve/modules` has four modules: `frontleft`, `frontright`, `backleft` and `backright`.
 
 **If not:** read the first error in the Driver Station. YAMS names the setting that is missing. [Troubleshooting](../troubleshooting.md) has the common ones.
+{% endstep %}
 
-## 2. Check the CAN IDs
+{% step %}
+### Check the CAN IDs
 
 Every device needs the CAN ID the code gives it:
 
@@ -46,8 +50,10 @@ The IDs must also be on the right module. Turn the front left wheel by hand, abo
 * **A device is missing.** Two devices share an ID, so only one answers. Give each its own ID.
 * **Turning the front left wheel changes another module's `encoder`.** The `CANcoder`s are on the wrong modules. Change their IDs to match the table, or change the IDs in the code.
 * **Every device is missing.** The code puts every device on `CANPort.CAN_S0`. If the robot is wired to another of the SystemCore's CAN ports, change `CAN_S0` in the code.
+{% endstep %}
 
-## 3. Set the absolute encoder offsets
+{% step %}
+### Set the absolute encoder offsets
 
 Each `CANcoder` is mounted at its own angle, so each reads a different number with the wheel pointing forward. The offset is that number. YAMS subtracts it from the reading, so the module reads 0 when the wheel points forward.
 
@@ -102,8 +108,10 @@ SetupModule(m_frontLeft, "frontleft", wpi::math::Translation2d{24_in, 24_in}, 64
 * **One module points backward.** Its bevel gear faced right when you read it. Add 180 to its offset, or turn the wheel round and read it again.
 * **One module points somewhere else.** That offset is not its own reading: check that you put each reading on the right module.
 * **Every module is off by a different amount after a restart.** The offsets are still 0, or the code was not deployed again.
+{% endstep %}
 
-## 4. Check the directions
+{% step %}
+### Check the directions
 
 Every angle in WPILib is counter-clockwise positive, seen from above, and every motor has to agree. The [swerve tuning command](../../details/live-tuning/README.md#swerve-drive) makes this easy: it turns every wheel to an angle, or runs every wheel at a speed, that you type on the dashboard.
 
@@ -127,8 +135,10 @@ Enable the robot in Teleoperated, still on blocks, and start the tuning command 
 Then set `modules/drive/inplace` to `true`. The wheels turn to form a circle, so the robot would spin counter-clockwise in place. If one wheel is not on the circle, its location in step 2 has the wrong sign.
 
 Set `modules/drive/enabled` to `false` when you are done.
+{% endstep %}
 
-## 5. Check the gyro
+{% step %}
+### Check the gyro
 
 Disable the robot. Watch `NT:/Mechanisms/swerve/gyro`, the heading in degrees, and turn the whole robot counter-clockwise by hand, seen from above.
 
@@ -138,8 +148,10 @@ Disable the robot. Watch `NT:/Mechanisms/swerve/gyro`, the heading in degrees, a
 
 * **It goes down.** Add `.withGyroInverted(true)` to the `SwerveDriveConfig` in step 2.
 * **It does not change.** Check the `Pigeon2`'s CAN ID. If the ID is right, the gyro is mounted on its side: see [How do I use a gyro mounted on its side?](../../how-to/how-do-i-use-a-gyro-mounted-on-its-side.md).
+{% endstep %}
 
-## 6. Tune the modules
+{% step %}
+### Tune the modules
 
 The gains from step 1 are placeholders. Tune the real modules on blocks, azimuth first so that the wheels point where they are told, then drive. Follow [Tune the swerve modules](../../details/live-tuning/README.md#tune-the-swerve-modules): it uses the same tuning command as the checks above, and says which value to raise and what the graph should look like.
 
@@ -148,8 +160,10 @@ Copy the gains you find into `buildAzimuthCfg()` and `buildDriveCfg()` (C++: `Co
 **What you should see:** stepping `modules/azimuth/angle` between `0` and `90` snaps every wheel to the angle without shaking, and a `modules/drive/velocity` of `1` holds each wheel's measured speed at 1 m/s.
 
 **If not:** the modules are still slow, or shake. See [When tuning does not help](../../details/live-tuning/README.md#when-tuning-does-not-help).
+{% endstep %}
 
-## 7. Drive on the ground
+{% step %}
+### Drive on the ground
 
 Take the robot off the blocks and put it in an open space. Keep the maximum speed at 1 m/s from step 3: it is slow on purpose.
 
@@ -161,10 +175,12 @@ Take the robot off the blocks and put it in an open space. Keep the maximum spee
 **If not:**
 
 * **It drives off at an angle, or the wrong way.** The robot was not facing away from you when it was turned on or zeroed. Point it away and press the zero gyro button.
-* **The direction it drives changes as it turns.** The gyro is the wrong way round: go back to [Check the gyro](#5-check-the-gyro).
-* **It curves, or a wheel fights the others.** An offset is wrong: go back to [Set the absolute encoder offsets](#3-set-the-absolute-encoder-offsets).
+* **The direction it drives changes as it turns.** The gyro is the wrong way round: go back to [Check the gyro](#check-the-gyro).
+* **It curves, or a wheel fights the others.** An offset is wrong: go back to [Set the absolute encoder offsets](#set-the-absolute-encoder-offsets).
 
 Once it drives well, raise the two maximum velocities in step 3 a little at a time.
+{% endstep %}
+{% endstepper %}
 
 ## After the first drive
 

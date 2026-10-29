@@ -11,7 +11,9 @@ The `FlyWheel` makes commands for you. Your class hands them out, and the button
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
 {% endhint %}
 
-## 1. Make the commands
+{% stepper %}
+{% step %}
+### Make the commands
 
 The `FlyWheel` makes the commands. Your class only hands them out, so that the rest of the robot code never touches the motor directly.
 
@@ -99,8 +101,10 @@ wpi::cmd::Trigger ShooterSubsystem::AtSpeed(wpi::units::revolutions_per_minute_t
 **For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
 
 Want the details? [When mechanism commands end](../../details/run-vs-runto.md)
+{% endstep %}
 
-## 2. Set the default command
+{% step %}
+### Set the default command
 
 The **default command** runs whenever no other command is using the shooter. Here it sets a duty cycle of 0, so the flywheel coasts. In Commands v3 the default command is given the lowest priority, so that any other command for the mechanism can interrupt it.
 
@@ -165,8 +169,10 @@ shooter.SetDefaultCommand(shooter.Set(0));
 {% endtabs %}
 
 **For your robot:** Choose what your mechanism should do when nobody is asking anything of it.
+{% endstep %}
 
-## 3. Bind the buttons
+{% step %}
+### Bind the buttons
 
 `whileTrue` runs a command for as long as its button is held, and cancels it on release. The default command then takes back over.
 
@@ -214,6 +220,8 @@ driverController.FaceUp().WhileTrue(shooter.Set(-0.3));
 {% endtabs %}
 
 **For your robot:** Pick your own buttons and setpoints. Use `onTrue` instead if one press should start a command that keeps running after the button is released.
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

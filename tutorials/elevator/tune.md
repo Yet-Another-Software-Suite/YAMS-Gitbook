@@ -21,7 +21,9 @@ If you did [the arm's tune step](../arm/tune.md), this is the same except for gr
 * Open [AdvantageScope](https://docs.advantagescope.org/) and connect it to the simulation (**File > Connect to Simulator**).
 * Do not press any of the elevator's buttons while you tune. A button runs another elevator command, which stops live tuning. If that happens, start it again as in part 1.
 
-## 1. Start live tuning
+{% stepper %}
+{% step %}
+### Start live tuning
 
 YAMS gives the elevator a `Live Tuning` command. While it runs, numbers you type on the dashboard are applied to the elevator straight away.
 
@@ -46,8 +48,10 @@ In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ElevatorSubsystem
 {% endtabs %}
 
 **Check it:** the command shows as running. The carriage stays at 0 m.
+{% endstep %}
 
-## 2. Find the numbers and graph the elevator
+{% step %}
+### Find the numbers and graph the elevator
 
 The elevator's values are under two tables. Both use the names from `withTelemetry`: `Elevator` for the elevator and `ElevatorMotor` for its motor.
 
@@ -65,8 +69,10 @@ The elevator's values are under two tables. Both use the names from `withTelemet
 Heights are in meters both where you type and where you read, so there is nothing to convert.
 
 **Check it:** both position lines are at 0, and the output voltage is about 0.
+{% endstep %}
 
-## 3. kG: hold the carriage up
+{% step %}
+### kG: hold the carriage up
 
 `kG` is the voltage it takes to hold the carriage still against gravity. Gravity pulls the carriage down just as hard at every height, so one `kG` is right everywhere. You only need to find it once, at any height away from the stops.
 
@@ -79,8 +85,10 @@ With `kG` at 0, only `kP` holds the carriage up. `kP` only pushes when there is 
 **Check it:** the measured position moves up onto the 1 m setpoint and stays there. The output voltage stays about the same, because `kG` now supplies it instead of `kP`. Type `0.5`, then `1.5`: the carriage holds each one without sagging, because `kG` is the same at every height.
 
 If the carriage drifts, adjust `kG` a little: up if it sits low, down if it sits high.
+{% endstep %}
 
-## 4. kP and kD: reach a setpoint
+{% step %}
+### kP and kD: reach a setpoint
 
 `kP` is how hard the motor pushes for each meter of error. A `kP` of 4 is 4 volts per meter, only 0.04 volts for each centimeter, which is why the carriage sagged so far.
 
@@ -95,8 +103,10 @@ If the carriage drifts, adjust `kG` a little: up if it sits low, down if it sits
 **Check it:** after each setpoint change the carriage follows the setpoint line closely and stops on it, within a centimeter or so, without bouncing.
 
 The carriage cannot go past the soft limits from step 1, 0 and 2 meters. A setpoint beyond them is held at the limit.
+{% endstep %}
 
-## 5. The motion profile and kV
+{% step %}
+### The motion profile and kV
 
 The motion profile limits how fast the carriage moves and speeds up: 0.5 m/s and 0.5 m/s² from step 1. On the dashboard they are in the same units.
 
@@ -107,8 +117,10 @@ The motion profile limits how fast the carriage moves and speeds up: 0.5 m/s and
 **Check it:** the measured velocity sits on top of the setpoint velocity, and the carriage arrives without lagging behind.
 
 For more on each value, see [Tuning order](../../details/live-tuning/README.md#tuning-order).
+{% endstep %}
 
-## 6. Copy the numbers into your code
+{% step %}
+### Copy the numbers into your code
 
 Dashboard changes are lost when the code restarts. Write the numbers you ended up with into the config from step 1. In simulation they go into the `Sim` versions.
 
@@ -167,6 +179,8 @@ Copy the motion profile limits into `WithLinearTrapezoidProfile` too.
 The numbers above are an example. Use the ones you found.
 
 **Check it:** restart the simulation and enable it. Hold **A** and **B**: the carriage goes to 0.5 m and 1 m smoothly and stops on each without sagging.
+{% endstep %}
+{% endstepper %}
 
 ## If it did not work
 

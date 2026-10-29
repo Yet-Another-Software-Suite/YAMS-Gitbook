@@ -11,7 +11,9 @@ The same code runs on the robot. Before you enable it, check a few things that s
 **Be ready to stop the arm.** Keep everyone clear of the arm, and keep a hand on the Driver Station: **Enter** disables the robot and **Space** stops it until it is rebooted. Do every enable in this step with the arm free to move and nothing in its way.
 {% endhint %}
 
-## 1. Set the CAN ID
+{% stepper %}
+{% step %}
+### Set the CAN ID
 
 The code talks to the `SparkMax` with CAN ID 4 (step 1, part 8).
 
@@ -19,8 +21,10 @@ The code talks to the `SparkMax` with CAN ID 4 (step 1, part 8).
 2. Update its firmware and set its CAN ID to `4`, or change the `4` in your code to the ID it already has.
 
 Every device on the CAN bus needs its own ID.
+{% endstep %}
 
-## 2. Put the arm at its starting position
+{% step %}
+### Put the arm at its starting position
 
 The NEO's encoder only measures how far the motor turns, not where the arm is. When the code starts, YAMS assumes the arm is at the starting position from step 1, part 6: -5 degrees.
 
@@ -31,14 +35,18 @@ If the arm starts somewhere else, every angle, setpoint and soft limit is off by
 {% endhint %}
 
 Change `withStartingPosition` to wherever your arm really rests, such as on a hard stop.
+{% endstep %}
 
-## 3. Deploy
+{% step %}
+### Deploy
 
 Open the command palette with <kbd>Ctrl+Shift+P</kbd> and run **WPILib: Deploy Robot Code**.
 
 **Check it:** the Driver Station shows robot code, and its messages show no errors about the SPARK MAX. A CAN error there means the ID or the wiring is wrong.
+{% endstep %}
 
-## 4. Check the direction, with the robot disabled
+{% step %}
+### Check the direction, with the robot disabled
 
 Keep the robot **disabled**. YAMS still publishes where the arm is.
 
@@ -57,8 +65,10 @@ In brake mode the motor resists being moved, and the gearbox makes the arm stiff
 {% endhint %}
 
 Do not skip this check. If the direction is wrong, the closed loop pushes the arm away from its setpoint, faster and faster, into a hard stop.
+{% endstep %}
 
-## 5. First enable
+{% step %}
+### First enable
 
 1. Put the arm back at its starting position, and restart the robot code (or deploy again).
 2. Enable **Teleoperated**.
@@ -66,8 +76,10 @@ Do not skip this check. If the direction is wrong, the closed loop pushes the ar
 **Check it:** the default command takes the arm from -5 degrees up to 0 degrees, smoothly, and holds it there. With the placeholder gains it may sag a little below level. That is fixed in the next part.
 
 **Disable straight away** if the arm moves fast, heads for a hard stop, or shakes. Then go back to part 4.
+{% endstep %}
 
-## 6. Tune it on the robot
+{% step %}
+### Tune it on the robot
 
 Tune the real arm the same way you tuned the simulation in [step 5](tune.md). On the robot the dashboard changes `withClosedLoopController` and `withFeedforward`, not the `Sim` versions.
 
@@ -97,13 +109,17 @@ The C++ tutorial uses one feedforward for both, so the simulation now uses the r
 {% endtabs %}
 
 The numbers are an example. Use the ones you found.
+{% endstep %}
 
-## 7. Check the soft limits
+{% step %}
+### Check the soft limits
 
 1. With live tuning running, type `30` into `NT:/Tuning/Arm/ArmMotor/closedloop/setpoint/position`.
 2. The arm should stop at 30 degrees, the upper soft limit, short of the hard stop.
 
 Do the same with `-20` for the lower soft limit. Set `withSoftLimits` in step 1 to just inside your arm's real hard stops.
+{% endstep %}
+{% endstepper %}
 
 ## If it did not work
 

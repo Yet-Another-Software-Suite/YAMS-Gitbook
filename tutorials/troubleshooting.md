@@ -34,7 +34,7 @@ Read the first error in the Driver Station or the simulation console. YAMS names
 
 * It is not under `SmartDashboard`. The simulated mechanism is at **NetworkTables > Mechanisms > _name_ > mechanism**, where _name_ is the name given to the mechanism config's `withTelemetry`, such as `Arm`.
 * The motor's values are at `NT:/Mechanisms/<mechanism name>/<motor name>/`, such as `NT:/Mechanisms/Arm/ArmMotor/`.
-* Nothing publishes until the mechanism's `updateTelemetry()` runs. Commands v2: check that the subsystem's `periodic()` calls it. Commands v3: check that the mechanism's `periodic()` calls it, and that `Robot.robotPeriodic()` calls the mechanism's `periodic()`. See [Step 2: The arm](arm/mechanism.md#3-update-it-every-loop).
+* Nothing publishes until the mechanism's `updateTelemetry()` runs. Commands v2: check that the subsystem's `periodic()` calls it. Commands v3: check that the mechanism's `periodic()` calls it, and that `Robot.robotPeriodic()` calls the mechanism's `periodic()`. See [Step 2: The arm](arm/mechanism.md#update-it-every-loop).
 
 ## It does not move in simulation
 
@@ -49,7 +49,7 @@ Read the first error in the Driver Station or the simulation console. YAMS names
 
 **It sags below its setpoint, or an elevator drifts down**
 
-* `kG` is 0. Tune it as in [Step 5: Tune it](arm/tune.md#3-kg-hold-the-arm-up).
+* `kG` is 0. Tune it as in [Step 5: Tune it](arm/tune.md#kg-hold-the-arm-up).
 
 **It stops short of its setpoint (a flywheel never reaches speed)**
 
@@ -61,11 +61,11 @@ Read the first error in the Driver Station or the simulation console. YAMS names
 
 **It moves the wrong way, or runs straight into a hard stop**
 
-* The motor direction is wrong. Check it with the robot disabled as in [Step 6: Run it on the robot](arm/robot.md#4-check-the-direction-with-the-robot-disabled), and set `withMotorInverted(true)` if positive is the wrong way.
+* The motor direction is wrong. Check it with the robot disabled as in [Step 6: Run it on the robot](arm/robot.md#check-the-direction-with-the-robot-disabled), and set `withMotorInverted(true)` if positive is the wrong way.
 
 **It goes the wrong distance**
 
-* The gearing does not match the mechanism. List each stage from the motor outward, as in [Step 1](arm/motor-controller.md#4-gearing).
+* The gearing does not match the mechanism. List each stage from the motor outward, as in [Step 1](arm/motor-controller.md#gearing).
 * For an elevator or a wheel, the circumference is wrong. See [How do I find my mechanism's circumference?](../how-to/how-to-find-your-mechanism-circumference.md)
 
 **Angles are off by the same amount every time**
@@ -83,7 +83,7 @@ Read the first error in the Driver Station or the simulation console. YAMS names
 * The `Live Tuning` command is not running. It is at `NT:/Tuning/<subsystem or mechanism name>/Live Tuning`, such as `NT:/Tuning/ArmSubsystem/Live Tuning`. Start it again after pressing any of the mechanism's buttons, which take over from it.
 * The value was typed under `NT:/Mechanisms`. Type values under `NT:/Tuning`. `NT:/Mechanisms` only shows what the mechanism is doing.
 * The motor's telemetry is not `TelemetryVerbosity.HIGH`.
-* The values were lost after a restart. Copy them into your code, as in [Step 5](arm/tune.md#6-copy-the-numbers-into-your-code).
+* The values were lost after a restart. Copy them into your code, as in [Step 5](arm/tune.md#copy-the-numbers-into-your-code).
 
 See [Live tuning](../details/live-tuning/README.md) for more.
 
@@ -101,4 +101,4 @@ See [Live tuning](../details/live-tuning/README.md) for more.
 
 **It worked in simulation but not on the robot**
 
-* The real robot uses `withClosedLoopController` and `withFeedforward`. The simulation uses the `withSim...` versions. Tune the robot separately, as in [Step 6](arm/robot.md#6-tune-it-on-the-robot).
+* The real robot uses `withClosedLoopController` and `withFeedforward`. The simulation uses the `withSim...` versions. Tune the robot separately, as in [Step 6](arm/robot.md#tune-it-on-the-robot).

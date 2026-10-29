@@ -10,7 +10,9 @@ Before the IO classes can log anything, the project needs the AdvantageKit libra
 AdvantageKit is a separate library from Team 6328, and its 2027 releases are still alphas. If anything here does not match what you see, the [AdvantageKit installation docs for existing projects](https://docs.advantagekit.org/getting-started/installation/existing-projects) are the source of truth.
 {% endhint %}
 
-## 1. Install the vendor library
+{% stepper %}
+{% step %}
+### Install the vendor library
 
 In VS Code, open the WPILib command palette, choose **WPILib: Manage Vendor Libraries**, then **Install new library (online)**, and paste:
 
@@ -21,8 +23,10 @@ https://github.com/Mechanical-Advantage/AdvantageKit/releases/latest/download/Ad
 This adds `vendordeps/AdvantageKit.json` to your project. The YAMS 2027 examples were built against AdvantageKit `27.0.0-alpha-5`.
 
 **Check:** `vendordeps/AdvantageKit.json` exists in your project.
+{% endstep %}
 
-## 2. Add the AutoLog code generator to `build.gradle`
+{% step %}
+### Add the AutoLog code generator to `build.gradle`
 
 The `@AutoLog` annotation used in [Step 1](io-interface.md) generates a class for each inputs class when the code builds. That needs an annotation processor line in the `dependencies` block of `build.gradle`:
 
@@ -41,8 +45,10 @@ dependencies {
 This is the setup used by the YAMS AdvantageKit examples. AdvantageKit's own docs add more to `build.gradle` (such as recording git metadata); see the [AdvantageKit installation docs](https://docs.advantagekit.org/getting-started/installation/existing-projects) if you want those.
 
 **Check:** the project still builds.
+{% endstep %}
 
-## 3. Make `Robot` a `LoggedRobot`
+{% step %}
+### Make `Robot` a `LoggedRobot`
 
 `Robot` extends AdvantageKit's `LoggedRobot` instead of WPILib's `TimedRobot`, and starts the logger in its constructor before anything else is created. It also defines `currentMode`, which [Log replay](log-replay.md) uses to choose the IO class.
 
@@ -116,10 +122,12 @@ Keep the rest of your `Robot` methods (autonomous, teleop and so on) as they are
 {% endhint %}
 
 **Check:** run the code in simulation and open AdvantageScope. An `AdvantageKit` table appears in NetworkTables next to the YAMS `Mechanisms` table.
+{% endstep %}
+{% endstepper %}
 
 ## If it did not work
 
-* **`org.littletonrobotics.junction` cannot be found:** the vendor library is not installed. Repeat [1. Install the vendor library](#1-install-the-vendor-library), then build again.
+* **`org.littletonrobotics.junction` cannot be found:** the vendor library is not installed. Repeat [1. Install the vendor library](#install-the-vendor-library), then build again.
 * **`ArmIOInputsAutoLogged` cannot be found later:** the annotation processor line is missing or wrong. Check step 2 above, clean the project with `gradlew clean` (Windows) or `./gradlew clean` (Linux/macOS) and build again.
 
 Next: [Step 1: Define the IO interface](io-interface.md)

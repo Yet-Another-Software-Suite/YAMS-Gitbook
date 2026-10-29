@@ -13,7 +13,9 @@ The `SmartMotorController` from step 1 is configured, but nothing tells it to mo
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
 {% endhint %}
 
-## 1. Describe the arm
+{% stepper %}
+{% step %}
+### Describe the arm
 
 `ArmConfig` describes the arm itself: its length and its hard limits. The simulation uses both. The hard limits are where the arm physically stops, which is different from the soft limits you set in step 1.
 
@@ -75,8 +77,10 @@ m_armConfig
 **For your robot:** Set the length of your arm, and where its hard stops are.
 
 Want the details? [Arms](../../details/arms.md) and [ArmConfig](../../details/mechanism-configs/arm-config.md)
+{% endstep %}
 
-## 2. Create the Arm
+{% step %}
+### Create the Arm
 
 Hand the config, and the `SmartMotorController` from step 1, to the `Arm`.
 
@@ -108,8 +112,10 @@ m_arm.emplace(&m_armConfig, &m_motor.value());
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
 
-## 3. Update it every loop
+{% step %}
+### Update it every loop
 
 Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry and applies anything you change through live tuning. `simIterate()` runs the physics simulation, and only needs to run in simulation.
 
@@ -232,6 +238,8 @@ void ArmSubsystem::SimulationPeriodic() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

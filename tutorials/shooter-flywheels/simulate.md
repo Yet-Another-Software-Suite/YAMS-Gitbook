@@ -7,7 +7,9 @@ icon: flask
 
 The code from the first three steps runs on your computer exactly as it will on the robot. YAMS simulates the motor, the gearing and the weight of the wheel, so the closed loop and the commands behave the way they will on the real flywheel.
 
-## Start the simulation
+{% stepper %}
+{% step %}
+### Start the simulation
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -30,8 +32,10 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 {% endtabs %}
 
 <figure><img src="../../.gitbook/assets/image (16).png" alt="The Sim GUI, the window that opens with the simulation, with the Robot State, System Joysticks, Joysticks and NetworkTables panels"><figcaption><p>The Sim GUI.</p></figcaption></figure>
+{% endstep %}
 
-## Drive it
+{% step %}
+### Drive it
 
 1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**.
 2. Open the simulated mechanism with **NetworkTables -> Mechanisms -> Shooter -> mechanism**. It is named after the `withTelemetry("Shooter", ...)` on the `FlyWheelConfig`. It shows the wheel as a line from its center that turns as the wheel turns.
@@ -45,12 +49,14 @@ No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0
 
 <figure><img src="../../.gitbook/assets/Robot Simulation 2025-09-09 09-05-32.gif" alt="The simulated flywheel in its Mechanism2d window, the line spinning while a button is held and slowing to a stop after it is released"><figcaption></figcaption></figure>
 
-### Watch the speed, not the drawing
+#### Watch the speed, not the drawing
 
 The drawing is only updated 50 times a second. At shooter speeds the line turns most of a rotation between updates, so it can look slow, frozen, or even turning backward. To see the real speed, graph it:
 
 * In the Sim GUI, open **NetworkTables -> Mechanisms -> Shooter -> ShooterMotor -> mechanism** and find **velocity**. Or graph `NT:/Mechanisms/Shooter/ShooterMotor/mechanism/velocity` in [AdvantageScope](https://docs.advantagescope.org/).
 * It is in **rotations per second**. Multiply by 60 for RPM: 3000 RPM reads as `50`.
+{% endstep %}
+{% endstepper %}
 
 ## What you should see
 

@@ -44,7 +44,9 @@ YAMS keeps a pointer to each config, so in C++ a config cannot be a temporary. T
 {% endtab %}
 {% endtabs %}
 
-## 1. The drive motor config
+{% stepper %}
+{% step %}
+### The drive motor config
 
 The drive motor turns the wheel and is **velocity** controlled. It needs the wheel diameter to turn rotations into distance, a PID controller, and a feedforward whose `kV` does most of the work of holding a speed.
 
@@ -131,16 +133,18 @@ void SwerveSubsystem::ConfigureDrive(Cfg& config) {
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set your wheel diameter and your module's drive gear ratio. Your module's maker publishes the ratio: this tutorial uses an MK4 L2, which is 6.75:1. Leave `withMotorInverted(false)` for now: [Step 4](real-robot.md#4-check-the-directions) checks which way the wheel spins and tells you when to change it.
+**For your robot:** Set your wheel diameter and your module's drive gear ratio. Your module's maker publishes the ratio: this tutorial uses an MK4 L2, which is 6.75:1. Leave `withMotorInverted(false)` for now: [Step 4](real-robot.md#check-the-directions) checks which way the wheel spins and tells you when to change it.
 
 Want the details? [Live tuning](../../details/live-tuning/README.md) has a section on tuning a swerve module's drive motor.
+{% endstep %}
 
-## 2. The azimuth motor config
+{% step %}
+### The azimuth motor config
 
 The azimuth motor steers the module and is **position** controlled. Two settings matter here:
 
 * **`withContinuousWrapping`** tells the controller that the wheel can turn all the way round, so -180 and +180 degrees are the same angle. Without it a wheel at 170 degrees asked for -170 degrees spins nearly a full turn the long way, instead of 20 degrees the short way. It must come after `withClosedLoopController`.
-* **`withMotorInverted`** sets which way the motor turns. Angles are counter-clockwise positive, seen from above, so a positive command must turn the wheel counter-clockwise. [Step 4](real-robot.md#4-check-the-directions) checks it.
+* **`withMotorInverted`** sets which way the motor turns. Angles are counter-clockwise positive, seen from above, so a positive command must turn the wheel counter-clockwise. [Step 4](real-robot.md#check-the-directions) checks it.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -223,6 +227,8 @@ void SwerveSubsystem::ConfigureAzimuth(Cfg& config) {
 **For your robot:** Set your module's steering gear ratio. An MK4 steers at 12.8:1. Other modules, such as an MK4i, use a different ratio: check your module maker's page.
 
 Want the details? [Swerve Module](../../details/swerve-module.md)
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

@@ -13,7 +13,9 @@ The `SmartMotorController` from step 1 is configured, but nothing tells it to mo
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
 {% endhint %}
 
-## 1. Describe the elevator
+{% stepper %}
+{% step %}
+### Describe the elevator
 
 `ElevatorConfig` describes the elevator itself: its hard limits and the weight of its carriage. The simulation uses both. The hard limits are where the carriage physically stops, which is different from the soft limits you set in step 1.
 
@@ -75,8 +77,10 @@ m_elevatorConfig
 **For your robot:** Set where your carriage's hard stops are, and what the carriage weighs with everything that rides on it.
 
 Want the details? [Elevators](../../details/elevators.md) and [ElevatorConfig](../../details/mechanism-configs/elevator-config.md)
+{% endstep %}
 
-## 2. Create the Elevator
+{% step %}
+### Create the Elevator
 
 Hand the config, and the `SmartMotorController` from step 1, to the `Elevator`.
 
@@ -108,14 +112,16 @@ m_elevator.emplace(&m_elevatorConfig, &m_motor.value());
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
 
-## 3. Update it every loop
+{% step %}
+### Update it every loop
 
 Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry and applies anything you change through live tuning. `simIterate()` runs the physics simulation, and only needs to run in simulation.
 
 In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you, so there is nothing more to do.
 
-In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it, the same way as in [the arm tutorial's step 2](../arm/mechanism.md#3-update-it-every-loop), which explains each part. Every mechanism gets one line in `robotPeriodic()`, before `scheduler.run()`, and one in `simulationInit()`.
+In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it, the same way as in [the arm tutorial's step 2](../arm/mechanism.md#update-it-every-loop), which explains each part. Every mechanism gets one line in `robotPeriodic()`, before `scheduler.run()`, and one in `simulationInit()`.
 
 If your `Robot.java` already has `simulationInit()` and `startSimulation(...)` from the arm tutorial, add the lines below. If not, copy the whole `Robot.java` from the Commands v3 tab of [the complete file](#the-complete-file).
 
@@ -194,6 +200,8 @@ void ElevatorSubsystem::SimulationPeriodic() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

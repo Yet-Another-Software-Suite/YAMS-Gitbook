@@ -43,7 +43,9 @@ YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are mem
 {% endtab %}
 {% endtabs %}
 
-## 1. Start the config
+{% stepper %}
+{% step %}
+### Start the config
 
 Everything the motor controller should do goes into one `SmartMotorControllerConfig`. Start it, and put it in closed loop mode so that it can hold a position.
 
@@ -88,8 +90,10 @@ m_smcConfig
 {% endtabs %}
 
 Want the details? [Motor basics](../../details/editor/config/motor-basics.md)
+{% endstep %}
 
-## 2. PID and feedforward
+{% step %}
+### PID and feedforward
 
 The PID gains correct the difference between where the arm is and where you asked it to be. The feedforward supplies the voltage you already know it needs. The `Sim` options are used only in simulation, so the simulation can be tuned without touching the real robot's gains.
 
@@ -140,8 +144,10 @@ The PID gains correct the difference between where the arm is and where you aske
 **For your robot:** These numbers are only a place to start. Leave them, get the arm moving, then tune them with [Live tuning](../../details/live-tuning/README.md).
 
 Want the details? [Closed loop control](../../details/editor/config/closed-loop-control.md) and [Feedforward](../../details/editor/config/feedforward.md)
+{% endstep %}
 
-## 3. Motion profile
+{% step %}
+### Motion profile
 
 The profile caps how fast the arm may move and accelerate on its way to a setpoint, so that it glides there instead of lunging.
 
@@ -177,8 +183,10 @@ The profile caps how fast the arm may move and accelerate on its way to a setpoi
 **For your robot:** Start slow. Raise the two numbers once the mechanism moves safely.
 
 Want the details? [Motion profiles](../../details/editor/config/motion-profiles.md)
+{% endstep %}
 
-## 4. Gearing
+{% step %}
+### Gearing
 
 The gearing tells YAMS how many turns of the motor make one turn of the arm.
 
@@ -216,8 +224,10 @@ The gearing tells YAMS how many turns of the motor make one turn of the arm.
 **For your robot:** List your gearbox stages in order, from the motor outward. `3, 4` here is a 3:1 stage followed by a 4:1 stage.
 
 Want the details? [Gearing and units](../../details/editor/config/gearing-and-units.md)
+{% endstep %}
 
-## 5. Direction, idle mode and current limit
+{% step %}
+### Direction, idle mode and current limit
 
 Which way is positive, what the motor does when it is given no power, and the most current it may draw.
 
@@ -256,8 +266,10 @@ Which way is positive, what the motor does when it is given no power, and the mo
 **For your robot:** Flip the inversion if a positive output moves your arm the wrong way. Keep the current limit within what your wiring and breaker allow.
 
 Want the details? [Motor basics](../../details/editor/config/motor-basics.md) and [Limits and protection](../../details/editor/config/limits-and-protection.md)
+{% endstep %}
 
-## 6. Starting position and soft limits
+{% step %}
+### Starting position and soft limits
 
 The starting position is where the arm is when the robot turns on. The soft limits are as far as the closed loop is allowed to take it.
 
@@ -301,8 +313,10 @@ The starting position is where the arm is when the robot turns on. The soft limi
 **For your robot:** Set the starting position to where your arm really rests, and the soft limits just inside its hard stops.
 
 Want the details? [Limits and protection](../../details/editor/config/limits-and-protection.md)
+{% endstep %}
 
-## 7. Telemetry
+{% step %}
+### Telemetry
 
 The name the motor gets on your dashboard, and how much it publishes. `HIGH` publishes everything, which is what you want while tuning.
 
@@ -336,8 +350,10 @@ The name the motor gets on your dashboard, and how much it publishes. `HIGH` pub
 {% endtabs %}
 
 Want the details? [Telemetry](../../understanding/telemetry.md)
+{% endstep %}
 
-## 8. The motor controller object
+{% step %}
+### The motor controller object
 
 This is the vendor's own object, exactly as you would create it without YAMS.
 
@@ -371,8 +387,10 @@ rev::spark::SparkMax m_spark{wpi::CANPort::CAN_S0, 4, rev::spark::SparkMax::Moto
 {% endtabs %}
 
 **For your robot:** Change the CAN ID to yours. Using a different motor controller? See the [feature matrix](../../details/editor/feature-matrix.md) for the wrapper that goes with it.
+{% endstep %}
 
-## 9. The SmartMotorController
+{% step %}
+### The SmartMotorController
 
 The wrapper brings the three together: the motor controller object, the motor plugged into it, and the config.
 
@@ -415,6 +433,8 @@ m_motor.emplace(&m_spark, wpi::math::DCMotor::NEO(1), &m_smcConfig);
 **For your robot:** Change the motor to the kind and the number of motors you have.
 
 Want the details? [Smart motor controllers](../../details/editor/README.md)
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 
