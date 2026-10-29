@@ -49,7 +49,7 @@ public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier translationX, D
       .withCubeRotationControllerAxis()
       // Forward on the stick is away from your own alliance wall.
       .withAllianceRelativeControl()
-      // Publish the stream's inputs and outputs, and allow live tuning of it.
+      // Publish the stream's mode and settings, and allow live tuning of them.
       .withTelemetry("Driver", TelemetryVerbosity.HIGH);
 }
 ```
@@ -84,7 +84,7 @@ public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier translationX, D
       .withCubeRotationControllerAxis()
       // Forward on the stick is away from your own alliance wall.
       .withAllianceRelativeControl()
-      // Publish the stream's inputs and outputs, and allow live tuning of it.
+      // Publish the stream's mode and settings, and allow live tuning of them.
       .withTelemetry("Driver", TelemetryVerbosity.HIGH);
 }
 ```
@@ -122,7 +122,7 @@ wpi::cmd::CommandPtr SwerveSubsystem::DriveWithSticks(std::function<double()> tr
           .WithCubeRotationControllerAxis()
           // Forward on the stick is away from your own alliance wall.
           .WithAllianceRelativeControl()
-          // Publish the stream's inputs and outputs, and allow live tuning of it.
+          // Publish the stream's mode and settings, and allow live tuning of them.
           .WithTelemetry("Driver", Cfg::TelemetryVerbosity::HIGH));
 
   return Run([this] { m_drive->SetFieldRelativeChassisSpeeds(m_inputStream->Get()); })
@@ -438,7 +438,7 @@ public class SwerveSubsystem extends SubsystemBase {
 </strong><strong>        .withCubeRotationControllerAxis()
 </strong><strong>        // Forward on the stick is away from your own alliance wall.
 </strong><strong>        .withAllianceRelativeControl()
-</strong><strong>        // Publish the stream's inputs and outputs, and allow live tuning of it.
+</strong><strong>        // Publish the stream's mode and settings, and allow live tuning of them.
 </strong><strong>        .withTelemetry("Driver", TelemetryVerbosity.HIGH);
 </strong><strong>  }
 </strong>
@@ -699,7 +699,7 @@ public class SwerveMechanism implements Mechanism {
 </strong><strong>        .withCubeRotationControllerAxis()
 </strong><strong>        // Forward on the stick is away from your own alliance wall.
 </strong><strong>        .withAllianceRelativeControl()
-</strong><strong>        // Publish the stream's inputs and outputs, and allow live tuning of it.
+</strong><strong>        // Publish the stream's mode and settings, and allow live tuning of them.
 </strong><strong>        .withTelemetry("Driver", TelemetryVerbosity.HIGH);
 </strong><strong>  }
 </strong>
@@ -947,7 +947,7 @@ SwerveSubsystem::SwerveSubsystem() {
 </strong><strong>          .WithCubeRotationControllerAxis()
 </strong><strong>          // Forward on the stick is away from your own alliance wall.
 </strong><strong>          .WithAllianceRelativeControl()
-</strong><strong>          // Publish the stream's inputs and outputs, and allow live tuning of it.
+</strong><strong>          // Publish the stream's mode and settings, and allow live tuning of them.
 </strong><strong>          .WithTelemetry("Driver", Cfg::TelemetryVerbosity::HIGH));
 </strong>
 <strong>  return Run([this] { m_drive->SetFieldRelativeChassisSpeeds(m_inputStream->Get()); })

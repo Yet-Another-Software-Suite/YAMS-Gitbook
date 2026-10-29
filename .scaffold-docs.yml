@@ -1,0 +1,9 @@
+# Documents https://github.com/Yet-Another-Software-Suite/YAMS: the SHA below is a YAMS commit, not one of this repo.
+last_synced_sha: bd75e5d12979fec1ba468dd9be193bc3b9d33517
+last_synced_date: 2026-10-28
+audience:
+  primary: FRC student programmers — know Java and command-based, and want a mechanism moving in simulation and on the robot, tuned easily while they learn control theory.
+  secondary:
+    - Mentors and lead programmers — choosing and adopting YAMS for a team; care about vendor coverage, design decisions and upgrading from 2026.
+  inferred: false        # true if audience was inferred from docs; false = user chose it
+ask_audience: true       # false = user told us to stop asking about audience

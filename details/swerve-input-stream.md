@@ -445,16 +445,16 @@ Telemetry is off until you call `withTelemetry(name, verbosity)` on a stream. It
 | `MID`     | Also the stream's configuration, read-only, and the [rotation controller's inputs](#rotation-controller-inputs) |
 | `HIGH`    | Also editable copies of the configuration, and a `Live Tuning` command on the dashboard                             |
 
-Call `withTelemetry` last, after the rest of the configuration, so the dashboard starts with the configured values. Calling it again replaces the stream's telemetry, and `getTelemetry().get().close()` stops publishing it, e.g. when replacing a stream with another of the same name.
+Call `withTelemetry` last, after the rest of the configuration, so the dashboard starts with the configured values. Calling it again replaces the stream's telemetry, and `getTelemetry().get().close()` stops publishing it, e.g. when replacing a stream with another of the same name. The new stream publishes its own configured values over any the old one left on the dashboard, so one opmode's tuning never carries into the next opmode's stream.
 
 ### Rotation controller inputs
 
 `HEADING`, `AIM` and `TRANSLATION_ONLY` turn the robot with the drive's rotation controller. At `MID` and above, the stream publishes what it gives that controller on every read, under `SwerveInputStream/<name>/rotationController`:
 
-| Key           | Value                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------- |
-| `measurement` | The robot's heading, in radians in the gyro's frame                                   |
-| `setpoint`    | The heading being turned to, in radians in the gyro's frame: the aim heading in `AIM` |
+| Key           | Unit      | Value                                                                      |
+| ------------- | --------- | -------------------------------------------------------------------------- |
+| `measurement` | `radians` | The robot's heading, in the gyro's frame                                   |
+| `setpoint`    | `radians` | The heading being turned to, in the gyro's frame: the aim heading in `AIM` |
 
 Both are `NaN` on reads in `ANGULAR_VELOCITY`, which doesn't use the controller, so a graph shows a gap rather than a stale value.
 
@@ -536,17 +536,19 @@ At `HIGH`, values edited on the dashboard are applied to the stream every loop w
 
 `mode` (the current drive mode: `ANGULAR_VELOCITY`, `HEADING`, `AIM` or `TRANSLATION_ONLY`) is published to `/SwerveInputStream/<name>/` at every verbosity. At `MID` (`MEDIUM` in C++) and `HIGH`, the values below are also published there read-only. At `HIGH` they are published as tunable values under `/Tuning/SwerveInputStream/<name>/`, with the command at `/Tuning/SwerveInputStream/<name>/Live Tuning`.
 
-| Topic                | Type    | Range   | Description                                                                                     |
-| -------------------- | ------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `deadband`           | double  | \[0, 1) | Controller axis deadband                                                                        |
-| `translationScale`   | double  | (0, 1]  | Translation axis scaling factor                                                                 |
-| `rotationScale`      | double  | (0, 1]  | Rotation axis scaling factor                                                                    |
-| `maxLinearVelocity`  | double  | > 0     | Maximum chassis linear velocity (m/s). Starts at the drive config's maximum and overrides it    |
-| `maxAngularVelocity` | double  | > 0     | Maximum chassis angular velocity (rad/s). Starts at the drive config's maximum and overrides it |
-| `translationCube`    | boolean | -       | Enable cubic translation response curve                                                         |
-| `rotationCube`       | boolean | -       | Enable cubic rotation response curve                                                            |
-| `allianceRelative`   | boolean | -       | Enable alliance-relative translation flip                                                       |
-| `robotRelative`      | boolean | -       | Enable robot-relative control                                                                   |
+The velocity limits and the rotation controller inputs carry their units on the topic, so AdvantageScope and Elastic label them for you.
+
+| Topic                | Type    | Unit                 | Range   | Description                                                                             |
+| -------------------- | ------- | -------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `deadband`           | double  | -                    | \[0, 1) | Controller axis deadband                                                                |
+| `translationScale`   | double  | -                    | (0, 1]  | Translation axis scaling factor                                                         |
+| `rotationScale`      | double  | -                    | (0, 1]  | Rotation axis scaling factor                                                            |
+| `maxLinearVelocity`  | double  | `meters_per_second`  | > 0     | Maximum chassis linear velocity. Starts at the drive config's maximum and overrides it  |
+| `maxAngularVelocity` | double  | `radians_per_second` | > 0     | Maximum chassis angular velocity. Starts at the drive config's maximum and overrides it |
+| `translationCube`    | boolean | -                    | -       | Enable cubic translation response curve                                                 |
+| `rotationCube`       | boolean | -                    | -       | Enable cubic rotation response curve                                                    |
+| `allianceRelative`   | boolean | -                    | -       | Enable alliance-relative translation flip                                               |
+| `robotRelative`      | boolean | -                    | -       | Enable robot-relative control                                                           |
 
 The output velocities are not published: reading them would call `get()` a second time each loop, which runs the heading controller twice. Log the speeds you send to the drive instead.
 
