@@ -13,8 +13,8 @@ The module gains from step 1 are placeholders: the azimuth motors' `kP` is 4, an
 **Simulation is practice, not tuning.** These configs use the same gains on the robot and in simulation, and a simulated module is never exactly like a real one. Do not copy the numbers you find here into your code: step 5 tunes the real modules the same way, and those are the numbers to keep.
 {% endhint %}
 
-{% hint style="warning" %}
-While it runs, the tuning command pauses the default drive command from step 3, so the sticks do nothing until you stop it. That needs a YAMS release with [YAMS #247](https://github.com/Yet-Another-Software-Suite/YAMS/pull/247). With an older YAMS, the default drive command keeps pointing the wheels back where they are, and the angles you type do not take effect.
+{% hint style="info" %}
+While it runs, the tuning command pauses the default drive command from step 3, so the sticks do nothing until you stop it.
 {% endhint %}
 
 ## Before you start
@@ -116,7 +116,7 @@ Open the drive graph. The drive values are under `Tuning/swerve/modules/drive`.
 
 * **Typing a value or clicking a dot does nothing.** Turn on AdvantageScope's tuning mode, and check that `running` under `Mechanisms/swerve/tuning` is green.
 * **`Mechanisms/swerve/tuning` is missing.** The tuning command is only there when `SwerveDriveConfig` has both a translation and a rotation controller, as in step 2, and the drive's telemetry is `TelemetryVerbosity.HIGH`.
-* **The modules do not turn to the angle.** Check that `enabled` under `azimuth` is green. If it is, and the sticks still drive the robot, your YAMS is older than [YAMS #247](https://github.com/Yet-Another-Software-Suite/YAMS/pull/247).
+* **The modules do not turn to the angle.** Check that `enabled` under `azimuth` is green, and that `running` under `Mechanisms/swerve/tuning` still is.
 * **A wheel turns the other way and runs backwards.** The angle changed by 90 degrees or more. Step between closer angles, such as 0 and 45.
 
 For every tuning value, including auto-align, see [Swerve drive](../../details/live-tuning/README.md#swerve-drive) on the Live tuning page. More problems and fixes: [Troubleshooting](../troubleshooting.md).
