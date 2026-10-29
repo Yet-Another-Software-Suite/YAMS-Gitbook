@@ -130,3 +130,13 @@ Severity:
 End with the single change that would help the most readers, if only one gets made.
 
 When asked to fix rather than review, make the Blocker and Major fixes, keep the page's existing tabs and structure, and follow the house style above.
+
+## Fixing a report with agents
+
+Reviewing many pages can be split across several agents, one per section, because they only read. Fixing should go to **one** agent, not several:
+
+* **The fixes overlap.** Findings often touch the same pages, links and `SUMMARY.md` entries: a page that moves, a heading whose anchor other pages link to, two pages merged into one. Several agents editing at once overwrite each other's work or leave broken links between their changes.
+* **The repo is shared.** Agents working in the same checkout switch branches under each other. One agent works on one branch and makes one docs PR.
+* **It saves tokens.** Each extra agent rereads the skill, the pages and the source to rebuild the same context.
+
+Give that one agent the whole report, the page and source paths, and the rules it must follow (house style, git and PR rules, how to build and test). If the report also finds library bugs, the same agent fixes them in a separate library PR. Only split the fixing across agents when the pages share nothing, such as two unrelated sections with no links between them, and then give each agent its own worktree.
