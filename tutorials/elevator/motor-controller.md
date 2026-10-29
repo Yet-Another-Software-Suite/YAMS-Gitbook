@@ -1,5 +1,6 @@
 ---
 description: Configure the SparkMax and wrap it in a SmartMotorController.
+icon: microchip
 ---
 
 # Step 1: The motor controller

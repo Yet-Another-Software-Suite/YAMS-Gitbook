@@ -1,5 +1,6 @@
 ---
 description: Learn how to program a Swerve Drive.
+icon: car-side
 ---
 
 # Swerve Drive

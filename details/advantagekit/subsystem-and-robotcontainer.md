@@ -1,3 +1,7 @@
+---
+icon: cubes
+---
+
 # Steps 3 and 4: The subsystem and RobotContainer
 
 ## Step 3: Create the subsystem

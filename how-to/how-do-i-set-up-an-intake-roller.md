@@ -1,3 +1,7 @@
+---
+icon: arrow-right-to-bracket
+---
+
 # How do I set up an intake roller?
 
 **Goal:** spin an intake, roller, feeder or indexer in and out from buttons, with YAMS telemetry and simulation.

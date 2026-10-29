@@ -1,5 +1,6 @@
 ---
 description: One command sets both flywheel speeds. Presets give no spin, backspin or topspin.
+icon: gamepad
 ---
 
 # Step 2: Commands and buttons

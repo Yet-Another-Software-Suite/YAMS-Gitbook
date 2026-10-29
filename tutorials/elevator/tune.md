@@ -1,5 +1,6 @@
 ---
 description: Tune the elevator's gains while the simulation runs, then copy them into your code.
+icon: sliders
 ---
 
 # Step 5: Tune it

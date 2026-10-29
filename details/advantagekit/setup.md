@@ -1,3 +1,7 @@
+---
+icon: download
+---
+
 # Step 0: Install AdvantageKit and set up Robot
 
 Before the IO classes can log anything, the project needs the AdvantageKit library, its code generator in `build.gradle`, and a `Robot` class that starts the AdvantageKit logger. This page sets up a Commands v2 project that already builds with YAMS, the same way the [YAMS AdvantageKit example](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/advantage_kit) does.

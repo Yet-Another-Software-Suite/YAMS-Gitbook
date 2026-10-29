@@ -1,3 +1,7 @@
+---
+icon: rotate
+---
+
 # How do I tune my elevator in rotations instead of meters?
 
 **Goal:** keep the closed loop controller (its error, `kP` and profile limits) in rotations, while still reading positions and speeds in meters.

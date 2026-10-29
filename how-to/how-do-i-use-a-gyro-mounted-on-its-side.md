@@ -1,3 +1,7 @@
+---
+icon: compass
+---
+
 # How do I use a gyro mounted on its side?
 
 A swerve drive needs the robot's heading, which is rotation about the axis pointing up through the robot. A gyro mounted flat reports that as its yaw. If packaging forces you to mount the gyro on its side (for example vertically on a superstructure plate), the robot turning shows up as the gyro's roll or pitch instead, and a `SwerveDrive` reading yaw will see almost no heading change. `SwerveDriveConfig.withGyroHeadingAxis(GyroAxis)` tells YAMS which gyro axis points up, so the heading and tilt are read correctly without any math in your robot code.

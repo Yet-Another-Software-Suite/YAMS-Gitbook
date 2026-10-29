@@ -1,5 +1,6 @@
 ---
 description: A SmartMotorControllerConfig for the drive motors and one for the azimuth motors.
+icon: microchip
 ---
 
 # Step 1: The module motors

@@ -1,5 +1,6 @@
 ---
 description: Where to learn shooting on the move, and how the ideas in those sources apply to YAMS.
+icon: person-running
 ---
 
 # How do I shoot on the move?

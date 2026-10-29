@@ -1,3 +1,7 @@
+---
+icon: car-side
+---
+
 # Swerve drive with AdvantageKit
 
 YAMS swerve integrates seamlessly with AdvantageKit. Here's a complete example based on the official YAMS AdvantageKit swerve examples ([Commands v2 `SwerveSubsystem`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/advantage_kit/java/first/robot/subsystems/SwerveSubsystem.java), [Commands v3 `SwerveMechanism`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/advantage_kit/java/first/robot/mechanisms/SwerveMechanism.java)):

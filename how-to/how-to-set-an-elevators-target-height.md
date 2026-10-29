@@ -1,3 +1,7 @@
+---
+icon: elevator
+---
+
 # How do I set an elevator's target height?
 
 **Goal:** send your `Elevator` to a height from a button, an autonomous routine or your own code.

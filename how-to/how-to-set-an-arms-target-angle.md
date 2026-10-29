@@ -1,3 +1,7 @@
+---
+icon: hand-fist
+---
+
 # How do I set an arm's target angle?
 
 **Goal:** send your `Arm` to an angle from a button, an autonomous routine or your own code.

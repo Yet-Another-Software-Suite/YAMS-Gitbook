@@ -2,6 +2,7 @@
 description: >-
   A game piece makes a mechanism heavier, and can move its center of mass, which
   changes the feedforward and feedback gains it needs.
+icon: weight-hanging
 ---
 
 # How do I control a mechanism that carries a game piece?

@@ -1,5 +1,6 @@
 ---
 description: Drive commands, a SwerveInputStream for the sticks, and the bindings.
+icon: gamepad
 ---
 
 # Step 3: Driving

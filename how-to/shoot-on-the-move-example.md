@@ -1,5 +1,6 @@
 ---
 description: A complete robot that aims, sets its shooter speed and feeds only when the shot is ready, while it drives.
+icon: code
 ---
 
 # Shoot on the move: worked example

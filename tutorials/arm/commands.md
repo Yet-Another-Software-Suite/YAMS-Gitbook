@@ -1,5 +1,6 @@
 ---
 description: Make commands from the Arm and bind them to controller buttons.
+icon: gamepad
 ---
 
 # Step 3: Commands and buttons

@@ -1,3 +1,7 @@
+---
+icon: file-code
+---
+
 # Step 1: Define the IO interface
 
 Create an interface that defines what inputs your subsystem reads and what outputs it sends. Following AdvantageKit conventions, inputs are grouped in an `Inputs` class. This needs AdvantageKit installed, from [Step 0: Install AdvantageKit and set up Robot](setup.md).

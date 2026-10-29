@@ -1,5 +1,6 @@
 ---
 description: Make the robot project that every tutorial starts from.
+icon: folder-plus
 ---
 
 # Create a project and install YAMS

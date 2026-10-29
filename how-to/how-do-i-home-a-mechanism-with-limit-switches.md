@@ -1,3 +1,7 @@
+---
+icon: house
+---
+
 # How do I home a mechanism with limit switches?
 
 **Goal:** reset your mechanism's encoder to a known position whenever it presses a limit switch at a hard stop.

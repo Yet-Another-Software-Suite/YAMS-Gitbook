@@ -1,3 +1,7 @@
+---
+icon: code
+---
+
 # Step 2: Implement the IO class
 
 With YAMS, you only need **one IO implementation** that works for both real hardware and simulation. The `SmartMotorController` automatically detects when it's running in simulation and uses physics simulation instead of real hardware.
