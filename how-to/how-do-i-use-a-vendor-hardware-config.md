@@ -1,3 +1,7 @@
+---
+icon: file-import
+---
+
 # How do I use a vendor hardware config?
 
 **Goal:** use a motor controller option that YAMS does not have a method for, such as beep settings, peak voltages or status frame rates.

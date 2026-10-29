@@ -1,5 +1,6 @@
 ---
 description: A spin ratio between the two flywheels, and what to change when two motors drive one wheel.
+icon: people-arrows
 ---
 
 # Step 3: Spin ratio and shared shafts

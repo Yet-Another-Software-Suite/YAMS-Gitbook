@@ -1,3 +1,7 @@
+---
+icon: ruler
+---
+
 # How do I command my elevator in meters?
 
 **Goal:** tell YAMS how far your elevator (or wheel, or linear slide) moves for each rotation, so you can give it targets in meters or inches instead of rotations.

@@ -1,3 +1,7 @@
+---
+icon: magnifying-glass-chart
+---
+
 # How do I view my DataLog in AdvantageScope?
 
 Record what your robot did to a DataLog file, then open that file in AdvantageScope to replay the run on a graph, a field and a swerve view. This page does it for the swerve drive from the [Swerve Drive tutorial](../tutorials/swerve-drive.md). Any YAMS mechanism works the same way.

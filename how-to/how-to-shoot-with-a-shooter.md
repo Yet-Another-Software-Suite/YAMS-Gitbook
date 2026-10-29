@@ -1,3 +1,7 @@
+---
+icon: fan
+---
+
 # How do I shoot with a shooter?
 
 **Goal:** hold a button to spin the shooter up, and have the feeder push the game piece in only once the wheel is at speed.

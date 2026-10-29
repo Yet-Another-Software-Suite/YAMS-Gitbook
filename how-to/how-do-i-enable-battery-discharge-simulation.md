@@ -1,3 +1,7 @@
+---
+icon: car-battery
+---
+
 # How do I enable battery discharge simulation?
 
 By default, `BatterySim` only models instantaneous voltage sag from combined current draw, and the simulated battery itself never changes, so it sags from the same fully-charged 12V/20mΩ baseline whether it's the first cycle of the match or the last. Enabling discharge simulation layers state-of-charge modeling on top: as your simulated robot draws amp-hours, the battery's open-circuit voltage droops and its internal resistance rises, so a long autonomous-plus-teleop simulation run actually sags harder near the end, the way a real battery does late in a match. This page is the practical walkthrough; for the full explanation of why YAMS models one shared battery at all, see [Battery Simulation](../understanding/battery-simulation.md).

@@ -2,6 +2,7 @@
 description: >-
   Step the simulated physics every millisecond from a Notifier, so a closed loop
   running on the motor controller sees a fresh measurement on every run.
+icon: microscope
 ---
 
 # How do I run a high fidelity simulation?

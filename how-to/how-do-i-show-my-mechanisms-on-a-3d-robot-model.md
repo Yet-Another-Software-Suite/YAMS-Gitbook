@@ -2,6 +2,7 @@
 description: >-
   Publish each mechanism's Pose3d, so AdvantageScope moves the matching part of
   your robot's CAD model as the real mechanism moves.
+icon: cube
 ---
 
 # How do I show my mechanisms on a 3D robot model?

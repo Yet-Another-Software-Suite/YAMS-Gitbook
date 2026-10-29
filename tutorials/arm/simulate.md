@@ -1,5 +1,6 @@
 ---
 description: Run the arm in simulation and drive it with a controller.
+icon: flask
 ---
 
 # Step 4: Simulate it

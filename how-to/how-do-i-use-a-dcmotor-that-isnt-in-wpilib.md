@@ -1,3 +1,7 @@
+---
+icon: plug
+---
+
 # How do I use a DCMotor that isn't in WPILib?
 
 **Goal:** simulate a motor that WPILib has no `DCMotor` for, by building one from its datasheet and giving it to your `SmartMotorController`.

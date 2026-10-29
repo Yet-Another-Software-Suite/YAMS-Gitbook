@@ -1,5 +1,6 @@
 ---
 description: Describe the elevator and create the Elevator mechanism.
+icon: elevator
 ---
 
 # Step 2: The elevator

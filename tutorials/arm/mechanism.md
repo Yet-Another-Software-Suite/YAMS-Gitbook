@@ -1,5 +1,6 @@
 ---
 description: Describe the arm and create the Arm mechanism.
+icon: hand-fist
 ---
 
 # Step 2: The arm

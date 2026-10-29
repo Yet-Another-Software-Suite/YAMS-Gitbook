@@ -1,5 +1,6 @@
 ---
 description: Run the flywheel in simulation and drive it with a controller.
+icon: flask
 ---
 
 # Step 4: Simulate it

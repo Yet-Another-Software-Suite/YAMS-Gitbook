@@ -1,3 +1,7 @@
+---
+icon: clock-rotate-left
+---
+
 # Log replay
 
 ## Log replay mode

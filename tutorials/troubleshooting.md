@@ -1,5 +1,6 @@
 ---
 description: What to check when a YAMS mechanism does not build, does not move, or moves the wrong way.
+icon: screwdriver-wrench
 ---
 
 # Troubleshooting

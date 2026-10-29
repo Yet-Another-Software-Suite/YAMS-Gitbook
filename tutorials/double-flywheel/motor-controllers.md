@@ -1,5 +1,6 @@
 ---
 description: One config and one SmartMotorController for each flywheel.
+icon: microchip
 ---
 
 # Step 1: Two motor controllers

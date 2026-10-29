@@ -1,5 +1,6 @@
 ---
 description: Learn how to program a shooter flywheel.
+icon: fan
 ---
 
 # Shooter/FlyWheels

@@ -1,5 +1,6 @@
 ---
 description: Learn how to program an Arm.
+icon: hand-fist
 ---
 
 # Arm

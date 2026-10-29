@@ -1,5 +1,6 @@
 ---
 description: Put the arm code on the robot, check it safely, and tune it on the real arm.
+icon: robot
 ---
 
 # Step 6: Run it on the robot

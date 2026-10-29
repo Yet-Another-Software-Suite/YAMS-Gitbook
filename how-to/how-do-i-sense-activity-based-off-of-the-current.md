@@ -1,3 +1,7 @@
+---
+icon: bolt
+---
+
 # How do I detect a game piece from motor current?
 
 **Goal:** know when your intake has a game piece, without a beam break or limit switch, by watching the roller motor's current.

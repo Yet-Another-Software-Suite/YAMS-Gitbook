@@ -1,5 +1,6 @@
 ---
 description: Build four SwerveModules, add the gyro, and create the SwerveDrive.
+icon: gear
 ---
 
 # Step 2: The modules and the drive

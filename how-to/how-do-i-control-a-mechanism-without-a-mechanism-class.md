@@ -2,6 +2,7 @@
 description: >-
   Control each SmartMotorController yourself, such as when the motors of one
   mechanism need different setpoints.
+icon: microchip
 ---
 
 # How do I control a mechanism without a mechanism class?

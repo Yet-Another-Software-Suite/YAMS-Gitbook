@@ -1,5 +1,6 @@
 ---
 description: Learn how to program a double flywheel shooter, with a separate speed for each wheel.
+icon: clone
 ---
 
 # Double FlyWheel

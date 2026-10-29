@@ -1,3 +1,7 @@
+---
+icon: arrows-down-to-line
+---
+
 # How do I zero a mechanism without limit switches?
 
 **Goal:** make your arm or elevator's encoder read the right position, when there is no limit switch and no absolute encoder.

@@ -1,5 +1,6 @@
 ---
 description: Set the encoder offsets, check every direction, tune the modules and drive the real robot for the first time.
+icon: robot
 ---
 
 # Step 4: On the real robot

@@ -1,5 +1,6 @@
 ---
 description: Describe the flywheel and create the FlyWheel mechanism.
+icon: fan
 ---
 
 # Step 2: The flywheel

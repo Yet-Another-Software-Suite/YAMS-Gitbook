@@ -1,3 +1,7 @@
+---
+icon: link-slash
+---
+
 # Without an IO layer
 
 For simpler projects, you can use YAMS mechanisms directly as shown in the official examples ([Commands v2 subsystems](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/advantage_kit/java/first/robot/subsystems), [Commands v3 mechanisms](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/advantage_kit/java/first/robot/mechanisms)):

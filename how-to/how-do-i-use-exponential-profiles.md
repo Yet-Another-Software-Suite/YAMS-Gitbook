@@ -1,3 +1,7 @@
+---
+icon: chart-line
+---
+
 # How do I use exponential profiles?
 
 An exponential profile plans a move the way a DC motor actually moves: hard acceleration at first, then less as it nears top speed. Every `SmartMotorController` in YAMS supports them. This is the short version: [Exponential profiles](../details/editor/exponential-profiles.md) has the full explanation and the tuning steps.
