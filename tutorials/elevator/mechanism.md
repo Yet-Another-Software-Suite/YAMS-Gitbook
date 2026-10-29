@@ -557,7 +557,3 @@ ElevatorSubsystem::ElevatorSubsystem() {
 Build the code again. You can already run the simulation as in [step 4](simulate.md): the elevator is drawn with the carriage at 0 m, its starting position. It does not move yet, because nothing gives it a setpoint.
 
 * **`Elevator` cannot be found:** the import is from the other command framework. Commands v2 uses `yams.commands2.mechanisms.Elevator`, Commands v3 uses `yams.commands3.mechanisms.Elevator`.
-
-## Next
-
-[Step 3: Commands and buttons](commands.md)

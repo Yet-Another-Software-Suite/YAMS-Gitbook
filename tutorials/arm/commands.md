@@ -802,7 +802,3 @@ The buttons here use the command that never ends, because a button that is held 
 ## Check it
 
 Build the code. If it builds, every button is bound. Next you run it and press them.
-
-## Next
-
-[Step 4: Simulate it](simulate.md)

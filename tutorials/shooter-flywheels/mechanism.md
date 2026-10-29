@@ -519,7 +519,3 @@ ShooterSubsystem::ShooterSubsystem() {
 Build the code again. You can already run the simulation as in [step 4](simulate.md): the flywheel is drawn, standing still. It does not spin yet, because nothing gives it a setpoint.
 
 * **`FlyWheel` cannot be found:** the import is from the other command framework. Commands v2 uses `yams.commands2.mechanisms.FlyWheel`, Commands v3 uses `yams.commands3.mechanisms.FlyWheel`.
-
-## Next
-
-[Step 3: Commands and buttons](commands.md)

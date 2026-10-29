@@ -577,7 +577,3 @@ ArmSubsystem::ArmSubsystem() {
 ## Check it
 
 Build the code again. You can already run the simulation as in [step 4](simulate.md): the arm is drawn at -5 degrees. It does not move yet, because nothing gives it a setpoint.
-
-## Next
-
-[Step 3: Commands and buttons](commands.md)

@@ -39,7 +39,7 @@ Go through the page top to bottom and ask at each section:
 1. **Do I know every word here yet?** Flag terms used before they are explained or linked: `SmartMotorController`, mechanism, setpoint, closed loop, `kG`, stator current, soft limit, verbosity, op mode, `Notifier`.
 2. **Can I tell what I should see now?** Every tutorial step ends with something the reader can check: it builds, a value shows on the dashboard, the mechanism moves. A step that only adds code with nothing to check is a stuck point.
 3. **What do I do if it did not work?** Each tutorial step names the one or two most likely failures and how to fix them (wrong CAN ID, inverted motor, mechanism not in `simulationInit`, wrong op mode, forgot the vendor library).
-4. **Where do I go next?** The page ends with one clear next step, not a list of six links.
+4. **Where do I go next?** GitBook already shows Previous and Next buttons at the end of every page, in table of contents order, so tutorial pages must not add a "Next" section that links the following step. Flag one if you find it. Only the last page of a tutorial, or a page whose next step is somewhere other than the following page in the table of contents, should point the reader on, under a heading that says what it is, such as "Read more" or the step's name.
 
 ## Step 3: Check the whole path, not just the page
 

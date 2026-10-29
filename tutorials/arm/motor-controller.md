@@ -640,7 +640,3 @@ Open the command palette with <kbd>Ctrl+Shift+P</kbd> and run **WPILib: Build Ro
 
 * **`SparkMax` cannot be found:** REVLib is not installed. See [Install your motor controller's library](../project-setup.md#install-your-motor-controllers-library).
 * **`SmartMotorControllerConfig` cannot be found:** YAMS is not installed, or the import is from the other command framework (`yams.commands2` or `yams.commands3`).
-
-## Next
-
-[Step 2: The arm](mechanism.md)

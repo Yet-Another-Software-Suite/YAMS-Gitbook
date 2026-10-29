@@ -794,7 +794,3 @@ The `atSpeed` method added in this step returns a `Trigger`. Nothing in this tut
 ## Check it
 
 Build the code. If it builds, every button is bound. Next you run it and press them.
-
-## Next
-
-[Step 4: Simulate it](simulate.md)

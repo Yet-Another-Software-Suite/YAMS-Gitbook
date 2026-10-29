@@ -66,7 +66,3 @@ The drawing is only updated 50 times a second. At shooter speeds the line turns 
 * **The speed settles well below the setpoint.** `kV` is too low, or 0. See step 1, part 2.
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).
-
-## Next
-
-[Step 5: Tune it](tune.md)

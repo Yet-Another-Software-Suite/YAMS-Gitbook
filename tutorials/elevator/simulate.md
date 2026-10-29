@@ -59,7 +59,3 @@ No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0
 * **The code stops with an error when the simulation starts.** Read the first error. YAMS names the setting that is missing, such as soft limits in meters set before `withDrumRadius`.
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).
-
-## Next
-
-[Step 5: Tune it](tune.md)

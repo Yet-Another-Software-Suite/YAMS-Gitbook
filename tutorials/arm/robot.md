@@ -114,7 +114,7 @@ Do the same with `-20` for the lower soft limit. Set `withSoftLimits` in step 1 
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).
 
-## Next
+## Read more
 
 Your arm works on the robot. From here:
 

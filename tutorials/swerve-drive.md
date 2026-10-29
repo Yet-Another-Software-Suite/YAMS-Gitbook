@@ -57,10 +57,6 @@ The same drive in the other two flavors:
 * **Java, Commands v3:** [`SwerveMechanism.java`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/simple_robot-2027/src/main/java/first/robot/mechanisms/SwerveMechanism.java) in `examples/commands3/simple_robot-2027`
 * **C++:** [`SwerveSubsystem.h`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/cpptest/src/main/include/subsystems/SwerveSubsystem.h) and [`SwerveSubsystem.cpp`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/cpptest/src/main/cpp/subsystems/SwerveSubsystem.cpp) in `examples/cpptest`
 
-## Next step
-
-Start with [Step 1: The module motors](swerve-drive/module-motors.md). Once the code runs in simulation, [Step 4: On the real robot](swerve-drive/real-robot.md) gets it driving on the ground.
-
 ## Read more
 
 * [AdvantageKit Integration](../details/advantagekit-integration.md) for swerve

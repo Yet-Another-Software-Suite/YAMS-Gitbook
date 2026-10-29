@@ -174,6 +174,6 @@ These make a good drive better. Do them once the robot drives well by hand:
 * **Odometry creep.** If the pose moves when the wheels only steer, set [`withCouplingRatio`](../../details/mechanism-configs/swerve-module-config.md#withcouplingratio).
 * **Auto-align.** Tune the `driveToPose()` controllers last: see [Tune auto-align](../../details/live-tuning/README.md#tune-auto-align).
 
-## Next
+## Read more
 
-Your swerve drive works on the real robot. [Swerve Drive](../../details/swerve-drive.md) covers what it can do next: vision measurements, auto-align and path following.
+* [Swerve Drive](../../details/swerve-drive.md): vision measurements, auto-align and path following

@@ -1204,10 +1204,6 @@ In simulation, `drive.getSimPose()` returns a ground truth `Pose2d`, separate fr
 
 More fixes are on [Troubleshooting](../troubleshooting.md).
 
-## Next
-
-The code is finished. [Step 4: On the real robot](real-robot.md) sets the encoder offsets, checks every direction, tunes the modules and drives the robot for the first time.
-
 ## Read more
 
 * [Swerve Input Stream](../../details/swerve-input-stream.md): everything the stream can do, including heading control and aiming

@@ -922,7 +922,3 @@ There is no `FlyWheel` mechanism here, so there is no drawing of the wheels. Wat
 * **Y**: both lines fall back toward 0 as the wheels coast down.
 
 If a line stays at 0, check that `setupTelemetry()` and `simIterate()` are called for that motor, as in step 1. More problems and fixes: [Troubleshooting](../troubleshooting.md).
-
-## Next
-
-[Step 3: Spin ratio and shared shafts](spin-and-followers.md)

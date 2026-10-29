@@ -177,7 +177,7 @@ The numbers above are an example. Use the ones you found.
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).
 
-## Next
+## Step 6: Run it on the robot
 
 Step 6 puts the code on the real robot. Follow [the arm's step 6: Run it on the robot](../arm/robot.md). Everything there works the same for the elevator, with these differences:
 

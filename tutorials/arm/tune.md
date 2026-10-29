@@ -172,7 +172,3 @@ The numbers above are an example. Use the ones you found.
 * **The numbers were gone after a restart.** They only last until the code stops. Copy them into your code as in part 6.
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).
-
-## Next
-
-[Step 6: Run it on the robot](robot.md)
