@@ -50,7 +50,7 @@ YAMS keeps a pointer to each config, so in C++ a config cannot be a temporary. T
 
 The drive motor turns the wheel and is **velocity** controlled. It needs the wheel diameter to turn rotations into distance, a PID controller, and a feedforward whose `kV` does most of the work of holding a speed.
 
-The gains are placeholders. `kV` is the voltage for each wheel rotation per second: a NEO turns a 6.75:1 wheel about 14 times a second at 12 volts, so `12 / 14`, about `0.85`, is close. With it the robot drives at roughly the speed you ask for. If it drives noticeably slower than the stick asks, `kV` is too low; if it lurches past the speed, it is too high. [Step 4](real-robot.md) tunes it properly.
+The gains are placeholders. `kV` is the voltage for each wheel rotation per second: a NEO turns a 6.75:1 wheel about 14 times a second at 12 volts, so `12 / 14`, about `0.85`, is close. With it the robot drives at roughly the speed you ask for. If it drives noticeably slower than the stick asks, `kV` is too low; if it lurches past the speed, it is too high. [Step 5](real-robot.md) tunes it properly.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -133,7 +133,7 @@ void SwerveSubsystem::ConfigureDrive(Cfg& config) {
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set your wheel diameter and your module's drive gear ratio. Your module's maker publishes the ratio: this tutorial uses an MK4 L2, which is 6.75:1. Leave `withMotorInverted(false)` for now: [Step 4](real-robot.md#check-the-directions) checks which way the wheel spins and tells you when to change it.
+**For your robot:** Set your wheel diameter and your module's drive gear ratio. Your module's maker publishes the ratio: this tutorial uses an MK4 L2, which is 6.75:1. Leave `withMotorInverted(false)` for now: [Step 5](real-robot.md#check-the-directions) checks which way the wheel spins and tells you when to change it.
 
 Want the details? [Live tuning](../../details/live-tuning/README.md) has a section on tuning a swerve module's drive motor.
 {% endstep %}
@@ -144,7 +144,7 @@ Want the details? [Live tuning](../../details/live-tuning/README.md) has a secti
 The azimuth motor steers the module and is **position** controlled. Two settings matter here:
 
 * **`withContinuousWrapping`** tells the controller that the wheel can turn all the way round, so -180 and +180 degrees are the same angle. Without it a wheel at 170 degrees asked for -170 degrees spins nearly a full turn the long way, instead of 20 degrees the short way. It must come after `withClosedLoopController`.
-* **`withMotorInverted`** sets which way the motor turns. Angles are counter-clockwise positive, seen from above, so a positive command must turn the wheel counter-clockwise. [Step 4](real-robot.md#check-the-directions) checks it.
+* **`withMotorInverted`** sets which way the motor turns. Angles are counter-clockwise positive, seen from above, so a positive command must turn the wheel counter-clockwise. [Step 5](real-robot.md#check-the-directions) checks it.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -424,7 +424,7 @@ SwerveSubsystem::SwerveSubsystem() {
 {% endtabs %}
 
 {% hint style="info" %}
-The gains here are a place to start. [Step 4: On the real robot](real-robot.md) tunes the drive and azimuth motors of every module with the swerve tuning command.
+The gains here are a place to start. [Step 4: Tune it](tune.md) practices tuning them in simulation with the swerve tuning command, and [Step 5: On the real robot](real-robot.md) tunes the real modules.
 {% endhint %}
 
 ## Check it

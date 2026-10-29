@@ -45,7 +45,7 @@ Module states are WPILib 2027 `SwerveModuleVelocity`s (the 2027 name for `Swerve
 
 ## Setting up a module on a real robot
 
-Finding each module's absolute encoder offset, checking which way the motors turn and tuning the azimuth and drive motors are steps in a tutorial now: see [Step 4: On the real robot](../tutorials/swerve-drive/real-robot.md).
+Finding each module's absolute encoder offset, checking which way the motors turn and tuning the azimuth and drive motors are steps in a tutorial now: see [Step 5: On the real robot](../tutorials/swerve-drive/real-robot.md).
 
 ## A fully configured module
 
@@ -144,7 +144,7 @@ A CANcoder feeding a REV azimuth motor is a different vendor, so it goes through
 .withAbsoluteEncoderOffset(Rotations.of(0.25)) // bevel-left zero offset
 ```
 
-`getAbsoluteEncoderAngle()` returns the angle with gearing and offset applied, the value actually used for seeding and optimization. `getRawAbsoluteEncoderAngle()` returns the same reading with no offset or gearing conversion applied, and the module publishes it as `encoder`: that raw reading, taken with the wheel forward and the bevel gear left, is the offset. [Step 4: On the real robot](../tutorials/swerve-drive/real-robot.md#set-the-absolute-encoder-offsets) walks through it.
+`getAbsoluteEncoderAngle()` returns the angle with gearing and offset applied, the value actually used for seeding and optimization. `getRawAbsoluteEncoderAngle()` returns the same reading with no offset or gearing conversion applied, and the module publishes it as `encoder`: that raw reading, taken with the wheel forward and the bevel gear left, is the offset. [Step 5: On the real robot](../tutorials/swerve-drive/real-robot.md#set-the-absolute-encoder-offsets) walks through it.
 
 ```java
 Angle angle = moduleConfig.getAbsoluteEncoderAngle();

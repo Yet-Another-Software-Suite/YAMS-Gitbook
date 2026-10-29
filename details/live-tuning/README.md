@@ -464,7 +464,7 @@ The command is published through `CommandTunable`. Set `NT:/Mechanisms/<name>/tu
 {% endtab %}
 {% endtabs %}
 
-Starting the command resets the translation and rotation PID controllers. Stopping it turns every mode off and holds the wheels where they are.
+Starting the command resets the translation and rotation PID controllers. It requires the drive, so it pauses the default drive command while it runs ([YAMS #247](https://github.com/Yet-Another-Software-Suite/YAMS/pull/247); before it, the default drive command could undo what you typed). Stopping it turns every mode off, holds the wheels where they are, and brings the default drive command back.
 
 ### Tune the swerve modules
 

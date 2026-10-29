@@ -3,7 +3,7 @@ description: Set the encoder offsets, check every direction, tune the modules an
 icon: robot
 ---
 
-# Step 4: On the real robot
+# Step 5: On the real robot
 
 The code from steps 1 to 3 drives in simulation. A real swerve drive needs four more things before it can drive safely: the right CAN IDs, an absolute encoder offset for every module, every motor and the gyro turning the right way, and tuned gains. This step does them in that order, and ends with the first drive on the ground.
 
@@ -153,7 +153,7 @@ Disable the robot. Watch `NT:/Mechanisms/swerve/gyro`, the heading in degrees, a
 {% step %}
 ### Tune the modules
 
-The gains from step 1 are placeholders. Tune the real modules on blocks, azimuth first so that the wheels point where they are told, then drive. Follow [Tune the swerve modules](../../details/live-tuning/README.md#tune-the-swerve-modules): it uses the same tuning command as the checks above, and says which value to raise and what the graph should look like.
+The gains from step 1 are placeholders. Tune the real modules on blocks, azimuth first so that the wheels point where they are told, then drive, the same way you practiced in [Step 4: Tune it](tune.md). [Tune the swerve modules](../../details/live-tuning/README.md#tune-the-swerve-modules) has every value and what the graph should look like.
 
 Copy the gains you find into `buildAzimuthCfg()` and `buildDriveCfg()` (C++: `ConfigureAzimuth` and `ConfigureDrive`), then deploy again. Values typed on the dashboard are lost when the code restarts.
 
