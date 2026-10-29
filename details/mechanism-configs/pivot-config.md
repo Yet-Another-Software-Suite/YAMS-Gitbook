@@ -29,5 +29,5 @@ new PivotConfig()
 
 ## Code reference
 
-* `PivotConfig`
-* `Pivot`
+* [`PivotConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/PivotConfig.java)
+* [`Pivot`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/positional/Pivot.java)

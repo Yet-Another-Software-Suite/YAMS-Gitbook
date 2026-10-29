@@ -178,17 +178,20 @@ public class SwerveSubsystem extends SubsystemBase {
         .withName("Drive to Pose");
   }
 
-  /** Point every module at its corner (X pattern) with zero drive speed, logging the desired states. */
+  /** Point every module at its corner (X pattern) without driving it, logging the desired states. */
   public Command lock() {
     return run(() -> {
       SwerveModule[] modules = config.getModules();
       SwerveModuleVelocity[] desiredStates = new SwerveModuleVelocity[modules.length];
       for (int i = 0; i < modules.length; i++) {
-        desiredStates[i] = new SwerveModuleVelocity(0,
+        // Each module points at its own corner, which makes the X.
+        // setAzimuthAngle turns the wheel without driving it and returns the state it set.
+        // A zero speed state through setSwerveModuleStates would be held where the wheel is
+        // by the velocity deadband.
+        desiredStates[i] = modules[i].setAzimuthAngle(
             modules[i].getConfig().getLocation().orElseThrow().getAngle().orElse(Rotation2d.ZERO));
       }
       Logger.recordOutput("Swerve/DesiredStates", desiredStates);
-      drive.setSwerveModuleStates(desiredStates);
     }).withName("Lock");
   }
 
@@ -223,6 +226,8 @@ drive.setDefaultCommand(drive.setFieldRelativeChassisSpeeds(
 {% hint style="warning" %}
 `SwerveDrive.lockPose()` turns every module to its corner (the X pattern) with zero drive speed, but it is marked as not compatible with AdvantageKit. The YAMS AdvantageKit example builds the same X pattern itself in `lock()`, turning each module with `SwerveModule.setAzimuthAngle(...)` so the [velocity deadband](../swerve-module.md#velocity-deadband) doesn't hold the wheels where they are, and the desired states are recorded with `Logger.recordOutput()` like every other drive command.
 {% endhint %}
+
+**Check:** run the code in simulation and drive with the left stick. In AdvantageScope, `AdvantageKit/Swerve/estimatedPose` on a 2D field moves with the robot, and `AdvantageKit/RealOutputs/Swerve/DesiredStates` changes as you drive.
 
 ## Commands v3
 

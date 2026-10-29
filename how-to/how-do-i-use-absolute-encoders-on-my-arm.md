@@ -95,6 +95,8 @@ Simulation has no physical encoder, so the absolute encoder reading is unavailab
 
 ## Complete examples
 
+The gains in these examples (`kP` of 4, and an `ArmFeedforward` of all zeros) are **placeholders**: with them the arm moves but sags below its setpoints. Find `kG` and then `kP` with [Step 5: Tune it](../tutorials/arm/tune.md).
+
 ### SparkMax + SparkAbsoluteEncoder
 
 ```java

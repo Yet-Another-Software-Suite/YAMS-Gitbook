@@ -36,7 +36,7 @@ new PivotConfig().withHardLimits(Degrees.of(-180), Degrees.of(180));
 
 The simulated mechanism stops dead at them, as the real one would against metal. They do not stop the real motor: that is what [`withSoftLimits`](../editor/config/limits-and-protection.md#withsoftlimits) is for. Set both, with the soft limits a little inside the hard ones.
 
-**Used in:** simulation only. **Required** for `Arm`, `Elevator` and `Pivot` to be created in simulation. On the real robot they do not stop the motor.
+**Used in:** simulation, where they are **required** for an `Arm`, `Elevator` or `Pivot` to be created, and on the real robot by `max()`, `min()`, `isAtMax()` and `isAtMin()` when no soft limit is set. On the real robot they never stop the motor.
 
 **Available on:** `ArmConfig` and `PivotConfig` (angles), `ElevatorConfig` (distances). **Not on** `FlyWheelConfig`: a flywheel has no end to its travel.
 
@@ -78,4 +78,4 @@ Places the mechanism on a drawing of the robot, so several mechanisms line up wh
 
 ## Code reference
 
-* `MechanismPositionConfig`
+* [`MechanismPositionConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/MechanismPositionConfig.java)

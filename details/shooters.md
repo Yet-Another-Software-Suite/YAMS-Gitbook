@@ -220,7 +220,11 @@ public Command stop()
 
 `set` takes a duty cycle from -1 to 1, and `setVoltage` a voltage. A voltage gives the same push as the battery drains, so prefer it. An intake is the same class with an `intake()` command. In Commands v3, write `stop()` as a lowest priority default command, as for the shooter above. [How do I set up an intake roller?](../how-to/how-do-i-set-up-an-intake-roller.md) has complete files for both.
 
-## When a flywheel will not reach its speed## Configuring and tuning a flywheel, step by step
+## When a flywheel will not reach its speed
+
+A flywheel that reaches low speeds but not high ones, or that slows down more with every shot, is usually short of power and not badly tuned: see [when tuning does not help](live-tuning/#when-tuning-does-not-help).
+
+## Configuring and tuning a flywheel, step by step
 
 Do the configuration steps first, in simulation, then tune the real flywheel with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
 

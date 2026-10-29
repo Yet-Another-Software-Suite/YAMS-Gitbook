@@ -30,7 +30,7 @@ On the real robot, `.wpilog` files are written to a USB drive if one is plugged 
 
 This walkthrough builds on the `SwerveSubsystem` from the [Swerve Drive tutorial](../tutorials/swerve-drive.md), with `withDataLogName(...)` added at three levels: the drive, each module, and (for field-level control) the azimuth motor inside each module.
 
-<figure><img src="../.gitbook/assets/datalog-walkthrough-1-configure.gif" alt=""><figcaption><p>Walking through <code>SwerveSubsystem</code>'s <code>createModule()</code> and constructor, showing where each <code>withDataLogName(...)</code> call goes.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-1-configure.gif" alt="Scrolling through SwerveSubsystem in the editor, stopping on each withDataLogName call: on the azimuth motor's telemetry config in createModule, on each module's telemetry config, and on the drive's telemetry config in the constructor."><figcaption><p>Walking through <code>SwerveSubsystem</code>'s <code>createModule()</code> and constructor, showing where each <code>withDataLogName(...)</code> call goes.</p></figcaption></figure>
 
 `createModule()` builds one module's drive/azimuth motors and the `SwerveModuleConfig`, and the constructor wires the drive-level DataLog name:
 

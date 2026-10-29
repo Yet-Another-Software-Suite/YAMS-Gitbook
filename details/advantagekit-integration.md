@@ -46,11 +46,12 @@ This means:
 
 ## Tutorial
 
-The tutorial builds an arm, an elevator and a shooter with the IO layer pattern, one step per page:
+The tutorial builds an arm with the IO layer pattern, one step per page, and shows the elevator and shooter IO classes alongside it. Start with Step 0:
 
 | Page                                                                                            | What it covers                                                                |
 | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [Step 1: Define the IO interface](advantagekit/io-interface.md)                                 | The inputs each mechanism logs, and the AdvantageKit setup in `build.gradle`. |
+| [Step 0: Install AdvantageKit and set up Robot](advantagekit/setup.md) | The vendor library, `build.gradle`, and `Robot` as a `LoggedRobot`. |
+| [Step 1: Define the IO interface](advantagekit/io-interface.md) | The inputs each mechanism logs. |
 | [Step 2: Implement the IO class](advantagekit/io-implementation.md)                             | One IO class per mechanism that works on the real robot and in simulation.    |
 | [Steps 3 and 4: The subsystem and RobotContainer](advantagekit/subsystem-and-robotcontainer.md) | The subsystem that uses the IO class, and wiring it up.                       |
 | [Log replay](advantagekit/log-replay.md)                                                        | Replaying a log, and the pattern in summary.                                  |

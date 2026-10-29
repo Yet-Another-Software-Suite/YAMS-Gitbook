@@ -37,6 +37,8 @@ new FlyWheelConfig().withSpeedometerSimulation(RPM.of(6000)); // the speed at th
 
 Give it the fastest speed you expect. `disableSpeedometerSimulation()` turns it back off.
 
+`withSpeedometerSimulation()`, with no speed, turns it back on with the speed you gave before, for example on a copy of a config that had it turned off. It throws a `FlyWheelConfigurationException` if no speed was ever given.
+
 **Used in:** simulation only.
 
 ## What else a flywheel needs
@@ -51,5 +53,5 @@ Give it the fastest speed you expect. `disableSpeedometerSimulation()` turns it 
 
 ## Code reference
 
-* `FlyWheelConfig`
-* `FlyWheel`
+* [`FlyWheelConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/FlyWheelConfig.java)
+* [`FlyWheel`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/velocity/FlyWheel.java)

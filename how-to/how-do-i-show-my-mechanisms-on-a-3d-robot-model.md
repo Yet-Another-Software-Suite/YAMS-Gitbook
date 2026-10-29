@@ -43,14 +43,13 @@ A part turns about the axis normal to its movement plane:
 
 {% tabs %}
 {% tab title="Java" %}
-```java
-import static org.wpilib.units.Units.Degrees;
+One YAMS mechanism per subsystem, so these are fragments of three subsystems. Each one exposes its mechanism's pose with a `getPose3d()` method.
 
-import org.wpilib.math.geometry.Rotation3d;
-import org.wpilib.math.geometry.Transform3d;
+{% code title="ElevatorSubsystem.java (fragment)" %}
+```java
+import org.wpilib.math.geometry.Pose3d;
 import org.wpilib.math.geometry.Translation3d;
 import yams.core.mechanisms.config.MechanismPositionConfig;
-import yams.core.mechanisms.config.MechanismPositionConfig.Plane;
 
 // An elevator 0.1 m behind the robot's center, its carriage 0.15 m off the floor at zero height.
 private final Elevator elevator = new Elevator(new ElevatorConfig()
@@ -58,13 +57,44 @@ private final Elevator elevator = new Elevator(new ElevatorConfig()
     .withMechanismPositionConfig(new MechanismPositionConfig()
         .withRelativePosition(new Translation3d(-0.1, 0, 0.15))), elevatorMotor);
 
-// An arm on the elevator's carriage, its axis 0.2 m above the carriage's reference point. It moves
-// with the carriage.
-private final Arm arm = new Arm(new ArmConfig()
-    // ... the rest of the config
-    .withMechanismPositionConfig(new MechanismPositionConfig()
-        .withParent(elevator::getPose3d)
-        .withRelativePosition(new Translation3d(0, 0, 0.2))), armMotor);
+public Pose3d getPose3d() {
+  return elevator.getPose3d();
+}
+```
+{% endcode %}
+
+{% code title="ArmSubsystem.java (fragment)" %}
+```java
+import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.math.geometry.Translation3d;
+import yams.core.mechanisms.config.MechanismPositionConfig;
+
+private final Arm arm;
+
+// The arm rides on the elevator's carriage, so it is given the elevator subsystem.
+public ArmSubsystem(ElevatorSubsystem elevator) {
+  // Its axis is 0.2 m above the carriage's reference point, and it moves with the carriage.
+  arm = new Arm(new ArmConfig()
+      // ... the rest of the config
+      .withMechanismPositionConfig(new MechanismPositionConfig()
+          .withParent(elevator::getPose3d)
+          .withRelativePosition(new Translation3d(0, 0, 0.2))), armMotor);
+}
+
+public Pose3d getPose3d() {
+  return arm.getPose3d();
+}
+```
+{% endcode %}
+
+{% code title="TurretSubsystem.java (fragment)" %}
+```java
+import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.math.geometry.Rotation3d;
+import org.wpilib.math.geometry.Transform3d;
+import org.wpilib.math.geometry.Translation3d;
+import yams.core.mechanisms.config.MechanismPositionConfig;
+import yams.core.mechanisms.config.MechanismPositionConfig.Plane;
 
 // A turret 0.3 m off the floor, turned 180° so that its 0° faces the back of the robot.
 private final Pivot turret = new Pivot(new PivotConfig()
@@ -72,7 +102,12 @@ private final Pivot turret = new Pivot(new PivotConfig()
     .withMechanismPositionConfig(new MechanismPositionConfig()
         .withMovementPlane(Plane.XY)
         .withRelativePosition(new Transform3d(new Translation3d(0, 0, 0.3), new Rotation3d(0, 0, Math.PI)))), turretMotor);
+
+public Pose3d getPose3d() {
+  return turret.getPose3d();
+}
 ```
+{% endcode %}
 {% endtab %}
 
 {% tab title="C++" %}
@@ -111,7 +146,8 @@ Publish every component's pose in one array, in the same order as the components
 import org.wpilib.math.geometry.Pose3d;
 import org.wpilib.telemetry.Telemetry;
 
-// In periodic(), or in Robot.robotPeriodic() with Commands v3.
+// Where all three subsystems are visible: RobotContainer with Commands v2 (call it every loop,
+// for example from Robot.robotPeriodic()), or Robot.robotPeriodic() with Commands v3.
 Telemetry.log("Robot/Components",
               new Pose3d[] {elevator.getPose3d(), arm.getPose3d(), turret.getPose3d()},
               Pose3d.struct);
@@ -259,3 +295,11 @@ A part mounted on another, such as an arm on an elevator's carriage, needs `with
 ### The parts are exported away from their starting position
 
 Export every part where it is at the robot's starting position. A part exported partway through its travel is drawn that far off.
+
+## Check it
+
+Start the simulation, open AdvantageScope's 3D Field tab with your robot model, and move each mechanism. Each part should move with its mechanism and stay attached to the robot, and the arm should rise with the elevator's carriage. If a part is in the wrong place, see the pitfalls above.
+
+## Next
+
+Record a match and replay it in AdvantageScope: [How do I view my DataLog in AdvantageScope?](how-do-i-view-my-datalog-in-advantagescope.md)

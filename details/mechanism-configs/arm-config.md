@@ -41,5 +41,5 @@ Angles on an `Arm` are measured from level: 0° is parallel to the ground and 90
 
 ## Code reference
 
-* `ArmConfig`
-* `Arm`
+* [`ArmConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/ArmConfig.java)
+* [`Arm`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/positional/Arm.java)

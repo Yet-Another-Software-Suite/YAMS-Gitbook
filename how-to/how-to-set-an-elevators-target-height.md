@@ -119,10 +119,10 @@ If the target comes from a `Supplier<Distance>`, `run(supplier)` and `runTo(supp
 ## If it did not work
 
 * **The carriage stops short of the target.** The target is outside your soft limits. YAMS clamps the setpoint to the nearest limit and prints a warning in the Driver Station. A `runTo` to a clamped target never ends.
-* **The carriage sags below the target, or slides down when you let go.** `kG` is still 0. The tutorial's gains are placeholders. Find `kG` first (the smallest voltage that holds the carriage still), then `kP`; the steps are the same as [Step 5: Tune it](../tutorials/arm/tune.md) for the arm.
+* **The carriage sags below the target, or slides down when you let go.** `kG` is still 0. The tutorial's gains are placeholders. Find `kG` first (the voltage that holds the carriage still), then `kP`, with [Step 5: Tune it](../tutorials/elevator/tune.md).
 * **The carriage goes to the wrong height, off by the same factor every time.** The drum radius or circumference is wrong. See [How do I command my elevator in meters?](how-to-find-your-mechanism-circumference.md)
 * **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
 
 ## Next
 
-Tune the elevator so it reaches the target quickly and holds it: follow [Step 5: Tune it](../tutorials/arm/tune.md), using `ElevatorFeedforward` in place of `ArmFeedforward`.
+Tune the elevator so it reaches the target quickly and holds it: [Step 5: Tune it](../tutorials/elevator/tune.md).
