@@ -62,6 +62,36 @@ Any missing step is the most important finding in the review.
 * When two tutorials repeat the same steps (arm and elevator), the second should say what is the same, link back, and spend its words on what differs (gravity, linear units, carriage mass).
 * Flag two pages that explain the same confusion in different ways (for example `run()` vs `runTo()` and setpoint methods). Merge them, or give each a clear different job.
 
+### Steps: steppers first, sub-step pages for complex work
+
+Anything the reader does in order, such as setup steps, a tuning sequence or checks on the robot, goes in a GitBook stepper on the page, not in numbered headings:
+
+```markdown
+{% stepper %}
+{% step %}
+### Turn the wheels
+
+What to do, then **Check it:** what the reader should see.
+{% endstep %}
+
+{% step %}
+### Tune the azimuth kP
+
+...
+{% endstep %}
+{% endstepper %}
+```
+
+* **Prefer one page with a stepper.** If the steps fit in one sitting (the sizes above), keep them on one page. A how-to with three to eight steps belongs on one page.
+* **Split into sub-step pages only for complex work:** when a single step needs its own code tabs and a complete file, or the steps together are far too long for one page. The tutorials do this: Arm has a page per step, under the Arm overview page in `SUMMARY.md`. Each sub-step page still puts its own parts in a stepper.
+* **Step headings have no numbers.** The stepper numbers the steps, so `### Turn the wheels`, not `### 1. Turn the wheels`. Inside a step, a further heading goes one level down (`####`).
+* **Each step ends with something to check,** as Step 2 asks.
+* **Tabs can go inside a step, but tabs cannot go inside tabs.** For a stepper inside a tab (one per mechanism, or per tool), flatten any code-language tabs in its steps into a short list or separate code blocks.
+* **Keep what is not a step outside the stepper:** "Before you start", "The complete file", "Check it", "What you should see" and "If it did not work".
+* **Point at a step by its name, not its number,** such as "as in [Tune the azimuth kP](#tune-the-azimuth-kp)": the numbers move when a step is added.
+
+Flag numbered headings (`## 1. ...`) for ordered steps as **Minor**. Flag a short sequence spread across several pages, or a long one crammed into a single stepper, as **Major**.
+
 ## Step 5: Examples
 
 * Every code block compiles as shown, or says clearly that it is a fragment and where it goes.
