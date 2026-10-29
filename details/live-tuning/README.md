@@ -441,7 +441,7 @@ The simulation does not know about the spring: it models the full carriage weigh
 | What | Where it is published |
 | --- | --- |
 | Values you type | `NT:/Tuning/<name>/<key>` |
-| The tuning command | `NT:/Mechanisms/<name>/tuning` |
+| The tuning command | `NT:/Tuning/<name>/Live Tuning` |
 | The robot pose to watch | `NT:/Mechanisms/<name>/pose` |
 
 `<name>` is the name given to `SwerveDriveConfig.withTelemetry(name, ...)`. The keys are published at `TelemetryVerbosity.HIGH`.
@@ -456,11 +456,11 @@ The tuning command is only published when both a translation and a rotation cont
 
 {% tabs %}
 {% tab title="Commands v2" %}
-Drag `NT:/Mechanisms/<name>/tuning` onto your Elastic dashboard and press its button, or bind it to a controller button.
+Drag `NT:/Tuning/<name>/Live Tuning` onto your Elastic dashboard and press its button, or bind it to a controller button.
 {% endtab %}
 
 {% tab title="Commands v3" %}
-The command is published through `CommandTunable`. Set `NT:/Mechanisms/<name>/tuning/running` to `true` to start it and `false` to stop it.
+The command is published through `CommandTunable`. Set `NT:/Tuning/<name>/Live Tuning/running` to `true` to start it and `false` to stop it.
 {% endtab %}
 {% endtabs %}
 
@@ -507,7 +507,7 @@ Watch one azimuth motor's `mechanism/position` against its `closedloop/setpoint/
 {% step %}
 #### Start the tuning command and turn the mode on
 
-Start `NT:/Mechanisms/<name>/tuning`, type `0` into `modules/azimuth/angle`, then set `modules/azimuth/enabled` to `true`. The drive motors are held at 0, so the wheels only turn in place.
+Start `NT:/Tuning/<name>/Live Tuning`, type `0` into `modules/azimuth/angle`, then set `modules/azimuth/enabled` to `true`. The drive motors are held at 0, so the wheels only turn in place.
 {% endstep %}
 
 {% step %}
@@ -565,7 +565,7 @@ Watch one drive motor's `measurement/velocity` against its `closedloop/setpoint/
 {% step %}
 #### Start the tuning command and turn the mode on
 
-Start `NT:/Mechanisms/<name>/tuning`, type `0` into `modules/drive/velocity`, then set `modules/drive/enabled` to `true`.
+Start `NT:/Tuning/<name>/Live Tuning`, type `0` into `modules/drive/velocity`, then set `modules/drive/enabled` to `true`.
 {% endstep %}
 
 {% step %}

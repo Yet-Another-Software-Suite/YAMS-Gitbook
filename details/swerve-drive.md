@@ -401,7 +401,7 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 | Modules azimuth voltage enabled (tunable)  | `modules/azimuth/voltage/enabled`   |       |       |    ✓   |
 
 {% hint style="info" %}
-`autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and `autoalign/enabled`, and the `modules/drive/*`/`modules/azimuth/*` tuning fields, only take effect while the `Mechanisms/<name>/tuning` command is scheduled, since that's the loop that actually reads them. Publishing values to them with the tuning command idle has no effect on the robot.
+`autoalign/setpoint/x`/`autoalign/setpoint/y`/`autoalign/setpoint/rot` and `autoalign/enabled`, and the `modules/drive/*`/`modules/azimuth/*` tuning fields, only take effect while the `Tuning/<name>/Live Tuning` command is scheduled, since that's the loop that actually reads them. Publishing values to them with the tuning command idle has no effect on the robot.
 {% endhint %}
 
 {% hint style="warning" %}
