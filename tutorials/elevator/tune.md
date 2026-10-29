@@ -32,6 +32,8 @@ The [YAMS Live Tuner](../../details/live-tuning/live-tuner.md) is a web page tha
 
 Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, and press **Connect**. If your browser asks whether the page may connect to devices on your local network, allow it.
 
+<figure><img src="../../.gitbook/assets/live-tuner-connect.png" alt="The Live Tuner header connected to a simulation on localhost, with the robot in Teleop and enabled"><figcaption><p>Connected to the simulation, with the robot enabled in Teleop.</p></figcaption></figure>
+
 **Check it:** the badge in the header shows `localhost`, with the robot enabled in Teleop.
 {% endstep %}
 
@@ -42,6 +44,8 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 2. Under **Live Tuning command**, choose `ElevatorSubsystem` (Commands v2 and C++) or `ElevatorMechanism` (Commands v3).
 3. Set **Type** to **Elevator**. Setpoints are in meters.
 4. Press **Continue**.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-mechanism.png" alt="The Mechanism step with Elevator/ElevatorMotor as the telemetry name, ElevatorSubsystem as the Live Tuning command and Elevator as the type, so setpoints are in meters"><figcaption><p>The tutorial elevator: its motor, its subsystem's <code>Live Tuning</code> command, and the Elevator type.</p></figcaption></figure>
 
 **Check it:** the telemetry card shows the carriage at 0 m.
 {% endstep %}
@@ -54,6 +58,8 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 3. Type `1` under **Type a voltage** and press **Enter**. The carriage rises. Gravity pulls it down, so it can need more voltage to rise than to fall.
 4. Type `0`, then press **Finish check**.
 
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-inversions.png" alt="Holding a typed 1 V: Positive voltage moves up is ticked and Finish check is enabled"><figcaption><p>At 1 V the carriage rises, so <strong>Positive voltage moves up</strong> is ticked.</p></figcaption></figure>
+
 **Check it:** **Positive voltage moves up** was ticked when the carriage rose. If the Live Tuner warns that the height went the wrong way, the motor or encoder inversion in step 1 is wrong.
 {% endstep %}
 
@@ -61,6 +67,8 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 ### Set the range of motion
 
 Choose **Enter range manually**. The ends start at the soft limits from step 1, 0 and 2 meters, so press **Use this range**.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-range.png" alt="Enter range manually chosen, with the lower end at 0 and the upper end at 2 meters, the soft limits, and Use this range"><figcaption><p>The ends start at the elevator's soft limits.</p></figcaption></figure>
 
 **Check it:** the Live tune card opens.
 {% endstep %}
@@ -75,6 +83,8 @@ Press **Start Live Tuning**. The setpoints and gains you send are now applied to
 1. On the **Setpoints** tab, type `1` and press **Send**. The carriage rises, then settles below 1 m: about 0.85 m with the placeholder `kP`.
 2. Once it has stopped, read its output voltage on the telemetry card. For this elevator it reads about `0.6`.
 3. Type that voltage into **kG** on the Settings card's **Gains** tab, and press **Enter**.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-kg.png" alt="Live tuning the elevator at a 1 m setpoint after kG is set to 0.6: the measured height climbs from about 0.85 m onto the setpoint, with the output at 0.67 V"><figcaption><p>With kG at 0.6 V, the carriage climbs from where it sagged onto the 1 m setpoint.</p></figcaption></figure>
 
 **Check it:** the measured height moves up onto the 1 m setpoint on the graph and stays there. Send `0.5`, then `1.5`: the carriage holds each one without sagging.
 {% endstep %}
@@ -94,6 +104,8 @@ A change that made it worse? Press **was** under the value to put the last one b
 
 <figure><img src="../../.gitbook/assets/live-tuning-response.png" alt="Three step responses: kP too low rises slowly and stops short, about right settles quickly on the setpoint, kP too high overshoots and rings"><figcaption><p>What the height looks like on the graph after each setpoint change.</p></figcaption></figure>
 
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-alternate.png" alt="Alternate setpoints on, switching between 0.5 and 1 m with kP at 40: the measured height follows each step up and back down"><figcaption><p>kP 40 and kD 1, alternating between 0.5 and 1 m.</p></figcaption></figure>
+
 **Check it:** after each change of setpoint the carriage follows the setpoint closely and stops on it, within a centimeter or so, without bouncing.
 {% endstep %}
 
@@ -105,6 +117,8 @@ The motion profile limits how fast the carriage moves and speeds up. On the **Ga
 1. Set **Setpoint B** to `1.5`, then raise **Max velocity** and **Max acceleration** a step at a time.
 2. Stop raising them when the measured height falls behind the setpoint while it moves, or the stator current on the graph jumps. This NEO and 12:1 gearing can lift the carriage at about 1.1 m/s at most, so keep **Max velocity** well below that.
 3. Raise **kV** until the measured height follows the setpoint during a move, instead of falling behind and catching up at the end. For this elevator it ends up near `10`: about 12 volts divided by the 1.1 m/s top speed.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-elevator-gains.png" alt="The Settings card's Gains tab for the elevator: kP 40, kD 1, kV 10, kG 0.6 V, Max velocity 0.8 m/s and Max accel 1 m/s squared, each with was under it"><figcaption><p>Max velocity raised to 0.8 m/s and max acceleration to 1 m/s², with kV at 10.</p></figcaption></figure>
 
 **Check it:** the carriage follows the setpoint through each move and arrives without lagging. Press **Space** to stop when you are done.
 {% endstep %}
