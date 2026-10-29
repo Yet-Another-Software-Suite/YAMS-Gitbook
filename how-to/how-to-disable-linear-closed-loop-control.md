@@ -1,30 +1,66 @@
-# How do I turn off linear closed loop control?
+# How do I tune my elevator in rotations instead of meters?
 
-YAMS defaults to closed-loop position or velocity control expressed in linear units (meters and meters per second) for mechanisms that have a wheel diameter or drum radius configured. There are specific situations, open-loop testing, duty-cycle-based control for simple mechanisms, or debugging actuator response, where you want to read linear measurement data without having the closed-loop controller operate in those linear units. Disabling linear closed-loop lets you get `Measurement` values in meters while still supplying angular setpoints, without restructuring your subsystem.
-
-<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>Measurement, Mechanism, and Rotor units</p></figcaption></figure>
+**Goal:** keep the closed loop controller (its error, `kP` and profile limits) in rotations, while still reading positions and speeds in meters.
 
 ## What is linear closed loop control?
 
-Linear closed loop control is when the closed loop controller operate in `meters` and `meters per second` instead of `rotations` and `rotations per second`. This directly affects your PID gains.
+YAMS's closed loop controller can work in one of two units:
+
+* **Angle based** (rotations). The error is in rotations, `kP` is in volts per rotation, and profile limits are in rotations per second.
+* **Distance based**, or **linear** (meters). The error is in meters, `kP` is in volts per meter, and profile limits are in meters per second.
 
 <figure><img src="../.gitbook/assets/smc-linear-units.png" alt="Two panels. Angle based, the default: error is measured in rotations, kP is in volts per rotation and profile limits are in rotations per second, for arms, pivots, turrets and flywheels. Distance based: error in meters, kP in volts per meter and profile limits in meters per second, for elevators and other linear mechanisms."><figcaption><p>The units the gains and limits are in.</p></figcaption></figure>
 
-## When would I want to disable it?
+The units change what your gains mean: a `kP` of 4 volts per meter is a very different controller from 4 volts per rotation.
 
-Sometimes you would like to get `Measurement` (like `SmartMotorController.getMeasurementPosition` and `SmartMotorController.getMeasurementVelocity`) data without enabling linear closed loop control.
+## When is it on?
 
-* Measuring shooter speed in `meters per second` for easier shoot on the move calculation
-* Supplying linear velocity or data which is translated to angle's or angular velocities inside of the `SmartMotorController`.
+It is **off by default**. Setting a circumference (`withWheelDiameter`, `withDrumRadius` and so on) does not turn it on; that only lets YAMS report distances. These `SmartMotorControllerConfig` calls turn it on:
 
-## How do I disable it?
+* `withFeedforward(ElevatorFeedforward)` or `withSimFeedforward(ElevatorFeedforward)`
+* `withTrapezoidalProfile(LinearVelocity, LinearAcceleration)` (a profile in meters per second)
+* `withTrapezoidalProfile(LinearAcceleration, Velocity<LinearAccelerationUnit>)`
+* `withExponentialProfile(Voltage, DCMotor, Mass, Distance)` (the elevator form)
 
-Inside of your `SmartMotorControllerConfig` you would use `withLinearClosedLoopController(false)`
+So a typical elevator config uses linear closed loop control without you asking for it.
 
-<pre class="language-java"><code class="lang-java">SmartMotorControllerConfig motorConfig        = new SmartMotorControllerConfig(this)
-      .withControlMode(ControlMode.CLOSED_LOOP)
-      .withWheelDiameter(Inches.of(4))
-      .withZeroPower(MotorMode.COAST)
-      .withClosedLoopController(50,0,0)
-<strong>      .withLinearClosedLoopController(false);
-</strong></code></pre>
+## When would I turn it off?
+
+* You tuned an elevator in rotations and want to keep those gains.
+* You are copying gains from a tool or another robot that works in rotations.
+* You use an `ElevatorFeedforward` for a mechanism that you want to control in rotations.
+
+Turning it off does not stop YAMS reporting distances. `getMeasurementPosition()` and `getMeasurementVelocity()` still return meters, as long as the circumference is set.
+
+## Turn it off
+
+Add `withLinearClosedLoopController(false)` **after** every call in the list above. Those calls switch it back on, so if one comes later in the chain, your `false` is lost.
+
+{% code title="ExampleSubsystem.java (fragment)" %}
+```java
+SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withDrumRadius(Inches.of(0.25), 22)
+    // Placeholder gains, now in volts per rotation. Tune them for your elevator.
+    .withClosedLoopController(4, 0, 0)
+    .withFeedforward(new ElevatorFeedforward(0, 0, 0))   // turns linear on...
+    // ...so this comes last, to turn it off again.
+    .withLinearClosedLoopController(false);
+```
+{% endcode %}
+
+Your profile limits must then be angular too, for example `withTrapezoidalProfile(RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(4))`, placed before the `false`.
+
+## Check it
+
+1. Deploy (or start the simulation) and command a height.
+2. Under **NetworkTables > Mechanisms**, the motor's `closedloop/setpoint/position` is now in rotations, while `measurement/position` is still in meters.
+
+## If it did not work
+
+* **The setpoint is still in meters.** A call from the list above comes after `withLinearClosedLoopController(false)`. Move the `false` to the end of the chain.
+* **The elevator is much too soft or too aggressive.** Your gains were tuned in the other unit. Tune `kP` again; see [Troubleshooting](../tutorials/troubleshooting.md).
+
+## Next
+
+Command the elevator in meters: [How do I set an elevator's target height?](how-to-set-an-elevators-target-height.md)

@@ -6,11 +6,7 @@ icon: gears
 
 These options tell YAMS how the motor's rotation becomes the mechanism's movement. Every position and velocity YAMS reports depends on them, so get them right before tuning.
 
-<figure><img src="../../../.gitbook/assets/image.png" alt="A diagram naming the rotor, the mechanism and the measurement of a geared mechanism"><figcaption><p>Rotor, mechanism and measurement.</p></figcaption></figure>
-
-* **Rotor** is the motor's own shaft.
-* **Mechanism** is the output after the gearing: an arm's pivot, an elevator's drum, a flywheel's axle.
-* **Measurement** is the distance the mechanism travels, for mechanisms that move in a line.
+The options on this page connect the **rotor** (the motor's own shaft), the **mechanism** (the output after the gearing) and the **measurement** (the distance a mechanism moves in a line). [Rotor, mechanism and measurement](../../how-yams-drives-a-motor.md#rotor-mechanism-and-measurement) defines them with a picture.
 
 ## `withGearing`
 

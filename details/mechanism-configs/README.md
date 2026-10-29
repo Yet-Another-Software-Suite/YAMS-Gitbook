@@ -48,7 +48,7 @@ The swerve configs are different enough to have their own pages and their own op
 ## What simulation needs
 
 {% hint style="warning" %}
-Most mechanism config options describe the mechanism to the simulator and do nothing on the real robot. Some of them are **required** in simulation: the mechanism throws when it is created in simulation if they are missing. The exception is the mechanism's own, such as an `ArmConfigurationException` or a `PivotConfigurationException`, or a `SmartMotorControllerConfigurationException` when the missing option belongs to the motor config, such as an elevator's starting height. Each option page says where the option is used.
+Most mechanism config options describe the mechanism to the simulator and do nothing on the real robot. Some of them are **required** in simulation: if one is missing, the mechanism throws an exception when it is created in simulation, and the robot code stops. A missing option on the mechanism config throws that mechanism's own exception, such as an `ArmConfigurationException` or a `PivotConfigurationException`. A missing option on the motor config, such as an elevator's starting height, throws a `SmartMotorControllerConfigurationException`. Each option page says where the option is used.
 {% endhint %}
 
 | Mechanism  | Must be set for simulation to start                                                                                                                                                                                                                                                                            |
@@ -73,9 +73,9 @@ Several things you might look for on a mechanism config are on the motor's confi
 
 ## Code reference
 
-* `ArmConfig`
-* `ElevatorConfig`
-* `PivotConfig`
-* `FlyWheelConfig`
-* `SwerveDriveConfig`
-* `SwerveModuleConfig`
+* [`ArmConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/ArmConfig.java)
+* [`ElevatorConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/ElevatorConfig.java)
+* [`PivotConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/PivotConfig.java)
+* [`FlyWheelConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/FlyWheelConfig.java)
+* [`SwerveDriveConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/SwerveDriveConfig.java)
+* [`SwerveModuleConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/SwerveModuleConfig.java)

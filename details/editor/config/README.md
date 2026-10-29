@@ -38,14 +38,17 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withZeroPower(MotorMode.BRAKE)
     .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
 
+SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
 SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), config);
 ```
+
+This is a fragment: it goes inside a subsystem, which is the `this` passed to the config. [Step 1 of the Arm tutorial](../../../tutorials/arm/motor-controller.md) builds the same thing as a complete file.
 
 Three things are worth knowing before reading the option pages:
 
 * **Every `with...()` method returns the config**, so options chain. A few options depend on an earlier one and say so on their page, for example `withClosedLoopTolerance` needs a PID controller first.
 * **Options are checked when the wrapper is created.** An option that motor controller cannot do throws an exception, so problems show up at startup and not mid-match. It is usually a `SmartMotorControllerConfigurationException` that names the method to change, and for a few options an `IllegalArgumentException`. Each option says which.
-* **A mechanism adds to the config for you.** `Arm`, `Elevator`, `Pivot` and `FlyWheel` configs forward options such as `withSoftLimits` to the motor's config, so set those on the mechanism where one exists.
+* **The motor's config holds the motor's limits.** Soft limits, starting position and gearing go on the `SmartMotorControllerConfig`, even when a mechanism uses the motor. The mechanism's own config (`ArmConfig`, `ElevatorConfig` and so on) describes the mechanism: its length, mass and hard stops.
 
 ## Not every option works on every motor controller
 
@@ -53,27 +56,14 @@ Three things are worth knowing before reading the option pages:
 Motor controllers differ. Some options only exist on one of them, and some only work in certain situations, for example only when the closed loop runs on the SystemCore. An option a controller cannot do normally throws a `SmartMotorControllerConfigurationException` or an `IllegalArgumentException` at startup, but check the table for each option you rely on.
 {% endhint %}
 
-Every option on the following pages has a table showing where it works. These are the ones that are **not** supported everywhere:
+Every option on the following pages has a table showing where it works. The [motor controller feature matrix](../feature-matrix.md#feature-support-matrix) has every option against every motor controller in one place. The ones that most often catch teams out:
 
-| Option                                                                                                                                                 | TalonFX                              | TalonFXS                             | SPARK MAX / Flex                                            | Thrifty Nova                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ | ------------------------------------ | ----------------------------------------------------------- | ---------------------------------------- |
-| [`withEncoderInverted`](encoders.md#withencoderinverted)                                                                                               | ❌                                    | ✅                                    | ❌                                                           | ❌                                        |
-| [`withVendorControlRequest`](motor-basics.md#withvendorcontrolrequest)                                                                                 | ✅                                    | ✅                                    | ❌                                                           | ❌                                        |
-| [`withSupplyCurrentLimit`](limits-and-protection.md#current-limits)                                                                                    | ✅                                    | ✅                                    | ❌                                                           | ✅                                        |
-| [`withVoltageCompensation`](limits-and-protection.md#withvoltagecompensation)                                                                          | ❌                                    | ❌                                    | ✅                                                           | ✅                                        |
-| [`withClosedLoopTolerance`](closed-loop-control.md#withclosedlooptolerance)                                                                            | ❌                                    | ❌                                    | ⚠️ not with [LQR](../lqr-controllers.md)                    | ⚠️ not with [LQR](../lqr-controllers.md) |
-| [Closed loop `SLOT_3`](closed-loop-control.md#slots)                                                                                                   | ❌                                    | ❌                                    | ✅                                                           | ✅                                        |
-| [`withClosedLoopControllerMaximumVoltage`](closed-loop-control.md#withclosedloopcontrollermaximumvoltage)                                              | ✅                                    | ✅                                    | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ✅                                        |
-| [`withClosedLoopControlPeriod`](closed-loop-control.md#withclosedloopcontrolperiod)                                                                    | ❌                                    | ❌                                    | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ⚠️ closed loop mode only                 |
-| [`withTemperatureCutoff`](limits-and-protection.md#withtemperaturecutoff)                                                                              | ⚠️ [LQR](../lqr-controllers.md) only | ⚠️ [LQR](../lqr-controllers.md) only | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ⚠️ closed loop mode only                 |
-| [`withFeedbackSynchronizationThreshold`](encoders.md#withfeedbacksynchronizationthreshold)                                                             | ❌                                    | ❌                                    | ⚠️ exponential profile or [LQR](../lqr-controllers.md) only | ⚠️ closed loop mode only                 |
-| [Separate open and closed loop ramp rates](limits-and-protection.md#ramp-rates)                                                                        | ✅                                    | ✅                                    | ✅                                                           | ❌ one shared ramp rate                   |
-| [`withExternalEncoderZeroOffset`](encoders.md#withexternalencoderzerooffset), [discontinuity point](encoders.md#withexternalencoderdiscontinuitypoint) | ✅                                    | ✅                                    | ⚠️ absolute encoders only                                   | ⚠️ absolute and CAN encoders only        |
-| [`withSoftLimits`](limits-and-protection.md#withsoftlimits)                                                                                            | ✅                                    | ✅                                    | ⚠️ closed loop mode only                                    | ✅                                        |
+* **TalonFX and TalonFXS:** no [`withClosedLoopTolerance`](closed-loop-control.md#withclosedlooptolerance), no [`withVoltageCompensation`](limits-and-protection.md#withvoltagecompensation), no `SLOT_3`, and [`withEncoderInverted`](encoders.md#withencoderinverted) only on a TalonFXS.
+* **SPARK MAX and SPARK Flex:** no [supply current limit](limits-and-protection.md#withstatorcurrentlimit-and-withsupplycurrentlimit) and no [`withVendorControlRequest`](motor-basics.md#withvendorcontrolrequest). Several options only work when the loop runs on the SystemCore, with an exponential profile or an [LQR](../lqr-controllers.md).
+* **Thrifty Nova:** everything closed loop runs on the SystemCore, and it has [one ramp rate](limits-and-protection.md#withopenloopramprate-and-withclosedloopramprate) for open and closed loop control.
+* **Everywhere:** [soft limits](limits-and-protection.md#withsoftlimits) only work in closed loop mode, and [`withVendorConfig`](motor-basics.md#withvendorconfig), [`withExternalEncoder`](encoders.md#withexternalencoder) and [`withFollowers`](followers.md#withfollowers) only take that vendor's own parts.
 
-Three more work everywhere but only with that vendor's own parts: [`withVendorConfig`](motor-basics.md#withvendorconfig), [`withExternalEncoder`](encoders.md#withexternalencoder) and [`withFollowers`](followers.md#withfollowers).
-
-Many of the ⚠️ entries depend on where the closed loop runs, which is explained in [where the loop runs](closed-loop-control.md#where-the-loop-runs). The [motor controller feature matrix](../feature-matrix.md) has every option, including the ones that work everywhere, in one place.
+Many of these depend on where the closed loop runs, which is explained in [where the loop runs](closed-loop-control.md#where-the-loop-runs).
 
 ## Changing a config later
 

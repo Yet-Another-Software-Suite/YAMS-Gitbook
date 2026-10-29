@@ -47,6 +47,8 @@ YAMS keeps a pointer to each config, so in C++ a config cannot be a temporary. T
 
 The drive motor turns the wheel and is **velocity** controlled. It needs the wheel diameter to turn rotations into distance, a PID controller, and a feedforward whose `kV` does most of the work of holding a speed.
 
+The gains are placeholders. `kV` is the voltage for each wheel rotation per second: a NEO turns a 6.75:1 wheel about 14 times a second at 12 volts, so `12 / 14`, about `0.85`, is close. With it the robot drives at roughly the speed you ask for. If it drives noticeably slower than the stick asks, `kV` is too low; if it lurches past the speed, it is too high. [Step 4](real-robot.md) tunes it properly.
+
 {% tabs %}
 {% tab title="Java, Commands v2" %}
 {% code title="subsystems/SwerveSubsystem.java" %}
@@ -58,10 +60,13 @@ private SmartMotorControllerConfig buildDriveCfg() {
       .withWheelDiameter(Inches.of(4))
       // kP trims the velocity error that is left after the feedforward.
       .withClosedLoopController(0.3, 0, 0)
-      // Gearing from the motor rotor to the wheel.
-      .withGearing(new MechanismGearing(12.75))
-      // kV does most of the work of holding a speed.
-      .withFeedforward(new SimpleMotorFeedforward(0, 12.0 / (MetersPerSecond.of(1).in(MetersPerSecond) / Inches.of(4).in(Meters)), 0.01))
+      // Gearing from the motor rotor to the wheel: 6.75:1, an MK4 L2 module.
+      .withGearing(new MechanismGearing(6.75))
+      // kV, in volts per wheel rotation per second, does most of the work of holding a speed.
+      // 0.85 is a placeholder, about right for a NEO on 6.75:1. Step 4 tunes it.
+      .withFeedforward(new SimpleMotorFeedforward(0, 0.85))
+      // Set this to true if the wheel spins backward when it is told to drive forward.
+      .withMotorInverted(false)
       .withStatorCurrentLimit(Amps.of(40))
       .withTelemetry("driveMotor", TelemetryVerbosity.HIGH);
 }
@@ -79,10 +84,13 @@ private SmartMotorControllerConfig buildDriveCfg() {
       .withWheelDiameter(Inches.of(4))
       // kP trims the velocity error that is left after the feedforward.
       .withClosedLoopController(0.3, 0, 0)
-      // Gearing from the motor rotor to the wheel.
-      .withGearing(new MechanismGearing(12.75))
-      // kV does most of the work of holding a speed.
-      .withFeedforward(new SimpleMotorFeedforward(0, 12.0 / (MetersPerSecond.of(1).in(MetersPerSecond) / Inches.of(4).in(Meters)), 0.01))
+      // Gearing from the motor rotor to the wheel: 6.75:1, an MK4 L2 module.
+      .withGearing(new MechanismGearing(6.75))
+      // kV, in volts per wheel rotation per second, does most of the work of holding a speed.
+      // 0.85 is a placeholder, about right for a NEO on 6.75:1. Step 4 tunes it.
+      .withFeedforward(new SimpleMotorFeedforward(0, 0.85))
+      // Set this to true if the wheel spins backward when it is told to drive forward.
+      .withMotorInverted(false)
       .withStatorCurrentLimit(Amps.of(40))
       .withTelemetry("driveMotor", TelemetryVerbosity.HIGH);
 }
@@ -107,11 +115,13 @@ void SwerveSubsystem::ConfigureDrive(Cfg& config) {
       .WithMechanismDiameter(4_in)
       // kP trims the velocity error that is left after the feedforward.
       .WithFeedback(0.3, 0, 0)
-      // Gearing from the motor rotor to the wheel.
-      .WithMotorGearing(12.75)
-      // kV does most of the work of holding a speed.
-      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t<Feedforward::kv_unit>{12.0 / (1.0 / 0.1016)},
-                                   wpi::units::unit_t<Feedforward::ka_unit>{0.01}})
+      // Gearing from the motor rotor to the wheel: 6.75:1, an MK4 L2 module.
+      .WithMotorGearing(6.75)
+      // kV, in volts per wheel rotation per second, does most of the work of holding a speed.
+      // 0.85 is a placeholder, about right for a NEO on 6.75:1. Step 4 tunes it.
+      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t<Feedforward::kv_unit>{0.85}})
+      // Set this to true if the wheel spins backward when it is told to drive forward.
+      .WithMotorInverted(false)
       .WithStatorCurrentLimit(40_A)
       .WithTelemetry("driveMotor", Cfg::TelemetryVerbosity::HIGH);
 }
@@ -120,13 +130,16 @@ void SwerveSubsystem::ConfigureDrive(Cfg& config) {
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set your wheel diameter and your module's drive gear ratio. Your module's maker publishes the ratio.
+**For your robot:** Set your wheel diameter and your module's drive gear ratio. Your module's maker publishes the ratio: this tutorial uses an MK4 L2, which is 6.75:1. Leave `withMotorInverted(false)` for now: [Step 4](real-robot.md#4-check-the-directions) checks which way the wheel spins and tells you when to change it.
 
 Want the details? [Live tuning](../../details/live-tuning/README.md) has a section on tuning a swerve module's drive motor.
 
 ## 2. The azimuth motor config
 
-The azimuth motor steers the module and is **position** controlled.
+The azimuth motor steers the module and is **position** controlled. Two settings matter here:
+
+* **`withContinuousWrapping`** tells the controller that the wheel can turn all the way round, so -180 and +180 degrees are the same angle. Without it a wheel at 170 degrees asked for -170 degrees spins nearly a full turn the long way, instead of 20 degrees the short way. It must come after `withClosedLoopController`.
+* **`withMotorInverted`** sets which way the motor turns. Angles are counter-clockwise positive, seen from above, so a positive command must turn the wheel counter-clockwise. [Step 4](real-robot.md#4-check-the-directions) checks it.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -135,10 +148,15 @@ The azimuth motor steers the module and is **position** controlled.
 /** The config of one azimuth (steering) motor. Azimuth motors are position controlled. */
 private SmartMotorControllerConfig buildAzimuthCfg() {
   return new SmartMotorControllerConfig(this)
-      .withClosedLoopController(1, 0, 0)
-      .withFeedforward(new SimpleMotorFeedforward(0, 1))
-      // Gearing from the motor rotor to the module's steering axis.
-      .withGearing(new MechanismGearing(6.75))
+      // kP, in volts per rotation of angle error. A placeholder: Step 4 tunes it.
+      .withClosedLoopController(4, 0, 0)
+      // The wheel turns all the way round, so -180 and +180 degrees are the same angle.
+      // Without this, a wheel at 170 degrees asked for -170 turns the long way round.
+      .withContinuousWrapping(Rotations.of(-0.5), Rotations.of(0.5))
+      // Gearing from the motor rotor to the module's steering axis: 12.8:1, an MK4 module.
+      .withGearing(new MechanismGearing(12.8))
+      // Set this to true if the wheel turns clockwise, seen from above, when told to turn counter-clockwise.
+      .withMotorInverted(false)
       // The azimuth motor rarely works hard, so it gets a lower limit.
       .withStatorCurrentLimit(Amps.of(20))
       .withTelemetry("angleMotor", TelemetryVerbosity.HIGH);
@@ -153,10 +171,15 @@ private SmartMotorControllerConfig buildAzimuthCfg() {
 /** The config of one azimuth (steering) motor. Azimuth motors are position controlled. */
 private SmartMotorControllerConfig buildAzimuthCfg() {
   return new SmartMotorControllerConfig(this)
-      .withClosedLoopController(1, 0, 0)
-      .withFeedforward(new SimpleMotorFeedforward(0, 1))
-      // Gearing from the motor rotor to the module's steering axis.
-      .withGearing(new MechanismGearing(6.75))
+      // kP, in volts per rotation of angle error. A placeholder: Step 4 tunes it.
+      .withClosedLoopController(4, 0, 0)
+      // The wheel turns all the way round, so -180 and +180 degrees are the same angle.
+      // Without this, a wheel at 170 degrees asked for -170 turns the long way round.
+      .withContinuousWrapping(Rotations.of(-0.5), Rotations.of(0.5))
+      // Gearing from the motor rotor to the module's steering axis: 12.8:1, an MK4 module.
+      .withGearing(new MechanismGearing(12.8))
+      // Set this to true if the wheel turns clockwise, seen from above, when told to turn counter-clockwise.
+      .withMotorInverted(false)
       // The azimuth motor rarely works hard, so it gets a lower limit.
       .withStatorCurrentLimit(Amps.of(20))
       .withTelemetry("angleMotor", TelemetryVerbosity.HIGH);
@@ -178,10 +201,15 @@ void ConfigureAzimuth(yams::motorcontrollers::SmartMotorControllerConfig& config
 void SwerveSubsystem::ConfigureAzimuth(Cfg& config) {
   config
       .WithSubsystem(this)
-      .WithFeedback(1, 0, 0)
-      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t<Feedforward::kv_unit>{1}})
-      // Gearing from the motor rotor to the module's steering axis.
-      .WithMotorGearing(6.75)
+      // kP, in volts per rotation of angle error. A placeholder: Step 4 tunes it.
+      .WithFeedback(4, 0, 0)
+      // The wheel turns all the way round, so -180 and +180 degrees are the same angle.
+      // Without this, a wheel at 170 degrees asked for -170 turns the long way round.
+      .WithContinuousWrapping(-0.5_tr, 0.5_tr)
+      // Gearing from the motor rotor to the module's steering axis: 12.8:1, an MK4 module.
+      .WithMotorGearing(12.8)
+      // Set this to true if the wheel turns clockwise, seen from above, when told to turn counter-clockwise.
+      .WithMotorInverted(false)
       // The azimuth motor rarely works hard, so it gets a lower limit.
       .WithStatorCurrentLimit(20_A)
       .WithTelemetry("angleMotor", Cfg::TelemetryVerbosity::HIGH);
@@ -191,7 +219,7 @@ void SwerveSubsystem::ConfigureAzimuth(Cfg& config) {
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set your module's steering gear ratio.
+**For your robot:** Set your module's steering gear ratio. An MK4 steers at 12.8:1. Other modules, such as an MK4i, use a different ratio: check your module maker's page.
 
 Want the details? [Swerve Module](../../details/swerve-module.md)
 
@@ -205,8 +233,7 @@ package first.robot.subsystems;
 
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Meters;
-import static org.wpilib.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.Rotations;
 
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
@@ -223,10 +250,13 @@ public class SwerveSubsystem extends SubsystemBase {
         .withWheelDiameter(Inches.of(4))
         // kP trims the velocity error that is left after the feedforward.
         .withClosedLoopController(0.3, 0, 0)
-        // Gearing from the motor rotor to the wheel.
-        .withGearing(new MechanismGearing(12.75))
-        // kV does most of the work of holding a speed.
-        .withFeedforward(new SimpleMotorFeedforward(0, 12.0 / (MetersPerSecond.of(1).in(MetersPerSecond) / Inches.of(4).in(Meters)), 0.01))
+        // Gearing from the motor rotor to the wheel: 6.75:1, an MK4 L2 module.
+        .withGearing(new MechanismGearing(6.75))
+        // kV, in volts per wheel rotation per second, does most of the work of holding a speed.
+        // 0.85 is a placeholder, about right for a NEO on 6.75:1. Step 4 tunes it.
+        .withFeedforward(new SimpleMotorFeedforward(0, 0.85))
+        // Set this to true if the wheel spins backward when it is told to drive forward.
+        .withMotorInverted(false)
         .withStatorCurrentLimit(Amps.of(40))
         .withTelemetry("driveMotor", TelemetryVerbosity.HIGH);
   }
@@ -234,10 +264,15 @@ public class SwerveSubsystem extends SubsystemBase {
   /** The config of one azimuth (steering) motor. Azimuth motors are position controlled. */
   private SmartMotorControllerConfig buildAzimuthCfg() {
     return new SmartMotorControllerConfig(this)
-        .withClosedLoopController(1, 0, 0)
-        .withFeedforward(new SimpleMotorFeedforward(0, 1))
-        // Gearing from the motor rotor to the module's steering axis.
-        .withGearing(new MechanismGearing(6.75))
+        // kP, in volts per rotation of angle error. A placeholder: Step 4 tunes it.
+        .withClosedLoopController(4, 0, 0)
+        // The wheel turns all the way round, so -180 and +180 degrees are the same angle.
+        // Without this, a wheel at 170 degrees asked for -170 turns the long way round.
+        .withContinuousWrapping(Rotations.of(-0.5), Rotations.of(0.5))
+        // Gearing from the motor rotor to the module's steering axis: 12.8:1, an MK4 module.
+        .withGearing(new MechanismGearing(12.8))
+        // Set this to true if the wheel turns clockwise, seen from above, when told to turn counter-clockwise.
+        .withMotorInverted(false)
         // The azimuth motor rarely works hard, so it gets a lower limit.
         .withStatorCurrentLimit(Amps.of(20))
         .withTelemetry("angleMotor", TelemetryVerbosity.HIGH);
@@ -254,8 +289,7 @@ package first.robot.mechanisms;
 
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Meters;
-import static org.wpilib.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.Rotations;
 
 import org.wpilib.command3.Mechanism;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
@@ -272,10 +306,13 @@ public class SwerveMechanism implements Mechanism {
         .withWheelDiameter(Inches.of(4))
         // kP trims the velocity error that is left after the feedforward.
         .withClosedLoopController(0.3, 0, 0)
-        // Gearing from the motor rotor to the wheel.
-        .withGearing(new MechanismGearing(12.75))
-        // kV does most of the work of holding a speed.
-        .withFeedforward(new SimpleMotorFeedforward(0, 12.0 / (MetersPerSecond.of(1).in(MetersPerSecond) / Inches.of(4).in(Meters)), 0.01))
+        // Gearing from the motor rotor to the wheel: 6.75:1, an MK4 L2 module.
+        .withGearing(new MechanismGearing(6.75))
+        // kV, in volts per wheel rotation per second, does most of the work of holding a speed.
+        // 0.85 is a placeholder, about right for a NEO on 6.75:1. Step 4 tunes it.
+        .withFeedforward(new SimpleMotorFeedforward(0, 0.85))
+        // Set this to true if the wheel spins backward when it is told to drive forward.
+        .withMotorInverted(false)
         .withStatorCurrentLimit(Amps.of(40))
         .withTelemetry("driveMotor", TelemetryVerbosity.HIGH);
   }
@@ -283,10 +320,15 @@ public class SwerveMechanism implements Mechanism {
   /** The config of one azimuth (steering) motor. Azimuth motors are position controlled. */
   private SmartMotorControllerConfig buildAzimuthCfg() {
     return new SmartMotorControllerConfig(this)
-        .withClosedLoopController(1, 0, 0)
-        .withFeedforward(new SimpleMotorFeedforward(0, 1))
-        // Gearing from the motor rotor to the module's steering axis.
-        .withGearing(new MechanismGearing(6.75))
+        // kP, in volts per rotation of angle error. A placeholder: Step 4 tunes it.
+        .withClosedLoopController(4, 0, 0)
+        // The wheel turns all the way round, so -180 and +180 degrees are the same angle.
+        // Without this, a wheel at 170 degrees asked for -170 turns the long way round.
+        .withContinuousWrapping(Rotations.of(-0.5), Rotations.of(0.5))
+        // Gearing from the motor rotor to the module's steering axis: 12.8:1, an MK4 module.
+        .withGearing(new MechanismGearing(12.8))
+        // Set this to true if the wheel turns clockwise, seen from above, when told to turn counter-clockwise.
+        .withMotorInverted(false)
         // The azimuth motor rarely works hard, so it gets a lower limit.
         .withStatorCurrentLimit(Amps.of(20))
         .withTelemetry("angleMotor", TelemetryVerbosity.HIGH);
@@ -339,11 +381,13 @@ void SwerveSubsystem::ConfigureDrive(Cfg& config) {
       .WithMechanismDiameter(4_in)
       // kP trims the velocity error that is left after the feedforward.
       .WithFeedback(0.3, 0, 0)
-      // Gearing from the motor rotor to the wheel.
-      .WithMotorGearing(12.75)
-      // kV does most of the work of holding a speed.
-      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t<Feedforward::kv_unit>{12.0 / (1.0 / 0.1016)},
-                                   wpi::units::unit_t<Feedforward::ka_unit>{0.01}})
+      // Gearing from the motor rotor to the wheel: 6.75:1, an MK4 L2 module.
+      .WithMotorGearing(6.75)
+      // kV, in volts per wheel rotation per second, does most of the work of holding a speed.
+      // 0.85 is a placeholder, about right for a NEO on 6.75:1. Step 4 tunes it.
+      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t<Feedforward::kv_unit>{0.85}})
+      // Set this to true if the wheel spins backward when it is told to drive forward.
+      .WithMotorInverted(false)
       .WithStatorCurrentLimit(40_A)
       .WithTelemetry("driveMotor", Cfg::TelemetryVerbosity::HIGH);
 }
@@ -351,10 +395,15 @@ void SwerveSubsystem::ConfigureDrive(Cfg& config) {
 void SwerveSubsystem::ConfigureAzimuth(Cfg& config) {
   config
       .WithSubsystem(this)
-      .WithFeedback(1, 0, 0)
-      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t<Feedforward::kv_unit>{1}})
-      // Gearing from the motor rotor to the module's steering axis.
-      .WithMotorGearing(6.75)
+      // kP, in volts per rotation of angle error. A placeholder: Step 4 tunes it.
+      .WithFeedback(4, 0, 0)
+      // The wheel turns all the way round, so -180 and +180 degrees are the same angle.
+      // Without this, a wheel at 170 degrees asked for -170 turns the long way round.
+      .WithContinuousWrapping(-0.5_tr, 0.5_tr)
+      // Gearing from the motor rotor to the module's steering axis: 12.8:1, an MK4 module.
+      .WithMotorGearing(12.8)
+      // Set this to true if the wheel turns clockwise, seen from above, when told to turn counter-clockwise.
+      .WithMotorInverted(false)
       // The azimuth motor rarely works hard, so it gets a lower limit.
       .WithStatorCurrentLimit(20_A)
       .WithTelemetry("angleMotor", Cfg::TelemetryVerbosity::HIGH);
@@ -368,5 +417,18 @@ SwerveSubsystem::SwerveSubsystem() {
 {% endtabs %}
 
 {% hint style="info" %}
-The gains here are a place to start. [Live tuning](../../details/live-tuning/README.md) has a section on tuning the drive and azimuth motors of a swerve module.
+The gains here are a place to start. [Step 4: On the real robot](real-robot.md) tunes the drive and azimuth motors of every module with the swerve tuning command.
 {% endhint %}
+
+## Check it
+
+Build the code: **WPILib: Build Robot Code** from the command palette (<kbd>Ctrl+Shift+P</kbd>). It should end with `BUILD SUCCESSFUL`. Nothing moves yet: the configs are not used until step 2.
+
+If it does not build:
+
+* **A REV or CTRE class cannot be found.** REVLib or Phoenix 6 is not installed. See [Create a project and install YAMS](../project-setup.md).
+* **`Rotations` or `Inches` cannot be found.** An `import static org.wpilib.units.Units...` line is missing. Copy the imports from the complete file.
+
+More fixes are on [Troubleshooting](../troubleshooting.md).
+
+Next: [Step 2: The modules and the drive](modules-and-drive.md).

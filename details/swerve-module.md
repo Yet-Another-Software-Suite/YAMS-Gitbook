@@ -27,7 +27,7 @@ You rarely call a module directly, but these are the functions it has:
 | `getState()`                                               | The wheel's current speed and angle, and how fast the azimuth is turning.                                                                                                                                |
 | `getPosition()`                                            | How far the wheel has rolled, and its angle. Used for odometry.                                                                                                                                          |
 | `seedAzimuthEncoder()`                                     | Set the azimuth motor's encoder from the absolute encoder.                                                                                                                                               |
-| `getRawAbsoluteEncoderAngle()`                             | The absolute encoder's reading with no offset, for [finding the offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder).                                                                 |
+| `getRawAbsoluteEncoderAngle()`                             | The absolute encoder's reading with no offset, for [finding the offset](mechanism-configs/swerve-module-config.md#withabsoluteencoderoffset).                                                                 |
 | `getDriveMotorController()`, `getAzimuthMotorController()` | The two motors, for anything YAMS does not wrap.                                                                                                                                                         |
 
 `SwerveDrive.updateTelemetry()` and `SwerveDrive.simIterate()` update every module, so you do not call those on a module yourself.
@@ -43,61 +43,13 @@ import yams.core.mechanisms.swerve.SwerveModule;
 
 Module states are WPILib 2027 `SwerveModuleVelocity`s (the 2027 name for `SwerveModuleState`).
 
-## Configuring and tuning a swerve module, step by step
+## Setting up a module on a real robot
 
-{% stepper %}
-{% step %}
-#### Configure the drive motor
-
-Set its gearing and wheel size, a `SimpleMotorFeedforward` and a stator current limit: see [The two motors](mechanism-configs/swerve-module-config.md#the-two-motors).
-{% endstep %}
-
-{% step %}
-#### Configure the azimuth motor
-
-Set its gearing, position gains and a stator current limit. The azimuth turns all the way round, so it usually has [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping).
-{% endstep %}
-
-{% step %}
-#### Set the location
-
-Give the module's position from the center of the robot: see [`withLocation`](mechanism-configs/swerve-module-config.md#withlocation). Front is positive X and left is positive Y.
-{% endstep %}
-
-{% step %}
-#### Find the absolute encoder offset
-
-Point the wheel forward with its bevel gear to the left, read the absolute encoder, and use that as the offset: see [The absolute encoder](mechanism-configs/swerve-module-config.md#the-absolute-encoder). Every module has its own.
-{% endstep %}
-
-{% step %}
-#### Lift the robot before tuning
-
-Put the robot on blocks so that every wheel is clear of the blocks and of the ground. Always start tuning the real modules this way, even if you already tuned them in simulation. Simulation is great practice, but its gains cannot be relied on for the first run of a real module.
-{% endstep %}
-
-{% step %}
-#### Tune the azimuth
-
-Step the wheel's angle with `NT:/Tuning/<name>/modules/azimuth/angle` and raise the azimuth's `kP` until it snaps to the angle without overshooting: see [Azimuth motors](live-tuning/#azimuth-motors).
-{% endstep %}
-
-{% step %}
-#### Tune the drive
-
-Type the setpoint velocity into `NT:/Tuning/<name>/modules/drive/velocity`, find the drive's `kS` and `kV`, then add a little `kP`: see [Drive motors](live-tuning/#drive-motors).
-{% endstep %}
-
-{% step %}
-#### Add the coupling ratio if the odometry drifts
-
-If the robot's position creeps when the wheels only steer, set [`withCouplingRatio`](mechanism-configs/swerve-module-config.md#withcouplingratio).
-{% endstep %}
-{% endstepper %}
+Finding each module's absolute encoder offset, checking which way the motors turn and tuning the azimuth and drive motors are steps in a tutorial now: see [Step 4: On the real robot](../tutorials/swerve-drive/real-robot.md).
 
 ## A fully configured module
 
-Here's every `SwerveModuleConfig` option from this page in one place, the sections below explain each call:
+Here's every `SwerveModuleConfig` option from this page in one place. The sections below explain each call, and [SwerveModuleConfig](mechanism-configs/swerve-module-config.md) has one section per option:
 
 ```java
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
@@ -126,7 +78,7 @@ SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC);
 SwerveModule fl = new SwerveModule(moduleConfig);
 ```
 
-See [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config) for a full worked example with the rest of the `withAbsoluteEncoder`/`withLocation`/`withOptimization`/`withTelemetry` chain filled in.
+See [Swerve Drive's Basic Swerve Config](swerve-drive.md#basic-swerve-config) for a full worked example with the rest of the chain filled in.
 
 {% hint style="info" %}
 There's also a no-arg `SwerveModuleConfig()` constructor paired with `withSmartMotorController(drive, azimuth)`, for cases where the config needs to exist before both motor controllers are ready. Calling `withSmartMotorController` twice on the same config throws an `IllegalStateException`, it's meant to be set exactly once.
@@ -143,24 +95,32 @@ Unlike an `Arm` or `Elevator`, a swerve azimuth motor has no safe "starting posi
 
 `SwerveModuleConfig.withAbsoluteEncoder(...)` has two forms:
 
-* Pass a same-vendor absolute encoder object directly, and YAMS wires it into the azimuth `SmartMotorControllerConfig` as an external feedback encoder.
+* Pass a same-vendor absolute encoder object directly, and YAMS wires it into the azimuth `SmartMotorControllerConfig` as an external feedback encoder. The azimuth config must also have `withUseExternalFeedbackEncoder(true)`.
 * Pass a `Supplier<Angle>` (or `DoubleSupplier`) for any other absolute encoder, such as a CANcoder read through its own API on a non-CTRE azimuth motor.
 
-A CANcoder feeding a `TalonFXWrapper` azimuth motor is same-vendor, so it can be passed directly:
+A CANcoder feeding a `TalonFXWrapper` azimuth motor is same-vendor, so it can be passed directly. The azimuth motor's closed loop then runs on the CANcoder, so its config needs `withUseExternalFeedbackEncoder(true)`. Without it, `new SwerveModule(...)` throws a `SmartMotorControllerConfigurationException` (`External encoder cannot be used without external feedback`).
 
 ```java
 CANBus canBus = new CANBus(CANPort.CAN_S0);
 CANcoder canCoder = new CANcoder(3, canBus);
+
+SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
+      .withClosedLoopController(4, 0, 0)
+      .withContinuousWrapping(Rotations.of(-0.5), Rotations.of(0.5))
+      .withGearing(new MechanismGearing(12.8))
+      // Required with a same-vendor absolute encoder: SwerveModule throws without it.
+      .withUseExternalFeedbackEncoder(true);
 SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2, canBus), DCMotor.getKrakenX60(1), azimuthCfg);
 
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withAbsoluteEncoder(canCoder)
-      .withAbsoluteEncoderOffset(Rotations.of(0.25)); // bevel-left zero offset
-      
-azimuthSMC.applyConfig(azimuthCfg); // Needed to apply the offset to the azimuthSmc
+      .withAbsoluteEncoderOffset(Rotations.of(0.25)); // the encoder's reading with the wheel forward, bevel left
+
+// withAbsoluteEncoder and withAbsoluteEncoderOffset change azimuthCfg, so apply it again.
+azimuthSMC.applyConfig(azimuthCfg);
 ```
 
-Setting the external encoder inside of the azimuth config is recommended so the settings are propagated to the external encoder. `withExternalEncoderZeroOffset(...)` is read back with `getExternalEncoderZeroOffset()` (formerly `getZeroOffset()`).
+You can also set the external encoder inside the azimuth config yourself, which also lets you set its other options. `withExternalEncoderZeroOffset(...)` is read back with `getExternalEncoderZeroOffset()` (formerly `getZeroOffset()`).
 
 ```java
 SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
@@ -175,7 +135,7 @@ SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2, canBus), DCM
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC);
 ```
 
-`withExternalEncoderDiscontinuityPoint(Angle)` must be `Rotations.of(0.5)` or `Rotations.of(1)`. `withUseExternalFeedbackEncoder(true)` is what actually makes the azimuth's closed-loop controller run on the absolute encoder continuously; without it, the absolute encoder is only used to seed the relative encoder once at construction (via `seedAzimuthEncoder()` above), and closed-loop control runs on the relative encoder from then on.
+`withExternalEncoderDiscontinuityPoint(Angle)` must be `Rotations.of(0.5)` or `Rotations.of(1)`. `withUseExternalFeedbackEncoder(true)` makes the azimuth's closed-loop controller run on the absolute encoder all the time. Whenever the azimuth config has an external encoder, `SwerveModule` requires it, and throws if it is missing. To read an absolute encoder only once at startup and run the closed loop on the motor's own encoder, use the `Supplier<Angle>` form below instead: the module seeds the motor's encoder from it with `seedAzimuthEncoder()`.
 
 A CANcoder feeding a REV azimuth motor is a different vendor, so it goes through the `Supplier<Angle>` form instead:
 
@@ -184,7 +144,7 @@ A CANcoder feeding a REV azimuth motor is a different vendor, so it goes through
 .withAbsoluteEncoderOffset(Rotations.of(0.25)) // bevel-left zero offset
 ```
 
-`getAbsoluteEncoderAngle()` returns the angle with gearing and offset applied, the value actually used for seeding and optimization. `getRawAbsoluteEncoderAngle()` returns the same reading with no offset or gearing conversion applied, useful when you're determining what offset to configure in the first place: point every wheel forward with the bevel gears facing the same direction, read the raw angle from each module, and that's your per-module offset.
+`getAbsoluteEncoderAngle()` returns the angle with gearing and offset applied, the value actually used for seeding and optimization. `getRawAbsoluteEncoderAngle()` returns the same reading with no offset or gearing conversion applied, and the module publishes it as `encoder`: that raw reading, taken with the wheel forward and the bevel gear left, is the offset. [Step 4: On the real robot](../tutorials/swerve-drive/real-robot.md#3-set-the-absolute-encoder-offsets) walks through it.
 
 ```java
 Angle angle = moduleConfig.getAbsoluteEncoderAngle();
@@ -238,7 +198,7 @@ If the robot stops short or will not creep, lower the deadband. If the wheels tw
 moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
 ```
 
-The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](../live-tuning/#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
+The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](live-tuning/README.md#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
 
 ## Steer to drive coupling
 
@@ -258,7 +218,7 @@ moduleConfig.withCouplingRatio(3.5); // drive motor rotations per azimuth rotati
 
 | Field                  | NetworkTables key | `LOW` | `MID` | `HIGH` |
 | ---------------------- | ----------------- | :---: | :---: | :----: |
-| Absolute encoder angle | `encoder`         |   ✓   |   ✓   |    ✓   |
+| Absolute encoder angle, raw (no offset), in degrees | `encoder`         |   ✓   |   ✓   |    ✓   |
 | SwerveModuleVelocity   | `state`           |       |       |    ✓   |
 
 See [Telemetry](../understanding/telemetry.md) for how struct-encoded fields and verbosity presets work across YAMS generally.

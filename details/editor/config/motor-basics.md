@@ -21,7 +21,7 @@ Chooses whether the motor controller runs a closed loop controller. The default 
 .withControlMode(ControlMode.CLOSED_LOOP) // anything that goes to a position or a speed
 ```
 
-In `OPEN_LOOP` the closed loop options on the other pages have nothing to act on. On SPARKs the [soft limits](limits-and-protection.md#withsoftlimits) are only enabled in `CLOSED_LOOP`.
+In `OPEN_LOOP` the closed loop options on the other pages have nothing to act on, and the [soft limits](limits-and-protection.md#withsoftlimits) are not enforced on any motor controller.
 
 **Supported on:** every supported motor controller.
 
@@ -137,7 +137,7 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
 ```
 {% endcode %}
 
-Nothing else changes. `arm.runTo(Degrees.of(45))` and every other command work as before, and now send your request.
+Nothing else changes. `arm.run(Degrees.of(45))`, `arm.runTo(Degrees.of(45), Degrees.of(2))` and every other command work as before, and now send your request.
 
 ### Rules
 

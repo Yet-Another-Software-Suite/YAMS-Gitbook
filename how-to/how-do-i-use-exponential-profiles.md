@@ -6,27 +6,28 @@ An exponential profile plans a move the way a DC motor actually moves: hard acce
 
 ## Use one
 
-Add `withExponentialProfile(...)` instead of `withTrapezoidalProfile(...)`. The helpers on `yams.core.math.ExponentialProfilePIDController` work out starting values from the mechanism:
+Add `withExponentialProfile(...)` instead of `withTrapezoidalProfile(...)`. For an elevator, YAMS works out starting values from the motor, the carriage and the drum. This is a fragment of an elevator subsystem's fields; the rest of the config (feedforward, limits, telemetry) is as in the [Elevator tutorial](../tutorials/elevator.md).
 
+{% code title="ElevatorSubsystem.java (fragment)" %}
 ```java
-private final Distance chainPitch = Inches.of(0.25);
-private final int toothCount = 22;
+private final Distance drumRadius = Inches.of(0.25).times(22).div(2 * Math.PI); // 22 tooth sprocket, #25 chain
 private final Mass     weight = Pounds.of(16);
 private final DCMotor  motors = DCMotor.getNEO(1);
 private final MechanismGearing gearing = new MechanismGearing(GearBox.fromReductionStages(3, 4));
 
-private final SmartMotorControllerConfig motorConfig        = new SmartMotorControllerConfig(this)
-      .withDrumRadius(chainPitch, toothCount)
-      .withClosedLoopController(30, 0, 0)
-      .withExponentialProfile(
-      ExponentialProfilePIDController.createElevatorConstraints(
-                                     Volts.of(12), // Maximum voltage during profile
-                                     motors, // Motors
-                                     weight, // Carriage weight
-                                     chainPitch.times(toothCount).div(2 * Math.PI), // Drum radius
-                                     gearing)) // Gearing
-...
+private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    // Gearing first: withExponentialProfile reads it to build the profile.
+    .withGearing(gearing)
+    .withDrumRadius(drumRadius)
+    // PLACEHOLDER kP, in volts per meter. Tune it after the profile.
+    .withClosedLoopController(10, 0, 0)
+    // Maximum voltage during the profile, the motor, the carriage weight and the drum radius.
+    .withExponentialProfile(Volts.of(12), motors, weight, drumRadius);
 ```
+{% endcode %}
+
+`withGearing` must come **before** `withExponentialProfile`, because the profile is calculated from the gearing at that moment. This form also makes the closed loop work in meters (see [How do I tune my elevator in rotations instead of meters?](how-to-disable-linear-closed-loop-control.md)).
 
 There are helpers for arms, flywheels and custom limits too: see [creating constraints](../details/editor/exponential-profiles.md#creating-constraints).
 
@@ -43,6 +44,19 @@ See [when to use each profile type](../details/editor/exponential-profiles.md#wh
 ## Tune it
 
 Start from the helper's values and [refine the profile live](../details/editor/exponential-profiles.md#refining-the-profile-live). The profile only plans the move, so it still needs a feedforward, and the profile's `kV` and `kA` are [not the feedforward's](../details/editor/config/feedforward.md#these-are-not-an-exponential-profiles-kv-and-ka).
+
+## Check it
+
+Start the simulation, command a new height, and graph the motor's `closedloop/setpoint/position` against `measurement/position` under **NetworkTables > Mechanisms**. The setpoint should curve smoothly to the target, and the measurement should stay close behind it the whole way.
+
+## If it did not work
+
+* **The setpoint jumps straight to the target, or the elevator does not move.** The profile is missing or empty: check that `withGearing` comes before `withExponentialProfile`, and that the drum radius and carriage weight are right.
+* **The elevator falls behind the setpoint and then overshoots.** The feedforward is missing or `kG` is 0. See [Feedforward](../details/editor/config/feedforward.md).
+
+## Next
+
+Refine the profile on the robot: [Refining the profile live](../details/editor/exponential-profiles.md#refining-the-profile-live).
 
 ## Code reference
 

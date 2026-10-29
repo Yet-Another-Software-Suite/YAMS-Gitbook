@@ -1,6 +1,8 @@
 # Step 1: Define the IO interface
 
-Create an interface that defines what inputs your subsystem reads and what outputs it sends. Following AdvantageKit conventions, inputs are grouped in an `Inputs` class.
+Create an interface that defines what inputs your subsystem reads and what outputs it sends. Following AdvantageKit conventions, inputs are grouped in an `Inputs` class. This needs AdvantageKit installed, from [Step 0: Install AdvantageKit and set up Robot](setup.md).
+
+The inputs are plain numbers with the unit in the name, as AdvantageKit's own examples do. The methods that command the mechanism take WPILib units (`Angle`, `Distance`, `AngularVelocity`), so a caller cannot mix up degrees and rotations.
 
 ## Arm IO interface
 
@@ -8,6 +10,7 @@ Create an interface that defines what inputs your subsystem reads and what outpu
 package first.robot.subsystems.akit;
 
 import org.littletonrobotics.junction.AutoLog;
+import org.wpilib.units.measure.Angle;
 
 public interface ArmIO {
 
@@ -30,7 +33,7 @@ public interface ArmIO {
   default void updateInputs(ArmIOInputs inputs) {}
 
   /** Set the target angle for the arm. */
-  default void setTargetAngle(double rotations) {}
+  default void setTargetAngle(Angle angle) {}
 
   /** Stop the arm motor. */
   default void stop() {}
@@ -38,7 +41,7 @@ public interface ArmIO {
   /** Update the sim telemetry */
   default void simIterate() {}
 
-  /** Update the telemtry */
+  /** Update the telemetry */
   default void updateTelemetry() {}
 }
 ```
@@ -49,6 +52,7 @@ public interface ArmIO {
 package first.robot.subsystems.akit;
 
 import org.littletonrobotics.junction.AutoLog;
+import org.wpilib.units.measure.Distance;
 
 public interface ElevatorIO {
 
@@ -65,14 +69,14 @@ public interface ElevatorIO {
 
   default void updateInputs(ElevatorIOInputs inputs) {}
 
-  default void setTargetHeight(double meters) {}
+  default void setTargetHeight(Distance height) {}
 
   default void stop() {}
 
   /** Update the sim telemetry */
   default void simIterate() {}
 
-  /** Update the telemtry */
+  /** Update the telemetry */
   default void updateTelemetry() {}
 }
 ```
@@ -83,6 +87,7 @@ public interface ElevatorIO {
 package first.robot.subsystems.akit;
 
 import org.littletonrobotics.junction.AutoLog;
+import org.wpilib.units.measure.AngularVelocity;
 
 public interface ShooterIO {
 
@@ -98,14 +103,14 @@ public interface ShooterIO {
 
   default void updateInputs(ShooterIOInputs inputs) {}
 
-  default void setTargetVelocity(double rotationsPerSec) {}
+  default void setTargetVelocity(AngularVelocity velocity) {}
 
   default void stop() {}
 
   /** Update the sim telemetry */
   default void simIterate() {}
 
-  /** Update the telemtry */
+  /** Update the telemetry */
   default void updateTelemetry() {}
 }
 ```
@@ -113,21 +118,9 @@ public interface ShooterIO {
 {% hint style="info" %}
 The `@AutoLog` annotation from AdvantageKit generates a class (e.g., `ArmIOInputsAutoLogged`) that handles serialization for log replay. See [AdvantageKit AutoLog documentation](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces#autolog) for details.
 
-If the @AutoLog fails to generate the coresponding AutoLogged class, check your build.gradle. In the dependencies section you should have
-
-## Build.gradle
-
-```groovy
-dependencies {
-    annotationProcessor wpi.java.deps.wpilibAnnotations()
-    def akitJson = new groovy.json.JsonSlurper().parseText(
-        new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
-    annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
-    // ...
-}
-```
-
-This is the setup used by the YAMS AdvantageKit examples. After changing it, clean the project with `gradlew clean` (Windows) or `./gradlew clean` (Linux/macOS) and then build. If the class still does not generate, try commenting out the `annotationProcessor wpi.java.deps.wpilibAnnotations()` line and clean again.
+If the `AutoLogged` class is not generated, check the `annotationProcessor` lines from [Step 0](setup.md), then clean the project with `gradlew clean` (Windows) or `./gradlew clean` (Linux/macOS) and build again. If the class still does not generate, try commenting out the `annotationProcessor wpi.java.deps.wpilibAnnotations()` line and clean again.
 {% endhint %}
+
+**Check:** build the project. It succeeds, and `ArmIOInputsAutoLogged`, `ElevatorIOInputsAutoLogged` and `ShooterIOInputsAutoLogged` can be imported (they are generated under `build/generated`).
 
 Next: [Step 2: Implement the IO class](io-implementation.md)

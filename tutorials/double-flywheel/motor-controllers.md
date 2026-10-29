@@ -12,13 +12,13 @@ Each flywheel gets its own `SmartMotorControllerConfig` and its own `SmartMotorC
 
 There is no `FlyWheel` mechanism in this tutorial, so three jobs a mechanism class would do fall to the subsystem:
 
-* **Describe the wheel.** `withMomentOfInertia(diameter, weight)` on the config gives the simulation the wheel it needs.
+* **Describe the wheel.** `withMomentOfInertia(...)` on the config tells the simulation how hard the wheel is to spin up. Without it the simulated wheel is far too heavy.
 * **Set up the telemetry.** `setupTelemetry()` on each `SmartMotorController`, once, in the constructor. This is also what makes live tuning work.
 * **Update every loop.** `updateTelemetry()` on each, and `simIterate()` on each in simulation.
 
 <figure><img src="../../.gitbook/assets/smc-followers.png" alt="Two panels. Tightly coupled, withFollowers: a leader and a follower are on one shaft or gearbox and the follower copies the leader's output. The motors are mechanically locked, there is one closed loop and one config, the followers are the same vendor as the leader, and voltage and duty cycle reach every motor. Loosely coupled, withLooselyCoupledFollowers: two separate motors joined only by the mechanism get the same setpoint and each runs its own PID. They are not mechanically locked, each has its own closed loop and config, vendors can be mixed, and voltage and duty cycle are not forwarded, so the leader moves alone."><figcaption><p>Tightly coupled followers share a shaft. Loosely coupled followers are separate motors.</p></figcaption></figure>
 
-The two wheels here are separate motors on separate shafts, each given its own setpoint. If yours share a shaft, see [step 3](spin-and-followers.md).
+The two wheels here are separate motors on separate shafts, each given its own setpoint. If two motors drive the same wheel, see [step 3](spin-and-followers.md#two-motors-on-one-wheel).
 
 {% hint style="success" %}
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
@@ -42,11 +42,12 @@ private final SmartMotorControllerConfig upperConfig = new SmartMotorControllerC
     .withSimClosedLoopController(0.1, 0, 0)
     .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
     .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-    // Gearing from the motor rotor to the flywheel: 3:1.
-    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-    // There is no FlyWheel mechanism to describe the wheel, so the simulation
-    // gets the wheel's diameter and weight from here.
-    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+    // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+    // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+    // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+    .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
     .withMotorInverted(false)
     .withZeroPower(MotorMode.COAST)
     .withStatorCurrentLimit(Amps.of(40))
@@ -66,11 +67,12 @@ private final SmartMotorControllerConfig upperConfig = new SmartMotorControllerC
     .withSimClosedLoopController(0.1, 0, 0)
     .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
     .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-    // Gearing from the motor rotor to the flywheel: 3:1.
-    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-    // There is no FlyWheel mechanism to describe the wheel, so the simulation
-    // gets the wheel's diameter and weight from here.
-    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+    // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+    // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+    // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+    .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
     .withMotorInverted(false)
     .withZeroPower(MotorMode.COAST)
     .withStatorCurrentLimit(Amps.of(40))
@@ -100,11 +102,13 @@ m_upperConfig
     .WithFeedback(0.1, 0, 0)
     .WithSimClosedLoopController(0.1, 0, 0)
     .WithFeedforward(feedforward)
-    // Gearing from the motor rotor to the flywheel: 3:1.
-    .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-    // There is no FlyWheel mechanism to describe the wheel, so the simulation
-    // gets the wheel's diameter and weight from here.
-    .WithMOI(4_in, 1_lb)
+    .WithSimFeedforward(feedforward)
+    // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+    .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+    // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+    // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+    // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+    .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
     .WithMotorInverted(false)
     .WithZeroPower(Cfg::MotorMode::COAST)
     .WithStatorCurrentLimit(40_A)
@@ -114,7 +118,13 @@ m_upperConfig
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set your own gearing, wheel diameter and wheel weight. The gains are only a place to start: tune them with [Live tuning](../../details/live-tuning/README.md).
+The gains are **placeholders** worked out from the motor. A Kraken X60 turns at most about 6000 RPM, 100 rotations per second, on 12 volts. With no gearbox the wheel does too, so `kV` is 12 / 100 = `0.12` volts for each rotation per second. `kS` of `0.1` is a guess at the voltage friction takes. The [Shooter/FlyWheels](../shooter-flywheels/motor-controller.md) tutorial has a different `kV` (0.19) because it uses a different motor (a NEO, about 5676 RPM) through 1.5:1 gearing: its wheel tops out near 63 rotations per second, and 12 / 63 = 0.19.
+
+**What to expect with them:** in simulation each wheel reaches its preset in well under a second and holds it close to the setpoint. Tune them for your robot with [the shooter tutorial's tune step](../shooter-flywheels/tune.md).
+
+`withMomentOfInertia` takes the wheel's moment of inertia in kg m². For a solid wheel it is 0.5 x mass x radius squared: 0.5 x 0.45 kg x (0.0508 m)² for a 4 inch, 1 pound wheel. (There is also a `withMomentOfInertia(length, mass)` overload, but it treats the length as an arm swinging from one end, 1/3 x mass x length², so it does not fit a wheel.)
+
+**For your robot:** Set your own gearing (top speed = motor free speed / reduction, and keep your fastest shot below it), and your wheel's moment of inertia from its mass and radius. Work out a starting `kV` as 12 divided by the wheel's top speed in rotations per second.
 
 Want the details? [SmartMotorControllerConfig](../../details/editor/config/README.md)
 
@@ -133,8 +143,8 @@ private final SmartMotorControllerConfig lowerConfig = new SmartMotorControllerC
     .withSimClosedLoopController(0.1, 0, 0)
     .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
     .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+    .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
     .withMotorInverted(true)
     .withZeroPower(MotorMode.COAST)
     .withStatorCurrentLimit(Amps.of(40))
@@ -153,8 +163,8 @@ private final SmartMotorControllerConfig lowerConfig = new SmartMotorControllerC
     .withSimClosedLoopController(0.1, 0, 0)
     .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
     .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-    .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+    .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
     .withMotorInverted(true)
     .withZeroPower(MotorMode.COAST)
     .withStatorCurrentLimit(Amps.of(40))
@@ -173,8 +183,9 @@ m_lowerConfig
     .WithFeedback(0.1, 0, 0)
     .WithSimClosedLoopController(0.1, 0, 0)
     .WithFeedforward(feedforward)
-    .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-    .WithMOI(4_in, 1_lb)
+    .WithSimFeedforward(feedforward)
+    .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+    .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
     .WithMotorInverted(true)
     .WithZeroPower(Cfg::MotorMode::COAST)
     .WithStatorCurrentLimit(40_A)
@@ -323,14 +334,9 @@ Want the details? [Telemetry](../../understanding/telemetry.md)
 
 In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you, so there is nothing more to do.
 
-In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it. `Robot.java` has the two functions you need:
+In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it, the same way as in [the arm tutorial's step 2](../arm/mechanism.md#3-update-it-every-loop), which explains each part. Every mechanism gets one line in `robotPeriodic()`, before `scheduler.run()`, and one in `simulationInit()`.
 
-* **`robotPeriodic()`** runs every loop, on the robot and in simulation. Call the mechanism's `periodic()` here, before `scheduler.run()`, so that the commands see fresh values.
-* **`simulationInit()`** runs once, when the simulation starts. The template does not have it yet, so add it, and start the mechanism's `simulationPeriodic()` here with `startSimulation(...)`, which runs it in its own `Notifier` every loop, in simulation only. That keeps the simulation from adding to the robot loop's time, as [Where the tutorials put things](../project-setup.md#where-the-tutorials-put-things) explains.
-
-Every mechanism you add to the robot gets one line in each of the two.
-
-Two smaller changes tidy up the template while you are here. Keep `Scheduler.getDefault()` in a `scheduler` attribute instead of asking for it every loop, and publish the scheduler with `Telemetry.log(...)` after it runs, so that a dashboard shows which commands are running and which mechanisms they hold.
+If your `Robot.java` already has `simulationInit()` and `startSimulation(...)` from the arm tutorial, add the lines below. If not, copy the whole `Robot.java` from the Commands v3 tab of [the complete file](#the-complete-file).
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -374,49 +380,16 @@ public void simulationPeriodic() {
 
 {% code title="Robot.java" %}
 ```java
-import java.util.ArrayList;
-import java.util.List;
-import org.wpilib.system.Notifier;
-import org.wpilib.telemetry.Telemetry;
 import first.robot.mechanisms.DoubleFlywheelMechanism;
 
-public class Robot extends OpModeRobot {
-  // ...
-  final DoubleFlywheelMechanism doubleFlywheel = new DoubleFlywheelMechanism();
-  // ...
+// A field of Robot.
+final DoubleFlywheelMechanism doubleFlywheel = new DoubleFlywheelMechanism();
 
-  // The scheduler that runs every command.
-  private final Scheduler scheduler = Scheduler.getDefault();
-  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
-  private final List<Notifier> simulationNotifiers = new ArrayList<>();
+// In robotPeriodic(), before scheduler.run():
+doubleFlywheel.periodic();
 
-  // ...
-
-  @Override
-  public void robotPeriodic() {
-    // Runs every loop, on the robot and in simulation.
-    // Update the mechanism before the scheduler runs its commands.
-    doubleFlywheel.periodic();
-    scheduler.run();
-    // Publish the scheduler, so that a dashboard shows which commands are running.
-    Telemetry.log("Scheduler", scheduler, Scheduler.proto);
-  }
-
-  @Override
-  public void simulationInit() {
-    // Runs once, when the simulation starts.
-    // Run each mechanism's simulation in its own Notifier, every robot loop.
-    startSimulation("Double Flywheel", doubleFlywheel::simulationPeriodic);
-  }
-
-  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
-  private void startSimulation(String name, Runnable simulationPeriodic) {
-    Notifier notifier = new Notifier(simulationPeriodic);
-    notifier.setName(name + " Simulation");
-    notifier.startPeriodic(getPeriod());
-    simulationNotifiers.add(notifier);
-  }
-}
+// In simulationInit():
+startSimulation("Double Flywheel", doubleFlywheel::simulationPeriodic);
 ```
 {% endcode %}
 {% endtab %}
@@ -456,8 +429,7 @@ void DoubleFlywheelSubsystem::SimulationPeriodic() {
 package first.robot.subsystems;
 
 import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -484,11 +456,12 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -501,8 +474,8 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -547,8 +520,7 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 package first.robot.mechanisms;
 
 import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -575,11 +547,12 @@ public class DoubleFlywheelMechanism implements Mechanism {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -592,8 +565,8 @@ public class DoubleFlywheelMechanism implements Mechanism {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -729,8 +702,7 @@ class DoubleFlywheelSubsystem : public wpi::cmd::SubsystemBase {
 #include <wpi/math/system/DCMotor.hpp>
 #include <wpi/units/angle.hpp>
 #include <wpi/units/current.hpp>
-#include <wpi/units/length.hpp>
-#include <wpi/units/mass.hpp>
+#include <wpi/units/moment_of_inertia.hpp>
 #include <wpi/units/voltage.hpp>
 
 #include "yams/gearing/GearBox.hpp"
@@ -751,11 +723,13 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .WithMOI(4_in, 1_lb)
+      .WithSimFeedforward(feedforward)
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(false)
       .WithZeroPower(Cfg::MotorMode::COAST)
       .WithStatorCurrentLimit(40_A)
@@ -768,8 +742,9 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-      .WithMOI(4_in, 1_lb)
+      .WithSimFeedforward(feedforward)
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(true)
       .WithZeroPower(Cfg::MotorMode::COAST)
       .WithStatorCurrentLimit(40_A)
@@ -811,4 +786,11 @@ Every option used here has its own section in the `SmartMotorControllerConfig` p
 * [Limits and protection](../../details/editor/config/limits-and-protection.md): soft limits and current limits
 * [Simulation](../../details/editor/config/simulation.md): the simulation only gains
 
-The PID and feedforward numbers on this page are a place to start, not tuned values. Tune them on your own mechanism with [Live tuning](../../details/live-tuning/README.md).
+The PID and feedforward numbers on this page are a place to start, not tuned values. Tune them with [the shooter tutorial's tune step](../shooter-flywheels/tune.md), once for each wheel.
+
+## Check it
+
+Open the command palette with <kbd>Ctrl+Shift+P</kbd> and run **WPILib: Build Robot Code**. It should build. Nothing moves yet, because nothing gives the wheels a speed.
+
+* **`TalonFX` or `TalonFXWrapper` cannot be found:** Phoenix 6 is not installed. See [Install your motor controller's library](../project-setup.md#install-your-motor-controllers-library).
+* **`SmartMotorControllerConfig` cannot be found:** YAMS is not installed, or the import is from the other command framework (`yams.commands2` or `yams.commands3`).

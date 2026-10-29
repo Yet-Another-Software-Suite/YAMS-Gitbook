@@ -76,12 +76,27 @@ In YAMS, you create an `LQRConfig` to specify your mechanism type and tuning par
 `LQRConfig` requires three core parameters:
 - **DCMotor**: The motor model (e.g., `DCMotor.getKrakenX60(1)`)
 - **MechanismGearing**: Your gear reduction
-- **MomentOfInertia**: The rotational inertia of your mechanism
+- **MomentOfInertia**: The rotational inertia of your mechanism. An elevator does not use it: its model comes from the carriage mass and drum radius you give `withElevator`. The constructor still needs a value, so pass any, such as `KilogramSquareMeters.of(0.01)`.
 
 Then you specify the mechanism type with one of:
 - `.withFlyWheel()` - For velocity-controlled flywheels
 - `.withArm()` - For position-controlled arms
 - `.withElevator()` - For position-controlled elevators
+
+### Starting values
+
+Every value below is a starting point. Change one at a time, as in [Tune it live](#tune-it-live).
+
+| Parameter | Start at | Change it when |
+| --- | --- | --- |
+| Position qelms (arm, elevator) | `Radians.of(0.1)` (about 6°), `Meters.of(0.05)` | Lower it if the mechanism is slow to reach the setpoint. |
+| Velocity qelms | `RadiansPerSecond.of(1.0)`, `MetersPerSecond.of(0.5)` | Lower it if an arm or elevator overshoots, or a flywheel is slow to reach speed. |
+| Model trust (standard deviations) | `Radians.of(0.01)`, `RadiansPerSecond.of(0.1)`, or the same in meters | Raise it if the estimate lags behind the real mechanism. |
+| Encoder trust (standard deviation) | `Radians.of(0.01)`, `RadiansPerSecond.of(0.1)` on a flywheel, `Meters.of(0.001)` | Raise it if the output is noisy. |
+| `withControlEffort` | `Volts.of(12)`, the default | Lower it for a gentler response that uses less voltage. |
+| `withMaxVoltage` | `Volts.of(12)`, the default | Lower it to cap the output, for example to 10 V for headroom. |
+
+The qelms and trust values have no defaults: `withFlyWheel`, `withArm` or `withElevator` sets them.
 
 ### Flywheel LQR configuration
 
@@ -110,7 +125,7 @@ LQRController flywheelLQR = new LQRController(flywheelLQRConfig);
 | `qelms` (velocity) | RadiansPerSecond | Velocity error tolerance. **Decrease** to penalize velocity errors more heavily (more aggressive). |
 | `modelTrust` | RadiansPerSecond | Standard deviation of your model. **Lower** = trust the model more. |
 | `encoderTrust` | RadiansPerSecond | Standard deviation of encoder readings. **Lower** = trust encoder more. |
-| `controlEffort` | Volts | How much to penalize voltage usage. **Increase** for gentler control. |
+| `controlEffort` | Volts | The voltage the LQR treats as acceptable. **Decrease** for gentler control. |
 
 ### Arm LQR configuration
 
@@ -152,7 +167,7 @@ Elevators use a two-state linear model (position and velocity in meters):
 LQRConfig elevatorLQRConfig = new LQRConfig(
         DCMotor.getKrakenX60(2),                              // 2 motors
         new MechanismGearing(GearBox.fromReductionStages(10)), // 10:1 reduction
-        KilogramSquareMeters.of(0.01)                         // MOI (used for plant creation)
+        KilogramSquareMeters.of(0.01)                         // not used by an elevator, but required
     )
     .withElevator(
         Meters.of(0.02),              // qelmsPosition: Position error tolerance (m)
@@ -177,7 +192,7 @@ LQRController elevatorLQR = new LQRController(elevatorLQRConfig);
 
 ## Using LQRController with SmartMotorControllerConfig
 
-Once you have an `LQRController`, pass it to `withClosedLoopController()`:
+Once you have an `LQRController`, pass it to `withClosedLoopController()`. This is a fragment for inside a subsystem, which is the `this` passed to the config. The [complete example](#complete-example-lqr-arm) below shows a whole subsystem.
 
 ```java
 // Create the LQR config and controller
@@ -208,27 +223,15 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withTelemetry("LQRArm", TelemetryVerbosity.HIGH);
 ```
 
+### With a motion profile
+
+An LQR can follow a [motion profile](config/motion-profiles.md), trapezoidal or exponential, set with the usual `withTrapezoidalProfile` or `withExponentialProfile`. The profile moves the setpoint smoothly, and the LQR tracks the profile's position and velocity instead of jumping straight to the goal.
+
 ## Advanced LQR options
 
-### Aggressiveness
+### Aggressiveness and measurement delay
 
-Use `withAggressiveness()` to scale overall controller response:
-
-```java
-LQRConfig config = new LQRConfig(motor, gearing, moi)
-    .withArm(...)
-    .withAggressiveness(10.0);  // Higher = more aggressive, typical range 1-20
-```
-
-### Measurement delay compensation
-
-If your sensors have significant latency, compensate with:
-
-```java
-LQRConfig config = new LQRConfig(motor, gearing, moi)
-    .withArm(...)
-    .withMeasurementDelay(Milliseconds.of(25));  // Compensate for 25ms delay
-```
+`LQRConfig` also has `withAggressiveness(double)` and `withMeasurementDelay(Time)`. In the current release they are stored but not used by the controller, so they change nothing. Use the qelms and the control effort to change how aggressive the LQR is.
 
 ### Loop period
 
@@ -240,7 +243,7 @@ LQRConfig config = new LQRConfig(motor, gearing, moi)
 
 ## Simulation-Only LQR
 
-You can use different controllers for simulation and real robot:
+You can use different controllers for simulation and real robot. This fragment assumes `gearing` and `moi` are defined, as in the [complete example](#complete-example-lqr-arm):
 
 ```java
 // Create simulation LQR
@@ -440,7 +443,7 @@ LQR can behave very differently with small parameter changes. Always validate in
 **Solutions**:
 - Increase control effort, up to 12 V
 - Decrease position qelms to penalize position errors more
-- Verify motion profile constraints aren't too conservative
+- If the config also has a [motion profile](config/motion-profiles.md), raise its limits: the LQR follows the profile's setpoints, so a slow profile gives a slow response whatever the LQR does
 
 ### Steady-state error
 
@@ -456,7 +459,7 @@ LQR can behave very differently with small parameter changes. Always validate in
 **Solutions**:
 - Re-measure mass and moment of inertia
 - Verify gearing ratio is correct
-- Measure kV and kA on the real mechanism and compare them with the model, see [Measuring kV and kA](exponential-profiles.md#measuring-kv-and-ka)
+- Measure kV and kA on the real mechanism and compare them with the model, see [Measuring kV and kA](exponential-profiles.md#measuring-kv-and-ka-optional)
 - Account for friction and other losses in feedforward
 
 ## LQR vs PID quick reference

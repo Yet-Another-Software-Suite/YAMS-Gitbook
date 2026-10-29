@@ -14,13 +14,9 @@ The motor turns a drum or sprocket through a gearbox, and the drum pulls the car
 
 A vertical elevator has to hold its carriage up, which is what the `kG` term of [`ElevatorFeedforward`](editor/config/feedforward.md#withfeedforward) is for.
 
-<figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
-
-A YAMS `Elevator` is a thin layer over one [`SmartMotorController`](editor/). The `Elevator` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
-
 ## Creating an elevator
 
-The code is the same for Commands v2 and Commands v3 except for the package you import from and the class that owns the mechanism.
+This is the shape of an elevator class, not a complete file: the imports and the motor controller object (`spark`, a `SparkMax`) are left out. [Step 2 of the Elevator tutorial](../tutorials/elevator/mechanism.md) builds the complete file. The code is the same for Commands v2 and Commands v3 except for the package you import from and the class that owns the mechanism.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -110,104 +106,13 @@ public class ElevatorMechanism implements Mechanism
 
 The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/), and the options in `config` in [ElevatorConfig](mechanism-configs/elevator-config.md).
 
-## Commands
+{% hint style="info" %}
+The gains (`kP` of 4, `kG` of 0.4, `kV` of 3.5) and the profile are placeholders. In simulation the carriage should rise to its target and hold there, perhaps with some overshoot or sag. On your robot they will be wrong: the [Elevator tutorial](../tutorials/elevator.md) finds the real ones.
+{% endhint %}
 
-Every command below exists with the same name in Commands v2 and Commands v3.
+## Controlling an elevator
 
-<figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
-
-| Command                                | What it does                                        | Ends                                       |
-| -------------------------------------- | --------------------------------------------------- | ------------------------------------------ |
-| `setHeight(Distance)`, `run(Distance)` | Go to the height and hold it. The two are the same. | Never, until interrupted.                  |
-| `runTo(Distance, Distance tolerance)`  | Go to the height.                                   | When the elevator is within the tolerance. |
-| `set(double)`                          | Output a duty cycle, with the closed loop off.      | Never, until interrupted.                  |
-| `setVoltage(Voltage)`                  | Output a voltage, with the closed loop off.         | Never, until interrupted.                  |
-
-`setHeight`, `run` and `runTo` also take a `Supplier<Distance>`, and `set` and `setVoltage` a supplier too, for a setpoint that changes while the command runs.
-
-{% tabs %}
-{% tab title="Commands v2" %}
-```java
-// In the subsystem
-public Command hold(Distance height)
-{
-  return elevator.setHeight(height); // never ends: a good default command
-}
-
-public Command moveTo(Distance height)
-{
-  return elevator.runTo(height, Centimeters.of(2)); // ends when it gets there
-}
-
-// In RobotContainer
-elevator.setDefaultCommand(elevator.hold(Meters.of(0)));
-Command score = elevator.moveTo(Meters.of(1.2)).andThen(intake.eject());
-```
-{% endtab %}
-
-{% tab title="Commands v3" %}
-```java
-// In the mechanism
-public Command hold(Distance height)
-{
-  return run(coroutine -> coroutine.await(elevator.setHeight(height)))
-      .withPriority(Command.LOWEST_PRIORITY) // so any other command can take over
-      .named("Elevator Hold");
-}
-
-public Command moveTo(Distance height)
-{
-  return elevator.runTo(height, Centimeters.of(2)); // ends when it gets there
-}
-
-// In Robot
-elevator.setDefaultCommand(elevator.hold(Meters.of(0)));
-Command score = Command.noRequirements(coroutine -> {
-  coroutine.await(elevator.moveTo(Meters.of(1.2)));
-  coroutine.await(intake.eject());
-}).named("Score");
-```
-{% endtab %}
-{% endtabs %}
-
-When a command ends the motor keeps its last request, so a mechanism that reached its goal stays there until another command, usually the default one, gives it something else. [run() vs runTo() Commands](run-vs-runto.md) covers the pitfalls, including a default command undoing a `runTo()`.
-
-## Setpoint functions
-
-The commands above are built on plain functions that set the setpoint and return at once. Use them when you write your own command, or when something other than a command decides the setpoint, such as an AdvantageKit IO layer.
-
-| Function                                   | What it does                                                                                                                                         |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `setMechanismPositionSetpoint(Angle)`      | Go to this angle with closed loop control.                                                                                                           |
-| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference).                                         |
-| `setVoltageSetpoint(Voltage)`              | Output this voltage. Stops the closed loop.                                                                                                          |
-| `setDutyCycleSetpoint(double)`             | Output this duty cycle, from -1 to 1. Stops the closed loop.                                                                                         |
-| `getMechanismSetpoint()`                   | The current position setpoint as an angle, if there is one.                                                                                          |
-| `getMeasurementSetpoint()`                 | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
-
-```java
-elevator.setMeasurementPositionSetpoint(Meters.of(0.8));
-```
-
-These do not require the subsystem or mechanism, so nothing stops two callers fighting over the setpoint. Prefer the commands unless you need these. [Setpoint Methods vs Command Helpers](setpoint-methods.md) compares the two in detail.
-
-## Asking where it is
-
-<figure><img src="../.gitbook/assets/mech-triggers-elevator.png" alt="A number line from 0 to 1.5 meters with an elevator at 1.18 meters. near 1.2 meters within 5 centimeters is true. between 0.25 and 0.75 meters is false. gte 0.5 meters is true. lte 0.5 meters is false. max and min, at the top and bottom of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
-
-| As a `Trigger`               | As a boolean                     | True when                                                                     |
-| ---------------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
-| `near(height, within)`       | `isNear(height, within)`         | The elevator is within `within` of `height`.                                  |
-| `between(start, end)`        | `isBetween(start, end)`          | The elevator is between the two heights.                                      |
-| `gte(height)`, `lte(height)` | `isGte(height)`, `isLte(height)` | The elevator is at or above, or at or below, the height.                      |
-| `max()`, `min()`             | `isAtMax()`, `isAtMin()`         | The elevator is at its soft limit, or its hard limit if no soft limit is set. |
-
-`getHeight()` returns the current height and `getVelocity()` its speed.
-
-```java
-elevator.near(Meters.of(1.2), Centimeters.of(2)).onTrue(intake.eject());
-if (elevator.isAtMin()) { /* fully down */ }
-```
+An elevator takes `Distance` targets: `elevator.setHeight(Meters.of(1.2))` goes to 1.2 m and holds it, `elevator.runTo(Meters.of(1.2), Centimeters.of(2))` ends when it gets there, and `elevator.getHeight()` reads where it is. [Controlling a mechanism](controlling-a-mechanism.md) lists every command, setpoint function and check, and [When mechanism commands end](run-vs-runto.md) explains how they work with a default command.
 
 ## Which kind of elevator do you have?
 
@@ -309,7 +214,7 @@ Hard limits are where the physical stops are, and the simulated elevator cannot 
 
 ## Configuring and tuning an elevator, step by step
 
-Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
+Do the configuration steps first, in simulation, then tune the real elevator with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
 Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
@@ -367,47 +272,14 @@ Set [`withCarriageWeight`](mechanism-configs/elevator-config.md#withcarriageweig
 {% endstep %}
 {% endstepper %}
 
-### Tune it
+### What is different when tuning an elevator
 
-{% stepper %}
-{% step %}
-#### Find kG and kS from two voltages
+The [Elevator tutorial](../tutorials/elevator/tune.md) walks through tuning an elevator, and [Tuning order](live-tuning/#tuning-order) lists the order with the keys to watch. What sets an elevator apart:
 
-Set kP, kI, kD and kS to 0, so kG is the only voltage reaching the motor. Raise it until the carriage just creeps up, and write it down. Lower it until the carriage just creeps down, and write that down. Then `kG = (up + down) / 2` and `kS = (up - down) / 2`.
-{% endstep %}
-
-{% step %}
-#### Check it holds
-
-With only the feedforward, the carriage should stay where you leave it at the bottom, the middle and the top.
-{% endstep %}
-
-{% step %}
-#### Raise kP, then add kD
-
-Raise kP until it reaches the setpoint quickly and stops cleanly. Add a little kD if it overshoots or bounces. Without a profile a new setpoint is a sudden jump, so tune with small moves, a few degrees or centimeters at a time.
-{% endstep %}
-
-{% step %}
-#### Add the motion profile last
-
-Once the elevator holds and reaches small setpoints cleanly, set a maximum velocity and acceleration it can really reach, and raise them a step at a time.
-{% endstep %}
-
-{% step %}
-#### Find kV with the profile
-
-kV only acts while the setpoint is moving, so it is tuned with the profile. Run a long move and raise kV until `measurement/velocity` matches the setpoint velocity in the middle of it.
-{% endstep %}
-
-{% step %}
-#### Check it loaded
-
-Repeat the hold check with a game piece on the carriage.
-{% endstep %}
-{% endstepper %}
-
-[Tuning order](live-tuning/#tuning-order) has the same steps with the NetworkTables keys to watch.
+* **kG is the same at every height.** Gravity pulls the carriage with the same force wherever it is, unlike an arm.
+* **Find kG and kS together from two voltages.** Set kP, kI, kD and kS to 0. Raise kG until the carriage just creeps up, then lower it until it just creeps down. kG is the average of the two, and kS is half the difference.
+* **Check the hold at the bottom, the middle and the top,** then again with a game piece on the carriage.
+* **Tune with small moves first,** a few centimeters at a time, until the motion profile is in.
 
 ### What changes for each kind
 

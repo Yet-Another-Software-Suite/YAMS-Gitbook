@@ -16,13 +16,9 @@ That is the right model for a turret, which turns about a vertical axis, and for
 
 If your mechanism needs voltage to hold itself up, it needs gravity accounted for: use an [Arm](arms.md).
 
-<figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
-
-A YAMS `Pivot` is a thin layer over one [`SmartMotorController`](editor/). The `Pivot` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
-
 ## Creating a pivot
 
-The code is the same for Commands v2 and Commands v3 except for the package you import from and the class that owns the mechanism.
+This is the shape of a turret class, not a complete file: the imports and the motor controller object (`spark`, a `SparkMax`) are left out. The [Arm tutorial](../tutorials/arm/mechanism.md) builds a complete mechanism file the same way. The code is the same for Commands v2 and Commands v3 except for the package you import from and the class that owns the mechanism.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -30,12 +26,13 @@ The code is the same for Commands v2 and Commands v3 except for the package you 
 import yams.commands2.config.SmartMotorControllerConfig;
 import yams.commands2.mechanisms.Pivot;
 
-public class PivotSubsystem extends SubsystemBase
+public class TurretSubsystem extends SubsystemBase
 {
   private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withClosedLoopController(4, 0, 0)
+      .withFeedforward(new SimpleMotorFeedforward(0.1, 0.5, 0)) // kS, kV, kA: no kG on a pivot
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
       .withSoftLimits(Degrees.of(-170), Degrees.of(170))
       .withStartingPosition(Degrees.of(0))
@@ -47,7 +44,7 @@ public class PivotSubsystem extends SubsystemBase
   private final PivotConfig config = new PivotConfig()
       .withHardLimits(Degrees.of(-180), Degrees.of(180))
       .withTelemetry("Turret", TelemetryVerbosity.HIGH);
-  private final Pivot pivot = new Pivot(config, motor);
+  private final Pivot pivot = new Pivot(config, motor); // the YAMS Pivot inside the turret
 
   @Override
   public void periodic()
@@ -71,12 +68,13 @@ public class PivotSubsystem extends SubsystemBase
 import yams.commands3.config.SmartMotorControllerConfig;
 import yams.commands3.mechanisms.Pivot;
 
-public class PivotMechanism implements Mechanism
+public class TurretMechanism implements Mechanism
 {
   private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withClosedLoopController(4, 0, 0)
+      .withFeedforward(new SimpleMotorFeedforward(0.1, 0.5, 0)) // kS, kV, kA: no kG on a pivot
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
       .withSoftLimits(Degrees.of(-170), Degrees.of(170))
       .withStartingPosition(Degrees.of(0))
@@ -88,7 +86,7 @@ public class PivotMechanism implements Mechanism
   private final PivotConfig config = new PivotConfig()
       .withHardLimits(Degrees.of(-180), Degrees.of(180))
       .withTelemetry("Turret", TelemetryVerbosity.HIGH);
-  private final Pivot pivot = new Pivot(config, motor);
+  private final Pivot pivot = new Pivot(config, motor); // the YAMS Pivot inside the turret
 
   public void periodic()
   {
@@ -108,103 +106,17 @@ public class PivotMechanism implements Mechanism
 
 The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/), and the options in `config` in [PivotConfig](mechanism-configs/pivot-config.md).
 
-## Commands
+In the rest of your code, `turret` is the `TurretSubsystem` (or `TurretMechanism`), and `pivot` is the YAMS `Pivot` inside it.
 
-Every command below exists with the same name in Commands v2 and Commands v3.
+{% hint style="info" %}
+The gains (`kP` of 4, `kS` of 0.1, `kV` of 0.5) and the profile are placeholders. In simulation the turret should turn to its target and stop there, perhaps with some overshoot. On your robot they will be wrong: tune them as below.
+{% endhint %}
 
-<figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
+## Controlling a pivot
 
-| Command                         | What it does                                       | Ends                                    |
-| ------------------------------- | -------------------------------------------------- | --------------------------------------- |
-| `setAngle(Angle)`, `run(Angle)` | Go to the angle and hold it. The two are the same. | Never, until interrupted.               |
-| `runTo(Angle, Angle tolerance)` | Go to the angle.                                   | When the pivot is within the tolerance. |
-| `set(double)`                   | Output a duty cycle, with the closed loop off.     | Never, until interrupted.               |
-| `setVoltage(Voltage)`           | Output a voltage, with the closed loop off.        | Never, until interrupted.               |
+A pivot takes `Angle` targets: `pivot.setAngle(Degrees.of(90))` goes to 90° and holds it, `pivot.runTo(Degrees.of(90), Degrees.of(1))` ends when it gets there, and `pivot.getAngle()` reads where it is. [Controlling a mechanism](controlling-a-mechanism.md) lists every command, setpoint function and check, and [When mechanism commands end](run-vs-runto.md) explains how they work with a default command.
 
-`setAngle`, `run` and `runTo` also take a `Supplier<Angle>`, which is how a turret tracks a moving target: give it a supplier that returns the angle to the target.
-
-{% tabs %}
-{% tab title="Commands v2" %}
-```java
-// In the subsystem
-public Command hold(Angle angle)
-{
-  return pivot.setAngle(angle); // never ends: a good default command
-}
-
-public Command moveTo(Angle angle)
-{
-  return pivot.runTo(angle, Degrees.of(1)); // ends when it gets there
-}
-
-// In RobotContainer
-turret.setDefaultCommand(turret.hold(Degrees.of(0)));
-Command score = turret.moveTo(Degrees.of(90)).andThen(intake.eject());
-```
-{% endtab %}
-
-{% tab title="Commands v3" %}
-```java
-// In the mechanism
-public Command hold(Angle angle)
-{
-  return run(coroutine -> coroutine.await(pivot.setAngle(angle)))
-      .withPriority(Command.LOWEST_PRIORITY) // so any other command can take over
-      .named("Pivot Hold");
-}
-
-public Command moveTo(Angle angle)
-{
-  return pivot.runTo(angle, Degrees.of(1)); // ends when it gets there
-}
-
-// In Robot
-turret.setDefaultCommand(turret.hold(Degrees.of(0)));
-Command score = Command.noRequirements(coroutine -> {
-  coroutine.await(turret.moveTo(Degrees.of(90)));
-  coroutine.await(intake.eject());
-}).named("Score");
-```
-{% endtab %}
-{% endtabs %}
-
-When a command ends the motor keeps its last request, so a mechanism that reached its goal stays there until another command, usually the default one, gives it something else. [run() vs runTo() Commands](run-vs-runto.md) covers the pitfalls, including a default command undoing a `runTo()`.
-
-## Setpoint functions
-
-The commands above are built on plain functions that set the setpoint and return at once. Use them when you write your own command, or when something other than a command decides the setpoint, such as an AdvantageKit IO layer.
-
-| Function                                   | What it does                                                                                                                                         |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `setMechanismPositionSetpoint(Angle)`      | Go to this angle with closed loop control.                                                                                                           |
-| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference).                                         |
-| `setVoltageSetpoint(Voltage)`              | Output this voltage. Stops the closed loop.                                                                                                          |
-| `setDutyCycleSetpoint(double)`             | Output this duty cycle, from -1 to 1. Stops the closed loop.                                                                                         |
-| `getMechanismSetpoint()`                   | The current position setpoint as an angle, if there is one.                                                                                          |
-| `getMeasurementSetpoint()`                 | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
-
-```java
-pivot.setMechanismPositionSetpoint(Degrees.of(30));
-```
-
-These do not require the subsystem or mechanism, so nothing stops two callers fighting over the setpoint. Prefer the commands unless you need these. [Setpoint Methods vs Command Helpers](setpoint-methods.md) compares the two in detail.
-
-## Asking where it is
-
-<figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
-
-| As a `Trigger`             | As a boolean                   | True when                                                                  |
-| -------------------------- | ------------------------------ | -------------------------------------------------------------------------- |
-| `near(angle, within)`      | `isNear(angle, within)`        | The pivot is within `within` of `angle`.                                   |
-| `between(start, end)`      | `isBetween(start, end)`        | The pivot is between the two angles.                                       |
-| `gte(angle)`, `lte(angle)` | `isGte(angle)`, `isLte(angle)` | The pivot is at or above, or at or below, the angle.                       |
-| `max()`, `min()`           | `isAtMax()`, `isAtMin()`       | The pivot is at its soft limit, or its hard limit if no soft limit is set. |
-
-`getAngle()` returns the pivot's current angle.
-
-```java
-turret.near(Degrees.of(90), Degrees.of(1)).whileTrue(shooter.fire());
-```
+To track a moving target, give `setAngle` (or `run`) a `Supplier<Angle>`: it follows the supplier every loop and never ends. `runTo` with a supplier also follows it, but ends as soon as the turret catches up, so it is not for tracking.
 
 ## Turret or wrist?
 
@@ -222,22 +134,26 @@ A turret turns on top of the robot. Its angle is measured from the robot's front
 | Is limited by its wiring                              | [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), with hard limits a little wider. It may have to unwind the long way. |
 
 ```java
-// A turret limited by its wiring to one and a bit turns
+// Fragment: a turret limited by its wiring to one and a bit turns. Placeholder gains.
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(10, 4)))
     .withClosedLoopController(20, 0, 0.5)
+    .withFeedforward(new SimpleMotorFeedforward(0.2, 0.5, 0)) // kS, kV, kA
     .withTrapezoidalProfile(DegreesPerSecond.of(360), DegreesPerSecondPerSecond.of(720))
     .withSoftLimits(Degrees.of(-200), Degrees.of(200))
     .withStartingPosition(Degrees.of(0))
-    .withMomentOfInertia(Meters.of(0.25), Pounds.of(8));
+    .withMomentOfInertia(Meters.of(0.25), Pounds.of(8))
+    .withTelemetry("TurretMotor", TelemetryVerbosity.HIGH);
 PivotConfig config = new PivotConfig()
     .withHardLimits(Degrees.of(-220), Degrees.of(220))
     .withTelemetry("Turret", TelemetryVerbosity.HIGH);
 ```
 
-**Use it** to track something by giving `setAngle` a supplier. To aim at a point on the field, the turret's angle is the direction to the target minus the robot's heading:
+**Use it** to track something by giving `setAngle` a supplier, which it reads every loop. To aim at a point on the field, the turret's angle is the direction to the target minus the robot's heading:
 
 ```java
+// In TurretSubsystem. Never ends: bind it with whileTrue, or make it the default command.
 public Command aimAt(Supplier<Angle> fieldAngleToTarget, Supplier<Angle> robotHeading)
 {
   return pivot.setAngle(() -> fieldAngleToTarget.get().minus(robotHeading.get()));
@@ -253,13 +169,17 @@ A wrist turns on the end of another mechanism, usually an arm. Its angle is meas
 **Configure it** with soft limits always, because a wrist has parts to hit at both ends of its travel, and a small moment of inertia.
 
 ```java
+// Fragment: a wrist on the end of an arm. Placeholder gains.
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 5)))
     .withClosedLoopController(12, 0, 0.2)
+    .withFeedforward(new SimpleMotorFeedforward(0.1, 0.3, 0)) // kS, kV, kA
     .withTrapezoidalProfile(DegreesPerSecond.of(360), DegreesPerSecondPerSecond.of(720))
     .withSoftLimits(Degrees.of(-90), Degrees.of(90))
     .withStartingPosition(Degrees.of(0))
-    .withMomentOfInertia(Inches.of(6), Pounds.of(2));
+    .withMomentOfInertia(Inches.of(6), Pounds.of(2))
+    .withTelemetry("WristMotor", TelemetryVerbosity.HIGH);
 PivotConfig config = new PivotConfig()
     .withHardLimits(Degrees.of(-100), Degrees.of(100))
     .withTelemetry("Wrist", TelemetryVerbosity.HIGH);
@@ -277,7 +197,7 @@ How heavy the pivot is to turn is set on the motor config with [`withMomentOfIne
 
 ## Configuring and tuning a pivot, step by step
 
-Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
+Do the configuration steps first, in simulation, then tune the real pivot with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
 Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
@@ -317,35 +237,13 @@ Set [`withMomentOfInertia`](editor/config/simulation.md#withmomentofinertia) on 
 {% endstep %}
 {% endstepper %}
 
-### Tune it
+### What is different when tuning a pivot
 
-A `Pivot` does not account for gravity, so there is no kG to find.
+A pivot is tuned like an arm without the kG step: follow [Step 5 of the Arm tutorial](../tutorials/arm/tune.md), and see [Tuning order](live-tuning/#tuning-order) for the keys to watch. What sets a pivot apart:
 
-{% stepper %}
-{% step %}
-#### Find kS
-
-Set kP, kI and kD to 0. Raise `closedloop/feedforward/kS` until the pivot is just about to move, in each direction, and use the smaller value.
-{% endstep %}
-
-{% step %}
-#### Raise kP, then add kD
-
-Raise kP until it reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots. Without a profile a new setpoint is a sudden jump, so tune with small moves, a few degrees or centimeters at a time.
-{% endstep %}
-
-{% step %}
-#### Add the motion profile last
-
-Once the pivot reaches small setpoints cleanly, set a maximum velocity and acceleration it can really reach, and raise them a step at a time.
-{% endstep %}
-
-{% step %}
-#### Find kV with the profile
-
-kV only acts while the setpoint is moving, so it is tuned with the profile. Run a long move and raise kV until `mechanism/velocity` matches the setpoint velocity in the middle of it.
-{% endstep %}
-{% endstepper %}
+* **There is no kG.** Start with kS: raise it until the pivot is just about to move, in each direction, and use the smaller value.
+* **Friction varies with direction and position.** Cables and hoses drag more one way, and more near the ends of the travel. Tune where the drag is worst.
+* **kV matters more than on an arm** for a turret that tracks, because its setpoint never stops moving.
 
 ### What changes for each kind
 

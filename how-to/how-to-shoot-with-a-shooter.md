@@ -1,441 +1,141 @@
 # How do I shoot with a shooter?
 
-A flywheel shooter's effectiveness depends on reaching a stable velocity setpoint before the game piece enters the shooter. `FlyWheel` exposes a velocity trigger (`near`) so you can gate game piece injection on whether the wheel has spun up, rather than using a fixed time delay.
+**Goal:** hold a button to spin the shooter up, and have the feeder push the game piece in only once the wheel is at speed.
+
+A shot has three parts:
+
+1. **Spin up:** the shooter `FlyWheel` goes to a speed and holds it.
+2. **Wait for speed:** a `Trigger` turns true once the wheel has been near that speed for 0.1 seconds.
+3. **Feed:** the feeder `FlyWheel` pushes the game piece into the wheel while the trigger is true.
+
+This page assumes a shooter built as in the [Shooter/FlyWheels tutorial](../tutorials/shooter-flywheels.md), and a feeder built like the intake in [How do I set up an intake roller?](how-do-i-set-up-an-intake-roller.md) The shooter and the feeder are separate subsystems, one YAMS mechanism each, so each can run its own command at the same time.
 
 <figure><img src="../.gitbook/assets/howto-shooter-at-speed.gif" alt="Animation of a flywheel spinning up to 3000 RPM and shooting two balls, with a band of 100 RPM around the setpoint. Each shot drops the speed by several hundred RPM, and it overshoots and rings as it recovers. A lane for the at speed trigger is true inside the band, including for an instant each time the speed passes through it. A lane for the feeder, which uses the trigger with a 0.1 second debounce, is only true once the speed has stayed in the band, so the second ball is not fed until the wheel has settled."><figcaption><p>Each shot slows the wheel and it rings as it recovers. The tolerance band and a debounce keep the feeder off until it has settled.</p></figcaption></figure>
 
-## Create `Command`s with our `Shooter`
+## Step 1: Spin up
 
-We use the `FlyWheel` class as a interface to create commands!
+The shooter needs gearing that lets it reach your shot speed. This example drives a 4 inch wheel 1:1 from a NEO, which spins freely at about 5600 RPM, and shoots at 3000 RPM. These lines are a fragment of the shooter's `SmartMotorControllerConfig`:
+
+{% code title="ShooterSubsystem.java (fragment)" %}
+```java
+private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    // 1:1, so the wheel can reach 3000 RPM. A 12:1 reduction would top out near 470 RPM.
+    .withGearing(new MechanismGearing(1))
+    // PLACEHOLDER gains: a starting point for a NEO on a 4 inch wheel, not tuned values.
+    .withClosedLoopController(0.1, 0, 0)
+    .withSimClosedLoopController(0.1, 0, 0)
+    // kS, kV, kA. kV is volts per rotation per second of the wheel.
+    .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
+    .withSimFeedforward(new SimpleMotorFeedforward(0, 0.12, 0))
+    .withMomentOfInertia(Inches.of(2), Pounds.of(1))
+    .withZeroPower(MotorMode.COAST)
+    .withStatorCurrentLimit(Amps.of(40))
+    .withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+
+**Why kV matters most.** Almost all of a flywheel's voltage comes from `kV`, the voltage per unit of speed. A good first guess is 12 volts divided by the free speed of the wheel: 12 / (5600 RPM ÷ 60) is about 0.12 volts per rotation per second. With `kV` right, the wheel gets close to the target on feedforward alone, and `kP` only has to fix the last bit and recover after each shot. If `kV` is 0, `kP` does all the work and the wheel settles well below the target.
+
+Add these two methods to the shooter class:
 
 {% tabs %}
 {% tab title="Commands v2" %}
-<pre class="language-java" data-title="ExampleSubsystem.java" data-line-numbers><code class="lang-java">// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
-package first.robot.subsystems;
-
-import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-<strong>import static org.wpilib.units.Units.Seconds;
-</strong>
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-
-import org.wpilib.command2.Command;
-import org.wpilib.command2.SubsystemBase;
-import org.wpilib.command2.button.Trigger;
-import org.wpilib.hardware.bus.CANPort;
-import org.wpilib.math.controller.SimpleMotorFeedforward;
-import org.wpilib.math.system.DCMotor;
-<strong>import org.wpilib.units.measure.AngularVelocity;
-</strong>import yams.commands2.config.SmartMotorControllerConfig;
-import yams.commands2.mechanisms.FlyWheel;
-import yams.core.gearing.GearBox;
-import yams.core.gearing.MechanismGearing;
-import yams.core.mechanisms.config.FlyWheelConfig;
-import yams.core.motorcontrollers.SmartMotorController;
-import yams.core.motorcontrollers.enums.ControlMode;
-import yams.core.motorcontrollers.enums.MotorMode;
-import yams.core.motorcontrollers.local.SparkWrapper;
-import yams.core.telemetry.enums.TelemetryVerbosity;
-
-public class ExampleSubsystem extends SubsystemBase {
-
-  private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(50, 0, 0)
-  .withSimClosedLoopController(50, 0, 0)
-  // Feedforward Constants
-  .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-  .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-  // Telemetry name and verbosity level
-  .withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH)
-  // Gearing from the motor rotor to final shaft.
-  // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-  // Motor properties to prevent over currenting.
-  .withMotorInverted(false)
-  .withZeroPower(MotorMode.COAST)
-  .withStatorCurrentLimit(Amps.of(40))
-  .withClosedLoopRampRate(Seconds.of(0.25))
-  .withOpenLoopRampRate(Seconds.of(0.25));
-
-  // Vendor motor controller object
-  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
-
-  // Create our SmartMotorController from our Spark and config with the NEO.
-  private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
-
- private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-  // Diameter of the flywheel.
-  .withDiameter(Inches.of(4))
-  // Telemetry name and verbosity for the shooter.
-  .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
-
-  // Shooter Mechanism
-  private FlyWheel shooter = new FlyWheel(shooterConfig, sparkSmartMotorController);
-
-<strong>  /**
-</strong><strong>   * Gets the current velocity of the shooter.
-</strong><strong>   *
-</strong><strong>   * @return Shooter velocity.
-</strong><strong>   */
-</strong><strong>  public AngularVelocity getVelocity() {return shooter.getSpeed();}
-</strong>
-<strong>  /**
-</strong><strong>   * Set the shooter velocity.
-</strong><strong>   *
-</strong><strong>   * @param speed Speed to set.
-</strong><strong>   * @return {@link org.wpilib.command2.RunCommand}
-</strong><strong>   */
-</strong><strong>  public Command run(AngularVelocity speed) {return shooter.run(speed);}
-</strong>
-<strong>  /**
-</strong><strong>   * Set the dutycycle of the shooter.
-</strong><strong>   *
-</strong><strong>   * @param dutyCycle DutyCycle to set.
-</strong><strong>   * @return {@link org.wpilib.command2.RunCommand}
-</strong><strong>   */
-</strong><strong>  public Command set(double dutyCycle) {return shooter.set(dutyCycle);}
-</strong>
-<strong>  /**
-</strong><strong>   * Trigger that is true while the shooter is within a tolerance of a velocity.
-</strong><strong>   *
-</strong><strong>   * @param speed Velocity to check.
-</strong><strong>   * @param tolerance Allowed velocity error.
-</strong><strong>   * @return {@link Trigger}
-</strong><strong>   */
-</strong><strong>  public Trigger atSpeed(AngularVelocity speed, AngularVelocity tolerance) {return shooter.near(speed, tolerance);}
-</strong>
-  /** Creates a new ExampleSubsystem. */
-  public ExampleSubsystem() {}
-
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-    shooter.updateTelemetry();
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
-    shooter.simIterate();
-  }
+{% code title="ShooterSubsystem.java (fragment)" %}
+```java
+/** Spin at a speed and hold it. Runs until interrupted. */
+public Command spinUp(AngularVelocity speed) {
+  return shooter.run(speed);
 }
 
-</code></pre>
+/** True once the wheel has stayed within 100 RPM of a speed for 0.1 seconds. */
+public Trigger ready(AngularVelocity speed) {
+  return shooter.near(speed, RPM.of(100)).debounce(0.1);
+}
+```
+{% endcode %}
 {% endtab %}
 
 {% tab title="Commands v3" %}
-{% code title="ExampleMechanism.java" lineNumbers="true" %}
+{% code title="ShooterMechanism.java (fragment)" %}
 ```java
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+/** Spin at a speed and hold it. Runs until interrupted. */
+public Command spinUp(AngularVelocity speed) {
+  return shooter.run(speed);
+}
 
-package first.robot.mechanisms;
-
-import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Seconds;
-
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-
-import org.wpilib.command3.Command;
-import org.wpilib.command3.Mechanism;
-import org.wpilib.command3.Trigger;
-import org.wpilib.hardware.bus.CANPort;
-import org.wpilib.math.controller.SimpleMotorFeedforward;
-import org.wpilib.math.system.DCMotor;
-import org.wpilib.units.measure.AngularVelocity;
-import yams.commands3.config.SmartMotorControllerConfig;
-import yams.commands3.mechanisms.FlyWheel;
-import yams.core.gearing.GearBox;
-import yams.core.gearing.MechanismGearing;
-import yams.core.mechanisms.config.FlyWheelConfig;
-import yams.core.motorcontrollers.SmartMotorController;
-import yams.core.motorcontrollers.enums.ControlMode;
-import yams.core.motorcontrollers.enums.MotorMode;
-import yams.core.motorcontrollers.local.SparkWrapper;
-import yams.core.telemetry.enums.TelemetryVerbosity;
-
-public class ExampleMechanism implements Mechanism {
-
-  private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(50, 0, 0)
-  .withSimClosedLoopController(50, 0, 0)
-  // Feedforward Constants
-  .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-  .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-  // Telemetry name and verbosity level
-  .withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH)
-  // Gearing from the motor rotor to final shaft.
-  // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-  // Motor properties to prevent over currenting.
-  .withMotorInverted(false)
-  .withZeroPower(MotorMode.COAST)
-  .withStatorCurrentLimit(Amps.of(40))
-  .withClosedLoopRampRate(Seconds.of(0.25))
-  .withOpenLoopRampRate(Seconds.of(0.25));
-
-  // Vendor motor controller object
-  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
-
-  // Create our SmartMotorController from our Spark and config with the NEO.
-  private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
-
- private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-  // Diameter of the flywheel.
-  .withDiameter(Inches.of(4))
-  // Telemetry name and verbosity for the shooter.
-  .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
-
-  // Shooter Mechanism
-  private FlyWheel shooter = new FlyWheel(shooterConfig, sparkSmartMotorController);
-
-  /**
-   * Gets the current velocity of the shooter.
-   *
-   * @return Shooter velocity.
-   */
-  public AngularVelocity getVelocity() {return shooter.getSpeed();}
-
-  /**
-   * Set the shooter velocity.
-   *
-   * @param speed Speed to set.
-   * @return {@link Command}
-   */
-  public Command run(AngularVelocity speed) {return shooter.run(speed);}
-
-  /**
-   * Set the dutycycle of the shooter.
-   *
-   * @param dutyCycle DutyCycle to set.
-   * @return {@link Command}
-   */
-  public Command set(double dutyCycle) {return shooter.set(dutyCycle);}
-
-  /**
-   * Trigger that is true while the shooter is within a tolerance of a velocity.
-   *
-   * @param speed Velocity to check.
-   * @param tolerance Allowed velocity error.
-   * @return {@link Trigger}
-   */
-  public Trigger atSpeed(AngularVelocity speed, AngularVelocity tolerance) {return shooter.near(speed, tolerance);}
-
-  /**
-   * Hold the shooter at a velocity at the lowest priority, so any other command can take over.
-   * Meant for the default command.
-   * @param speed Velocity to hold.
-   */
-  public Command hold(AngularVelocity speed) {
-    return run(coroutine -> coroutine.await(shooter.run(speed)))
-        .withPriority(Command.LOWEST_PRIORITY)
-        .named("Shooter Hold");
-  }
-
-  /** Creates a new ExampleMechanism. */
-  public ExampleMechanism() {}
-
-  public void periodic() {
-    // A Commands v3 Mechanism has no periodic hook: call this from Robot.robotPeriodic()
-    shooter.updateTelemetry();
-  }
-
-  public void simulationPeriodic() {
-    // A Commands v3 Mechanism has no periodic hook: Robot.simulationInit() runs this in its own Notifier
-    shooter.simIterate();
-  }
+/** True once the wheel has stayed within 100 RPM of a speed for 0.1 seconds. */
+public Trigger ready(AngularVelocity speed) {
+  return shooter.near(speed, RPM.of(100)).debounce(Seconds.of(0.1));
 }
 ```
 {% endcode %}
 {% endtab %}
 {% endtabs %}
 
-## Bind buttons to our `Shooter`
+## Step 2: Wait for speed
 
-We bind buttons to use the `Commands` from our `Shooter`
+Every shot takes speed out of the wheel, and the speed overshoots and rings as the closed loop brings it back. The 100 RPM tolerance keeps `ready` false while the wheel is too slow or too fast. The speed still passes through the tolerance for an instant on each swing, and the 0.1 second debounce ignores that: `ready` only turns true once the speed has stayed inside the tolerance. Without the debounce, the feeder pulses while the wheel is still ringing.
+
+For a plain boolean outside of a `Trigger`, `FlyWheel` also has `isNear(speed, tolerance)`.
+
+## Step 3: Feed
+
+The feeder is a `FlyWheel` in `ControlMode.OPEN_LOOP`, exactly like the intake in [How do I set up an intake roller?](how-do-i-set-up-an-intake-roller.md), with a `feed()` command that returns `feeder.setVoltage(Volts.of(8))` and a default command that stops it.
+
+Bind both to the same button. The shooter spins up as soon as the button is held, and the feeder only runs while the button is held **and** the shooter is ready.
 
 {% tabs %}
 {% tab title="Commands v2" %}
-<pre class="language-java" data-title="RobotContainer.java" data-line-numbers><code class="lang-java">// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
-package first.robot;
-
-import first.robot.subsystems.ExampleSubsystem;
-
-<strong>import static org.wpilib.units.Units.RPM;
-</strong>
-import org.wpilib.command2.Command;
-import org.wpilib.command2.Commands;
-import org.wpilib.command2.button.CommandNiDsXboxController;
-
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and trigger mappings) should be declared here.
- */
-public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-
-  private final CommandNiDsXboxController m_driverController = new CommandNiDsXboxController(0);
-
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
-    // Configure the trigger bindings
-    configureBindings();
-
-<strong>    // Set the default command to force the shooter rest.
-</strong><strong>    m_exampleSubsystem.setDefaultCommand(m_exampleSubsystem.set(0));
-</strong>  }
-
-  /** Use this method to define your trigger->command mappings. */
-  private void configureBindings() {
-    
-<strong>    // Schedule `run` when the Xbox controller's A or B button is pressed,
-</strong><strong>    // cancelling on release.
-</strong><strong>    m_driverController.a().whileTrue(m_exampleSubsystem.run(RPM.of(60)));
-</strong><strong>    m_driverController.b().whileTrue(m_exampleSubsystem.run(RPM.of(300)));
-</strong>
-<strong>    // Schedule `set` when the Xbox controller's X or Y button is pressed,
-</strong><strong>    // cancelling on release.
-</strong><strong>    m_driverController.x().whileTrue(m_exampleSubsystem.set(0.3));
-</strong><strong>    m_driverController.y().whileTrue(m_exampleSubsystem.set(-0.3));
-</strong>
-  }
-
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
-  }
-}
-
-</code></pre>
-{% endtab %}
-
-{% tab title="Commands v3" %}
-{% code title="Robot.java" lineNumbers="true" %}
+{% code title="RobotContainer.java (fragment)" %}
 ```java
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+private static final AngularVelocity SHOT_SPEED = RPM.of(3000);
 
-package first.robot;
+private final ShooterSubsystem shooter = new ShooterSubsystem();
+private final FeederSubsystem feeder = new FeederSubsystem();
 
-import first.robot.mechanisms.ExampleMechanism;
+private void configureBindings() {
+  // Hold the right trigger: spin up.
+  m_driverController.rightTrigger().whileTrue(shooter.spinUp(SHOT_SPEED));
 
-import static org.wpilib.units.Units.RPM;
-
-import java.util.ArrayList;
-import java.util.List;
-import org.wpilib.command3.Scheduler;
-import org.wpilib.command3.button.CommandNiDsXboxController;
-import org.wpilib.framework.OpModeRobot;
-import org.wpilib.system.Notifier;
-
-/**
- * With Commands v3 there is no RobotContainer. The robot's mechanisms and controllers are declared
- * here, and the button bindings live in the opmodes.
- */
-public class Robot extends OpModeRobot {
-  // The robot's mechanisms are defined here...
-  public final ExampleMechanism exampleMechanism = new ExampleMechanism();
-
-  public final CommandNiDsXboxController driverController = new CommandNiDsXboxController(0);
-
-  private final Scheduler scheduler = Scheduler.getDefault();
-  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
-  private final List<Notifier> simulationNotifiers = new ArrayList<>();
-
-  public Robot() {
-    // Set the default command to force the shooter rest.
-    exampleMechanism.setDefaultCommand(exampleMechanism.hold(RPM.of(0)));
-  }
-
-  @Override
-  public void robotPeriodic() {
-    // A Mechanism has no periodic hook, so update it before the scheduler runs.
-    exampleMechanism.periodic();
-    scheduler.run();
-  }
-
-  @Override
-  public void simulationInit() {
-    // Runs once, when the simulation starts.
-    // Run each mechanism's simulation in its own Notifier, every robot loop.
-    startSimulation("Example Mechanism", exampleMechanism::simulationPeriodic);
-  }
-
-  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
-  private void startSimulation(String name, Runnable simulationPeriodic) {
-    Notifier notifier = new Notifier(simulationPeriodic);
-    notifier.setName(name + " Simulation");
-    notifier.startPeriodic(getPeriod());
-    simulationNotifiers.add(notifier);
-  }
+  // While the trigger is held and the wheel is ready: feed.
+  m_driverController.rightTrigger()
+      .and(shooter.ready(SHOT_SPEED))
+      .whileTrue(feeder.feed());
 }
 ```
 {% endcode %}
+{% endtab %}
 
-{% code title="ExampleTeleop.java" lineNumbers="true" %}
+{% tab title="Commands v3" %}
+{% code title="ExampleTeleop.java (fragment)" %}
 ```java
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// In the opmode constructor. SHOT_SPEED is RPM.of(3000).
+var shoot = controller.rightTrigger();
 
-package first.robot.opmodes;
+// Hold the right trigger: spin up.
+shoot.whileTrue(robot.shooter.spinUp(SHOT_SPEED));
 
-import static org.wpilib.units.Units.RPM;
-
-import first.robot.Robot;
-import org.wpilib.opmode.OpMode;
-import org.wpilib.opmode.Teleop;
-
-/** Bindings made in an opmode's constructor only exist while that opmode runs. */
-@Teleop
-public class ExampleTeleop implements OpMode {
-  public ExampleTeleop(Robot robot) {
-    var controller = robot.driverController;
-
-    // Schedule `run` when the Xbox controller's A or B button is pressed,
-    // cancelling on release.
-    controller.a().whileTrue(robot.exampleMechanism.run(RPM.of(60)));
-    controller.b().whileTrue(robot.exampleMechanism.run(RPM.of(300)));
-
-    // Schedule `set` when the Xbox controller's X or Y button is pressed,
-    // cancelling on release.
-    controller.x().whileTrue(robot.exampleMechanism.set(0.3));
-    controller.y().whileTrue(robot.exampleMechanism.set(-0.3));
-  }
-}
+// While the trigger is held and the wheel is ready: feed.
+shoot.and(robot.shooter.ready(SHOT_SPEED)).whileTrue(robot.feeder.feed());
 ```
 {% endcode %}
 {% endtab %}
 {% endtabs %}
 
-To feed a game piece only once the wheel is up to speed, bind your feeder to the `atSpeed` trigger, for example `m_exampleSubsystem.atSpeed(RPM.of(300), RPM.of(10)).debounce(0.1).and(m_driverController.rightTrigger()).whileTrue(feeder.set(0.5));`.
+## Check it
 
-Every shot takes speed out of the wheel, and the speed overshoots and rings as the closed loop brings it back. The tolerance keeps the trigger false while the wheel is too slow or too fast. The speed still passes through the tolerance for an instant on each swing, and `.debounce(0.1)` ignores that: the trigger only turns true once the speed has stayed inside the tolerance for 0.1 seconds. Without the debounce the feeder can pulse while the wheel is still ringing. For a plain boolean check outside of a `Trigger`, `FlyWheel` also has `isNear(speed, tolerance)`.
+1. Start the simulation and open **NetworkTables > Mechanisms > Shooter** in your dashboard.
+2. Hold the right trigger. The shooter's speed should rise to about 3000 RPM.
+3. The feeder should start only after the shooter's speed has settled, not while it is still climbing.
 
-<figure><img src="../.gitbook/assets/mech-triggers-flywheel.png" alt="A number line from 0 to 5000 RPM with a flywheel at 2960 RPM. near 3000 RPM within 100 is true. between 500 and 2000 RPM is false. gte 2500 RPM is true. lte 2500 RPM is false. A flywheel has no max or min. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
+## If it did not work
 
-{% hint style="info" %}
-**Using Commands v3?** Use the Commands v3 tabs above. A v3 `Mechanism` has no `periodic()` hook, so `Robot.robotPeriodic()` calls `updateTelemetry()` and `simIterate()` through the mechanism, and the button bindings live in an opmode instead of a `RobotContainer`. See `examples/commands3/simple_robot-2027` in the YAMS repo for a complete robot.
-{% endhint %}
+* **The wheel settles below 3000 RPM and the feeder never runs.** `kV` is too low (or 0). Raise it until the wheel gets close on its own, then tune `kP`.
+* **The wheel never gets near 3000 RPM, even at full voltage.** The gearing is too slow. Check `withGearing`: the motor's free speed divided by the reduction must be well above the shot speed.
+* **The feeder pulses on and off.** The tolerance is too tight, or the debounce is missing. Try 100 to 150 RPM and 0.1 seconds.
+* **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
+
+## Next
+
+To shoot while the robot is driving, see [How do I shoot on the move?](how-do-i-shoot-on-the-move.md)

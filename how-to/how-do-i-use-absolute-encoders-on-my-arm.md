@@ -64,11 +64,16 @@ If the arm's physical range of motion crosses the discontinuity point, the posit
 
 ## Find your zero offset
 
-Move the arm to exactly horizontal (0° from horizontal, parallel to the ground). Read the raw encoder position in the hardware client, that value is your zero offset.
+Move the arm to exactly horizontal (0° from horizontal, parallel to the ground). Read the raw encoder position in the hardware client, with no offset set in the client: that value is your zero offset.
+
+**Units.** The hardware clients show the position in **rotations**, from 0 to 1. `withExternalEncoderZeroOffset` takes an `Angle`, so pass the reading as rotations, or multiply it by 360 for degrees. A reading of 0.0924 is either of these:
 
 ```java
-.withExternalEncoderZeroOffset(Degrees.of(33.25))  // replace with your measured value
+.withExternalEncoderZeroOffset(Rotations.of(0.0924))  // the reading, as shown in the client
+.withExternalEncoderZeroOffset(Degrees.of(33.25))     // the same, 0.0924 × 360
 ```
+
+Use one of the two, with your own reading. The offset is in **arm (mechanism) rotations**. With the encoder on the arm's shaft (1:1, as this page assumes), an encoder rotation and an arm rotation are the same, so the client's reading goes in as it is. If you set `withExternalEncoderGearing`, measure the offset as an arm angle instead.
 
 Negative offsets are automatically converted to their positive equivalent (1 rotation is added internally).
 
@@ -89,6 +94,8 @@ Simulation has no physical encoder, so the absolute encoder reading is unavailab
 ***
 
 ## Complete examples
+
+The gains in these examples (`kP` of 4, and an `ArmFeedforward` of all zeros) are **placeholders**: with them the arm moves but sags below its setpoints. Find `kG` and then `kP` with [Step 5: Tune it](../tutorials/arm/tune.md).
 
 ### SparkMax + SparkAbsoluteEncoder
 
@@ -233,3 +240,19 @@ The exact same external encoder setup described above works identically for `Piv
 The arm example demonstrates configuring an arm with a CANcoder as its external feedback encoder:
 
 {% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ArmSubsystem.java" %}
+
+## Check it
+
+1. Deploy, and hold the arm horizontal. The arm's angle under **NetworkTables > Mechanisms** should read about 0°.
+2. Move the arm by hand through its whole travel. The angle should follow it smoothly, with no jump of 360° anywhere.
+3. Power cycle the robot with the arm somewhere else. After boot it should read the right angle straight away, with no homing.
+
+## If it did not work
+
+* **The angle reads about twice your offset, or the offset is the wrong way.** Check the units above, and that the client had no offset of its own set when you read the value.
+* **The angle jumps by 360° partway through the travel.** The discontinuity point is inside the travel; see [Set the discontinuity point](#set-the-discontinuity-point).
+* **The angle goes the wrong way.** See [Check your inversion](#check-your-inversion), or [Troubleshooting](../tutorials/troubleshooting.md).
+
+## Next
+
+Send the arm to an angle: [How do I set an arm's target angle?](how-to-set-an-arms-target-angle.md)

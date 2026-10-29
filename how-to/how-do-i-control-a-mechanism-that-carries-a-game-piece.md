@@ -65,7 +65,7 @@ A game piece passes through the flywheel rather than staying on it. Its `kV` doe
 
 Measure the loaded gains on the robot, as you measured the empty ones, with [live tuning](../details/live-tuning/):
 
-1. Load a game piece, and hold the mechanism where gravity pulls hardest: an arm level, or an elevator anywhere.
+1. Load a game piece, and move the mechanism to where gravity pulls hardest: an arm level, or an elevator at any height. Then let go, so that only the motor holds it from here on.
 2. Raise the voltage until the mechanism just starts to move up, and note it. Lower it until the mechanism just starts to move down, and note that.
 3. `kG` is halfway between the two voltages. `kS` is half the difference between them.
 4. With that `kG`, check the mechanism reaches its setpoints with the game piece, and raise `kP` (and `kD`) if it is slow.
@@ -78,6 +78,7 @@ A motor controller holds up to four [slots](../details/editor/config/closed-loop
 
 {% tabs %}
 {% tab title="Commands v2" %}
+{% code title="ArmSubsystem.java (fragment)" %}
 ```java
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.Trigger;
@@ -102,9 +103,11 @@ public ArmSubsystem() {
       .onFalse(Commands.runOnce(() -> motor.setClosedLoopSlot(ClosedLoopControllerSlot.SLOT_0)));
 }
 ```
+{% endcode %}
 {% endtab %}
 
 {% tab title="Commands v3" %}
+{% code title="ArmMechanism.java (fragment)" %}
 ```java
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Trigger;
@@ -131,10 +134,13 @@ public ArmMechanism() {
           .named("Arm Empty Gains"));
 }
 ```
+{% endcode %}
 {% endtab %}
 {% endtabs %}
 
-`hasGamePiece()` is whatever tells you the mechanism has a game piece: a beam break, a distance sensor, or the intake's current, as in [How do I sense activity from the motor current?](how-do-i-sense-activity-based-off-of-the-current.md). The slot takes effect with the next setpoint, and a mechanism's commands send a setpoint every loop.
+The gains in this code are **placeholders** to show the shape of the change; use the ones you measured above.
+
+`hasGamePiece()` is whatever tells you the mechanism has a game piece: a beam break, a distance sensor, or the intake's current, as in [How do I detect a game piece from motor current?](how-do-i-sense-activity-based-off-of-the-current.md). The slot takes effect with the next setpoint, and a mechanism's commands send a setpoint every loop.
 
 [Loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers) are switched to the same slot. Give each follower the same slots in its own config.
 
@@ -166,3 +172,11 @@ The motion profile's limits are the same in every slot. A profile that the empty
 ### The simulation is always empty
 
 The simulation uses the mass and moment of inertia in the config, so it never carries the game piece. Gains for the loaded mechanism can be checked in simulation by setting the config's mass to the loaded mass, but tune them on the robot.
+
+## Check it
+
+Graph the arm's angle and setpoint, pick up a game piece, and send the arm to the same setpoint with and without it. With the right slot selected, the arm should settle on the setpoint both times, rather than sagging below it when loaded. Watch the motor's `closedloop/slot` value on the dashboard change from 0 to 1 as it picks the game piece up.
+
+## Next
+
+Tune the empty mechanism first, if you have not: [Step 5: Tune it](../tutorials/arm/tune.md).

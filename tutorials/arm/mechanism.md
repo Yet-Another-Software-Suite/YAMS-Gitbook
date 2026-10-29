@@ -4,7 +4,7 @@ description: Describe the arm and create the Arm mechanism.
 
 # Step 2: The arm
 
-The `SmartMotorController` from step 1 can already spin the motor. An `Arm` adds what makes it an arm: a physics simulation, a drawing of the mechanism for your dashboard, and the commands and triggers you will use in step 3.
+The `SmartMotorController` from step 1 is configured, but nothing tells it to move yet. An `Arm` adds what makes it an arm: a physics simulation, a drawing of the mechanism for your dashboard, and the commands and triggers you will use in step 3.
 
 <figure><img src="../../.gitbook/assets/mech-two-configs.png" alt="A diagram. A mechanism config, which says what the mechanism is, such as its length, mass, hard stops and how it is drawn, and a SmartMotorControllerConfig, which says how its motor behaves, such as gearing, PID, feedforward, soft limits and current, both go into the mechanism class. The mechanism then drives the simulation's physics and Mechanism2d, and the real robot's commands and telemetry."><figcaption><p>Two configs go into one mechanism.</p></figcaption></figure>
 
@@ -573,3 +573,7 @@ ArmSubsystem::ArmSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
+
+## Check it
+
+Build the code again. You can already run the simulation as in [step 4](simulate.md): the arm is drawn at -5 degrees. It does not move yet, because nothing gives it a setpoint.

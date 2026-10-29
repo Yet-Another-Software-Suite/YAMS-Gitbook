@@ -6,7 +6,7 @@ icon: gamepad
 
 `SwerveInputStream` bridges raw joystick axes (each in the range `[-1, 1]`) and the field-relative `ChassisVelocities` (WPILib 2027's name for `ChassisSpeeds`) that [`SwerveDrive.setFieldRelativeChassisSpeeds(...)`](swerve-drive.md) expects. It implements `Supplier<ChassisVelocities>`, so once built it is read with `get()` every loop by the command that drives the robot.
 
-Import it from the package that matches your vendordep: `yams.commands2.swerve.SwerveInputStream` (Commands v2) or `yams.commands3.swerve.SwerveInputStream` (Commands v3). The API is the same in both. In C++ it is `yams::mechanisms::swerve::utility::SwerveInputStream<NumModules>` from `yams/mechanisms/swerve/utility/SwerveInputStream.hpp`, with the same methods in PascalCase (`Of`, `WithDeadband`, `Get`, ...).
+Import it from the package that matches your vendordep: `yams.commands2.swerve.SwerveInputStream` (Commands v2) or `yams.commands3.swerve.SwerveInputStream` (Commands v3). The API is the same in both. In C++ it is `yams::mechanisms::swerve::utility::SwerveInputStream<NumModules>` from `yams/mechanisms/swerve/utility/SwerveInputStream.hpp`, with the same methods in PascalCase (`Of`, `WithDeadband`, `Get`, ...). In the examples on this page, `driverController` is the `CommandGamepad` from the [Swerve Drive tutorial](../tutorials/swerve-drive.md). Its buttons, such as `driverController.rightBumper()`, are `Trigger`s, which can be passed wherever a `BooleanSupplier` is expected.
 
 <figure><img src="../.gitbook/assets/swerve-input-stream-sticks.gif" alt="Animation of two controller sticks, the ChassisVelocities they produce, and a robot on a field. Left stick forward gives positive vx and the robot moves away from the driver station. Left stick left gives positive vy and the robot moves left. A diagonal push gives both. Right stick left gives a positive omega and the robot turns counter-clockwise"><figcaption><p>How each stick movement becomes a field relative velocity.</p></figcaption></figure>
 
@@ -14,83 +14,129 @@ Import it from the package that matches your vendordep: `yams.commands2.swerve.S
 The output is **field relative**, even with `withRobotRelative()`. Drive with it through `setFieldRelativeChassisSpeeds(...)`, not `SwerveDrive.drive(...)`, which expects robot-relative speeds. If you do want `drive(...)`, convert it first: `drive.drive(() -> input.get().toRobotRelative(drive.getGyroRotation3d().toRotation2d()))`.
 {% endhint %}
 
+This page covers building a stream and shaping the sticks. Two more pages cover the rest:
+
+* [Heading and aim modes](swerve-input-stream-aim.md): facing a heading, aiming at a target, and driving without turning.
+* [Input stream telemetry and live tuning](swerve-input-stream-telemetry.md): what a stream publishes, and changing it from a dashboard.
+
 ## Building a stream
 
-`SwerveInputStream.of(drive, x, y)` is the base factory, translation axes only. `SwerveInputStream.of(drive, x, y, rot)` (or the matching constructor) adds an angular velocity axis, and the `new SwerveInputStream(drive, x, y, headingX, headingY)` constructor adds heading axes for point-and-hold control instead. `drive` is your YAMS `SwerveDrive`. From there, `with*()` methods layer on deadbanding, scaling, non-linear response, and alliance-relative flipping:
+`SwerveInputStream.of(drive, x, y)` is the base factory, translation axes only. `SwerveInputStream.of(drive, x, y, rot)` (or the matching constructor) adds an angular velocity axis, and the `new SwerveInputStream(drive, x, y, headingX, headingY)` constructor adds heading axes for point-and-hold control instead. `drive` is your YAMS `SwerveDrive`. From there, `with*()` methods layer on deadbanding, scaling and a non-linear response.
+
+These examples follow the [Swerve Drive tutorial](../tutorials/swerve-drive.md): the subsystem or mechanism builds the stream, because only it can see the YAMS `SwerveDrive`, and a `driveFieldRelative` command drives with it.
 
 {% tabs %}
 {% tab title="Commands v2" %}
+{% code title="subsystems/SwerveSubsystem.java" %}
 ```java
-NiDsXboxController driver = new NiDsXboxController(0);
+/** Turn three controller axes into field relative chassis speeds. */
+public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier translationX, DoubleSupplier translationY,
+                                                  DoubleSupplier rotation) {
+  return SwerveInputStream.of(drive, translationX, translationY)
+      .withControllerRotationAxis(rotation)
+      .withDeadband(0.05)
+      .withScaleTranslation(0.8)
+      .withScaleRotation(0.6)
+      .withMaximumLinearVelocity(MetersPerSecond.of(4.5))
+      .withMaximumAngularVelocity(DegreesPerSecond.of(360))
+      .withCubeTranslationControllerAxis();
+}
 
-SwerveInputStream input =
-    SwerveInputStream.of(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX())
-        .withControllerRotationAxis(() -> -driver.getRightX())
-        .withDeadband(0.05)
-        .withScaleTranslation(0.8)
-        .withScaleRotation(0.6)
-        .withMaximumLinearVelocity(MetersPerSecond.of(4.5))
-        .withMaximumAngularVelocity(DegreesPerSecond.of(360))
-        .withCubeTranslationControllerAxis()
-        .withAllianceRelativeControl();
-
-// SwerveInputStream output is field relative.
-setDefaultCommand(run(() -> drive.setFieldRelativeChassisSpeeds(input.get())));
+/** Drive with field relative chassis speeds. */
+public Command driveFieldRelative(Supplier<ChassisVelocities> speedsSupplier) {
+  return run(() -> drive.setFieldRelativeChassisSpeeds(speedsSupplier.get()))
+      .withName("Field Oriented Drive");
+}
 ```
+{% endcode %}
+
+{% code title="RobotContainer.java: in the constructor" %}
+```java
+// SwerveInputStream output is field relative.
+drive.setDefaultCommand(drive.driveFieldRelative(
+    drive.getChassisSpeedsSupplier(
+        () -> -driverController.getLeftY(),
+        () -> -driverController.getLeftX(),
+        () -> -driverController.getRightX())));
+```
+{% endcode %}
 {% endtab %}
 
 {% tab title="Commands v3" %}
+{% code title="mechanisms/SwerveMechanism.java" %}
 ```java
-// In a teleop opmode. robot.drive is the swerve Mechanism; getSwerveDrive() returns its YAMS SwerveDrive.
-var controller = robot.xboxController;
-robot.drive.setInputStream(SwerveInputStream.of(
-        robot.drive.getSwerveDrive(),
-        () -> -controller.getLeftY(),
-        () -> -controller.getLeftX(),
-        () -> -controller.getRightX())
-    .withDeadband(0.05)
-    .withCubeTranslationControllerAxis()
-    .withAllianceRelativeControl());
-robot.drive.setDefaultCommand(robot.drive.driveInputStream());
-```
+/** Turn three controller axes into field relative chassis speeds. */
+public SwerveInputStream getChassisSpeedsSupplier(DoubleSupplier translationX, DoubleSupplier translationY,
+                                                  DoubleSupplier rotation) {
+  return SwerveInputStream.of(drive, translationX, translationY)
+      .withControllerRotationAxis(rotation)
+      .withDeadband(0.05)
+      .withScaleTranslation(0.8)
+      .withScaleRotation(0.6)
+      .withMaximumLinearVelocity(MetersPerSecond.of(4.5))
+      .withMaximumAngularVelocity(DegreesPerSecond.of(360))
+      .withCubeTranslationControllerAxis();
+}
 
-The Mechanism's drive command reads the active stream every loop:
-
-```java
-public Command driveInputStream() {
+/** Drive with field relative chassis speeds. */
+public Command driveFieldRelative(Supplier<ChassisVelocities> speedsSupplier) {
   return run(coroutine -> {
     while (true) {
-      drive.setFieldRelativeChassisSpeeds(inputStream.get());
+      drive.setFieldRelativeChassisSpeeds(speedsSupplier.get());
       coroutine.yield();
     }
-  }).named("Swerve Drive Input Stream");
+  }).named("Field Oriented Drive");
 }
 ```
+{% endcode %}
+
+{% code title="ExampleTeleop.java: in the constructor" %}
+```java
+// SwerveInputStream output is field relative.
+robot.drive.setDefaultCommand(robot.drive.driveFieldRelative(
+    robot.drive.getChassisSpeedsSupplier(
+        () -> -robot.exampleController.getLeftY(),
+        () -> -robot.exampleController.getLeftX(),
+        () -> -robot.exampleController.getRightX())));
+```
+{% endcode %}
 {% endtab %}
 
 {% tab title="C++" %}
+{% code title="cpp/subsystems/SwerveSubsystem.cpp" %}
 ```cpp
-#include "yams/mechanisms/swerve/utility/SwerveInputStream.hpp"
+// m_inputStream is a std::optional<SwerveInputStream<4>> member of the subsystem,
+// because the drive command reads it every loop.
+wpi::cmd::CommandPtr SwerveSubsystem::DriveWithSticks(std::function<double()> translationX,
+                                                      std::function<double()> translationY,
+                                                      std::function<double()> rotation) {
+  m_inputStream.emplace(
+      utility::SwerveInputStream<4>::Of(m_drive.value(), translationX, translationY)
+          .WithControllerRotationAxis(rotation)
+          .WithDeadband(0.05)
+          .WithScaleTranslation(0.8));
 
-using namespace yams::mechanisms::swerve::utility;
-
-// Member of your subsystem.
-SwerveInputStream<4> m_driveStream = SwerveInputStream<4>::Of(m_drive,
-    [this]{ return -m_driverController.GetLeftY(); },
-    [this]{ return -m_driverController.GetLeftX(); })
-  .WithControllerRotationAxis([this]{ return -m_driverController.GetRightX(); })
-  .WithDeadband(0.05)
-  .WithScaleTranslation(0.8);
-
-// In Periodic(). SwerveInputStream output is field relative.
-void Periodic() override {
-    m_drive.SetFieldRelativeChassisSpeeds(m_driveStream.Get());
+  // SwerveInputStream output is field relative.
+  return Run([this] { m_drive->SetFieldRelativeChassisSpeeds(m_inputStream->Get()); })
+      .WithName("Field Oriented Drive");
 }
 ```
+{% endcode %}
+
+{% code title="cpp/RobotContainer.cpp: in the constructor" %}
+```cpp
+drive.SetDefaultCommand(drive.DriveWithSticks(
+    [this] { return -driverController.GetLeftY(); },
+    [this] { return -driverController.GetLeftX(); },
+    [this] { return -driverController.GetRightX(); }));
+```
+{% endcode %}
 
 C++ has `Of(drive, x, y)` plus constructors taking a rotation axis or two heading axes.
 {% endtab %}
 {% endtabs %}
+
+The single-line examples on the rest of this page call a method on `input`, a stream like the one `getChassisSpeedsSupplier` returns. Keep a reference to the stream if you want to change it later.
 
 ## Mutations apply immediately
 
@@ -100,18 +146,25 @@ Every `with*()` method mutates the stream in place and returns `this`; none of t
 
 For example, auto-aim can be retargeted on the fly from a completely separate button binding, without touching the drive command at all:
 
-```java
-input.withAim(() -> FieldConstants.SPEAKER_POSE, driver::getRightBumperButton);
-setDefaultCommand(run(() -> drive.setFieldRelativeChassisSpeeds(input.get())));
+A Commands v2 fragment. `input` is the stream the default command drives with:
 
-new Trigger(driver::getLeftBumperButton).onTrue(Commands.runOnce(() ->
-    input.withAim(() -> FieldConstants.AMP_POSE, driver::getRightBumperButton)));
+```java
+// Two targets on the field. Use your game's real positions.
+Pose2d speakerPose = new Pose2d(Meters.of(0.2), Meters.of(5.5), Rotation2d.ZERO);
+Pose2d ampPose = new Pose2d(Meters.of(1.8), Meters.of(8.0), Rotation2d.ZERO);
+
+// Aim at the speaker while the right bumper is held.
+input.withAim(() -> speakerPose, driverController.rightBumper());
+
+// Pressing the left bumper retargets the same stream at the amp.
+driverController.leftBumper().onTrue(Commands.runOnce(() ->
+    input.withAim(() -> ampPose, driverController.rightBumper())));
 ```
 
 Pressing the left bumper swaps the aim target from the speaker to the amp. The default command keeps reading the exact same `input` instance; it just starts computing `ChassisVelocities` toward a different pose the moment the mutation happens.
 
 {% hint style="info" %}
-`clone()` is the one method here that doesn't mutate: it returns an independent copy, useful for deriving a second variant of a stream from a shared base configuration without one affecting the other. See [Copying a Stream](swerve-input-stream.md#copying-a-stream) below.
+`clone()` is the one method here that doesn't mutate: it returns an independent copy, useful for deriving a second variant of a stream from a shared base configuration without one affecting the other. See [Copying a stream](#copying-a-stream) below.
 {% endhint %}
 
 ## From stick to velocity
@@ -173,12 +226,12 @@ Both methods set or replace a rotation source after construction. That is useful
 <figure><img src="../.gitbook/assets/sis-rotation-axis.gif" alt="Animation of the right stick pushed left and then right. Pushed left the robot turns counter-clockwise, pushed right it turns clockwise"><figcaption><p>One axis sets a turn rate.</p></figcaption></figure>
 
 ```java
-input.withControllerRotationAxis(() -> -driver.getRightX());
+input.withControllerRotationAxis(() -> -driverController.getRightX());
 ```
 
 ### `withControllerHeadingAxis`
 
-`withControllerHeadingAxis(DoubleSupplier, DoubleSupplier)` sets the pair of axes whose direction becomes a target heading. It does nothing on its own: the heading is used by [`withHeadingControl`](swerve-input-stream.md#withheadingcontrol) in `HEADING` mode.
+`withControllerHeadingAxis(DoubleSupplier, DoubleSupplier)` sets the pair of axes whose direction becomes a target heading. It does nothing on its own: the heading is used by [`withHeadingControl`](swerve-input-stream-aim.md#withheadingcontrol) in `HEADING` mode.
 
 <figure><img src="../.gitbook/assets/sis-heading-axis.gif" alt="Animation of the right stick moving all the way around its edge while a robot on the field turns to face the same direction. Stick up is 0 degrees, stick left is 90 degrees, stick down is 180 degrees and stick right is minus 90 degrees"><figcaption><p>Two axes set a direction, and the robot turns to face it.</p></figcaption></figure>
 
@@ -187,7 +240,7 @@ The heading axes only replace rotation. The left stick keeps driving the robot, 
 <figure><img src="../.gitbook/assets/sis-heading-axis-driving.gif" alt="Animation of a robot driving across the field along a curved path set by the left stick. While it drives, the right stick swings from left to right and the robot turns to face where the right stick points, without changing the path it drives"><figcaption><p>Driving with the left stick while the right stick sets the heading.</p></figcaption></figure>
 
 ```java
-input.withControllerHeadingAxis(() -> -driver.getRightX(), () -> -driver.getRightY());
+input.withControllerHeadingAxis(() -> -driverController.getRightX(), () -> -driverController.getRightY());
 ```
 
 ## Deadband
@@ -245,142 +298,20 @@ input.withCubeTranslationControllerAxis();
 <figure><img src="../.gitbook/assets/sis-cube-rotation.gif" alt="Animation of the right stick sweeping from center to full and back, with two bars and a graph. The linear turn rate follows the stick. The cubed turn rate stays very small until the stick is pushed far, then rises to the same maximum"><figcaption><p>Linear and cubed turn rate from the same stick.</p></figcaption></figure>
 
 ```java
-input.withCubeRotationControllerAxis(driver::getBButton); // only while B is held
-```
-
-## Modes are chosen automatically
-
-A stream is always in exactly one of four internal modes: `ANGULAR_VELOCITY` (the default), `TRANSLATION_ONLY`, `HEADING`, or `AIM`. You never select a mode directly. `get()` re-derives it on every call from which optional pieces are configured and whether the relevant `BooleanSupplier` trigger currently reports true, then transitions cleanly (resetting the relevant PID controllers) if the mode changed since the last call. Mode priority, highest to lowest: `TRANSLATION_ONLY` > `AIM` > `HEADING` > `ANGULAR_VELOCITY`. `getCurrentModeName()` returns the mode the last `get()` used.
-
-`HEADING`, `AIM` and `TRANSLATION_ONLY` turn the robot with the rotation controller from `SwerveDriveConfig.withRotationController(...)`, so configure one before using them.
-
-{% hint style="info" %}
-`SwerveInputStream` used to have a `DRIVE_TO_POSE` mode and a matching `atTargetPose(...)` method; both have been removed. Use [`SwerveDrive.driveToPose(...)`](swerve-drive.md#auto-align) for auto-align instead.
-{% endhint %}
-
-### Heading-snap control
-
-#### `withHeadingControl`
-
-`withHeadingControl(trigger)` enables `HEADING` while `trigger` reports true, snapping to a heading derived from [`withControllerHeadingAxis(x, y)`](swerve-input-stream.md#withcontrollerheadingaxis) instead of rotating at a velocity. The robot stops turning while the heading stick is inside the deadband.
-
-<figure><img src="../.gitbook/assets/sis-heading.gif" alt="Animation of the right stick moving in an arc around its edge, from straight up round to the left, back through the top and round to the right. The robot turns with it, always facing the direction the stick points, a moment behind"><figcaption><p><code>HEADING</code> mode: as the right stick moves around, the robot turns to face where it points.</p></figcaption></figure>
-
-```java
-SwerveInputStream headingStream = input.clone()
-    .withControllerHeadingAxis(() -> -driver.getRightX(), () -> -driver.getRightY())
-    .withHeadingControl(driver::getAButton);
-```
-
-#### `withHeading`
-
-`withHeading(Supplier<Angle>)` faces a field-relative heading from code instead of a stick, and replaces any controller heading axes.
-
-<figure><img src="../.gitbook/assets/sis-with-heading.gif" alt="Animation of a robot facing away from the driver station with both sticks at rest. While the A button is held the robot turns to face 90 degrees and holds it"><figcaption><p>A heading from code, enabled while A is held.</p></figcaption></figure>
-
-```java
-input.withHeading(() -> Degrees.of(90))
-     .withHeadingControl(driver::getAButton);
-```
-
-### Aim at a target
-
-`withAim(Supplier<Pose2d> targetPose, BooleanSupplier trigger)` enables `AIM` while `trigger` reports true, rotating to face `targetPose` while translation keeps working normally. See [Mutations Apply Immediately](swerve-input-stream.md#mutations-apply-immediately) above for an example that retargets it live.
-
-<figure><img src="../.gitbook/assets/sis-aim.gif" alt="Animation of a robot driven left and right by the left stick while it stays facing a target on the field"><figcaption><p><code>AIM</code> mode: the left stick drives, the robot keeps facing the target.</p></figcaption></figure>
-
-```java
-input.withAim(() -> FieldConstants.SPEAKER_POSE, driver::getRightBumperButton);
-```
-
-`withAim` points the front of the robot at the pose it is given. The options below refine that. They are the same in Commands v2 and Commands v3, and C++ has each one in PascalCase.
-
-{% hint style="info" %}
-Aiming at a target is not the same as shooting on the move. The stream turns the robot, and it knows nothing about your shooter or how long a shot is in the air. [How do I shoot on the move?](../how-to/how-do-i-shoot-on-the-move.md) explains what these options cover and what you still have to work out yourself.
-{% endhint %}
-
-#### Aim lookahead
-
-`withAimLookahead(Time)` aims from where the robot will be after a delay, instead of where it is now. The pose is moved along the robot's field relative velocity by that time before the direction to the target is worked out.
-
-<figure><img src="../.gitbook/assets/sis-aim-lookahead.gif" alt="Animation of a robot driving to the right with a faded copy of itself a short way ahead along its velocity. A grey dashed line runs from the robot to the target, and an orange dashed line runs from the faded copy to the target. The robot turns to the direction of the orange line."><figcaption><p>The robot turns to the direction it will need a moment from now.</p></figcaption></figure>
-
-A game piece leaves the robot a moment after the aim was calculated: the camera, the loop, the motors and the feed all take time, and the robot keeps moving through all of it. Add those delays together for a starting value, then tune it. It is often 100 to 200 milliseconds.
-
-```java
-input.withAimLookahead(Milliseconds.of(150));
-```
-
-The lookahead assumes the robot keeps its current velocity, so it works best while driving in a straight line.
-
-#### Aim feedforward
-
-`withAimFeedforward(SimpleMotorFeedforward)` adds a feedforward to the aim rotation. The rotation controller only reacts to heading error, so while the robot drives past a target it trails a little behind. The feedforward is calculated from the robot's current angular velocity to the angular velocity the controller asks for, and its result is added to that angular velocity.
-
-<figure><img src="../.gitbook/assets/sis-aim-feedforward.gif" alt="Animation of two robots driving back and forth past a target. A grey dashed line shows the direction to the target and an orange arrow shows where each robot faces. The robot with only the rotation controller trails the target by about 20 degrees as it passes in front of it. The robot with an aim feedforward trails by about 9 degrees."><figcaption><p>The lag is largest as the robot passes in front of the target. A feedforward shrinks it.</p></figcaption></figure>
-
-```java
-input.withAimFeedforward(new SimpleMotorFeedforward(0, 0.1));
-```
-
-**How to use it:** hold the aim button and drive sideways past the target while you watch the heading, or [`aimLock`](swerve-input-stream.md#aim-lock). With telemetry at `MID` or above, graph the [rotation controller's measurement against its setpoint](#rotation-controller-inputs) to see the lag. If the robot trails the target, start with a small `kV` and raise it until it keeps up. Too much makes the heading overshoot and wobble. `kS` and `kA` can usually stay at 0.
-
-The feedforward does not remove the lag completely, and it is no substitute for a rotation controller that is tuned well. Tune the controller in [`SwerveDriveConfig`](mechanism-configs/swerve-drive-config.md) first.
-
-#### Aim heading offset
-
-`withAimHeadingOffset(Rotation2d)` rotates the aim heading, for a shooter that does not point out of the front of the robot. The offset is counter-clockwise positive. `withAimHeadingOffset(Rotation2d, BooleanSupplier)` only applies it while the supplier is true.
-
-<figure><img src="../.gitbook/assets/sis-aim-heading-offset.gif" alt="Animation of two robots driving left and right in front of a target. Each has a shooter on its back, drawn in orange. With no offset the front of the robot faces the target and the shooter faces away from it. With an offset of 180 degrees the robot is turned around, so the shooter faces the target."><figcaption><p><code>withAim</code> points the front of the robot at the target. The offset turns the side with the shooter to it instead.</p></figcaption></figure>
-
-```java
-// The shooter points out of the back of the robot.
-input.withAimHeadingOffset(Rotation2d.fromDegrees(180));
-```
-
-**How to use it:** the offset is the angle from the front of the robot to the direction the shooter points, counter-clockwise positive. A shooter out of the back is 180 degrees, out of the left side is 90 degrees, and out of the right side is -90 degrees. A small offset, such as 2 degrees, also works as a trim for a shooter that throws slightly to one side.
-
-The version with a `BooleanSupplier` lets one stream serve two mechanisms: aim the front at a target for an intake, and turn the offset on while a shooter on the back is in use.
-
-#### Aim lock
-
-`aimLock(Angle)` returns a `Trigger` that is true while the robot is aiming and its heading is within the tolerance of the aim heading. `isAimLocked(Angle)` gives the same answer as a plain `boolean`. Use them to decide when to feed a game piece.
-
-```java
-Trigger aimed = input.aimLock(Degrees.of(2));
-```
-
-The lock only updates while the stream is being read, and it is false whenever aiming is not enabled. C++ has `IsAimLocked(tolerance)` and no trigger version.
-
-#### Building your own aim
-
-Two methods expose the pieces the aim mode is made of:
-
-| Method                            | Returns                                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `getTargetVector(Pose2d)`         | The field relative vector from the robot to a target, from the looked ahead position if a lookahead is set.   |
-| `calculateAngularVelocity(Angle)` | The angular velocity that turns the robot to a heading, from the rotation controller and the aim feedforward. |
-
-### Translation only
-
-`withTranslationOnly(trigger)` enables `TRANSLATION_ONLY` while `trigger` reports true, locking the current heading and suppressing rotation entirely:
-
-<figure><img src="../.gitbook/assets/sis-translation-only.gif" alt="Animation of a robot driving across the field while the right stick is wiggled. The robot&#x27;s heading stays at 30 degrees the whole time"><figcaption><p><code>TRANSLATION_ONLY</code> mode: the right stick is ignored and the heading is held.</p></figcaption></figure>
-
-```java
-input.withTranslationOnly(driver::getStartButton);
+input.withCubeRotationControllerAxis(driverController.faceRight()); // only while the right face button is held
 ```
 
 ## Robot-relative control
 
-<figure><img src="../.gitbook/assets/swerve-input-stream-frames.png" alt="Three drawings of a robot facing up and to the left with the left stick pushed forward. Field relative: it moves away from your driver station. Robot relative: it moves toward its own front. On the red alliance with alliance relative control: translation is flipped 180 degrees and it still moves away from you"><figcaption><p>Field relative, robot relative and alliance relative control.</p></figcaption></figure>
 
 By default the translation axes are field relative. `withRobotRelative()` treats them as robot relative instead, so pushing the stick forward drives toward the robot's front. The stream still outputs **field-relative** `ChassisVelocities` (it converts using the current heading), so the drive command does not change. The `withRobotRelative(BooleanSupplier)` overload toggles it live, e.g. while a button is held.
+
+<figure><img src="../.gitbook/assets/swerve-input-stream-frames.png" alt="Three drawings of a robot facing up and to the left with the left stick pushed forward. Field relative: it moves away from your driver station. Robot relative: it moves toward its own front. On the red alliance with alliance relative control: translation is flipped 180 degrees and it still moves away from you"><figcaption><p>Field relative, robot relative and alliance relative control.</p></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/sis-robot-relative.gif" alt="Animation of two robots facing up and to the left with the stick pushed forward. Field relative, the robot moves straight away from the driver station. Robot relative, it moves toward its own front"><figcaption><p>Stick forward, field relative and robot relative.</p></figcaption></figure>
 
 ```java
-input.withRobotRelative(driver::getXButton); // robot-relative while X is held
+input.withRobotRelative(driverController.faceLeft()); // robot-relative while the left face button is held
 ```
 
 ## Alliance-relative control
@@ -392,6 +323,10 @@ input.withRobotRelative(driver::getXButton); // robot-relative while X is held
 ```java
 input.withAllianceRelativeControl();
 ```
+
+{% hint style="warning" %}
+Alliance-relative control assumes the robot's pose is a real field pose, where a heading of 0 degrees faces the red alliance wall. On red, a robot facing away from its own driver station has a heading of 180 degrees. If the robot starts at a pose of 0 degrees on red (the default starting pose, or after `zeroGyro()`) the flip sends it toward its own driver station. Set the real pose first, from your autonomous routine, vision, or `resetOdometry(...)`.
+{% endhint %}
 
 {% hint style="info" %}
 `withAllianceRelativeControl()` and `withRobotRelative()` can both be set. While robot-relative control is active, alliance flipping is skipped.
@@ -422,143 +357,23 @@ SwerveDriveConfig config = new SwerveDriveConfig(this, fl, fr, bl, br)
 Like the stream, the config is mutable, and the drive reads the center of rotation every loop. Changing it on the running drive's config takes effect on the next loop, for example to pivot around a corner while a button is held:
 
 ```java
-new Trigger(driver::getLeftBumperButton)
+driverController.leftBumper()
     .onTrue(Commands.runOnce(() -> drive.getConfig().withCenterOfRotation(Meters.of(0.3), Meters.of(0.3))))
     .onFalse(Commands.runOnce(() -> drive.getConfig().withCenterOfRotation(Meters.of(0), Meters.of(0))));
 ```
 
 ## Copying a stream
 
-`clone()` is the only method on this page that doesn't mutate the original; it returns an independent copy that shares the base stream's configuration at the moment it was called. Changing the copy afterward, or changing the original, doesn't affect the other. A clone has no [telemetry](swerve-input-stream.md#telemetry-and-live-tuning); call `withTelemetry` on it if it needs its own.
+`clone()` is the only method on this page that doesn't mutate the original; it returns an independent copy that shares the base stream's configuration at the moment it was called. Changing the copy afterward, or changing the original, doesn't affect the other. A clone has no [telemetry](swerve-input-stream-telemetry.md); call `withTelemetry` on it if it needs its own.
 
 ```java
 SwerveInputStream headingStream = input.clone();
 ```
 
-## Telemetry and live tuning
+## Turning to a heading, aiming, and telemetry
 
-Telemetry is off until you call `withTelemetry(name, verbosity)` on a stream. It publishes every time the stream is read with `get()`, so there is nothing to call each loop. `getTelemetry()` returns the stream's `SwerveInputStreamTelemetry` as an `Optional`.
-
-| Verbosity | Publishes                                                                                                           |
-| --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `LOW`     | The current drive mode                                                                                              |
-| `MID`     | Also the stream's configuration, read-only, and the [rotation controller's inputs](#rotation-controller-inputs) |
-| `HIGH`    | Also editable copies of the configuration, and a `Live Tuning` command on the dashboard                             |
-
-Call `withTelemetry` last, after the rest of the configuration, so the dashboard starts with the configured values. Calling it again replaces the stream's telemetry, and `getTelemetry().get().close()` stops publishing it, e.g. when replacing a stream with another of the same name.
-
-### Rotation controller inputs
-
-`HEADING`, `AIM` and `TRANSLATION_ONLY` turn the robot with the drive's rotation controller. At `MID` and above, the stream publishes what it gives that controller on every read, under `SwerveInputStream/<name>/rotationController`:
-
-| Key           | Value                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------- |
-| `measurement` | The robot's heading, in radians in the gyro's frame                                   |
-| `setpoint`    | The heading being turned to, in radians in the gyro's frame: the aim heading in `AIM` |
-
-Both are `NaN` on reads in `ANGULAR_VELOCITY`, which doesn't use the controller, so a graph shows a gap rather than a stale value.
-
-Graph the two together while you hold the aim or heading button. The gap between them is the controller's error: a measurement that is slow to reach the setpoint needs more `kP`, and one that overshoots and wobbles needs less `kP` or some `kD`. Tune the gains in [`SwerveDriveConfig`](mechanism-configs/swerve-drive-config.md#auto-align-controllers).
-
-`getRotationControllerMeasurement()` and `getRotationControllerSetpoint()` return the same values as `Optional<Angle>`s, empty when the last `get()` didn't use the controller. C++ has `GetRotationControllerMeasurement()` and `GetRotationControllerSetpoint()`, returning `std::optional<wpi::units::radian_t>`.
-
-{% tabs %}
-{% tab title="Commands v2" %}
-```java
-SwerveInputStream driveStream =
-    SwerveInputStream.of(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
-        .withControllerRotationAxis(() -> -controller.getRightX())
-        .withDeadband(0.05)
-        .withScaleTranslation(0.8)
-        .withTelemetry("Driver", TelemetryVerbosity.HIGH);
-
-// SwerveInputStream output is field relative.
-swerve.setDefaultCommand(swerve.run(() -> drive.setFieldRelativeChassisSpeeds(driveStream.get())));
-```
-
-The `Live Tuning` command is a Commands v2 `Command`.
-{% endtab %}
-
-{% tab title="Commands v3" %}
-```java
-// In a teleop opmode.
-robot.drive.setInputStream(SwerveInputStream.of(robot.drive.getSwerveDrive(),
-                                                () -> -controller.getLeftY(),
-                                                () -> -controller.getLeftX(),
-                                                () -> -controller.getRightX())
-    .withDeadband(0.05)
-    .withScaleTranslation(0.8)
-    .withTelemetry("Driver", TelemetryVerbosity.HIGH));
-robot.drive.setDefaultCommand(robot.drive.driveInputStream());
-```
-
-The `Live Tuning` command is a Commands v3 `Command`, published through `CommandTunable`. When an opmode replaces the active stream, close the old stream's telemetry first:
-
-```java
-public void setInputStream(SwerveInputStream inputStream) {
-  if (this.inputStream != null) {
-    this.inputStream.getTelemetry().ifPresent(SwerveInputStreamTelemetry::close);
-  }
-  this.inputStream = inputStream;
-}
-```
-{% endtab %}
-
-{% tab title="C++" %}
-```cpp
-SwerveInputStream<4> m_driveStream = SwerveInputStream<4>::Of(m_drive,
-    [this]{ return -m_driverController.GetLeftY(); },
-    [this]{ return -m_driverController.GetLeftX(); })
-  .WithControllerRotationAxis([this]{ return -m_driverController.GetRightX(); })
-  .WithDeadband(0.05)
-  .WithScaleTranslation(0.8)
-  .WithTelemetry("Driver", SwerveDriveConfig::TelemetryVerbosity::HIGH);
-```
-
-C++ has the same API: `WithTelemetry(name, verbosity)` and `GetTelemetry()`, which returns a `std::optional<std::reference_wrapper<SwerveInputStreamTelemetry<N>>>`. The verbosities are `SwerveDriveConfig::TelemetryVerbosity`: `LOW`, `MEDIUM` (Java's `MID`) and `HIGH`, and `NONE` turns telemetry off. The `Live Tuning` command is a Commands v2 `Command`, from `GetLiveTuningCommand()`.
-
-The stream is a value type, so ownership works differently from Java:
-
-* `WithTelemetry` stores the name and verbosity. The telemetry is created when the stream is first read with `Get()` or `GetTelemetry()` is called, so the copies made while building a stream do not publish.
-* The stream owns its telemetry and stops publishing when it is destroyed.
-* A copy of a stream keeps the telemetry settings and publishes under the same name once it is read. `Clone()` returns a copy without telemetry.
-* Moving a stream moves the settings; the moved-from stream stops publishing.
-{% endtab %}
-{% endtabs %}
-
-Neither framework's `Live Tuning` command requires a subsystem or mechanism, so running it does not interrupt the command driving with the stream.
-
-### Live tuning
-
-At `HIGH`, values edited on the dashboard are applied to the stream every loop while the `Live Tuning` command runs. Start and stop it from the dashboard, or bind `getTelemetry().get().getLiveTuningCommand()` to a button. Tunable values stay in sync both ways while it runs: a change made in code, such as a slow mode binding calling `withScaleTranslation`, or a `BooleanSupplier` passed to `withAllianceRelativeControl` changing, is published to the dashboard and is not overridden. Dashboard values outside the allowed range are replaced with the stream's current value.
-
-### NetworkTables topics
-
-`mode` (the current drive mode: `ANGULAR_VELOCITY`, `HEADING`, `AIM` or `TRANSLATION_ONLY`) is published to `/SwerveInputStream/<name>/` at every verbosity. At `MID` (`MEDIUM` in C++) and `HIGH`, the values below are also published there read-only. At `HIGH` they are published as tunable values under `/Tuning/SwerveInputStream/<name>/`, with the command at `/Tuning/SwerveInputStream/<name>/Live Tuning`.
-
-| Topic                | Type    | Range   | Description                                                                                     |
-| -------------------- | ------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `deadband`           | double  | \[0, 1) | Controller axis deadband                                                                        |
-| `translationScale`   | double  | (0, 1]  | Translation axis scaling factor                                                                 |
-| `rotationScale`      | double  | (0, 1]  | Rotation axis scaling factor                                                                    |
-| `maxLinearVelocity`  | double  | > 0     | Maximum chassis linear velocity (m/s). Starts at the drive config's maximum and overrides it    |
-| `maxAngularVelocity` | double  | > 0     | Maximum chassis angular velocity (rad/s). Starts at the drive config's maximum and overrides it |
-| `translationCube`    | boolean | -       | Enable cubic translation response curve                                                         |
-| `rotationCube`       | boolean | -       | Enable cubic rotation response curve                                                            |
-| `allianceRelative`   | boolean | -       | Enable alliance-relative translation flip                                                       |
-| `robotRelative`      | boolean | -       | Enable robot-relative control                                                                   |
-
-The output velocities are not published: reading them would call `get()` a second time each loop, which runs the heading controller twice. Log the speeds you send to the drive instead.
-
-{% hint style="success" %}
-Once the values feel right, copy them from NetworkTables back into the stream's `with*()` calls in code. Values edited live are not persisted. For competition, use `TelemetryVerbosity.LOW`; in Java `getTelemetry().get().close()` stops publishing, and in C++ `WithTelemetry(name, TelemetryVerbosity::NONE)` does.
-{% endhint %}
-
-| Issue                        | Solution                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| Telemetry not appearing      | Check the stream was given `withTelemetry` and is read with `get()` every loop |
-| Changes don't apply          | Start the `Live Tuning` command; it only exists at `TelemetryVerbosity.HIGH`   |
-| A dashboard value snaps back | The value is outside the allowed range in the table above                      |
+* [Heading and aim modes](swerve-input-stream-aim.md): `withHeadingControl`, `withHeading`, `withAim` and its options, and `withTranslationOnly`.
+* [Input stream telemetry and live tuning](swerve-input-stream-telemetry.md): `withTelemetry`, the rotation controller's inputs, and the `Live Tuning` command.
 
 ## Code reference
 

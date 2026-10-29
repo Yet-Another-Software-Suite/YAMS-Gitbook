@@ -97,7 +97,7 @@ wpi::cmd::Trigger ShooterSubsystem::AtSpeed(wpi::units::revolutions_per_minute_t
 
 **For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
 
-Want the details? [run() vs runTo() Commands](../../details/run-vs-runto.md)
+Want the details? [When mechanism commands end](../../details/run-vs-runto.md)
 
 ## 2. Set the default command
 
@@ -169,15 +169,15 @@ shooter.SetDefaultCommand(shooter.Set(0));
 
 `whileTrue` runs a command for as long as its button is held, and cancels it on release. The default command then takes back over.
 
-<figure><img src="../../.gitbook/assets/tutorial-shooter-buttons.gif" alt="Animation of the four face buttons of a controller, the flywheel, and the command that is running. With no button held the default command runs: a duty cycle of 0, so the flywheel coasts. While A is held its command runs: hold the flywheel at 60 RPM. While B is held: hold the flywheel at 300 RPM. While X is held the flywheel is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the flywheel. Let go, and the default command lets it coast down.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/tutorial-shooter-buttons.gif" alt="Animation of the four face buttons of a controller, the flywheel, and the command that is running. With no button held the default command runs: a duty cycle of 0, so the flywheel coasts. While A is held its command runs: hold the flywheel at a speed, shown as 60 RPM. While B is held: hold it at a faster speed, shown as 300 RPM. While X is held the flywheel is driven at a 30 percent duty cycle with the closed loop off. Each time a button is released the default command takes back over."><figcaption><p>A held button owns the flywheel. Let go, and the default command lets it coast down. The animation shows slower speeds than the 2000 and 3000 RPM used on this page; the buttons work the same way.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
 {% code title="RobotContainer.java" %}
 ```java
 // Hold a speed while the bottom (A) or right (B) face button is held.
-driverController.faceDown().whileTrue(shooter.run(RPM.of(60)));
-driverController.faceRight().whileTrue(shooter.run(RPM.of(300)));
+driverController.faceDown().whileTrue(shooter.run(RPM.of(2000)));
+driverController.faceRight().whileTrue(shooter.run(RPM.of(3000)));
 // Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
 driverController.faceLeft().whileTrue(shooter.set(0.3));
 driverController.faceUp().whileTrue(shooter.set(-0.3));
@@ -189,8 +189,8 @@ driverController.faceUp().whileTrue(shooter.set(-0.3));
 {% code title="ExampleTeleop.java" %}
 ```java
 // Hold a speed while the bottom (A) or right (B) face button is held.
-robot.exampleController.faceDown().whileTrue(robot.shooter.setVelocity(RPM.of(60)));
-robot.exampleController.faceRight().whileTrue(robot.shooter.setVelocity(RPM.of(300)));
+robot.exampleController.faceDown().whileTrue(robot.shooter.setVelocity(RPM.of(2000)));
+robot.exampleController.faceRight().whileTrue(robot.shooter.setVelocity(RPM.of(3000)));
 // Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
 robot.exampleController.faceLeft().whileTrue(robot.shooter.set(0.3));
 robot.exampleController.faceUp().whileTrue(robot.shooter.set(-0.3));
@@ -202,8 +202,8 @@ robot.exampleController.faceUp().whileTrue(robot.shooter.set(-0.3));
 {% code title="cpp/RobotContainer.cpp" %}
 ```cpp
 // Hold a speed while the bottom (A) or right (B) face button is held.
-driverController.FaceDown().WhileTrue(shooter.Run(60_rpm));
-driverController.FaceRight().WhileTrue(shooter.Run(300_rpm));
+driverController.FaceDown().WhileTrue(shooter.Run(2000_rpm));
+driverController.FaceRight().WhileTrue(shooter.Run(3000_rpm));
 // Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
 driverController.FaceLeft().WhileTrue(shooter.Set(0.3));
 driverController.FaceUp().WhileTrue(shooter.Set(-0.3));
@@ -226,6 +226,7 @@ Add the commands to `ShooterSubsystem.java`, then create the subsystem and bind 
 
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 <strong>import static org.wpilib.units.Units.RPM;
 </strong>
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -255,13 +256,16 @@ public class ShooterSubsystem extends SubsystemBase {
       .withControlMode(ControlMode.CLOSED_LOOP)
       // Feedback constants (PID), on the real robot and in simulation.
       // A flywheel holds a speed, so it gets no motion profile.
-      .withClosedLoopController(1, 0, 0)
-      .withSimClosedLoopController(1, 0, 0)
+      .withClosedLoopController(0.2, 0, 0)
+      .withSimClosedLoopController(0.2, 0, 0)
       // Feedforward constants, on the real robot and in simulation.
-      .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      // Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+      .withFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      .withSimFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      // Gearing from the motor rotor to the flywheel: one 1.5:1 stage.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1.5)))
+      // How hard the wheel is to spin up, used by the simulation: two 4 inch
+      // wheels, 0.68 kg (1.5 lb) in all, as solid discs: 0.5 x 0.68 kg x (0.0508 m)^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0009))
       .withMotorInverted(false)
       // Coast, so that the wheel spins down by itself instead of being braked to a stop.
       .withZeroPower(MotorMode.COAST)
@@ -276,7 +280,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
 
   private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-      // The diameter of the flywheel, used by the simulation and for surface speeds.
+      // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
       .withDiameter(Inches.of(4))
       // Telemetry name and how much to publish.
       .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
@@ -361,8 +365,8 @@ public class RobotContainer {
     new Trigger(exampleSubsystem::exampleCondition).onTrue(new ExampleCommand(exampleSubsystem));
 
 <strong>    // Hold a speed while the bottom (A) or right (B) face button is held.
-</strong><strong>    driverController.faceDown().whileTrue(shooter.run(RPM.of(60)));
-</strong><strong>    driverController.faceRight().whileTrue(shooter.run(RPM.of(300)));
+</strong><strong>    driverController.faceDown().whileTrue(shooter.run(RPM.of(2000)));
+</strong><strong>    driverController.faceRight().whileTrue(shooter.run(RPM.of(3000)));
 </strong><strong>    // Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
 </strong><strong>    driverController.faceLeft().whileTrue(shooter.set(0.3));
 </strong><strong>    driverController.faceUp().whileTrue(shooter.set(-0.3));
@@ -392,6 +396,7 @@ A `Mechanism` already has a `run(...)` method that takes a coroutine, so the com
 
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 <strong>import static org.wpilib.units.Units.RPM;
 </strong>
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -421,13 +426,16 @@ public class ShooterMechanism implements Mechanism {
       .withControlMode(ControlMode.CLOSED_LOOP)
       // Feedback constants (PID), on the real robot and in simulation.
       // A flywheel holds a speed, so it gets no motion profile.
-      .withClosedLoopController(1, 0, 0)
-      .withSimClosedLoopController(1, 0, 0)
+      .withClosedLoopController(0.2, 0, 0)
+      .withSimClosedLoopController(0.2, 0, 0)
       // Feedforward constants, on the real robot and in simulation.
-      .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      // Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+      .withFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      .withSimFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      // Gearing from the motor rotor to the flywheel: one 1.5:1 stage.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1.5)))
+      // How hard the wheel is to spin up, used by the simulation: two 4 inch
+      // wheels, 0.68 kg (1.5 lb) in all, as solid discs: 0.5 x 0.68 kg x (0.0508 m)^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0009))
       .withMotorInverted(false)
       // Coast, so that the wheel spins down by itself instead of being braked to a stop.
       .withZeroPower(MotorMode.COAST)
@@ -442,7 +450,7 @@ public class ShooterMechanism implements Mechanism {
   private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
 
   private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-      // The diameter of the flywheel, used by the simulation and for surface speeds.
+      // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
       .withDiameter(Inches.of(4))
       // Telemetry name and how much to publish.
       .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
@@ -557,8 +565,8 @@ public class ExampleTeleop implements OpMode {
     robot.exampleController.rightStick().whileTrue(robot.exampleMechanism.exampleCommand());
 
 <strong>    // Hold a speed while the bottom (A) or right (B) face button is held.
-</strong><strong>    robot.exampleController.faceDown().whileTrue(robot.shooter.setVelocity(RPM.of(60)));
-</strong><strong>    robot.exampleController.faceRight().whileTrue(robot.shooter.setVelocity(RPM.of(300)));
+</strong><strong>    robot.exampleController.faceDown().whileTrue(robot.shooter.setVelocity(RPM.of(2000)));
+</strong><strong>    robot.exampleController.faceRight().whileTrue(robot.shooter.setVelocity(RPM.of(3000)));
 </strong><strong>    // Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
 </strong><strong>    robot.exampleController.faceLeft().whileTrue(robot.shooter.set(0.3));
 </strong><strong>    robot.exampleController.faceUp().whileTrue(robot.shooter.set(-0.3));
@@ -643,12 +651,16 @@ ShooterSubsystem::ShooterSubsystem() {
       .WithClosedLoopMode()
       // Feedback constants (PID), on the real robot and in simulation.
       // A flywheel holds a speed, so it gets no motion profile.
-      .WithFeedback(1, 0, 0)
-      .WithSimClosedLoopController(1, 0, 0)
-      // Feedforward constants: kS and kV.
-      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t&#x3C;Feedforward::kv_unit>{0}})
-      // Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
+      .WithFeedback(0.2, 0, 0)
+      .WithSimClosedLoopController(0.2, 0, 0)
+      // Feedforward constants (kS and kV), on the real robot and in simulation.
+      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t&#x3C;Feedforward::kv_unit>{0.19}})
+      .WithSimFeedforward(Feedforward{0_V, wpi::units::unit_t&#x3C;Feedforward::kv_unit>{0.19}})
+      // Gearing from the motor rotor to the flywheel: one 1.5:1 stage.
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.5})})
+      // How hard the wheel is to spin up, used by the simulation: two 4 inch
+      // wheels, 0.68 kg (1.5 lb) in all, as solid discs: 0.5 x 0.68 kg x (0.0508 m)^2.
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0009})
       .WithMotorInverted(false)
       // Coast, so that the wheel spins down by itself instead of being braked to a stop.
       .WithZeroPower(Cfg::MotorMode::COAST)
@@ -660,7 +672,7 @@ ShooterSubsystem::ShooterSubsystem() {
   m_motor.emplace(&#x26;m_spark, wpi::math::DCMotor::NEO(1), &#x26;m_smcConfig);
 
   m_shooterConfig
-      // The diameter of the flywheel, used by the simulation and for surface speeds.
+      // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
       .WithRollerDiameter(4_in)
       // Telemetry name.
       .WithTelemetryName("Shooter");
@@ -752,8 +764,8 @@ void RobotContainer::ConfigureBindings() {
   }).OnTrue(ExampleCommand(&#x26;subsystem).ToPtr());
 
 <strong>  // Hold a speed while the bottom (A) or right (B) face button is held.
-</strong><strong>  driverController.FaceDown().WhileTrue(shooter.Run(60_rpm));
-</strong><strong>  driverController.FaceRight().WhileTrue(shooter.Run(300_rpm));
+</strong><strong>  driverController.FaceDown().WhileTrue(shooter.Run(2000_rpm));
+</strong><strong>  driverController.FaceRight().WhileTrue(shooter.Run(3000_rpm));
 </strong><strong>  // Drive the flywheel forward or backward while the left (X) or top (Y) face button is held.
 </strong><strong>  driverController.FaceLeft().WhileTrue(shooter.Set(0.3));
 </strong><strong>  driverController.FaceUp().WhileTrue(shooter.Set(-0.3));
@@ -768,7 +780,7 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 {% endtabs %}
 
 {% hint style="info" %}
-These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [Setpoint Methods vs Command Helpers](../../details/setpoint-methods.md).
+These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [How do I write my own mechanism command?](../../details/setpoint-methods.md).
 {% endhint %}
 
 ## Knowing when it is up to speed
@@ -778,3 +790,7 @@ The `atSpeed` method added in this step returns a `Trigger`. Nothing in this tut
 <figure><img src="../../.gitbook/assets/howto-shooter-at-speed.gif" alt="Animation of a flywheel spinning up to 3000 RPM and shooting two balls, with a band of 100 RPM around the setpoint. Each shot drops the speed by several hundred RPM, and it overshoots and rings as it recovers. A lane for the at speed trigger is true inside the band, including for an instant each time the speed passes through it. A lane for the feeder, which uses the trigger with a 0.1 second debounce, is only true once the speed has stayed in the band, so the second ball is not fed until the wheel has settled."><figcaption><p>Each shot slows the wheel and it rings as it recovers. The tolerance band and a debounce keep the feeder off until it has settled.</p></figcaption></figure>
 
 [How do I shoot with a shooter?](../../how-to/how-to-shoot-with-a-shooter.md) shows how to bind a feeder to it.
+
+## Check it
+
+Build the code. If it builds, every button is bound. Next you run it and press them.

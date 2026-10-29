@@ -16,9 +16,9 @@ At the end of this tutorial you will have an `Elevator` that works in both real 
 {% column %}
 #### Simulation
 
-<figure><img src="../.gitbook/assets/Robot Simulation 2025-08-30 18-27-07.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/Robot Simulation 2025-08-30 18-27-07.gif" alt="The simulated elevator in its Mechanism2d window: the carriage bar rises to a height and stops there"><figcaption></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/Robot Simulation 2025-08-30 18-37-59.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/Robot Simulation 2025-08-30 18-37-59.gif" alt="The simulated elevator moving between heights as controller buttons are pressed, staying between its limit marks"><figcaption></figcaption></figure>
 {% endcolumn %}
 
 {% column %}
@@ -43,7 +43,7 @@ This `Elevator` uses the following hardware and controls:
 
 ## The steps
 
-<figure><img src="../.gitbook/assets/tutorial-elevator-steps.png" alt="The four steps of the elevator tutorial, each building on the one before. Step 1, the motor controller: a SparkMax and a SmartMotorControllerConfig. Step 2, the elevator: an ElevatorConfig and the SmartMotorController. Step 3, commands and buttons: run and set commands bound to a controller. Step 4, simulation: the same code run on your computer."><figcaption><p>Four steps, one page each.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/tutorial-elevator-steps.png" alt="The four steps of the elevator tutorial, each building on the one before. Step 1, the motor controller: a SparkMax and a SmartMotorControllerConfig. Step 2, the elevator: an ElevatorConfig and the SmartMotorController. Step 3, commands and buttons: run and set commands bound to a controller. Step 4, simulation: the same code run on your computer."><figcaption><p>The first four steps, one page each. Then you tune it and run it on the robot.</p></figcaption></figure>
 
 Every step has a tab for **Java with Commands v2**, **Java with Commands v3** and **C++**.
 
@@ -54,6 +54,8 @@ Every step has a tab for **Java with Commands v2**, **Java with Commands v3** an
 | [Step 2: The elevator](elevator/mechanism.md)                | Describe the elevator with an `ElevatorConfig` and create the `Elevator`.                     |
 | [Step 3: Commands and buttons](elevator/commands.md)         | Turn the `Elevator` into commands and bind them to controller buttons.                        |
 | [Step 4: Simulate it](elevator/simulate.md)                  | Run the code on your computer and drive the elevator with a controller.                       |
+| [Step 5: Tune it](elevator/tune.md)                          | Find `kG`, `kP` and the profile while the simulation runs, and copy them into your code.      |
+| [Step 6: Run it on the robot](arm/robot.md)                  | The arm's robot step, with the elevator differences listed at the end of step 5.              |
 
 ## Complete Example
 

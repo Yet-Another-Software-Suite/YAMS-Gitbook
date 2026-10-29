@@ -8,6 +8,17 @@ description: Configure the SparkMax and wrap it in a SmartMotorController.
 This page assumes a project with YAMS and REVLib installed. If you do not have one yet, start at [Create a project and install YAMS](../project-setup.md).
 {% endhint %}
 
+{% hint style="info" %}
+**Did the arm tutorial?** This step is the same as [the arm's step 1](../arm/motor-controller.md), except:
+
+* **The sprocket or drum** (part 2) is new. It tells YAMS how far the carriage moves for each turn, so that you can work in meters.
+* **Linear units.** The motion profile, starting position and soft limits are in meters and meters per second, not degrees.
+* **`ElevatorFeedforward`** replaces `ArmFeedforward`. Its `kG` is the same at every height, because gravity pulls the carriage straight down wherever it is.
+* **Cascading elevators** divide the gearing by the number of stages (part 5).
+
+Skim the parts you know and read those four.
+{% endhint %}
+
 A `SmartMotorController` is how YAMS talks to a motor controller. It takes three things:
 
 1. **The vendor's motor controller object**, here a `SparkMax`.
@@ -99,7 +110,8 @@ An elevator has to know how far the carriage moves for each turn of the output s
 {% code title="subsystems/ElevatorSubsystem.java" %}
 ```java
 // How far the carriage moves for each turn of the output shaft:
-// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+// so one turn moves the chain pitch x teeth = 5.5 inches.
 .withDrumRadius(Inches.of(0.25), 22)
 ```
 {% endcode %}
@@ -109,7 +121,8 @@ An elevator has to know how far the carriage moves for each turn of the output s
 {% code title="mechanisms/ElevatorMechanism.java" %}
 ```java
 // How far the carriage moves for each turn of the output shaft:
-// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+// so one turn moves the chain pitch x teeth = 5.5 inches.
 .withDrumRadius(Inches.of(0.25), 22)
 ```
 {% endcode %}
@@ -119,12 +132,15 @@ An elevator has to know how far the carriage moves for each turn of the output s
 {% code title="cpp/subsystems/ElevatorSubsystem.cpp" %}
 ```cpp
 // How far the carriage moves for each turn of the output shaft:
-// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+// #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+// so one turn moves the chain pitch x teeth = 5.5 inches.
 .WithMechanismCircumference(0.25_in, 22)
 ```
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+
+`withDrumRadius(pitch, teeth)` works the radius out from the chain for you: one turn of the sprocket moves the chain one pitch per tooth, 0.25 inch x 22 = 5.5 inches here.
 
 **For your robot:** Use your own chain pitch and tooth count, or the radius of your drum:
 
@@ -154,13 +170,13 @@ An elevator has to know how far the carriage moves for each turn of the output s
 {% endtab %}
 {% endtabs %}
 
-A **cascading** elevator also needs its number of stages, with `withCascadingElevatorStages(2)` in Java or `WithCascadingElevatorStages(2)` in C++.
-
 Want the details? [How do I find my mechanism's circumference?](../../how-to/how-to-find-your-mechanism-circumference.md)
 
 ## 3. PID and feedforward
 
 The PID gains correct the difference between where the elevator is and where you asked it to be. The feedforward supplies the voltage you already know it needs. The `Sim` options are used only in simulation, so the simulation can be tuned without touching the real robot's gains.
+
+**Gravity on an elevator.** Gravity always pulls the carriage down with the same force, at the bottom, in the middle or at the top. So the motor needs the same voltage just to hold it still at any height. That voltage is `kG`, the middle number of `ElevatorFeedforward(kS, kG, kV)`. (An arm is different: its `kG` shrinks as it points up or down.)
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -198,15 +214,21 @@ The PID gains correct the difference between where the elevator is and where you
 .WithFeedback(4, 0, 0)
 .WithSimClosedLoopController(4, 0, 0)
 
-// Feedforward constants: kS, kG and kV.
+// Feedforward constants (kS, kG and kV), on the real robot and in simulation.
 .WithFeedforward(wpi::math::ElevatorFeedforward{
+    0_V, 0_V, wpi::units::unit_t<wpi::math::ElevatorFeedforward::kv_unit>{0}})
+.WithSimFeedforward(wpi::math::ElevatorFeedforward{
     0_V, 0_V, wpi::units::unit_t<wpi::math::ElevatorFeedforward::kv_unit>{0}})
 ```
 {% endcode %}
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** These numbers are only a place to start. Leave them, get the elevator moving, then tune them with [Live tuning](../../details/live-tuning/README.md).
+These gains are **placeholders**. `kP` of 4 is 4 volts for each meter of error, and every feedforward gain is 0.
+
+**What to expect with them:** the elevator moves, but with `kG` at 0 only `kP` holds the carriage up. `kP` only pushes when the carriage is below its setpoint, so the carriage sags: in simulation it settles roughly 15 cm below each setpoint. That is expected. You find `kG` in [Step 5: Tune it](tune.md), and the sag goes away.
+
+**For your robot:** Leave these numbers for now, and tune them in step 5.
 
 Want the details? [Closed loop control](../../details/editor/config/closed-loop-control.md) and [Feedforward](../../details/editor/config/feedforward.md)
 
@@ -283,6 +305,28 @@ The gearing tells YAMS how many turns of the motor make one turn of the sprocket
 {% endtabs %}
 
 **For your robot:** List your gearbox stages in order, from the motor outward. `3, 4` here is a 3:1 stage followed by a 4:1 stage.
+
+**Cascading elevator?** In a cascading elevator each stage rides on the one below, so the top carriage moves faster than the chain. Add the number of stages right **after** `withGearing`. It divides the gearing that is already set, so put before `withGearing` it would be overwritten:
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+// A two stage cascading elevator: divides the 12:1 gearing above by 2.
+.withCascadingElevatorStages(2)
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+.WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
+// A two stage cascading elevator: divides the 12:1 gearing above by 2.
+.WithCascadingElevatorStages(2)
+```
+{% endtab %}
+{% endtabs %}
+
+Skip this for a continuous elevator, like the one in this tutorial.
 
 Want the details? [Gearing and units](../../details/editor/config/gearing-and-units.md)
 
@@ -367,7 +411,11 @@ The starting position is where the elevator is when the robot turns on. The soft
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set the starting position to where your elevator really rests, and the soft limits just inside its hard stops.
+Both take meters, so they need the sprocket from part 2 first: YAMS uses its circumference to turn meters into rotations. That is why `withDrumRadius` comes earlier in the config. In C++, `WithStartingPosition(meters)` and `WithMeasurementLimits` throw an error if `WithMechanismCircumference` has not been called yet, and in Java `withStartingPosition(meters)` and `withSoftLimits(meters)` do the same without `withDrumRadius`.
+
+The lower soft limit here is 0 m, the same as the bottom hard stop and the starting height. That is on purpose: the carriage rests on the bottom stop, and the default command parks it there, so the closed loop never asks for a height below it.
+
+**For your robot:** Set the starting position to where your carriage really rests when the robot turns on, and the upper soft limit a little below the top hard stop. If your carriage pushes into the bottom stop when it parks, raise the lower soft limit and the parking height a little, such as 0.02 m.
 
 Want the details? [Limits and protection](../../details/editor/config/limits-and-protection.md)
 
@@ -522,7 +570,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .withDrumRadius(Inches.of(0.25), 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .withClosedLoopController(4, 0, 0)
@@ -586,7 +635,8 @@ public class ElevatorMechanism implements Mechanism {
   private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .withDrumRadius(Inches.of(0.25), 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .withClosedLoopController(4, 0, 0)
@@ -673,15 +723,18 @@ ElevatorSubsystem::ElevatorSubsystem() {
       .WithSubsystem(this)
       .WithClosedLoopMode()
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .WithMechanismCircumference(0.25_in, 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .WithFeedback(4, 0, 0)
       .WithSimClosedLoopController(4, 0, 0)
       // The fastest the closed loop is allowed to move and accelerate the carriage.
       .WithLinearTrapezoidProfile(0.5_mps, 0.5_mps_sq)
-      // Feedforward constants: kS, kG and kV.
+      // Feedforward constants (kS, kG and kV), on the real robot and in simulation.
       .WithFeedforward(wpi::math::ElevatorFeedforward{
+          0_V, 0_V, wpi::units::unit_t<wpi::math::ElevatorFeedforward::kv_unit>{0}})
+      .WithSimFeedforward(wpi::math::ElevatorFeedforward{
           0_V, 0_V, wpi::units::unit_t<wpi::math::ElevatorFeedforward::kv_unit>{0}})
       // Gearing from the motor rotor to the sprocket: a 3:1 stage and a 4:1 stage, 12:1 in total.
       .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
@@ -713,4 +766,11 @@ Every option used here has its own section in the `SmartMotorControllerConfig` p
 * [Limits and protection](../../details/editor/config/limits-and-protection.md): soft limits and current limits
 * [Simulation](../../details/editor/config/simulation.md): the simulation only gains
 
-The PID and feedforward numbers on this page are a place to start, not tuned values. Tune them on your own mechanism with [Live tuning](../../details/live-tuning/README.md).
+The PID and feedforward numbers on this page are a place to start, not tuned values. You tune them in [Step 5: Tune it](tune.md).
+
+## Check it
+
+Open the command palette with <kbd>Ctrl+Shift+P</kbd> and run **WPILib: Build Robot Code**. It should build. Nothing moves yet, because nothing tells the motor what to do.
+
+* **`SparkMax` or `SparkWrapper` cannot be found:** REVLib is not installed. See [Install your motor controller's library](../project-setup.md#install-your-motor-controllers-library).
+* **`SmartMotorControllerConfig` cannot be found:** YAMS is not installed, or the import is from the other command framework (`yams.commands2` or `yams.commands3`).

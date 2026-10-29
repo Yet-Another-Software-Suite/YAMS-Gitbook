@@ -74,7 +74,7 @@ new ElevatorConfig()
 `withStages` does not change the gearing. A cascading elevator also needs [`withCascadingElevatorStages`](../editor/config/gearing-and-units.md#withcascadingelevatorstages) on its motor config, so the carriage's height is right: see [how the stages are rigged](../elevators.md#how-the-stages-are-rigged).
 {% endhint %}
 
-**Used in:** stage poses only.
+**Used in:** the stage poses, and, when there are no hard limits, the elevator's height range: in simulation, and on the real robot for `max()`, `min()`, `isAtMax()` and `isAtMin()` when no soft limit is set.
 
 ## What else an elevator needs
 
@@ -89,5 +89,5 @@ new ElevatorConfig()
 
 ## Code reference
 
-* `ElevatorConfig`
-* `Elevator`
+* [`ElevatorConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/ElevatorConfig.java)
+* [`Elevator`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/positional/Elevator.java)

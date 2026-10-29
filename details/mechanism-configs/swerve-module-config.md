@@ -16,7 +16,20 @@ A module is built from a drive `SmartMotorController` and an azimuth `SmartMotor
 SwerveModuleConfig config = new SwerveModuleConfig(driveMotor, azimuthMotor);
 ```
 
-The drive motor's config needs the wheel size, with [`withWheelRadius` or `withWheelDiameter`](../editor/config/gearing-and-units.md#withmechanismcircumference). `SwerveModuleConfig.withWheelRadius` and `withWheelDiameter` set the same thing from here, but the motor config is the better place for it. The azimuth motor's config usually has [`withContinuousWrapping`](../editor/config/closed-loop-control.md#withcontinuouswrapping).
+The drive motor's config needs the wheel size, with [`withWheelRadius` or `withWheelDiameter`](../editor/config/gearing-and-units.md#withmechanismcircumference). `SwerveModuleConfig.withWheelRadius` and `withWheelDiameter` set the same thing from here, but the motor config is the better place for it. The azimuth motor's config usually has [`withContinuousWrapping`](../editor/config/closed-loop-control.md#withcontinuouswrapping), so that the wheel takes the short way round from 170 degrees to -170.
+
+## Directions and inversion
+
+Every direction on a swerve module follows WPILib's convention: angles are counter-clockwise positive, seen from above, and a positive wheel speed drives the robot forward when the wheel points forward. There is no inversion option on `SwerveModuleConfig` itself: each direction is set where its sensor or motor is configured.
+
+| What | Must be | Set it with |
+| --- | --- | --- |
+| Azimuth motor | A positive command turns the wheel counter-clockwise, seen from above | `withMotorInverted(...)` on the azimuth motor's `SmartMotorControllerConfig` |
+| Drive motor | A positive speed rolls the wheel forward when it points forward | `withMotorInverted(...)` on the drive motor's `SmartMotorControllerConfig` |
+| Absolute encoder | Its reading goes up as the wheel turns counter-clockwise | The encoder's own direction setting, such as a `CANcoder`'s sensor direction in Phoenix Tuner X, or `withExternalEncoderInverted(...)` for an encoder passed with `withAbsoluteEncoder(Object)` |
+| Gyro | The heading goes up as the robot turns counter-clockwise | [`withGyroInverted`](swerve-drive-config.md#the-gyro) on the `SwerveDriveConfig` |
+
+A wheel that points the right way but rolls backward is usually not inverted: its absolute encoder offset is 180 degrees off. [Step 4: On the real robot](../../tutorials/swerve-drive/real-robot.md#4-check-the-directions) checks each direction in turn.
 
 ## `withLocation`
 
@@ -35,23 +48,49 @@ config.withLocation(Meters.of(0.42), Degrees.of(45)); // distance and angle from
 
 <figure><img src="../../.gitbook/assets/mech-module-absolute-encoder.png" alt="Two panels. Zero must be with the wheel pointing forward and its bevel gear facing the robot&#x27;s left. To find the offset, point every wheel forward with bevels to the left, read each absolute encoder, and use that reading, here 64 degrees, as that module&#x27;s offset."><figcaption><p>Zero is the wheel pointing forward with the bevel to the left.</p></figcaption></figure>
 
-| Option                                 | What it does                                                                                     |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `withAbsoluteEncoder(Object)`          | An absolute encoder from the **same vendor** as the azimuth motor, read by the motor controller. |
-| `withAbsoluteEncoder(Supplier<Angle>)` | An absolute encoder from **any vendor**, read by your code.                                      |
-| `withAbsoluteEncoderOffset(Angle)`     | Makes the encoder read 0 when the wheel points forward with the bevel to the left.               |
-| `withAbsoluteEncoderGearing(GearBox)`  | For an encoder that is not 1:1 with the azimuth.                                                 |
+The absolute encoder tells the module which way its wheel points when the robot turns on. Set it with one of the two forms of `withAbsoluteEncoder`, then give it an offset.
+
+### `withAbsoluteEncoder(Supplier<Angle>)`
+
+An absolute encoder from **any vendor**, read by your code. The module reads it once at startup and sets the azimuth motor's own encoder from it.
 
 ```java
-config.withAbsoluteEncoder(new CANcoder(11, new CANBus(CANPort.CAN_S0)))
-      .withAbsoluteEncoderOffset(Degrees.of(64));
+config.withAbsoluteEncoder(canCoder.getAbsolutePosition().asSupplier());
+```
+
+A `DoubleSupplier` in rotations works too. This is the form the [Swerve Drive tutorial](../../tutorials/swerve-drive.md) uses, with a `CANcoder` on a `SparkMax` azimuth.
+
+### `withAbsoluteEncoder(Object)`
+
+An absolute encoder from the **same vendor** as the azimuth motor, read by the motor controller itself, such as a `CANcoder` on a `TalonFX`. The azimuth motor's closed loop then runs on the absolute encoder.
+
+```java
+config.withAbsoluteEncoder(new CANcoder(11, new CANBus(CANPort.CAN_S0)));
 ```
 
 {% hint style="warning" %}
-`withAbsoluteEncoder(Object)` only accepts an encoder the azimuth motor controller can read itself, which means the same vendor: see the [encoders each controller accepts](../editor/config/encoders.md#withexternalencoder). For any other encoder use the `Supplier<Angle>` form.
+This form only accepts an encoder the azimuth motor controller can read itself: see the [encoders each controller accepts](../editor/config/encoders.md#withexternalencoder). The azimuth motor's `SmartMotorControllerConfig` must also have `withUseExternalFeedbackEncoder(true)`: without it, `new SwerveModule(...)` throws a `SmartMotorControllerConfigurationException`. For any other encoder use the `Supplier<Angle>` form.
 {% endhint %}
 
 [Absolute Encoder Wiring](../swerve-module.md#absolute-encoder-wiring) covers both forms in detail.
+
+### `withAbsoluteEncoderOffset`
+
+The absolute encoder's reading when the wheel points straight forward with its bevel gear to the robot's left. YAMS subtracts it, so the module reads 0 there.
+
+```java
+config.withAbsoluteEncoderOffset(Degrees.of(64));
+```
+
+**The rule:** the offset is the raw reading itself, with the same sign. Point the wheel forward, bevel gear left, read `NT:/Mechanisms/<drive name>/modules/<module name>/encoder` (the raw reading in degrees, with no offset applied), and pass that number. Every module has its own. If a module then drives backward while the others drive forward, its bevel gear faced right when you read it: add 180 degrees. [Step 4: On the real robot](../../tutorials/swerve-drive/real-robot.md#3-set-the-absolute-encoder-offsets) walks through it.
+
+### `withAbsoluteEncoderGearing`
+
+For an absolute encoder that does not turn once per turn of the wheel's steering. Most modules mount it 1:1 and do not need this.
+
+```java
+config.withAbsoluteEncoderGearing(new GearBox(new double[]{1.5}));
+```
 
 ## `withOptimization`
 
@@ -107,7 +146,7 @@ Names the module and chooses what it publishes. The name appears under the drive
 config.withTelemetry("frontleft", TelemetryVerbosity.HIGH);
 ```
 
-[Module Telemetry](../swerve-module.md#module-telemetry) lists the keys, and [tuning the swerve modules](../live-tuning/#tune-the-swerve-modules) uses them.
+[Module Telemetry](../swerve-module.md#module-telemetry) lists the keys, and [tuning the swerve modules](../live-tuning/README.md#tune-the-swerve-modules) uses them.
 
 ## Code reference
 

@@ -23,7 +23,7 @@ Sets the PID gains.
 .withClosedLoopController(new PIDController(4, 0, 0.2))
 ```
 
-The gains work in rotations and volts, or meters and volts for a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller). YAMS converts them to whatever the motor controller uses, so the same numbers behave the same on every vendor. [How your gains reach the motor controller](closed-loop-control.md#how-your-gains-reach-the-motor-controller) shows how.
+Write gains in volts per mechanism rotation, or volts per meter for a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller). YAMS converts them for each motor controller, so the same numbers behave the same on every vendor: see [Under the hood](closed-loop-control.md#under-the-hood) if you want the details.
 
 Passing an `LQRController` instead replaces the PID with an LQR: see [LQR controllers](../lqr-controllers.md).
 
@@ -32,6 +32,24 @@ Passing an `LQRController` instead replaces the PID with an LQR: see [LQR contro
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova                 |
 | ------- | -------- | ---------------- | ---------------------------- |
 | ✅       | ✅        | ✅                | ✅ PID runs on the SystemCore |
+
+### Starting values
+
+These are only places to start, so the first move is gentle and you can see which way to go. Every mechanism ends up somewhere else. Tune the [feedforward](feedforward.md#withfeedforward) first, with these PID gains at 0.
+
+| Mechanism            | Start `kP` at | Which means                                        | Start `kI`, `kD` at |
+| -------------------- | ------------- | -------------------------------------------------- | ------------------- |
+| Arm, pivot, turret   | `10`          | 10 V per rotation of error, about 0.3 V at 10° off | `0`, `0`            |
+| Elevator             | `10`          | 10 V per meter of error, 1 V at 10 cm off          | `0`, `0`            |
+| Flywheel, roller     | `0.1`         | 0.1 V per rotation per second of error, 1 V at 600 RPM off | `0`, `0`    |
+
+Graph the position (or velocity) against the setpoint and make small moves:
+
+* **It stops short, or creeps up slowly:** `kP` is too low. Double it and try again.
+* **It overshoots and rings:** `kP` is too high. Go back about a third, then add `kD`, starting around a tenth of `kP`, until the overshoot goes.
+* **It stops a little short every time, even with a good `kP`:** check `kG` and `kS` in the [feedforward](feedforward.md) before reaching for `kI`.
+
+The Arm tutorial starts its light, simulated arm at a `kP` of 50; either is a fine place to start because you double or cut it from there. [Step 5 of the Arm tutorial](../../../tutorials/arm/tune.md) walks through this, and [Tuning order](../../live-tuning/README.md#tuning-order) has the order for each mechanism.
 
 ### Slots
 
@@ -137,13 +155,32 @@ Changes how often the SystemCore loop runs. The default is 20 ms. It does not ch
 | ------- | -------- | --------------------------------------------------------------------------------- | --------------------------- |
 | ❌       | ❌        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
 
-## How your gains reach the motor controller
+## `withLinearClosedLoopController`
+
+Chooses whether the controller works in rotations or in meters.
+
+<figure><img src="../../../.gitbook/assets/smc-linear-units.png" alt="Two panels. Angle based, the default: error is measured in rotations, kP is in volts per rotation and profile limits are in rotations per second, for arms, pivots, turrets and flywheels. Distance based: error in meters, kP in volts per meter and profile limits in meters per second, for elevators and other linear mechanisms."><figcaption><p>The units the gains and limits are in.</p></figcaption></figure>
+
+```java
+.withLinearClosedLoopController(true)  // gains and limits in meters
+.withLinearClosedLoopController(false) // gains and limits in rotations
+```
+
+It turns on by itself when you give a distance profile, a distance exponential profile or an `ElevatorFeedforward`, and it only takes effect when a [circumference](gearing-and-units.md#withmechanismcircumference) is set. [How do I turn off linear closed loop control?](../../../how-to/how-to-disable-linear-closed-loop-control.md) explains when to turn it off.
+
+**Supported on:** every supported motor controller.
+
+## Under the hood
+
+You do not need this section to use YAMS. It explains what YAMS does with your gains, for when you compare them with a vendor's documentation or another team's numbers.
+
+### How your gains reach the motor controller
 
 You write every gain once, in mechanism units: volts per mechanism rotation, or per meter for a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller). Every [feedforward](feedforward.md) uses the same units, including an `ArmFeedforward`. Each motor controller wants its gains in its own units, so YAMS converts them when it applies the config, and again every time you change a gain while [live tuning](../../live-tuning/).
 
 <figure><img src="../../../.gitbook/assets/smc-gain-overview.png" alt="Your gains, in YAMS units of volts per mechanism rotation or meter, go to three motor controllers. TalonFX and TalonFXS: the sensor to mechanism ratio is the gear ratio, so the Talon already works in mechanism rotations; a linear mechanism&#x27;s gains are divided by the rotations per meter; kS and kG are volts and do not change; Motion Magic limits go from meters to rotations; gravity is Arm_Cosine or Elevator_Static. SPARK MAX and Flex: gains are per rotation of its encoder and output a duty cycle, so they are divided by 12 V and the gear ratio, velocity gains by 60 more for RPM, kI is multiplied by 1 ms and kD divided by 1 ms, kV and kA are volts per RPM of its encoder, and an arm&#x27;s kG becomes kCos with a kCosRatio of 1 over the ratio. Thrifty Nova: the PID runs on the SystemCore in YAMS units, so nothing is converted."><figcaption><p>Where your gains go.</p></figcaption></figure>
 
-### Dimensional analysis
+#### Dimensional analysis
 
 The conversion is dimensional analysis. A gain is a number with units, like 4 V per mechanism rotation. To change its units, multiply it by fractions that are each worth exactly 1, such as 1 mechanism rotation over 12 motor rotations on a 12:1 gearbox. A unit that appears on both the top and the bottom cancels. Once only the units the motor controller wants are left, the number in front is its gain.
 
@@ -195,21 +232,7 @@ The Nova's closed loop [runs on the SystemCore](closed-loop-control.md#where-the
 {% endtab %}
 {% endtabs %}
 
-{% hint style="info" %}
-WPILib's `ArmFeedforward` documents its `kV` and `kA` per radian. In YAMS they are per rotation, like every other gain. When the loop runs on the SystemCore, YAMS converts them to radians for WPILib's math.
-{% endhint %}
-
 The units are the same on every controller, but [where the loop runs](closed-loop-control.md#where-the-loop-runs) still matters. A loop on the motor controller runs every millisecond, so gains tuned there are not the best gains for a loop on the SystemCore.
-
-## `withLinearClosedLoopController`
-
-Chooses whether the controller works in rotations or in meters.
-
-<figure><img src="../../../.gitbook/assets/smc-linear-units.png" alt="Two panels. Angle based, the default: error is measured in rotations, kP is in volts per rotation and profile limits are in rotations per second, for arms, pivots, turrets and flywheels. Distance based: error in meters, kP in volts per meter and profile limits in meters per second, for elevators and other linear mechanisms."><figcaption><p>The units the gains and limits are in.</p></figcaption></figure>
-
-It turns on by itself when you give a distance profile, a distance exponential profile or an `ElevatorFeedforward`, and it only takes effect when a [circumference](gearing-and-units.md#withmechanismcircumference) is set. [How do I turn off linear closed loop control?](../../../how-to/how-to-disable-linear-closed-loop-control.md) explains when to turn it off.
-
-**Supported on:** every supported motor controller.
 
 ## Code reference
 

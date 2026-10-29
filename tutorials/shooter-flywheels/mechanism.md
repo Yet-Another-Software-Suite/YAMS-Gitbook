@@ -4,7 +4,7 @@ description: Describe the flywheel and create the FlyWheel mechanism.
 
 # Step 2: The flywheel
 
-The `SmartMotorController` from step 1 can already spin the motor. A `FlyWheel` adds what makes it a flywheel: a physics simulation, a drawing of the mechanism for your dashboard, and the commands and triggers you will use in step 3.
+The `SmartMotorController` from step 1 is configured, but nothing tells it to move yet. A `FlyWheel` adds what makes it a flywheel: a physics simulation, a drawing of the mechanism for your dashboard, and the commands and triggers you will use in step 3.
 
 <figure><img src="../../.gitbook/assets/mech-two-configs.png" alt="A diagram. A mechanism config, which says what the mechanism is, such as its length, mass, hard stops and how it is drawn, and a SmartMotorControllerConfig, which says how its motor behaves, such as gearing, PID, feedforward, soft limits and current, both go into the mechanism class. The mechanism then drives the simulation's physics and Mechanism2d, and the real robot's commands and telemetry."><figcaption><p>Two configs go into one mechanism.</p></figcaption></figure>
 
@@ -14,7 +14,7 @@ The `SmartMotorController` from step 1 can already spin the motor. A `FlyWheel` 
 
 ## 1. Describe the flywheel
 
-`FlyWheelConfig` describes the flywheel itself. Its diameter is used by the simulation, and it is what lets you ask for a surface speed in meters per second as well as a rotation speed.
+`FlyWheelConfig` describes the flywheel itself. Its diameter sets the size of the drawing on your dashboard, and it is what lets you ask for a surface speed in meters per second as well as a rotation speed. The simulation does not use the diameter to spin the wheel: it uses the moment of inertia you gave the motor controller config in step 1.
 
 <figure><img src="../../.gitbook/assets/mech-flywheel-diameter.png" alt="A flywheel with its diameter marked, spinning at 3000 RPM and throwing a game piece from its surface. For a 4 inch wheel the circumference is 0.319 meters, 3000 RPM is 50 rotations per second, and the surface speed is 16 meters per second. getLinearVelocity and getAngularVelocity on the config convert between the two."><figcaption><p>The diameter converts rotation speed to surface speed.</p></figcaption></figure>
 
@@ -23,7 +23,7 @@ The `SmartMotorController` from step 1 can already spin the motor. A `FlyWheel` 
 {% code title="subsystems/ShooterSubsystem.java" %}
 ```java
 private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-    // The diameter of the flywheel, used by the simulation and for surface speeds.
+    // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
     .withDiameter(Inches.of(4))
     // Telemetry name and how much to publish.
     .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
@@ -35,7 +35,7 @@ private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
 {% code title="mechanisms/ShooterMechanism.java" %}
 ```java
 private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-    // The diameter of the flywheel, used by the simulation and for surface speeds.
+    // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
     .withDiameter(Inches.of(4))
     // Telemetry name and how much to publish.
     .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
@@ -55,7 +55,7 @@ std::optional<yams::mechanisms::velocity::FlyWheel> m_shooter;
 {% code title="cpp/subsystems/ShooterSubsystem.cpp" %}
 ```cpp
 m_shooterConfig
-    // The diameter of the flywheel, used by the simulation and for surface speeds.
+    // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
     .WithRollerDiameter(4_in)
     // Telemetry name.
     .WithTelemetryName("Shooter");
@@ -107,14 +107,9 @@ Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry 
 
 In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you, so there is nothing more to do.
 
-In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it. `Robot.java` has the two functions you need:
+In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it, the same way as in [the arm tutorial's step 2](../arm/mechanism.md#3-update-it-every-loop), which explains each part. Every mechanism gets one line in `robotPeriodic()`, before `scheduler.run()`, and one in `simulationInit()`.
 
-* **`robotPeriodic()`** runs every loop, on the robot and in simulation. Call the mechanism's `periodic()` here, before `scheduler.run()`, so that the commands see fresh values.
-* **`simulationInit()`** runs once, when the simulation starts. The template does not have it yet, so add it, and start the mechanism's `simulationPeriodic()` here with `startSimulation(...)`, which runs it in its own `Notifier` every loop, in simulation only. That keeps the simulation from adding to the robot loop's time, as [Where the tutorials put things](../project-setup.md#where-the-tutorials-put-things) explains.
-
-Every mechanism you add to the robot gets one line in each of the two.
-
-Two smaller changes tidy up the template while you are here. Keep `Scheduler.getDefault()` in a `scheduler` attribute instead of asking for it every loop, and publish the scheduler with `Telemetry.log(...)` after it runs, so that a dashboard shows which commands are running and which mechanisms they hold.
+If your `Robot.java` already has `simulationInit()` and `startSimulation(...)` from the arm tutorial, add the lines below. If not, copy the whole `Robot.java` from the Commands v3 tab of [the complete file](#the-complete-file).
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -154,49 +149,16 @@ public void simulationPeriodic() {
 
 {% code title="Robot.java" %}
 ```java
-import java.util.ArrayList;
-import java.util.List;
-import org.wpilib.system.Notifier;
-import org.wpilib.telemetry.Telemetry;
 import first.robot.mechanisms.ShooterMechanism;
 
-public class Robot extends OpModeRobot {
-  // ...
-  final ShooterMechanism shooter = new ShooterMechanism();
-  // ...
+// A field of Robot.
+final ShooterMechanism shooter = new ShooterMechanism();
 
-  // The scheduler that runs every command.
-  private final Scheduler scheduler = Scheduler.getDefault();
-  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
-  private final List<Notifier> simulationNotifiers = new ArrayList<>();
+// In robotPeriodic(), before scheduler.run():
+shooter.periodic();
 
-  // ...
-
-  @Override
-  public void robotPeriodic() {
-    // Runs every loop, on the robot and in simulation.
-    // Update the mechanism before the scheduler runs its commands.
-    shooter.periodic();
-    scheduler.run();
-    // Publish the scheduler, so that a dashboard shows which commands are running.
-    Telemetry.log("Scheduler", scheduler, Scheduler.proto);
-  }
-
-  @Override
-  public void simulationInit() {
-    // Runs once, when the simulation starts.
-    // Run each mechanism's simulation in its own Notifier, every robot loop.
-    startSimulation("Shooter", shooter::simulationPeriodic);
-  }
-
-  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
-  private void startSimulation(String name, Runnable simulationPeriodic) {
-    Notifier notifier = new Notifier(simulationPeriodic);
-    notifier.setName(name + " Simulation");
-    notifier.startPeriodic(getPeriod());
-    simulationNotifiers.add(notifier);
-  }
-}
+// In simulationInit():
+startSimulation("Shooter", shooter::simulationPeriodic);
 ```
 {% endcode %}
 {% endtab %}
@@ -237,7 +199,8 @@ The highlighted lines are new in this step.
 
 import static org.wpilib.units.Units.Amps;
 <strong>import static org.wpilib.units.Units.Inches;
-</strong>
+</strong>import static org.wpilib.units.Units.KilogramSquareMeters;
+
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import org.wpilib.command2.SubsystemBase;
@@ -262,13 +225,16 @@ public class ShooterSubsystem extends SubsystemBase {
       .withControlMode(ControlMode.CLOSED_LOOP)
       // Feedback constants (PID), on the real robot and in simulation.
       // A flywheel holds a speed, so it gets no motion profile.
-      .withClosedLoopController(1, 0, 0)
-      .withSimClosedLoopController(1, 0, 0)
+      .withClosedLoopController(0.2, 0, 0)
+      .withSimClosedLoopController(0.2, 0, 0)
       // Feedforward constants, on the real robot and in simulation.
-      .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      // Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+      .withFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      .withSimFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      // Gearing from the motor rotor to the flywheel: one 1.5:1 stage.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1.5)))
+      // How hard the wheel is to spin up, used by the simulation: two 4 inch
+      // wheels, 0.68 kg (1.5 lb) in all, as solid discs: 0.5 x 0.68 kg x (0.0508 m)^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0009))
       .withMotorInverted(false)
       // Coast, so that the wheel spins down by itself instead of being braked to a stop.
       .withZeroPower(MotorMode.COAST)
@@ -283,7 +249,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
 
 <strong>  private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-</strong><strong>      // The diameter of the flywheel, used by the simulation and for surface speeds.
+</strong><strong>      // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
 </strong><strong>      .withDiameter(Inches.of(4))
 </strong><strong>      // Telemetry name and how much to publish.
 </strong><strong>      .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
@@ -315,7 +281,8 @@ Nothing calls a periodic method on a Commands v3 `Mechanism`, so give the class 
 
 import static org.wpilib.units.Units.Amps;
 <strong>import static org.wpilib.units.Units.Inches;
-</strong>
+</strong>import static org.wpilib.units.Units.KilogramSquareMeters;
+
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import org.wpilib.command3.Mechanism;
@@ -340,13 +307,16 @@ public class ShooterMechanism implements Mechanism {
       .withControlMode(ControlMode.CLOSED_LOOP)
       // Feedback constants (PID), on the real robot and in simulation.
       // A flywheel holds a speed, so it gets no motion profile.
-      .withClosedLoopController(1, 0, 0)
-      .withSimClosedLoopController(1, 0, 0)
+      .withClosedLoopController(0.2, 0, 0)
+      .withSimClosedLoopController(0.2, 0, 0)
       // Feedforward constants, on the real robot and in simulation.
-      .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-      // Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+      .withFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      .withSimFeedforward(new SimpleMotorFeedforward(0, 0.19, 0))
+      // Gearing from the motor rotor to the flywheel: one 1.5:1 stage.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1.5)))
+      // How hard the wheel is to spin up, used by the simulation: two 4 inch
+      // wheels, 0.68 kg (1.5 lb) in all, as solid discs: 0.5 x 0.68 kg x (0.0508 m)^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0009))
       .withMotorInverted(false)
       // Coast, so that the wheel spins down by itself instead of being braked to a stop.
       .withZeroPower(MotorMode.COAST)
@@ -361,7 +331,7 @@ public class ShooterMechanism implements Mechanism {
   private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
 
 <strong>  private final FlyWheelConfig shooterConfig = new FlyWheelConfig()
-</strong><strong>      // The diameter of the flywheel, used by the simulation and for surface speeds.
+</strong><strong>      // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
 </strong><strong>      .withDiameter(Inches.of(4))
 </strong><strong>      // Telemetry name and how much to publish.
 </strong><strong>      .withTelemetry("Shooter", TelemetryVerbosity.HIGH);
@@ -501,12 +471,16 @@ ShooterSubsystem::ShooterSubsystem() {
       .WithClosedLoopMode()
       // Feedback constants (PID), on the real robot and in simulation.
       // A flywheel holds a speed, so it gets no motion profile.
-      .WithFeedback(1, 0, 0)
-      .WithSimClosedLoopController(1, 0, 0)
-      // Feedforward constants: kS and kV.
-      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t&#x3C;Feedforward::kv_unit>{0}})
-      // Gearing from the motor rotor to the flywheel: a 3:1 stage and a 4:1 stage, 12:1 in total.
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
+      .WithFeedback(0.2, 0, 0)
+      .WithSimClosedLoopController(0.2, 0, 0)
+      // Feedforward constants (kS and kV), on the real robot and in simulation.
+      .WithFeedforward(Feedforward{0_V, wpi::units::unit_t&#x3C;Feedforward::kv_unit>{0.19}})
+      .WithSimFeedforward(Feedforward{0_V, wpi::units::unit_t&#x3C;Feedforward::kv_unit>{0.19}})
+      // Gearing from the motor rotor to the flywheel: one 1.5:1 stage.
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.5})})
+      // How hard the wheel is to spin up, used by the simulation: two 4 inch
+      // wheels, 0.68 kg (1.5 lb) in all, as solid discs: 0.5 x 0.68 kg x (0.0508 m)^2.
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0009})
       .WithMotorInverted(false)
       // Coast, so that the wheel spins down by itself instead of being braked to a stop.
       .WithZeroPower(Cfg::MotorMode::COAST)
@@ -518,7 +492,7 @@ ShooterSubsystem::ShooterSubsystem() {
   m_motor.emplace(&#x26;m_spark, wpi::math::DCMotor::NEO(1), &#x26;m_smcConfig);
 
 <strong>  m_shooterConfig
-</strong><strong>      // The diameter of the flywheel, used by the simulation and for surface speeds.
+</strong><strong>      // The diameter of the flywheel: the size of its drawing, and what turns RPM into surface speed.
 </strong><strong>      .WithRollerDiameter(4_in)
 </strong><strong>      // Telemetry name.
 </strong><strong>      .WithTelemetryName("Shooter");
@@ -539,3 +513,9 @@ ShooterSubsystem::ShooterSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
+
+## Check it
+
+Build the code again. You can already run the simulation as in [step 4](simulate.md): the flywheel is drawn, standing still. It does not spin yet, because nothing gives it a setpoint.
+
+* **`FlyWheel` cannot be found:** the import is from the other command framework. Commands v2 uses `yams.commands2.mechanisms.FlyWheel`, Commands v3 uses `yams.commands3.mechanisms.FlyWheel`.

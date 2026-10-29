@@ -21,24 +21,36 @@ CTRE has excellent documentation explaining the relationship between the supply 
 
 {% embed url="https://v6.docs.ctr-electronics.com/en/stable/docs/hardware-reference/talonfx/improving-performance-with-current-limits.html" %}
 
-If your mechanism interacts with a game element or has a chance of getting stuck a current limit **WILL** cause the mechanism to stutter until the current is back below the limit. This can cause strains on the mechanism as it constantly starts then stops but it could save your motor controller and prevent brownouts because your mechanism will not be able to pull more power than necessary.
+If your mechanism pushes on a game piece or can get stuck, a current limit **will** make it stutter while the current is held at the limit. That strains the mechanism a little, but it protects the motor and stops one stuck mechanism from browning out the robot.
 
 ### Setting current limits in YAMS
 
 ```java
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-      .withStatorCurrentLimit(Amps.of(200)) // Current to the motor
-      .withSupplyCurrentLimit(Amps.of(40)) // Current to the motor controller
+.withStatorCurrentLimit(Amps.of(40)) // stator: current through the motor, limits torque and heat
+.withSupplyCurrentLimit(Amps.of(30)) // supply: current from the battery, protects the breaker and voltage
 ```
+
+This is a fragment of a `SmartMotorControllerConfig`. Leave out the supply limit on a SPARK MAX or SPARK Flex, which only has a stator limit.
+
+### Starting limits
+
+These are starting points for a mechanism, not rules. Raise a limit if the mechanism is too weak or too slow, and lower it if the battery voltage dips too far in the [simulation test below](#testing-brownout-scenarios-in-simulation). Drive motors usually run higher stator limits than mechanisms.
+
+| Motor      | Usually on                    | Stator limit to start | Supply limit to start             |
+| ---------- | ----------------------------- | --------------------- | --------------------------------- |
+| Kraken X60 | TalonFX                       | 60 A                  | 40 A                              |
+| NEO        | SPARK MAX, TalonFXS, Nova     | 40 A                  | 30 A, where the controller has one |
+| NEO 550    | SPARK MAX, TalonFXS           | 20 A                  | 20 A, where the controller has one |
+| NEO Vortex | SPARK Flex, TalonFXS          | 60 A                  | 40 A, where the controller has one |
+
+A NEO 550 is small and overheats quickly when stalled, so keep its stator limit low on intakes and rollers that can jam.
 
 ## Ramp rates
 
-Ramp rates is the minimum time it takes for a motor to go from 0% to 100% power to the motor.
+A ramp rate is the shortest time the motor's output may take to go from 0% to 100%.
 
 {% hint style="info" %}
-A ramp rate is the last thing to reach for. It delays everything the motor does, which makes the robot seem "slow" or "delayed".
-
-A mechanism that takes too much power when it starts moving is better fixed, in this order, with a [motion profile](config/motion-profiles.md) if one suits it, then a supply current limit where the motor controller has one, then a stator current limit where it does not. Use a ramp rate only if none of those is enough.
+A ramp rate is the last thing to reach for. It delays everything the motor does, which makes the robot seem slow. Try the fixes in [Limit each load in this order](#limit-each-load-in-this-order) first.
 {% endhint %}
 
 <figure><img src="../../.gitbook/assets/power-ramp-rate.png" alt="Without a ramp rate the motor output jumps to full at once and the current spikes. With a 0.25 second ramp rate the output climbs over 0.25 seconds and the current is a lower, wider bump, with a slower start"><figcaption><p>A ramp rate trades the current spike for a slower start.</p></figcaption></figure>
@@ -57,9 +69,8 @@ The Thrifty Nova has a single ramp rate for open and closed loop control. `NovaW
 ### Setting ramp rates in YAMS
 
 ```java
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-      .withClosedLoopRampRate(Seconds.of(0.25)) // 0.25 seconds minimum 
-      .withOpenLoopRampRate(Seconds.of(0.25)) // 0.25 seconds minimum
+.withClosedLoopRampRate(Seconds.of(0.25)) // at least 0.25 s from 0 to full output under closed loop
+.withOpenLoopRampRate(Seconds.of(0.25))   // the same for voltage and duty cycle commands
 ```
 
 ## Testing brownout scenarios in simulation

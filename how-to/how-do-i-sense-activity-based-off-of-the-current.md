@@ -1,50 +1,110 @@
-# How do I sense activity from the motor current?
+# How do I detect a game piece from motor current?
 
-Current sensing lets your robot detect when a mechanism is stalling against a hard stop, for example, an elevator that has fully descended or a claw that has fully closed, without requiring a dedicated limit switch. Because `SmartMotorController` exposes stator current, you can wire a `Trigger` directly to a current threshold, which is useful when a sensor was never installed or when adding one mid-season is not practical.
+**Goal:** know when your intake has a game piece, without a beam break or limit switch, by watching the roller motor's current.
 
-There are situations where the mechanical team never confirmed with programming on what they would need to plan for and it is too late to redesign the mechanism and add a proper sensor.
+When a game piece jams against a spinning roller, the roller slows and the motor draws more current. **Stator current** is the current through the motor's windings, and it rises with the load. YAMS reads it with `SmartMotorController.getStatorCurrent()`, so you can turn "current has been high for a moment" into a `Trigger`.
 
-In this case you can sense if there is a game piece by the current on the smart motor controller?
+This is a fallback for when there is no room or time for a real sensor. A beam break is more reliable, so ask for one if you can.
 
-<figure><img src="../.gitbook/assets/howto-current-sensing.gif" alt="Animation of a graph of stator current against a threshold of 40 amps. The current spikes over the threshold for a moment when the motor starts, runs at about 12 amps, then rises over the threshold and stays there when a game piece jams against the roller. The raw check is true during both. The debounced isGamePieceIn is false during the start up spike and turns true 0.1 seconds after the game piece arrives."><figcaption><p>The <code>Debouncer</code> ignores the short spike when the motor starts, and reports the game piece once the current has stayed over the threshold for 0.1 seconds.</p></figcaption></figure>
+This page builds on the `IntakeSubsystem` from [How do I set up an intake roller?](how-do-i-set-up-an-intake-roller.md)
+
+## Step 1: Measure your current
+
+Pick the threshold from your robot, not from this page.
+
+1. Deploy the intake from [How do I set up an intake roller?](how-do-i-set-up-an-intake-roller.md) to the robot and open the motor's `current/stator` value under **NetworkTables > Mechanisms** as a graph (Elastic, AdvantageScope or the Glass graph widget).
+2. Run the intake with nothing in it. Note the current once it is up to speed; a roller like this one often sits around 5 to 15 amps.
+3. Feed it a game piece and let it jam. Note how high the current goes and how long it stays there.
+
+Choose a threshold between the two, well clear of both: if it runs at 10 A empty and climbs to the 40 A limit with a game piece, try 25 A.
+
+{% hint style="warning" %}
+**Keep the threshold below the stator current limit.** The limit (`withStatorCurrentLimit(Amps.of(40))`) stops the current from going over 40 A, so a stalled roller reads at or just under 40 A. A threshold equal to the limit may never be reached, or flicker on and off.
+{% endhint %}
+
+Simulation does not model a game piece, so this step has to be done on the real robot.
+
+## Step 2: Add the detection
+
+Add a `Debouncer` and a method to the intake class. The `Debouncer` only reports `true` once the current has stayed over the threshold for 0.1 seconds, so the short spike when the motor starts does not count as a game piece. These lines are a fragment: they go in the `IntakeSubsystem` (or `IntakeMechanism`) class, next to the `motor` field.
+
+{% code title="IntakeSubsystem.java (fragment)" %}
+```java
+import static org.wpilib.units.Units.Amps;
+import org.wpilib.math.filter.Debouncer;
+import org.wpilib.units.measure.Current;
+
+// Over this, the roller is pushing against a game piece. Measured on our robot:
+// about 10 A empty, 40 A (the current limit) with a game piece jammed.
+private static final Current GAME_PIECE_CURRENT = Amps.of(25);
+
+// True only after the current has stayed high for 0.1 seconds.
+private final Debouncer gamePieceDebouncer = new Debouncer(0.1);
+
+/** True once the roller has been pushing against a game piece for 0.1 seconds. */
+public boolean hasGamePiece() {
+  return gamePieceDebouncer.calculate(motor.getStatorCurrent().gte(GAME_PIECE_CURRENT));
+}
+```
+{% endcode %}
+
+## Step 3: Use it
+
+Run the intake until it has a game piece, then stop.
+
+{% tabs %}
+{% tab title="Commands v2" %}
+{% code title="IntakeSubsystem.java (fragment)" %}
+```java
+/** Run the intake until a game piece is detected. */
+public Command intakeUntilGamePiece() {
+  return intake().until(this::hasGamePiece);
+}
+```
+{% endcode %}
+
+To use it as a `Trigger` elsewhere (for example to rumble the controller), wrap it: `new Trigger(intake::hasGamePiece)`.
+{% endtab %}
+
+{% tab title="Commands v3" %}
+{% code title="IntakeMechanism.java (fragment)" %}
+```java
+/** Run the intake until a game piece is detected. */
+public Command intakeUntilGamePiece() {
+  return run(coroutine -> {
+    while (true) {
+      if (hasGamePiece()) {
+        intake.setVoltageSetpoint(Volts.of(0));
+        return;
+      }
+      intake.setVoltageSetpoint(Volts.of(8));
+      coroutine.yield();
+    }
+  }).named("Intake Until Game Piece");
+}
+```
+{% endcode %}
+
+To use it as a `Trigger` elsewhere, wrap it: `new Trigger(intake::hasGamePiece)` with `org.wpilib.command3.Trigger`.
+{% endtab %}
+{% endtabs %}
+
+## Check it
+
+1. On the robot, graph `current/stator` and `hasGamePiece()` together (publish `hasGamePiece()` with `Telemetry.log`, or watch the command end).
+2. Start the intake with nothing in it. `hasGamePiece()` should stay `false`, even during the spike when the motor starts.
+3. Feed it a game piece. `hasGamePiece()` should turn `true` about 0.1 seconds after the current climbs over the threshold, and the intake should stop.
+
+## If it did not work
+
+* **It never detects the game piece.** The threshold is too high, or the same as the current limit. Lower it toward the middle of your empty and jammed readings.
+* **It detects a game piece when the intake starts.** The start up spike lasts longer than 0.1 seconds. Raise the `Debouncer` time to 0.2 or 0.25 seconds, or the threshold.
+* **It works with a full battery but not a low one.** A tired battery slows the roller and changes the current. Use `setVoltage` rather than `set` for the intake, and measure again with a used battery.
+
+## Next
+
+To feed that game piece into a shooter, see [How do I shoot with a shooter?](how-to-shoot-with-a-shooter.md)
+
+For more on `Debouncer`, see the WPILib docs:
 
 {% embed url="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/debouncer.html#debouncer" %}
-
-<pre class="language-java"><code class="lang-java">  private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    // Feedback Constants (PID Constants)
-    .withClosedLoopController(50, 0, 0)
-    .withSimClosedLoopController(50, 0, 0)
-    // Feedforward Constants
-    .withFeedforward(new ArmFeedforward(0, 0, 0))
-    .withSimFeedforward(new ArmFeedforward(0, 0, 0))
-    // Telemetry name and verbosity level
-    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
-    // Gearing from the motor rotor to final shaft.
-    // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
-    // Motor properties to prevent over currenting.
-    .withMotorInverted(false)
-    .withZeroPower(MotorMode.BRAKE)
-    .withStatorCurrentLimit(Amps.of(40))
-    .withClosedLoopRampRate(Seconds.of(0.25))
-    .withOpenLoopRampRate(Seconds.of(0.25));
-
-  // Vendor motor controller object
-  private SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
-
-  // Create our SmartMotorController from our Spark and config with the NEO.
-<strong>  private SmartMotorController sparkSmartMotorController = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
-</strong>
-<strong>  private Debouncer statorDebounce = new Debouncer(0.1); // Debouncer to prevent rapid changes in 0.1s
-</strong>
-<strong>  /**
-</strong><strong>   * Game piece is detected if you're using over 40A current for more than 0.1s
-</strong><strong>   */
-</strong><strong>  public boolean isGamePieceIn() {
-</strong><strong>      return statorDebounce.calculate(sparkSmartMotorController.getStatorCurrent().gte(Amps.of(40))); 
-</strong><strong>  }
-</strong></code></pre>
-
-`Debouncer` is `org.wpilib.math.filter.Debouncer` and `CANPort` is `org.wpilib.hardware.bus.CANPort` in WPILib 2027. To use the check as a `Trigger`, wrap it: `new Trigger(this::isGamePieceIn)`.
-

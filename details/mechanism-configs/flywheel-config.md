@@ -37,6 +37,8 @@ new FlyWheelConfig().withSpeedometerSimulation(RPM.of(6000)); // the speed at th
 
 Give it the fastest speed you expect. `disableSpeedometerSimulation()` turns it back off.
 
+`withSpeedometerSimulation()`, with no speed, turns it back on with the speed you gave before, for example on a copy of a config that had it turned off. It throws a `FlyWheelConfigurationException` if no speed was ever given.
+
 **Used in:** simulation only.
 
 ## What else a flywheel needs
@@ -45,11 +47,11 @@ Give it the fastest speed you expect. `disableSpeedometerSimulation()` turns it 
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | How heavy the wheel is in simulation | [`withMomentOfInertia`](../editor/config/simulation.md#withmomentofinertia) on the motor config          |
 | Holding a speed                      | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kV`, plus a small `kP` |
-| A smooth spin up                     | [A velocity profile](../editor/config/motion-profiles.md#a-velocity-profile)                             |
+| A smooth spin up                     | [A velocity profile](../editor/config/motion-profiles.md#velocity-profiles-for-flywheels)                             |
 | A roller that only needs a voltage   | [`ControlMode.OPEN_LOOP`](../editor/config/motor-basics.md#withcontrolmode)                              |
 | Coasting when stopped                | [`MotorMode.COAST`](../editor/config/motor-basics.md#withzeropower)                                      |
 
 ## Code reference
 
-* `FlyWheelConfig`
-* `FlyWheel`
+* [`FlyWheelConfig`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/config/FlyWheelConfig.java)
+* [`FlyWheel`](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/yams/java/yams/core/mechanisms/velocity/FlyWheel.java)

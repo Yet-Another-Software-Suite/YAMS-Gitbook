@@ -6,13 +6,23 @@ icon: plug-circle-plus
 
 Live tuning lets you change gains, motion profiles and limits from a dashboard while the robot is enabled, and see the result straight away. It works over NetworkTables with AdvantageScope or Elastic.
 
+This page shows how to turn it on, how to use it, and the order to tune in. For every key, its units and what to watch, see [Live tuning keys and units](keys-and-units.md).
+
 <figure><img src="../../.gitbook/assets/live-tuning-loop.png" alt="A loop: the dashboard sends tunable values under NT:/Tuning to the Live Tuning command, which applies them to the SmartMotorController every loop, and telemetry under NT:/Mechanisms flows back to the dashboard"><figcaption><p>Change a number, watch the graph, change it again.</p></figcaption></figure>
 
 ## Turn it on
 
-Give the motor's telemetry `TelemetryVerbosity.HIGH`. That is all most robots need.
+**If you followed a tutorial, live tuning is already on.** It comes from this one line on the motor's `SmartMotorControllerConfig`:
 
-<pre class="language-java"><code class="lang-java">SmartMotorControllerConfig lowerFlyWheelConfig = new SmartMotorControllerConfig(this)
+```java
+.withTelemetry("ArmMotor", TelemetryVerbosity.HIGH) // yams.core.telemetry.enums.TelemetryVerbosity
+```
+
+`TelemetryVerbosity.HIGH` publishes the tunable values and registers the `Live Tuning` command. That is all most robots need. Live tuning also needs `.withControlMode(ControlMode.CLOSED_LOOP)` on the same config.
+
+A fragment of a flywheel motor config, with the line in place:
+
+<pre class="language-java" data-title="Fragment: a flywheel's SmartMotorControllerConfig"><code class="lang-java">SmartMotorControllerConfig lowerFlyWheelConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withZeroPower(MotorMode.COAST)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
@@ -22,7 +32,7 @@ Give the motor's telemetry `TelemetryVerbosity.HIGH`. That is all most robots ne
                                 0) // You generally do not want a profile because its not a position controlled loop.
       .withFeedforward(new SimpleMotorFeedforward(0, 0, 0)) // Helps track changing RPM goals
       .withMotorInverted(false)
-<strong>      .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH) // yams.core.telemetry.enums.TelemetryVerbosity
+<strong>      .withTelemetry("LowerFlyWheel", TelemetryVerbosity.HIGH);
 </strong></code></pre>
 
 | How the motor's telemetry is set up | Live Tuning command |
@@ -75,33 +85,52 @@ Using CTRE TalonFX or TalonFXS motors? Phoenix Tuner X can connect to your simul
 Like all tuning, live tuning can be **dangerous**. It's best to practice in simulation before the real robot.
 {% endhint %}
 
+The steps below are a first run with the `ArmSubsystem` from the [Arm tutorial](../../tutorials/arm.md). Its mechanism is named `Arm` and its motor `ArmMotor`, so:
+
+* The `Live Tuning` command is at `NT:/Tuning/ArmSubsystem/Live Tuning`.
+* The values you type are under `NT:/Tuning/Arm/ArmMotor/`.
+* The values you watch are under `NT:/Mechanisms/Arm/ArmMotor/`.
+
+For your own robot, swap in your subsystem's class name and the names you gave `withTelemetry(...)`. [NetworkTables keys](keys-and-units.md#networktables-keys) explains each part.
+
 {% stepper %}
 {% step %}
-#### Try it in simulation
+#### Run the code in simulation
 
-Run the robot code in simulation and go through the steps below there first.
+Run the robot code in simulation and go through these steps there first. In simulation you are tuning the `withSimClosedLoopController(...)` and `withSimFeedforward(...)` gains: the simulation uses those when they are set, so the values the dashboard starts at, and the ones you find, belong in the `withSim...` lines.
+
+**Check:** the arm shows on the simulation's `Mechanism2d` and `NT:/Mechanisms/Arm/ArmMotor/mechanism/position` updates.
 {% endstep %}
 
 {% step %}
 #### Enable the robot
 
-Dashboard edits are only applied while the robot is enabled and the `Live Tuning` command is running.
+Set the robot to Teleoperated and enable it. Dashboard edits are only applied while the robot is enabled and the `Live Tuning` command is running.
 {% endstep %}
 
 {% step %}
 #### Start the `Live Tuning` command
 
-It is published at `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning`, where `SUBSYSTEM_NAME` is the name of the subsystem (Commands v2) or mechanism (Commands v3) given to the `SmartMotorControllerConfig`.
-
 {% tabs %}
 {% tab title="Commands v2" %}
-In Elastic, drag the `Live Tuning` command from `NT:/Tuning/SUBSYSTEM_NAME/Live Tuning` onto your dashboard and press its button.
+In Elastic, drag `NT:/Tuning/ArmSubsystem/Live Tuning` onto your dashboard and press its button.
 
-It is a regular WPILib Commands v2 `Command` that requires the subsystem.
+It is a regular WPILib Commands v2 `Command` that requires the subsystem. If you use AdvantageScope, which cannot press a command button, bind it to a controller button in `RobotContainer` instead:
+
+```java
+import yams.commands2.telemetry.SmartMotorControllerCommandRegistry;
+
+// In configureBindings(), after the subsystem is created.
+// getCommand returns an Optional<Command>: it is empty if no Live Tuning command was registered.
+SmartMotorControllerCommandRegistry.getCommand("Live Tuning", arm)
+    .ifPresent(liveTuning -> driverController.rightStick().toggleOnTrue(liveTuning));
+```
+
+Pressing the right stick starts it, and pressing it again stops it.
 {% endtab %}
 
 {% tab title="Commands v3" %}
-Commands v3 commands are not dashboard widgets themselves, so YAMS publishes the command through `yams.commands3.telemetry.CommandTunable`. It shows up with a single `running` boolean at `NT:/Tuning/MECHANISM_NAME/Live Tuning/running`:
+Commands v3 commands are not dashboard widgets themselves, so YAMS publishes the command through `yams.commands3.telemetry.CommandTunable`. It shows up with a single `running` boolean at `NT:/Tuning/MECHANISM_NAME/Live Tuning/running`, where `MECHANISM_NAME` is the Commands v3 `Mechanism`'s `getName()`:
 
 * Set `running` to `true` to schedule the command on the default `Scheduler`.
 * Set `running` to `false` to cancel it.
@@ -111,13 +140,32 @@ The command requires the mechanism and runs a `while (true)` loop that applies t
 {% endtab %}
 {% endtabs %}
 
-The command takes over from the default command. If that default command coasts the motor with a duty cycle or voltage, it stopped a closed loop that runs on the SystemCore, such as an LQR or an exponential profile. The `Live Tuning` command starts it again, holding the setpoint the motor controller had.
+The command takes over from the default command and holds the setpoint the motor controller had. In the Arm tutorial that is the default command's 0 degrees, so the arm holds level.
+
+If the default command coasted the motor with a duty cycle or voltage, it stopped any closed loop that runs on the SystemCore, such as an [LQR](../editor/lqr-controllers.md) or an [exponential profile](../editor/exponential-profiles.md). The `Live Tuning` command starts it again.
+
+**Check:** in Elastic the button shows the command running, or `running` reads `true`.
+{% endstep %}
+
+{% step %}
+#### Graph what to watch
+
+Graph these two together. They are what you compare after every change:
+
+* `NT:/Mechanisms/Arm/ArmMotor/closedloop/setpoint/position`: where the arm is told to be.
+* `NT:/Mechanisms/Arm/ArmMotor/mechanism/position`: where it is.
+
+Add `NT:/Mechanisms/Arm/ArmMotor/motor/outputVoltage` too: it is how you find kG below.
+
+{% hint style="warning" %}
+**You type degrees, you read rotations.** A setpoint typed as `15` (degrees) is graphed as `0.0417` (rotations). To graph in degrees, see [See both in the same units with AdvantageScope](keys-and-units.md#see-both-in-the-same-units-with-advantagescope). All the units are in [Units: what you type and what you read](keys-and-units.md#units-what-you-type-and-what-you-read).
+{% endhint %}
 {% endstep %}
 
 {% step %}
 #### Change a value
 
-The tunable values are published under `NT:/Tuning/`. Edit one, and it is applied on the next loop.
+The tunable values are under `NT:/Tuning/Arm/ArmMotor/`. Edit one, and it is applied on the next loop. A value is only applied when it changes, so typing the number that is already there does nothing.
 
 {% tabs %}
 {% tab title="AdvantageScope" %}
@@ -132,317 +180,30 @@ With tuning mode on, the fields under `NT:/Tuning` can be edited in the sidebar.
 Drag a field from `NT:/Tuning/` onto the dashboard as a text or number widget and type the new value. Elastic can always write to NetworkTables, so there is nothing to turn on.
 {% endtab %}
 {% endtabs %}
+
+Try it: type `10` into `NT:/Tuning/Arm/ArmMotor/closedloop/setpoint/position`.
+
+**Check:** `closedloop/setpoint/position` under `NT:/Mechanisms` jumps to about `0.028` (10 degrees in rotations), and `mechanism/position` follows it up. Type `0` to bring the arm back to level.
 {% endstep %}
 
 {% step %}
-#### Watch what happens
+#### Tune, then copy the values into your code
 
-Graph the matching read-only fields under `NT:/Mechanisms/`. [NetworkTables keys](#networktables-keys) shows where they are, and [What to tune and what to watch](#what-to-tune-and-what-to-watch) lists which key to watch for each value.
+Follow the [Tuning order](#tuning-order) for your mechanism. Values typed on the dashboard are lost when the robot code restarts, so the last step is always to copy them into your config.
 {% endstep %}
 {% endstepper %}
 
 {% hint style="warning" %}
-The `Live Tuning` command requires the subsystem or mechanism, so the controller, a default command, or any other trigger for that subsystem or mechanism can interrupt it. Dashboard edits stop being applied when it is interrupted.
+The `Live Tuning` command requires the subsystem or mechanism, so the controller, a default command, or any other trigger for that subsystem or mechanism can interrupt it. Dashboard edits stop being applied when it is interrupted. If your edits suddenly do nothing, check the command is still running.
 {% endhint %}
 
-<figure><img src="../../.gitbook/assets/new_liveutinging.gif" alt="Starting the Live Tuning command and editing a tunable value on the dashboard"><figcaption><p>Starting the command and changing a value.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/new_liveutinging.gif" alt="Starting the Live Tuning command from the dashboard, then typing a new value into a tunable field and the mechanism responding"><figcaption><p>Starting the command and changing a value.</p></figcaption></figure>
 
-<figure><img src="../../.gitbook/assets/AScopeLiveTuningExample.gif" alt="Tuning a mechanism in AdvantageScope while the robot is enabled"><figcaption><p>Tuning while the robot is enabled.</p></figcaption></figure>
-
-## NetworkTables keys
-
-Everything on this page is named by its NetworkTables key, which is what you see in AdvantageScope and Elastic.
-
-| What | Where it is published |
-| --- | --- |
-| Values you type | `NT:/Tuning/<Mechanism>/<Motor>/<key>` |
-| Values you watch | `NT:/Mechanisms/<Mechanism>/<Motor>/<key>` |
-| The `Live Tuning` command | `NT:/Tuning/<Subsystem>/Live Tuning` |
-
-`<Mechanism>` and `<Motor>` are the names given to `withTelemetry(...)` on the mechanism config and on the `SmartMotorControllerConfig`. A motor controller used without a mechanism class has no `<Mechanism>` level.
-
-For example, an arm named `Arm` with a motor named `ArmMotor`:
-
-* You type kP into `NT:/Tuning/Arm/ArmMotor/closedloop/feedback/kP`.
-* You watch the arm at `NT:/Mechanisms/Arm/ArmMotor/mechanism/position`.
-
-{% hint style="info" %}
-Some keys exist in both tables. `closedloop/setpoint/position` under `NT:/Tuning` is the setpoint you type. Under `NT:/Mechanisms` it is the setpoint the controller is using right now.
-{% endhint %}
-
-### The position and velocity to watch
-
-Which keys hold the position and velocity depends on the mechanism.
-
-| Mechanism | Position | Velocity | Units |
-| --- | --- | --- | --- |
-| Rotational: arms, pivots, turrets, flywheels | `mechanism/position` | `mechanism/velocity` | Rotations, rot/s |
-| Linear: elevators, and anything with a mechanism circumference | `measurement/position` | `measurement/velocity` | Meters, m/s |
-
-The tables below write `mechanism/position` and `mechanism/velocity`. On a linear mechanism, read them as `measurement/position` and `measurement/velocity`.
-
-## Units: what you type and what you read
-
-Tunable fields and read-only fields do not use the same units.
-
-<figure><img src="../../.gitbook/assets/live-tuning-units.png" alt="For a flywheel you type 3000 RPM into closedloop/setpoint/velocity and read 50 rotations per second at mechanism/velocity. For an arm you type 30 degrees into mechanism/limit/upper and read 0.0833 rotations at mechanism/position."><figcaption><p>The value you type is in the tunable unit, not the unit of the read-only field next to it.</p></figcaption></figure>
-
-| Quantity | You type (tunable fields) | You read (read-only fields) |
-| --- | --- | --- |
-| Angular position | **Degrees** | **Rotations** |
-| Angular velocity | **RPM** | **Rotations per second** |
-| Angular acceleration | **RPM per second** | **Rotations per second²** |
-| Linear position, velocity, acceleration (linear closed loop control) | **Meters**, **m/s**, **m/s²** | **Meters**, **m/s**, **m/s²** |
-| Voltage, current | **Volts**, **Amps** | **Volts**, **Amps** |
-| Temperature | Not tunable | **Fahrenheit** |
-
-### See both in the same units with AdvantageScope
-
-AdvantageScope can convert any read-only field for display, without changing the data or your robot code.
-
-1. Drag the telemetry field, for example `NT:/Mechanisms/Arm/ArmMotor/mechanism/position`, into a Line Graph.
-2. Right-click the field in the graph legend and choose **Convert Units…**
-3. Pick the target unit: Rotations to Degrees, rot/s to RPM, Meters to Inches, and so on.
-
-Now the graph shows degrees and RPM, the same units the tunable fields expect. When the graph shows 180°, you type `180`.
-
-{% hint style="success" %}
-**Recommended setup for a tuning session**
-
-* Convert `mechanism/position` and `closedloop/setpoint/position` to degrees. On a linear mechanism, convert `measurement/position` to inches if you prefer.
-* Convert `mechanism/velocity` to RPM (or deg/s).
-* Graph `closedloop/setpoint/position` and `mechanism/position` together. YAMS has no closed loop error field: the error is the gap between the two lines.
-* Keep the graphs visible next to the tunable fields.
-{% endhint %}
-
-## What to tune and what to watch
-
-Every tunable field has a read-only field that tells you whether your change worked.
-
-<figure><img src="../../.gitbook/assets/live-tuning-response.png" alt="Three step responses: kP too low rises slowly and stops short, about right settles quickly on the setpoint, kP too high overshoots and rings"><figcaption><p>What the position graph looks like after a setpoint change.</p></figcaption></figure>
-
-{% tabs %}
-{% tab title="PID" %}
-| You type (`NT:/Tuning`) | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- |
-| `closedloop/feedback/kP` | `mechanism/position` vs `closedloop/setpoint/position` | Error should shrink faster as kP rises. Oscillation means kP is too high. |
-| `closedloop/feedback/kI` | `mechanism/position` vs `closedloop/setpoint/position` over time | Removes a steady error that never closes. Watch for windup causing overshoot. |
-| `closedloop/feedback/kD` | `mechanism/velocity`, `motor/outputVoltage` | Dampens oscillation. If voltage spikes on direction changes, kD is too high. |
-
-For a velocity mechanism such as a flywheel, compare `mechanism/velocity` with `closedloop/setpoint/velocity` instead.
-
-Gains are in volts per rotation of error (per meter for linear mechanisms). See [Gain units](#gain-units) below.
-{% endtab %}
-
-{% tab title="LQR" %}
-A motor controller configured with an [LQR](../editor/lqr-controllers.md) has no kP, kI or kD fields. It publishes the LQR's own values in their place, under `closedloop/lqr/`. They only appear when the config has an LQR, and only the ones its type uses.
-
-| You type (`NT:/Tuning`) | Flywheel | Arm | Elevator | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- | --- | --- | --- |
-| `closedloop/lqr/qelms/position` | | Degrees | Meters | `mechanism/position` vs `closedloop/setpoint/position` | The position error you tolerate. Lower it to close position error harder. |
-| `closedloop/lqr/qelms/velocity` | RPM | RPM | m/s | `mechanism/velocity` vs `closedloop/setpoint/velocity` | The velocity error you tolerate. Lower it to damp overshoot, or on a flywheel to reach speed faster. |
-| `closedloop/lqr/relms` | Volts | Volts | Volts | `motor/outputVoltage` | The voltage the LQR treats as acceptable. Lower it for a gentler response. |
-| `closedloop/lqr/model/position` | | Degrees | Meters | `mechanism/position` | How far you trust the model's position. |
-| `closedloop/lqr/model/velocity` | RPM | RPM | m/s | `mechanism/velocity` | How far you trust the model's velocity. |
-| `closedloop/lqr/encoder/position` | | Degrees | Meters | `mechanism/position` | How noisy the encoder's position is. |
-| `closedloop/lqr/encoder/velocity` | RPM | | | `mechanism/velocity` | How noisy the encoder's velocity is. |
-| `closedloop/lqr/maxVoltage` | Volts | Volts | Volts | `motor/outputVoltage` | The most voltage the LQR outputs. |
-
-* **Units:** the same as the tunable setpoints, so an arm's tolerance of `5` is 5 degrees. The fields start at the values in your `LQRConfig`.
-* **Retuning:** a change rebuilds the LQR from every field. The new LQR starts from the old one's state estimate, so the output doesn't jump, and it keeps holding the setpoint.
-* **Bad values:** every value must be above 0. One the LQR can't use leaves it as it was, with a warning on the Driver Station naming the motor.
-* **The feedforward is still tuned as usual.** The LQR only replaces kP, kI and kD. kS, kV, kG and kA are added on top of its output.
-
-See [Tune it live](../editor/lqr-controllers.md#tune-it-live) for the order to change them in.
-{% endtab %}
-
-{% tab title="Feedforward" %}
-| You type (`NT:/Tuning`) | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- |
-| `closedloop/feedforward/kS` | `motor/outputVoltage` at rest | Voltage to overcome static friction. Raise until the mechanism just starts to move. |
-| `closedloop/feedforward/kV` | `mechanism/velocity` vs `closedloop/setpoint/velocity`, `motor/outputVoltage` | With kP = 0, adjust until measured velocity matches the setpoint at steady state. |
-| `closedloop/feedforward/kA` | `mechanism/velocity` during the acceleration ramp | Improves tracking while a motion profile accelerates. |
-| `closedloop/feedforward/kG` (arms, elevators) | `mechanism/position`, `motor/outputVoltage` | Arms: hold level and raise until the arm stays put. Elevators: a constant that fights gravity. |
-
-{% hint style="info" %}
-For arms, `kG * cos(angle)` is applied: full kG when level (0°), none when vertical (±90°). YAMS handles the cosine for you.
-{% endhint %}
-{% endtab %}
-
-{% tab title="Motion profile" %}
-All of these keys start with `closedloop/motionprofile/`.
-
-| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- | --- |
-| `maxVelocity` | RPM (or m/s) | `mechanism/velocity` while cruising | The plateau speed. Raise to move faster; lower if the motor stalls while cruising. |
-| `maxAcceleration` | RPM/s (or m/s²) | `current/stator`, `mechanism/velocity` ramp | How quickly speed builds. High acceleration means a current spike at the start. |
-| `maxJerk` | RPM/s² | Shape of `mechanism/velocity` | Smooths the ramp when sudden acceleration causes mechanical shock. |
-| `kV`, `kA` | Same units as the feedforward kV, kA | `mechanism/velocity` | The system constants the exponential profile plans with. |
-| `maxInput` | Volts | `motor/outputVoltage` | The most voltage the exponential profile will ask for. |
-{% endtab %}
-
-{% tab title="Setpoints" %}
-| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- | --- |
-| `closedloop/setpoint/position` | Degrees (or m) | `mechanism/position` vs `closedloop/setpoint/position` | Send the mechanism to a position without a button binding. |
-| `closedloop/setpoint/velocity` | RPM (or m/s) | `mechanism/velocity`, `motor/outputVoltage` | Command a speed, for example to find kV without a full profile. |
-| `closedloop/slot` | Slot number | `closedloop/slot` | Switch which gain slot the controller uses. |
-{% endtab %}
-
-{% tab title="Limits" %}
-| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- | --- |
-| `mechanism/limit/lower` | Degrees | `mechanism/position`, `limits/mechanism/lower` (boolean) | The boolean turns true at the lower soft limit. Move the limit to change where it stops. |
-| `mechanism/limit/upper` | Degrees | `mechanism/position`, `limits/mechanism/upper` (boolean) | The same for the upper soft limit. |
-| `measurement/limit/lower`, `measurement/limit/upper` | Meters | `measurement/position` | Soft limits for linear mechanisms. |
-| `current/limit/stator` | Amps | `current/stator`, `mechanism/velocity` | Caps torque. Watch for speed sagging when the limit is too low. |
-| `current/limit/supply` | Amps | `current/supply`, `motor/outputVoltage` | Prevents brownouts. Lower it if supply current spikes dip the voltage. |
-{% endtab %}
-
-{% tab title="Ramp rates and inversion" %}
-| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- | --- |
-| `ramprate/dutycycle/openloop` | Seconds, 0 to 100% | `motor/outputVoltage` during open loop commands | Slows voltage changes in open loop. Reduces shock on `set(dutyCycle)`. |
-| `ramprate/dutycycle/closedloop` | Seconds, 0 to 100% | `motor/outputVoltage` during closed loop moves | The same for closed loop, when a setpoint step causes a big voltage jump. |
-| `motor/inverted` | Boolean | `mechanism/velocity` | Flips the motor direction. Positive voltage should give a positive velocity. |
-| `encoder/inverted` | Boolean | `mechanism/position` | Flips the encoder direction. |
-{% endtab %}
-
-{% tab title="Voltage" %}
-| You type (`NT:/Tuning`) | Units | Watch (`NT:/Mechanisms`) | Why |
-| --- | --- | --- | --- |
-| `voltage/enabled` | Boolean | `motor/outputVoltage` | Drive the motor at `voltage/setpoint` instead of the closed loop. See [Drive a motor at a voltage](#drive-a-motor-at-a-voltage). |
-| `voltage/setpoint` | Volts | `mechanism/velocity`, `current/stator` | The voltage for the motor and its loosely coupled followers. |
-{% endtab %}
-{% endtabs %}
-
-{% hint style="info" %}
-**Worth watching the whole time**
-
-* `motor/temperature`: a hot motor backing off can look like a gain problem.
-* `motor/outputVoltage`: the raw command the motor is getting. Confirms your feedforward math.
-* `rotor/position`, `rotor/velocity`: values before gearing. Useful for checking the gearing is right.
-{% endhint %}
-
-Some settings are **not** tunable live and have to be changed in the config: the closed loop tolerance, voltage compensation, the closed loop maximum voltage and the temperature cutoff.
-
-### Gain units
-
-<details>
-
-<summary>PID gains</summary>
-
-| Gain | Unit | Meaning |
-| --- | --- | --- |
-| `kP` | V/rot | Volts per rotation of position error. Linear mechanisms: V/m. |
-| `kI` | V/(rot·s) | Volts per accumulated position error over time. Linear: V/(m·s). |
-| `kD` | V/(rot/s) | Volts per unit of velocity error. Linear: V/(m/s). |
-
-For position control the error is in rotations of the mechanism (or meters with linear closed loop control). For velocity control it is in rotations per second (or meters per second).
-
-</details>
-
-<details>
-
-<summary>Feedforward gains</summary>
-
-| Gain | SimpleMotorFeedforward (flywheels) | ArmFeedforward (arms, pivots) | ElevatorFeedforward (elevators) |
-| --- | --- | --- | --- |
-| `kS` | V, static friction | V, static friction | V, static friction |
-| `kG` | Not used | V, holds the arm level; applied as `kG * cos(angle)` | V, constant against gravity |
-| `kV` | V/(rot/s) | V/(rot/s) | V/(m/s) |
-| `kA` | V/(rot/s²) | V/(rot/s²) | V/(m/s²) |
-
-In YAMS, `ArmFeedforward` uses rotations for kV and kA, like the other feedforward types.
-
-</details>
-
-<details>
-
-<summary>LQR values</summary>
-
-| Field, under `closedloop/lqr/` | Flywheel | Arm | Elevator |
-| --- | --- | --- | --- |
-| `qelms/position`, `model/position`, `encoder/position` | Not used | Degrees | Meters |
-| `qelms/velocity`, `model/velocity` | RPM | RPM | m/s |
-| `encoder/velocity` | RPM | Not used | Not used |
-| `relms`, `maxVoltage` | Volts | Volts | Volts |
-
-In code, `LQRConfig` keeps these in radians, rad/s, meters and m/s. YAMS converts them for the dashboard.
-
-</details>
-
-<details>
-
-<summary>Motion profile settings in code</summary>
-
-| Profile | Setting | Unit in code |
-| --- | --- | --- |
-| Trapezoidal | Max velocity | Any WPILib angular velocity (or linear velocity) unit |
-| Trapezoidal | Max acceleration | Any WPILib angular acceleration (or linear acceleration) unit |
-| Exponential | Max input | Volts |
-| Exponential | kV, kA | V/(rot/s), V/(rot/s²) |
-
-On the dashboard, the trapezoidal values are typed in RPM and RPM per second, as in the Motion profile tab above.
-
-</details>
-
-## Drive a motor at a voltage
-
-Sometimes you want no closed loop at all, just a voltage: to find the voltage that just starts a mechanism moving, to check that a positive voltage moves it the way you expect, or to see how fast it goes at 3 V. Every motor controller with `TelemetryVerbosity.HIGH` has two keys for this under `NT:/Tuning/<Mechanism>/<Motor>/`:
-
-| You type | Units | What it is |
-| --- | --- | --- |
-| `voltage/enabled` | Boolean | Drive the motor at `voltage/setpoint` while `true`. |
-| `voltage/setpoint` | Volts | The voltage. Set back to `0` when `voltage/enabled` turns on, and sent to the motor and its loosely coupled followers every loop while `voltage/enabled` is `true`, even when it has not changed. It is not applied while `voltage/enabled` is `false`. |
-
-<figure><img src="../../.gitbook/assets/live-tuning-voltage.png" alt="Three steps. Closed loop: the leader and its loosely coupled follower hold the setpoint. Voltage on: both closed loops stop and the leader and the follower are driven at voltage/setpoint. Voltage off, or the Live Tuning command ends: the voltage goes to 0, both closed loops start again and the setpoint is sent again"><figcaption><p>The closed loop hands over to the voltage, and back again.</p></figcaption></figure>
-
-{% stepper %}
-{% step %}
-#### Start the `Live Tuning` command
-
-As in [Use it](#use-it). The voltage is only applied while the command runs.
-{% endstep %}
-
-{% step %}
-#### Turn it on, then type a voltage
-
-Set `voltage/enabled` to `true`. YAMS stops the closed loop and starts the motor at 0 V, with `voltage/setpoint` set back to `0`, so nothing moves until you type a voltage. A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, which is why it is stopped.
-
-Now type a small voltage, such as `1`, into `voltage/setpoint`. It is sent every loop, so the motor keeps outputting it until you change it.
-{% endstep %}
-
-{% step %}
-#### Watch it move
-
-Graph `mechanism/velocity` (or `measurement/velocity`), `motor/outputVoltage` and `current/stator`. Raise or lower `voltage/setpoint` a little at a time.
-{% endstep %}
-
-{% step %}
-#### Turn it off
-
-Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts again, and the setpoint it held before is sent again, so the mechanism goes back to it.
-{% endstep %}
-{% endstepper %}
-
-**Setpoints typed while the voltage is on are skipped.** A value typed into `closedloop/setpoint/position` or `closedloop/setpoint/velocity` then is not saved for later. Type it again once the voltage is off. Gains, limits and the other tunable values are applied as soon as you type them, even while the voltage is on.
-
-**Loosely coupled followers** are driven at the same voltage. A follower is normally sent its leader's setpoints and runs its own closed loop, so it is not sent a voltage the leader is driven at. With `voltage/enabled` on, YAMS stops the followers' closed loops with the leader's and sends each follower the voltage itself. Each follower's own inversion still applies. Turning the voltage off starts the followers' closed loops again and sends them the setpoint with the leader's.
-
-**When the `Live Tuning` command ends**, because you stopped it or another command for the subsystem or mechanism interrupted it, the voltage stops too. YAMS turns the voltage off, sets `voltage/enabled` back to `false` so the voltage is not applied again as soon as the command starts again, and the closed loop holds the setpoint.
-
-{% hint style="warning" %}
-A voltage has no speed limit and no motion profile. Start low, keep the mechanism away from its hard stops, and keep a hand on disable. On an arm or elevator, a voltage too small to hold it up lets it fall.
-{% endhint %}
-
-{% hint style="info" %}
-Live tuning needs `ControlMode.CLOSED_LOOP`. The voltage keys are published at `TelemetryVerbosity.HIGH`, or with `withCustom(DoubleTelemetryField.TunableVoltage, true)` and `withCustom(BooleanTelemetryField.TunableVoltageEnabled, true)` on a `SmartMotorControllerTelemetryConfig`.
-{% endhint %}
+<figure><img src="../../.gitbook/assets/AScopeLiveTuningExample.gif" alt="AdvantageScope with tuning mode on: a gain is edited in the sidebar and the position graph changes while the robot is enabled"><figcaption><p>Tuning while the robot is enabled.</p></figcaption></figure>
 
 ## Tuning order
 
-Tune the feedforward first, then the feedback, then the motion profile last, one value at a time.
+Tune the feedforward first, then the feedback, then the motion profile last, one value at a time. [What to tune and what to watch](keys-and-units.md#what-to-tune-and-what-to-watch) lists the key to watch for each value.
 
 {% hint style="success" %}
 **New to tuning?** The WPILib docs explain what each gain does and have interactive simulations to practice on. Read the one for your mechanism before tuning the real thing:
@@ -458,13 +219,23 @@ Tune the feedforward first, then the feedback, then the motion profile last, one
 
 {% tabs %}
 {% tab title="Flywheel" %}
-With `SimpleMotorFeedforward`:
+With `SimpleMotorFeedforward`. Type speeds in RPM into `closedloop/setpoint/velocity`, and read `mechanism/velocity` in rotations per second (RPM divided by 60).
 
 1. **kS**: raise slowly until the wheel just starts to move.
 2. **kV**: set a target speed with kP = 0, then adjust kV until the steady speed matches.
 3. **kP**: raise to remove the leftover error and speed up the response.
 4. **kD**: only if it oscillates, add a little to damp it.
 5. **kA** (optional): for faster spin up.
+6. **Copy the values into your code.** Dashboard values are lost when the code restarts. `SimpleMotorFeedforward` takes kS, kV, kA in that order. In simulation, change the `withSim...` lines instead (or as well, if the config has them).
+
+   ```java
+   // Before
+   .withClosedLoopController(1, 0, 0)
+   .withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
+   // After: your numbers (kP, kI, kD) and (kS, kV, kA)
+   .withClosedLoopController(0.4, 0, 0)
+   .withFeedforward(new SimpleMotorFeedforward(0.15, 0.12, 0))
+   ```
 
 {% hint style="success" %}
 **Units example:** a kV of 0.12 V/(rot/s) means 0.12 volts for every rotation per second. At 100 rot/s (6000 RPM) the feedforward contributes 12 V.
@@ -474,25 +245,55 @@ With `SimpleMotorFeedforward`:
 {% tab title="Arm" %}
 With `ArmFeedforward`. The motion profile comes last:
 
-1. **kG**: with kP, kI, kD and the other feedforward gains at 0, hold the arm level (0° from horizontal) and raise kG until it stays there.
+1. **kG**: keep the kP you already have (the Arm tutorial's is `50`). Set the setpoint to level: type `0` into `closedloop/setpoint/position`, or let the default command hold it there. With kG at 0, kP alone holds the arm up, so it sags a little below level until kP pushes hard enough. Read the steady `motor/outputVoltage`: that voltage is what gravity needs, so type it into `closedloop/feedforward/kG`. The arm should rise onto the setpoint and stay there. If it still sits low, raise kG a little; if it sits high, lower it.
+
+   On a real robot you can also use [Drive a motor at a voltage](#drive-a-motor-at-a-voltage): with the arm level, find the voltage that just moves it up and the voltage that just lets it move down. `kG = (up + down) / 2`.
 2. **kS**: raise until the arm is just about to move, then back off a little.
-3. **kP, then kD**: command small moves of a few degrees. Raise kP until the arm reaches them quickly without oscillating, then add kD if it overshoots. Without a profile a setpoint is a sudden jump, so keep the moves small.
-4. **Motion profile**: now type a `closedloop/motionprofile/maxVelocity` (RPM) and `maxAcceleration` (RPM/s), for example 15 RPM (90°/s) and 30 RPM/s, and raise them a step at a time. Stop when `mechanism/velocity` starts falling behind the setpoint or `current/stator` spikes.
+3. **kP, then kD**: command small moves by typing `0`, then `10`, then `0` into `closedloop/setpoint/position`. kP is in volts per rotation, so the tutorial's `50` is about 0.14 V per degree of error. If the arm crawls toward the setpoint or stops short, double kP. If it overshoots and rings, halve it and add kD, starting around a tenth of kP. Without a profile a setpoint is a sudden jump, so keep the moves small.
+4. **Motion profile**: now type a `closedloop/motionprofile/maxVelocity` (RPM) and `maxAcceleration` (RPM/s), for example 15 RPM (90°/s) and 30 RPM/s, and raise them a step at a time. Stop when `mechanism/velocity` starts falling behind the setpoint or `current/stator` (the current through the motor, which sets its torque) spikes.
 5. **kV**: kV only acts while the setpoint is moving, so tune it with the profile. Raise it until `mechanism/velocity` tracks `closedloop/setpoint/velocity` during a long move. Leave kA at 0 unless the arm lags while accelerating.
+6. **Copy the values into your code.** Dashboard values are lost when the code restarts. `ArmFeedforward` takes kS, kG, kV in that order. In simulation you tuned the `withSim...` gains, so change those lines; on the real robot, change `withClosedLoopController` and `withFeedforward`.
+
+   ```java
+   // Before
+   .withClosedLoopController(50, 0, 0)
+   .withSimClosedLoopController(50, 0, 0)
+   .withFeedforward(new ArmFeedforward(0, 0, 0))
+   .withSimFeedforward(new ArmFeedforward(0, 0, 0))
+   // After: your numbers. Here kP 60, kD 4 and kS 0.1, kG 0.9, kV 1.5 were found in simulation.
+   .withClosedLoopController(50, 0, 0)
+   .withSimClosedLoopController(60, 0, 4)
+   .withFeedforward(new ArmFeedforward(0, 0, 0))
+   .withSimFeedforward(new ArmFeedforward(0.1, 0.9, 1.5))
+   ```
+
+   Tune again on the real robot before trusting the real gains: the simulation does not know about friction, cables or a slightly wrong mass.
 
 {% hint style="info" %}
-`kG * cos(angle)` is applied, so there is no gravity compensation when the arm is vertical (±90° from horizontal) and full kG when it is level.
+`kG * cos(angle)` is applied, so there is no gravity compensation when the arm is vertical (±90° from horizontal) and full kG when it is level. That only works if 0 degrees is level.
 {% endhint %}
 {% endtab %}
 
 {% tab title="Elevator" %}
 With `ElevatorFeedforward`. An elevator is a linear mechanism, so you type meters and watch the `measurement/` keys. The motion profile comes last:
 
-1. **kG**: with kP, kI, kD and kS at 0, raise kG until the carriage holds its height without drifting down. It is the same at every height.
+1. **kG**: keep the kP you already have. Set the setpoint to the middle of the travel by typing its height in meters into `closedloop/setpoint/position`. With kG at 0, kP alone holds the carriage up, so it sags a little below the setpoint. Read the steady `motor/outputVoltage` and type it into `closedloop/feedforward/kG`. The carriage should rise onto the setpoint and stay there. kG is the same at every height.
+
+   On a real robot you can also find the voltage that just moves the carriage up and the one that just lets it move down with [Drive a motor at a voltage](#drive-a-motor-at-a-voltage): `kG = (up + down) / 2`. Elevators with springs need this method, see [Elevators with a constant force spring](#elevators-with-a-constant-force-spring).
 2. **kS**: raise until the carriage is just about to move, then back off a little.
-3. **kP, then kD**: command small moves of a few centimeters. Raise kP until `measurement/position` reaches them quickly without oscillating, then add kD if it still rings. Without a profile a setpoint is a sudden jump, so keep the moves small.
+3. **kP, then kD**: command small moves of a few centimeters, such as `0.5`, then `0.55`, then `0.5`. kP is in volts per meter, so a kP of `20` is 0.2 V per centimeter of error (the [Elevator tutorial](../../tutorials/elevator.md) starts at `4`). Double kP until `measurement/position` reaches the setpoint quickly, halve it if it oscillates, then add kD if it still rings. Without a profile a setpoint is a sudden jump, so keep the moves small.
 4. **Motion profile**: now type a `closedloop/motionprofile/maxVelocity` (m/s) and `maxAcceleration` (m/s²), for example 0.5 m/s and 1 m/s², and raise them a step at a time. Stop when `measurement/velocity` starts falling behind the setpoint or `current/stator` spikes.
 5. **kV**: kV only acts while the setpoint is moving, so tune it with the profile. Raise it until `measurement/velocity` tracks `closedloop/setpoint/velocity` during a long move. Leave kA at 0 unless the carriage lags while accelerating.
+6. **Copy the values into your code.** Dashboard values are lost when the code restarts. `ElevatorFeedforward` takes kS, kG, kV in that order. In simulation, change the `withSim...` lines.
+
+   ```java
+   // Before
+   .withSimClosedLoopController(4, 0, 0)
+   .withSimFeedforward(new ElevatorFeedforward(0, 0, 0))
+   // After: your numbers (kP, kI, kD) and (kS, kG, kV)
+   .withSimClosedLoopController(12, 0, 0.5)
+   .withSimFeedforward(new ElevatorFeedforward(0.05, 0.4, 3.2))
+   ```
 
 {% hint style="info" %}
 Tune in the middle of the travel, away from the hard stops, and keep the soft limits (`measurement/limit/lower`, `measurement/limit/upper`) set while you do.
@@ -521,13 +322,66 @@ Watch `closedloop/setpoint/velocity` against `mechanism/velocity` (arm) or `meas
 The profile only exists if the config has one, for example `withTrapezoidalProfile(MetersPerSecond.of(0.5), MetersPerSecondPerSecond.of(1))` on an elevator. For an exponential profile, tune `kV`, `kA` and `maxInput` under the same `closedloop/motionprofile/` keys instead. See [Exponential profiles](../editor/exponential-profiles.md).
 {% endhint %}
 
-### Elevators with a constant force spring
+## Drive a motor at a voltage
+
+Sometimes you want no closed loop at all, just a voltage: to find the voltage that just starts a mechanism moving, to check that a positive voltage moves it the way you expect, or to see how fast it goes at 3 V. Every motor controller with `TelemetryVerbosity.HIGH` has two keys for this under `NT:/Tuning/<Mechanism>/<Motor>/`:
+
+| You type | Units | What it is |
+| --- | --- | --- |
+| `voltage/enabled` | Boolean | Drive the motor at `voltage/setpoint` while `true`. |
+| `voltage/setpoint` | Volts | The voltage. Set back to `0` when `voltage/enabled` turns on, and sent to the motor and its [loosely coupled followers](../editor/config/followers.md#withlooselycoupledfollowers) every loop while `voltage/enabled` is `true`, even when it has not changed. It is not applied while `voltage/enabled` is `false`. |
+
+<figure><img src="../../.gitbook/assets/live-tuning-voltage.png" alt="Three steps. Closed loop: the leader and its loosely coupled follower hold the setpoint. Voltage on: both closed loops stop and the leader and the follower are driven at voltage/setpoint. Voltage off, or the Live Tuning command ends: the voltage goes to 0, both closed loops start again and the setpoint is sent again"><figcaption><p>The closed loop hands over to the voltage, and back again.</p></figcaption></figure>
+
+{% stepper %}
+{% step %}
+#### Start the `Live Tuning` command
+
+As in [Use it](#use-it), for example from `NT:/Tuning/ArmSubsystem/Live Tuning`. The voltage is only applied while the command runs.
+{% endstep %}
+
+{% step %}
+#### Turn it on, then type a voltage
+
+Set `voltage/enabled` to `true`. YAMS stops the closed loop and starts the motor at 0 V, with `voltage/setpoint` set back to `0`, so nothing moves until you type a voltage. A closed loop that runs on the SystemCore (on a Thrifty Nova motor controller, whose YAMS closed loop runs on the SystemCore, or with an [LQR](../editor/lqr-controllers.md) or [exponential profile](../editor/exponential-profiles.md)), would replace the voltage on its next loop, which is why it is stopped.
+
+Now type a small voltage, such as `1`, into `voltage/setpoint`, for example `NT:/Tuning/Arm/ArmMotor/voltage/setpoint`. It is sent every loop, so the motor keeps outputting it until you change it.
+{% endstep %}
+
+{% step %}
+#### Watch it move
+
+Graph `mechanism/velocity` (or `measurement/velocity`), `motor/outputVoltage` and `current/stator`. Raise or lower `voltage/setpoint` a little at a time.
+{% endstep %}
+
+{% step %}
+#### Turn it off
+
+Set `voltage/enabled` to `false`. The voltage goes to 0, the closed loop starts again, and the setpoint it held before is sent again, so the mechanism goes back to it.
+{% endstep %}
+{% endstepper %}
+
+**Setpoints typed while the voltage is on are skipped.** A value typed into `closedloop/setpoint/position` or `closedloop/setpoint/velocity` then is not saved for later. Type it again once the voltage is off. Gains, limits and the other tunable values are applied as soon as you type them, even while the voltage is on.
+
+**Loosely coupled followers** are driven at the same voltage. A loosely coupled follower is a second motor that gets its leader's setpoints and runs its own closed loop, instead of copying the leader's output. A follower is normally sent its leader's setpoints and runs its own closed loop, so it is not sent a voltage the leader is driven at. With `voltage/enabled` on, YAMS stops the followers' closed loops with the leader's and sends each follower the voltage itself. Each follower's own inversion still applies. Turning the voltage off starts the followers' closed loops again and sends them the setpoint with the leader's.
+
+**When the `Live Tuning` command ends**, because you stopped it or another command for the subsystem or mechanism interrupted it, the voltage stops too. YAMS turns the voltage off, sets `voltage/enabled` back to `false` so the voltage is not applied again as soon as the command starts again, and the closed loop holds the setpoint.
+
+{% hint style="warning" %}
+A voltage has no speed limit and no motion profile. Start low, keep the mechanism away from its hard stops, and keep a hand on disable. On an arm or elevator, a voltage too small to hold it up lets it fall.
+{% endhint %}
+
+{% hint style="info" %}
+Live tuning needs `ControlMode.CLOSED_LOOP`. The voltage keys are published at `TelemetryVerbosity.HIGH`, or with `withCustom(DoubleTelemetryField.TunableVoltage, true)` and `withCustom(BooleanTelemetryField.TunableVoltageEnabled, true)` on a `SmartMotorControllerTelemetryConfig`.
+{% endhint %}
+
+## Elevators with a constant force spring
 
 A constant force spring pulls the carriage up with about the same force at every height. It does part of the motor's job, which changes what kG should be.
 
 <figure><img src="../../.gitbook/assets/live-tuning-spring.png" alt="Three elevators. With no spring the motor holds all of the weight and kG is large and positive. With a spring that matches the carriage weight, kG is close to zero. With a stronger spring the motor has to hold the carriage down and kG is negative"><figcaption><p>kG is what is left for the motor to do after the spring.</p></figcaption></figure>
 
-Do not copy kG from a calculation or from the robot before the springs went on. Measure it. The steps below type the voltages into `closedloop/feedforward/kG`; you can type them into [`voltage/setpoint`](#drive-a-motor-at-a-voltage) with `voltage/enabled` on instead, which takes the closed loop out of the way without zeroing any gains:
+Do not copy kG from a calculation or from the robot before the springs went on. Measure it. With a spring, holding the carriage with kP and reading the voltage (as in [Tuning order](#tuning-order)) can land anywhere between the up and down voltages, so use the two voltages below instead. The steps below type the voltages into `closedloop/feedforward/kG`; you can type them into [`voltage/setpoint`](#drive-a-motor-at-a-voltage) with `voltage/enabled` on instead, which takes the closed loop out of the way without zeroing any gains:
 
 <figure><img src="../../.gitbook/assets/live-tuning-spring-test.png" alt="A bar chart of two voltages: plus 1.1 volts just makes the carriage creep up and minus 0.5 volts just makes it creep down. kG is halfway between them, 0.3 volts. kS is half the gap between them, 0.8 volts"><figcaption><p>Two voltages give kG and kS. Example values.</p></figcaption></figure>
 
@@ -559,7 +413,7 @@ With only the feedforward, the carriage should stay where you leave it at every 
 {% step %}
 #### Tune kV, kP and kD as usual
 
-Follow the elevator steps in [Tuning order](#tuning-order). The spring does not change them.
+Follow the elevator steps in [Tuning order](#tuning-order), including copying the values into your code at the end. The spring does not change them.
 {% endstep %}
 {% endstepper %}
 
@@ -572,84 +426,6 @@ Follow the elevator steps in [Tuning order](#tuning-order). The spring does not 
 
 {% hint style="warning" %}
 The simulation does not know about the spring: it models the full carriage weight from `ElevatorConfig.withCarriageWeight(...)`. Keep a separate kG for simulation with `withSimFeedforward(...)`, so a sprung robot's small kG does not make the simulated elevator sag.
-{% endhint %}
-
-## When tuning does not help
-
-Some mechanisms cannot be tuned, because the motor does not have enough torque for the job. No gain fixes that, and it is worth recognizing early so you stop chasing numbers.
-
-{% tabs %}
-{% tab title="Elevator" %}
-<figure><img src="../../.gitbook/assets/live-tuning-underpowered.gif" alt="Animation of a heavy elevator trying to reach a setpoint with kP at 5, then 20, then 80. All three attempts rise slowly and stall short of the setpoint, and the motor output voltage is pinned at 12 volts each time"><figcaption><p>Sixteen times the gain, the same move. Illustrative, not a recording.</p></figcaption></figure>
-
-Raising kP does nothing, because the motor was already at full voltage with the smaller gain.
-{% endtab %}
-
-{% tab title="Arm" %}
-<figure><img src="../../.gitbook/assets/live-tuning-underpowered-arm.gif" alt="Animation of an arm given three setpoints. At 75 degrees, nearly upright, it holds easily. At 58 degrees it holds with the voltage near the maximum. At 25 degrees it falls straight through the setpoint and comes to rest on its hard stop with the voltage pinned at 12 volts"><figcaption><p>The same arm at three setpoints. Illustrative, not a recording.</p></figcaption></figure>
-
-An arm needs the most torque when it is level and almost none when it is upright. An underpowered arm therefore looks fine at some setpoints and hopeless at others. If it only misbehaves near level, suspect torque before you suspect the gains.
-{% endtab %}
-
-{% tab title="Flywheel" %}
-<figure><img src="../../.gitbook/assets/live-tuning-underpowered-flywheel.gif" alt="Animation of a flywheel given three speed setpoints. It reaches 2000 RPM easily, reaches 4000 RPM slowly with the voltage at the maximum for the whole spin up, and never reaches 6000 RPM, levelling off near 4800 RPM with the voltage pinned"><figcaption><p>The same flywheel at three setpoints. Illustrative, not a recording.</p></figcaption></figure>
-
-A flywheel has a top speed set by the motor, the gearing and the battery voltage. Below it everything works, and the closer the setpoint gets to it the longer the spin up takes. Above it, no gain will ever get there. Remember that the battery sags under load, so the top speed in a match is lower than on a fresh battery on the bench.
-{% endtab %}
-{% endtabs %}
-
-### It works at low setpoints
-
-This is what makes an underpowered mechanism hard to spot. It tunes well on the easy moves, and then the same gains fail on the hard ones:
-
-| Mechanism | Works | Fails |
-| --- | --- | --- |
-| Elevator | Short moves, slow profiles, an empty carriage | Long fast moves, or carrying a game piece |
-| Arm | Setpoints near upright | Setpoints near level, where gravity pulls hardest |
-| Flywheel | Low speeds | Speeds near the motor's top speed, and recovery between shots |
-
-When that happens, do not retune for the hard case. Look at `motor/outputVoltage` during the move that fails. If it is at the maximum, the gains are not the problem.
-
-### It gets slower every time
-
-An overworked motor heats up, and a hot motor is weaker. The first few moves look fine, then each one takes a little longer, until the mechanism stops reaching its setpoint at all.
-
-<figure><img src="../../.gitbook/assets/live-tuning-overheating.gif" alt="Animation of the same move repeated five times on an overworked motor. The time to reach the setpoint grows from 0.55 seconds to 1.40 seconds and on the fifth repeat it never arrives, while the stator current climbs from 28 amps to the 60 amp limit and the motor temperature rises to 225 degrees Fahrenheit"><figcaption><p>Five repeats of one move. Illustrative numbers.</p></figcaption></figure>
-
-| Watch (`NT:/Mechanisms`) | What you see |
-| --- | --- |
-| `current/stator` | Higher on every repeat of the same move, until it sits on the limit. |
-| `motor/temperature` | Climbing steadily and not coming back down between moves. |
-| `mechanism/velocity` or `measurement/velocity` | The peak speed of the same move dropping over time. |
-| `mechanism/position` or `measurement/position` | Arriving later each time, then stopping short. |
-
-{% hint style="danger" %}
-If the gains that worked ten minutes ago no longer work, check `motor/temperature` before you touch them. Retuning to a hot motor gives you gains that are wrong once it cools, and running it harder is how motors burn out. Stop, let it cool, and fix the load.
-{% endhint %}
-
-**How to recognize it**
-
-| Watch (`NT:/Mechanisms`) | What you see |
-| --- | --- |
-| `motor/outputVoltage` | Pinned at the maximum for most of the move, not just at the start. |
-| `current/stator` | Sitting on the stator current limit. |
-| `mechanism/position` or `measurement/position` | The same slow curve whatever you set kP to, and it may stop short of the setpoint. |
-| `mechanism/velocity` or `measurement/velocity` | Far below the profile's `closedloop/setpoint/velocity`, however the profile is set. |
-| `motor/temperature` | Climbing quickly while the mechanism holds a position. |
-
-**What to do about it**
-
-The fix is mechanical or electrical, not a gain:
-
-* **More gear reduction.** The most common fix. It trades top speed, which you are not reaching anyway, for torque.
-* **More motors**, or a stronger motor.
-* **Take load off the motor**: a lighter mechanism, a counterweight, or a [constant force spring](#elevators-with-a-constant-force-spring) on an elevator.
-* **Check the current limit.** A stator limit set too low makes a capable motor look underpowered. Raise `current/limit/stator` and see whether the move changes. See [Limiting power consumption](../editor/limiting-power-consumption.md).
-* **Check for binding.** Disable the robot and move the mechanism by hand through its whole travel.
-* **Ask for less.** Lower the motion profile's `maxVelocity` and `maxAcceleration` to what the motor can deliver.
-
-{% hint style="info" %}
-Check this in simulation first. With the real motor, gearing and mass in the config, an underpowered mechanism shows the same pinned voltage in simulation, before anything is built.
 {% endhint %}
 
 ## Swerve drive
@@ -840,7 +616,7 @@ Instead of tuning by hand, the modules can be driven at a voltage and the gains 
 * **Drive:** every drive motor runs at the voltage, without its closed loop. The wheels point forward, or around the robot with `modules/drive/inplace`, and are not optimized, so they always drive the same way.
 * **Azimuth:** every azimuth motor turns at the voltage, without its closed loop, and the drive motors are held still.
 
-A closed loop that runs on the SystemCore, on a Nova or with an LQR or exponential profile, would replace the voltage on its next loop, so YAMS stops it while the voltage is on and starts it again when the voltage turns off. The setpoint you typed is sent again then, or the wheels are held where they are if no mode is on.
+A closed loop that runs on the SystemCore (on a Thrifty Nova motor controller, whose YAMS closed loop runs on the SystemCore, or with an [LQR](../editor/lqr-controllers.md) or [exponential profile](../editor/exponential-profiles.md)), would replace the voltage on its next loop, so YAMS stops it while the voltage is on and starts it again when the voltage turns off. The setpoint you typed is sent again then, or the wheels are held where they are if no mode is on.
 
 {% hint style="info" %}
 The YAGSL config generator's [Quick Start Guide](https://config.yagsl.com/guide) uses these keys in its Live mode: **Auto**, next to the gain fields, runs a slow ramp and a quick step each way, fits the feedforward, works out the feedback with an LQR, and fills in all six gains. The feedback depends on how often the closed loop runs, which each motor controller publishes as `closedloop/period` at `TelemetryVerbosity.HIGH`.
@@ -881,3 +657,97 @@ The gains start at the values given to `withTranslationController(...)` and `wit
 * **Every module shares the values.** The `modules/drive/*` and `modules/azimuth/*` keys apply to all modules at once. There are no per-module keys.
 * **Module optimization still applies.** Both module modes go through `SwerveDrive.setSwerveModuleStates(...)`, so `withOptimization(true)` behaves the same as it does while driving.
 * **No gyro needed in simulation.** The simulated drive tracks its own heading, so you can practice tuning the drive and azimuth motors before writing any gyro code. On a real robot, `SwerveDrive` throws an `IllegalStateException` if `withGyro(...)` was never called.
+
+## Troubleshooting
+
+For problems outside live tuning, such as a mechanism that does not move at all or moves the wrong way, see [Troubleshooting](../../tutorials/troubleshooting.md).
+
+### Live tuning does nothing
+
+| What you see | Likely cause | Fix |
+| --- | --- | --- |
+| Typing a value changes nothing | The `Live Tuning` command is not running, or something interrupted it | Start it again. A button binding or default command for the same subsystem interrupts it. |
+| Typing a value in AdvantageScope changes nothing | Tuning mode is off | Click the sliders icon at the top of the sidebar. |
+| Typing the same setpoint again does nothing | Values are applied only when they change | Type a different value, then the one you want. |
+| There is no `NT:/Tuning/.../Live Tuning` | The motor is not at `TelemetryVerbosity.HIGH`, or you set up telemetry yourself | See [Turn it on](#turn-it-on). |
+| Live tuning throws "Live tuning does not work in OPEN_LOOP" | The config is open loop | Add `.withControlMode(ControlMode.CLOSED_LOOP)`. |
+| The gains reset when the code restarts | Dashboard values are not saved | Copy them into your config, the last step of each [Tuning order](#tuning-order) tab. |
+| The gains you found in simulation do nothing on the robot | Simulation uses the `withSim...` gains | Copy them into `withClosedLoopController(...)` and `withFeedforward(...)` too, then tune again on the robot. |
+
+### When tuning does not help
+
+Some mechanisms cannot be tuned, because the motor does not have enough torque for the job. No gain fixes that, and it is worth recognizing early so you stop chasing numbers.
+
+{% tabs %}
+{% tab title="Elevator" %}
+<figure><img src="../../.gitbook/assets/live-tuning-underpowered.gif" alt="Animation of a heavy elevator trying to reach a setpoint with kP at 5, then 20, then 80. All three attempts rise slowly and stall short of the setpoint, and the motor output voltage is pinned at 12 volts each time"><figcaption><p>Sixteen times the gain, the same move. Illustrative, not a recording.</p></figcaption></figure>
+
+Raising kP does nothing, because the motor was already at full voltage with the smaller gain.
+{% endtab %}
+
+{% tab title="Arm" %}
+<figure><img src="../../.gitbook/assets/live-tuning-underpowered-arm.gif" alt="Animation of an arm given three setpoints. At 75 degrees, nearly upright, it holds easily. At 58 degrees it holds with the voltage near the maximum. At 25 degrees it falls straight through the setpoint and comes to rest on its hard stop with the voltage pinned at 12 volts"><figcaption><p>The same arm at three setpoints. Illustrative, not a recording.</p></figcaption></figure>
+
+An arm needs the most torque when it is level and almost none when it is upright. An underpowered arm therefore looks fine at some setpoints and hopeless at others. If it only misbehaves near level, suspect torque before you suspect the gains.
+{% endtab %}
+
+{% tab title="Flywheel" %}
+<figure><img src="../../.gitbook/assets/live-tuning-underpowered-flywheel.gif" alt="Animation of a flywheel given three speed setpoints. It reaches 2000 RPM easily, reaches 4000 RPM slowly with the voltage at the maximum for the whole spin up, and never reaches 6000 RPM, levelling off near 4800 RPM with the voltage pinned"><figcaption><p>The same flywheel at three setpoints. Illustrative, not a recording.</p></figcaption></figure>
+
+A flywheel has a top speed set by the motor, the gearing and the battery voltage. Below it everything works, and the closer the setpoint gets to it the longer the spin up takes. Above it, no gain will ever get there. Remember that the battery sags under load, so the top speed in a match is lower than on a fresh battery on the bench.
+{% endtab %}
+{% endtabs %}
+
+#### It works at low setpoints
+
+This is what makes an underpowered mechanism hard to spot. It tunes well on the easy moves, and then the same gains fail on the hard ones:
+
+| Mechanism | Works | Fails |
+| --- | --- | --- |
+| Elevator | Short moves, slow profiles, an empty carriage | Long fast moves, or carrying a game piece |
+| Arm | Setpoints near upright | Setpoints near level, where gravity pulls hardest |
+| Flywheel | Low speeds | Speeds near the motor's top speed, and recovery between shots |
+
+When that happens, do not retune for the hard case. Look at `motor/outputVoltage` during the move that fails. If it is at the maximum, the gains are not the problem.
+
+#### How to recognize an underpowered mechanism
+
+| Watch (`NT:/Mechanisms`) | What you see |
+| --- | --- |
+| `motor/outputVoltage` | Pinned at the maximum for most of the move, not just at the start. |
+| `current/stator` | Sitting on the stator current limit. |
+| `mechanism/position` or `measurement/position` | The same slow curve whatever you set kP to, and it may stop short of the setpoint. |
+| `mechanism/velocity` or `measurement/velocity` | Far below the profile's `closedloop/setpoint/velocity`, however the profile is set. |
+| `motor/temperature` | Climbing quickly while the mechanism holds a position. |
+
+#### What to do about it
+
+The fix is mechanical or electrical, not a gain:
+
+* **More gear reduction.** The most common fix. It trades top speed, which you are not reaching anyway, for torque.
+* **More motors**, or a stronger motor.
+* **Take load off the motor**: a lighter mechanism, a counterweight, or a [constant force spring](#elevators-with-a-constant-force-spring) on an elevator.
+* **Check the current limit.** A stator limit set too low makes a capable motor look underpowered. Raise `current/limit/stator` and see whether the move changes. See [Limiting power consumption](../editor/limiting-power-consumption.md).
+* **Check for binding.** Disable the robot and move the mechanism by hand through its whole travel.
+* **Ask for less.** Lower the motion profile's `maxVelocity` and `maxAcceleration` to what the motor can deliver.
+
+{% hint style="info" %}
+Check this in simulation first. With the real motor, gearing and mass in the config, an underpowered mechanism shows the same pinned voltage in simulation, before anything is built.
+{% endhint %}
+
+#### It gets slower every time
+
+An overworked motor heats up, and a hot motor is weaker. The first few moves look fine, then each one takes a little longer, until the mechanism stops reaching its setpoint at all.
+
+<figure><img src="../../.gitbook/assets/live-tuning-overheating.gif" alt="Animation of the same move repeated five times on an overworked motor. The time to reach the setpoint grows from 0.55 seconds to 1.40 seconds and on the fifth repeat it never arrives, while the stator current climbs from 28 amps to the 60 amp limit and the motor temperature rises to 225 degrees Fahrenheit"><figcaption><p>Five repeats of one move. Illustrative numbers.</p></figcaption></figure>
+
+| Watch (`NT:/Mechanisms`) | What you see |
+| --- | --- |
+| `current/stator` | Higher on every repeat of the same move, until it sits on the limit. |
+| `motor/temperature` | Climbing steadily and not coming back down between moves. |
+| `mechanism/velocity` or `measurement/velocity` | The peak speed of the same move dropping over time. |
+| `mechanism/position` or `measurement/position` | Arriving later each time, then stopping short. |
+
+{% hint style="danger" %}
+If the gains that worked ten minutes ago no longer work, check `motor/temperature` before you touch them. Retuning to a hot motor gives you gains that are wrong once it cools, and running it harder is how motors burn out. Stop, let it cool, and fix the load.
+{% endhint %}

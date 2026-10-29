@@ -21,7 +21,7 @@ A second set of gains used only in simulation. They take the same arguments, inc
 .withSimFeedforward(new ArmFeedforward(0, 0.3, 1.2))
 ```
 
-[Simulation-only PID + feedforward](../simulation-only-pid-+-feedforward.md) explains why the two usually differ.
+[Simulation-only PID + feedforward](../simulation-only-pid-+-feedforward.md) explains why the two usually differ, with an example.
 
 ## `withSimStartingPosition`
 
@@ -35,12 +35,15 @@ It is most useful with an absolute encoder: the real robot reads its position fr
 
 ## `withMomentOfInertia`
 
-How hard the simulated load is to spin up. It is only needed when a `SmartMotorController` is simulated on its own. A mechanism class works it out from the mechanism's length and mass.
+How hard the simulated load is to spin up. An `Arm`, `Pivot` and `FlyWheel` simulate with this value, and so does a `SmartMotorController` simulated on its own. The default is 0.02 kg·m², so set it for anything heavier than a small roller. An `Elevator` uses its carriage mass instead.
 
 ```java
-.withMomentOfInertia(KilogramSquareMeters.of(0.02))
-.withMomentOfInertia(Inches.of(4), Pounds.of(1)) // a rod of this length and weight
+.withMomentOfInertia(KilogramSquareMeters.of(0.02))          // from CAD
+.withMomentOfInertia(Inches.of(18), Pounds.of(8))           // an arm: a rod of this length and mass, turning about one end
+.withWheelMomentOfInertia(Inches.of(4), Pounds.of(1))       // a wheel or roller: a solid disk of this diameter and mass
 ```
+
+Use exactly one; the last call wins. For a wheel, `withWheelMomentOfInertia` gives about a third of what the arm version gives for the same numbers, so don't use the arm version for wheels.
 
 ## `withSimulationPeriod`
 
@@ -56,7 +59,21 @@ Each `simIterate()` call steps the physics by exactly this period, so it must ma
 
 ## Running the simulation
 
-A mechanism class steps its motor's simulation for you. A `SmartMotorController` used without one needs `simIterate()` called from `simulationPeriodic()`: see [simulation without a mechanism](../#simulation-without-a-mechanism). Every simulated motor also draws from the shared [battery simulation](../../../understanding/battery-simulation.md).
+A mechanism class steps its motor's simulation for you when you call its `simIterate()`. A `SmartMotorController` used without a mechanism class needs its own `simIterate()` called every loop in simulation, and its own `updateTelemetry()` called every loop, so it publishes values and picks up live tuning. In a Commands v2 subsystem:
+
+```java
+@Override
+public void periodic() {
+  smartMotorController.updateTelemetry();
+}
+
+@Override
+public void simulationPeriodic() {
+  smartMotorController.simIterate();
+}
+```
+
+In Commands v3, call them from the methods `Robot.java` runs, as in [Where the tutorials put things](../../../tutorials/project-setup.md#where-the-tutorials-put-things). Every simulated motor also draws from the shared [battery simulation](../../../understanding/battery-simulation.md).
 
 ## Code reference
 

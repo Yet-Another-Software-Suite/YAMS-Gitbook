@@ -1,388 +1,245 @@
 ---
+description: Write a command, an AdvantageKit IO class or a state machine that sets a mechanism's target with the setpoint functions.
 icon: sliders
 ---
 
-# Setpoint methods vs command helpers
+# How do I write my own mechanism command?
 
-YAMS Mechanism classes provide two ways to control mechanisms: **direct setpoint methods** inherited from `SmartMechanism`, and **command helper methods** that return `Command` objects. Understanding when to use each is key to writing clean, effective robot code.
+The built-in commands, `run`, `runTo`, `set` and `setVoltage`, cover most needs. When they do not, for example when the target needs extra logic every loop, when an AdvantageKit IO class sets it, or when a state machine decides it, set the target yourself with the mechanism's **setpoint functions**. This page shows each case.
 
-The command helpers come from the mechanism classes in `yams.commands2.mechanisms` (Commands v2) or `yams.commands3.mechanisms` (Commands v3). Both have the same method names and arguments; only the returned `Command` and `Trigger` types differ (`org.wpilib.command2.Command` and `org.wpilib.command2.button.Trigger`, or `org.wpilib.command3.Command` and `org.wpilib.command3.Trigger`). The direct setpoint methods come from `yams.core.mechanisms.SmartMechanism` and are the same in both.
+[Controlling a mechanism](controlling-a-mechanism.md#setpoint-functions) lists every setpoint function for each mechanism.
 
-## Overview
+<figure><img src="../.gitbook/assets/setpoint-two-ways.png" alt="Two paths to the same SmartMotorController. A command helper such as arm.run returns a Command that requires the subsystem; a button binding or auto sequence schedules it, and the scheduler stops it when another command needs the mechanism. A direct setpoint method such as arm.setMechanismPositionSetpoint returns nothing and sets the target at once; it is called from your own code, such as a custom command, an IO class or a state machine, and nothing is scheduled."><figcaption><p>A built-in command and a setpoint function end at the same motor controller.</p></figcaption></figure>
 
-| Approach                    | Example                                            | Returns   | Use Case                                            |
-| --------------------------- | -------------------------------------------------- | --------- | --------------------------------------------------- |
-| **Command Helpers**         | `arm.run(Degrees.of(45))`                          | `Command` | Button bindings, autonomous sequences               |
-| **Direct Setpoint Methods** | `arm.setMechanismPositionSetpoint(Degrees.of(45))` | `void`    | Custom commands, AdvantageKit IO, low-level control |
+## The rules
 
-Both [start or stop the closed loop controller](setpoint-methods.md#starting-and-stopping-the-systemcore-closed-loop) for you. You only do it yourself when you call the `SmartMotorController` directly.
+* **A setpoint function sets the target and returns at once.** It is not a command, and it does not require the subsystem. Call it from inside a command that does, so two pieces of code never fight over the motor.
+* **Position and velocity setpoint functions start the closed loop if it was stopped.** Voltage and duty cycle ones stop it. You do not need to manage the loop when you use them.
+* **Starting a stopped loop resets it** to where the mechanism is now: the PID controller, the motion profile and the LQR's estimate start fresh. On a loop that is already running, starting it does nothing, so calling `setMechanismPositionSetpoint(...)` every loop is fine.
+* **The motor keeps its last request when your command ends,** as with the built-in commands. See [When mechanism commands end](run-vs-runto.md).
 
-<figure><img src="../.gitbook/assets/setpoint-two-ways.png" alt="Two paths to the same SmartMotorController. A command helper such as arm.run returns a Command that requires the subsystem; a button binding or auto sequence schedules it, and the scheduler stops it when another command needs the mechanism. A direct setpoint method such as arm.setMechanismPositionSetpoint returns nothing and sets the target at once; it is called from your own code, such as a custom command, an IO class or a state machine, and nothing is scheduled."><figcaption><p>Both paths end at the same motor controller.</p></figcaption></figure>
+## A command with extra logic
 
-<figure><img src="../.gitbook/assets/setpoint-helper-vs-direct.gif" alt="Animation of the same arm moving to 45 degrees two ways. With the command helper arm.run, a command stays scheduled and owns the arm for as long as it runs. With the direct setpoint method there is one call that returns at once and nothing is scheduled. The arm moves and holds the same way in both."><figcaption><p>A helper gives you a <code>Command</code> that stays scheduled. A setpoint method is one call.</p></figcaption></figure>
-
-## Command helper methods
-
-Command helpers are methods on Mechanism classes that return `Command` objects. These are the **recommended approach** for most use cases.
-
-### Why use command helpers?
-
-1. **Subsystem Requirements** - Commands automatically require their subsystem (or Commands v3 mechanism), preventing conflicts
-2. **Lifecycle Management** - Commands handle starting/stopping the closed loop controller
-3. **Composability** - Easy to chain with `.andThen()`, `.alongWith()`, etc. in Commands v2, or to `await` inside a coroutine in Commands v3
-4. **Trigger Integration** - Work directly with button triggers like `controller.a().onTrue()`
-5. **Naming** - Commands are automatically named for debugging
-
-<figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
-
-### Available command helpers by mechanism
-
-#### Arm / pivot
-
-```java
-// Run continuously to an angle (use for teleop)
-arm.run(Degrees.of(45))
-arm.run(() -> Degrees.of(joystick.getY() * 90))  // Supplier version
-arm.setAngle(Degrees.of(45))         // Alias for run()
-
-// Run to angle and end when reached (use in autonomous sequences)
-arm.runTo(Degrees.of(45), Degrees.of(1))  // with tolerance
-
-// Open loop control
-arm.set(0.5)                         // Duty cycle [-1, 1]
-arm.set(() -> joystick.getY())       // Duty cycle supplier
-arm.setVoltage(Volts.of(6))          // Voltage
-arm.setVoltage(() -> Volts.of(6))    // Voltage supplier
-```
-
-#### Elevator
-
-```java
-// Run continuously to a height (use for teleop)
-elevator.run(Meters.of(1.0))
-elevator.run(() -> Meters.of(joystick.getY()))
-elevator.setHeight(Meters.of(1.0))   // Alias for run()
-
-// Run to height and end when reached (use in autonomous sequences)
-elevator.runTo(Meters.of(1.0), Centimeters.of(2))  // with tolerance
-
-// Open loop control
-elevator.set(0.5)
-elevator.setVoltage(Volts.of(6))
-```
-
-#### FlyWheel
-
-```java
-// Run continuously at a velocity (use for teleop)
-flywheel.run(RPM.of(5000))
-flywheel.run(() -> RPM.of(targetRPM))
-
-// Run to velocity and end when reached (use for spin-up sequences)
-flywheel.runTo(RPM.of(5000), RPM.of(100))  // with tolerance
-
-// Linear velocity (requires circumference configured)
-flywheel.run(MetersPerSecond.of(20))
-flywheel.runTo(MetersPerSecond.of(20), MetersPerSecond.of(0.5))
-
-// Open loop control
-flywheel.set(0.8)
-flywheel.setVoltage(Volts.of(10))
-```
-
-### Example: Button bindings
+This command follows a target from a supplier, and adds 5 degrees while the arm is below level.
 
 {% tabs %}
 {% tab title="Commands v2" %}
 ```java
-// Teleop controls - use run() for continuous control
-controller.a().whileTrue(arm.run(Degrees.of(45)));
-controller.b().whileTrue(arm.run(Degrees.of(-30)));
-controller.x().whileTrue(elevator.run(Meters.of(1.0)));
-controller.y().whileTrue(flywheel.run(RPM.of(5000)));
+package first.robot.commands;
 
-// Autonomous-style - use runTo() when you need to wait for completion
-controller.leftBumper().onTrue(
-    arm.runTo(Degrees.of(90), Degrees.of(2))
-        .andThen(shooter.runTo(RPM.of(5000), RPM.of(50)))
-        .andThen(intake.feedNote())
-);
-```
-{% endtab %}
+import static org.wpilib.units.Units.Degrees;
 
-{% tab title="Commands v3" %}
-```java
-// Teleop controls - use run() for continuous control
-controller.a().whileTrue(arm.run(Degrees.of(45)));
-controller.b().whileTrue(arm.run(Degrees.of(-30)));
-controller.x().whileTrue(elevator.run(Meters.of(1.0)));
-controller.y().whileTrue(flywheel.run(RPM.of(5000)));
+import java.util.function.Supplier;
+import org.wpilib.command2.Command;
+import org.wpilib.units.measure.Angle;
+import first.robot.subsystems.ArmSubsystem;
 
-// Autonomous-style - await each runTo() inside a coroutine instead of chaining
-controller.leftBumper().onTrue(Command.noRequirements(coroutine -> {
-  coroutine.await(arm.runTo(Degrees.of(90), Degrees.of(2)));
-  coroutine.await(shooter.runTo(RPM.of(5000), RPM.of(50)));
-  coroutine.await(intake.feedNote());
-}).named("Aim And Shoot"));
-```
-{% endtab %}
-{% endtabs %}
+public class OffsetArmCommand extends Command
+{
+  private final ArmSubsystem    armSubsystem;
+  private final Supplier<Angle> target;
 
-## Direct setpoint methods
-
-Direct setpoint methods are inherited from `SmartMechanism` and set the motor controller's target immediately without returning a Command.
-
-{% hint style="info" %}
-**The direct setpoint methods start and stop the closed loop controller for you.** A position or velocity setpoint starts a stopped one and leaves a running one alone, so you can send it every loop. A voltage or duty cycle setpoint stops it. Only when you call the `SmartMotorController` yourself do you have to do it, see [Starting and stopping the SystemCore closed loop](setpoint-methods.md#starting-and-stopping-the-systemcore-closed-loop).
-{% endhint %}
-
-### SmartMechanism setpoint methods
-
-All Mechanism classes inherit these methods from `SmartMechanism`:
-
-```java
-// Position setpoints
-void setMechanismPositionSetpoint(Angle angle)      // Rotational position (Arm, Pivot)
-void setMeasurementPositionSetpoint(Distance dist)  // Linear position (Elevator)
-
-// Velocity setpoints
-void setMechanismVelocitySetpoint(AngularVelocity vel)  // Rotational velocity
-void setMeasurementVelocitySetpoint(LinearVelocity vel) // Linear velocity (Elevator, FlyWheel)
-
-// Open loop setpoints
-void setVoltageSetpoint(Voltage volts)              // Voltage control
-void setDutyCycleSetpoint(double dutyCycle)         // Duty cycle [-1, 1]
-```
-
-### When to use direct setpoint methods
-
-1. **AdvantageKit IO Classes** - When implementing IO interfaces that don't use Commands
-2. **Custom Command Logic** - When building complex commands with custom execute() methods
-3. **State Machine Control** - When a state machine directly controls mechanism state
-4. **Performance Critical** - Avoiding Command overhead in tight loops (rare)
-
-### Example: AdvantageKit IO
-
-```java
-public class ArmIOYAMS implements ArmIO {
-  private final Arm arm;
-
-  @Override
-  public void setTargetAngle(double rotations) {
-    // Use direct setpoint method - no Command needed
-    arm.setMechanismPositionSetpoint(Rotations.of(rotations));
+  public OffsetArmCommand(ArmSubsystem armSubsystem, Supplier<Angle> target)
+  {
+    this.armSubsystem = armSubsystem;
+    this.target = target;
+    addRequirements(armSubsystem); // so no other command drives the arm at the same time
   }
-}
-```
-
-### Example: Custom command
-
-{% tabs %}
-{% tab title="Commands v2" %}
-```java
-public class ComplexArmCommand extends Command {
-  private final Arm arm;
-  private final Supplier<Angle> targetSupplier;
 
   @Override
-  public void execute() {
-    Angle target = targetSupplier.get();
-    // Apply custom logic before setting
-    if (arm.getAngle().lt(Degrees.of(0))) {
-      target = target.plus(Degrees.of(5)); // Offset when below horizontal
+  public void execute()
+  {
+    Angle goal = target.get();
+    if (armSubsystem.getArm().getAngle().lt(Degrees.of(0)))
+    {
+      goal = goal.plus(Degrees.of(5)); // below level, aim a little higher
     }
-    arm.setMechanismPositionSetpoint(target);
+    armSubsystem.getArm().setMechanismPositionSetpoint(goal); // safe every loop
   }
 }
 ```
+
+`getArm()` is a getter you add to `ArmSubsystem` that returns its YAMS `Arm` field. The command never finishes, so bind it with `whileTrue`, or use it as a default command.
 {% endtab %}
 
 {% tab title="Commands v3" %}
-Commands v3 has no command classes with `execute()`. Write the same logic as a `while (true)` coroutine on your mechanism:
+Commands v3 has no command classes with `execute()`. Write the same logic as a `while (true)` coroutine in your `ArmMechanism`, where `arm` is its YAMS `Arm` field:
 
 ```java
-public Command complexArmCommand(Supplier<Angle> targetSupplier) {
+// In ArmMechanism
+public Command offsetTo(Supplier<Angle> target)
+{
   return run(coroutine -> {
-    while (true) {
-      Angle target = targetSupplier.get();
-      // Apply custom logic before setting
-      if (arm.getAngle().lt(Degrees.of(0))) {
-        target = target.plus(Degrees.of(5)); // Offset when below horizontal
+    while (true)
+    {
+      Angle goal = target.get();
+      if (arm.getAngle().lt(Degrees.of(0)))
+      {
+        goal = goal.plus(Degrees.of(5)); // below level, aim a little higher
       }
-      arm.setMechanismPositionSetpoint(target);
+      arm.setMechanismPositionSetpoint(goal); // safe every loop
       coroutine.yield();
     }
-  }).named("Complex Arm Command");
+  }).named("Arm Offset To");
 }
 ```
+
+`run(...)` on a `Mechanism` requires that mechanism, so no other command drives the arm at the same time.
 {% endtab %}
 {% endtabs %}
 
-### Example: State machine (Commands v3)
+To end a command like this when the arm arrives, check `arm.isNear(goal, tolerance)`: in Commands v2 return it from `isFinished()`, and in Commands v3 make it the `while` condition.
 
-WPILib's Commands v3 has a state machine built in: `org.wpilib.command3.StateMachine`. Each state runs one command, and transitions say when to move from one state to another. The state machine cancels the current state's command and starts the next one for you.
+## An AdvantageKit IO class
 
-The direct setpoint methods fit inside the command for each state:
+An IO class is called by the subsystem, which owns the requirement, so it uses the setpoint functions directly. Take `Measure` types, not `double`:
 
 ```java
-public class ArmMechanism implements Mechanism {
-  private static final Angle STOW_ANGLE = Degrees.of(0);
-  private static final Angle INTAKE_ANGLE = Degrees.of(-20);
-  private static final Angle SCORE_ANGLE = Degrees.of(80);
-  private static final Angle TOLERANCE = Degrees.of(2);
+// Fragment: ArmIO is your IO interface, with setTargetAngle(Angle) and setVoltage(Voltage).
+public class ArmIOYAMS implements ArmIO
+{
+  private final Arm arm; // built as in the Arm tutorial
 
-  private final Arm arm;
-  private final BooleanSupplier hasGamePiece;
-
-  public ArmMechanism(BooleanSupplier hasGamePiece) {
-    this.hasGamePiece = hasGamePiece;
-    // createArm() stands for the usual setup: the SmartMotorControllerConfig, the SmartMotorController and the Arm.
-    arm = createArm();
+  public ArmIOYAMS(Arm arm)
+  {
+    this.arm = arm;
   }
 
-  /**
-   * The command for one state: it sends the angle with a direct setpoint method every loop, until
-   * the state machine cancels it to move on.
-   */
-  private Command holdAt(String name, Angle angle) {
-    return run(coroutine -> {
-      while (true) {
-        // Starts the closed loop if it was stopped, and leaves it running otherwise.
-        arm.setMechanismPositionSetpoint(angle);
-        coroutine.yield();
-      }
-    }).named(name);
+  @Override
+  public void setTargetAngle(Angle angle)
+  {
+    arm.setMechanismPositionSetpoint(angle); // starts the closed loop if it was stopped
   }
 
-  /**
-   * Build the arm's state machine.
-   *
-   * @param intakeRequested True when the driver asks to intake.
-   * @param scoreRequested True when the driver asks to score.
-   * @return The state machine, which is itself a Command.
-   */
-  public Command stateMachine(BooleanSupplier intakeRequested, BooleanSupplier scoreRequested) {
-    // Declare the state machine
-    StateMachine machine = new StateMachine("Arm State Machine");
-
-    // Declare states: each one runs a single command
-    State stowed = machine.addState(holdAt("Arm Stowed", STOW_ANGLE));
-    State intaking = machine.addState(holdAt("Arm Intaking", INTAKE_ANGLE));
-    State scoring = machine.addState(holdAt("Arm Scoring", SCORE_ANGLE));
-
-    // Set the initial state
-    machine.setInitialState(stowed);
-
-    // Declare transitions
-    stowed.switchTo(intaking).when(intakeRequested);
-    stowed.switchTo(scoring).when(() -> scoreRequested.getAsBoolean() && hasGamePiece.getAsBoolean());
-    // Once a game piece is in, stow by itself
-    intaking.switchTo(stowed).when(hasGamePiece);
-    // Once the arm is up and the game piece has left, stow by itself
-    scoring.switchTo(stowed).when(() -> arm.isNear(SCORE_ANGLE, TOLERANCE) && !hasGamePiece.getAsBoolean());
-
-    return machine;
-  }
-
-  public void periodic() {
-    arm.updateTelemetry();
-  }
-
-  public void simulationPeriodic() {
-    arm.simIterate();
+  @Override
+  public void setVoltage(Voltage volts)
+  {
+    arm.setVoltageSetpoint(volts); // stops the closed loop
   }
 }
 ```
 
-A `StateMachine` is itself a `Command`, so schedule it like any other:
+[AdvantageKit Integration](advantagekit-integration.md) builds the whole IO layer.
+
+## A state machine (Commands v3)
+
+WPILib's Commands v3 has a state machine built in, `org.wpilib.command3.StateMachine`. Each state runs one command, and transitions say when to move to another state. The state machine cancels the current state's command and starts the next one for you.
 
 ```java
-// The buttons are the conditions for the transitions. A Trigger is a BooleanSupplier.
-Scheduler.getDefault().schedule(arm.stateMachine(controller.a(), controller.b()));
+// Fragment of ArmMechanism. motorConfig, motor and armConfig are built as in the Arm tutorial.
+private static final Angle STOW_ANGLE   = Degrees.of(0);
+private static final Angle INTAKE_ANGLE = Degrees.of(-20);
+private static final Angle SCORE_ANGLE  = Degrees.of(80);
+private static final Angle TOLERANCE    = Degrees.of(2);
+
+private final Arm arm = new Arm(armConfig, motor);
+
+/** The command for one state: hold an angle until the state machine moves on. */
+private Command holdAt(String name, Angle angle)
+{
+  return run(coroutine -> {
+    while (true)
+    {
+      arm.setMechanismPositionSetpoint(angle); // safe every loop
+      coroutine.yield();
+    }
+  }).named(name);
+}
+
+/** Build the arm's state machine. It is itself a Command. */
+public Command stateMachine(BooleanSupplier intakeRequested, BooleanSupplier scoreRequested,
+                            BooleanSupplier hasGamePiece)
+{
+  StateMachine machine = new StateMachine("Arm State Machine");
+
+  State stowed   = machine.addState(holdAt("Arm Stowed", STOW_ANGLE));
+  State intaking = machine.addState(holdAt("Arm Intaking", INTAKE_ANGLE));
+  State scoring  = machine.addState(holdAt("Arm Scoring", SCORE_ANGLE));
+
+  machine.setInitialState(stowed);
+
+  stowed.switchTo(intaking).when(intakeRequested);
+  stowed.switchTo(scoring).when(() -> scoreRequested.getAsBoolean() && hasGamePiece.getAsBoolean());
+  intaking.switchTo(stowed).when(hasGamePiece);  // stow once a game piece is in
+  scoring.switchTo(stowed).when(() -> arm.isNear(SCORE_ANGLE, TOLERANCE) && !hasGamePiece.getAsBoolean());
+
+  return machine;
+}
 ```
 
-How it fits together:
+The imports are `org.wpilib.command3.StateMachine`, `org.wpilib.command3.StateMachine.State` and `java.util.function.BooleanSupplier`. Schedule it like any other command. A `Trigger` is a `BooleanSupplier`, so buttons can be the conditions:
 
-* **`addState(command)`** makes a state from a command. Here each state's command sends its angle with `setMechanismPositionSetpoint(...)` inside a `while (true)` loop that ends each pass with `coroutine.yield()`.
-* **`setInitialState(state)`** is required before the state machine runs.
-* **`from.switchTo(to).when(condition)`** moves between states when the condition turns true. Two of the transitions here come from buttons and two happen by themselves.
-* **Each state's command requires the arm, and the state machine itself requires nothing.** Another command that takes the arm cancels the running state, and the state machine then exits.
-* **A state whose command ends with no transition ends the state machine.** These commands never end on their own, so this one keeps running until it is canceled.
+```java
+// In Robot. arm is your ArmMechanism; intake.hasGamePiece() is your own sensor check.
+Scheduler.getDefault().schedule(arm.stateMachine(controller.a(), controller.b(), intake::hasGamePiece));
+```
 
-### Starting and stopping the SystemCore closed loop
+How it behaves:
 
-<figure><img src="../.gitbook/assets/setpoint-closed-loop-state.png" alt="Two panels. Position or velocity setpoints, such as setMechanismPositionSetpoint and setMechanismVelocitySetpoint, need the closed loop running: call startClosedLoopController once when your command starts, or the setpoint is ignored and the mechanism does not move. Voltage or duty cycle setpoints, setVoltageSetpoint and setDutyCycleSetpoint, need the closed loop stopped: call stopClosedLoopController once when your command starts, or the loop overwrites your output on its next run. This only matters when the closed loop runs on the SystemCore, and the command helpers do it for you."><figcaption><p>Start the closed loop for position and velocity setpoints. Stop it for voltage and duty cycle setpoints.</p></figcaption></figure>
+* **`setInitialState(state)` is required.** Without it the state machine throws when it starts.
+* **`when(condition)` fires when the condition turns from false to true while that state is active.** A button already held when the state starts does not count until it is released and pressed again.
+* **If two transitions fire in the same loop, the first one declared wins.**
+* **The state machine itself requires nothing; each state's command requires the arm.** Another command that takes the arm cancels the running state, and with no `whenComplete()` transition from that state, the state machine exits.
+* **A state whose command ends by itself, with no `whenComplete()` transition, also ends the state machine.** These `holdAt` commands never end, so this one runs until it is canceled.
 
-Some closed loops run on the motor controller and some run on the SystemCore. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) lists which is which. A loop on the SystemCore is a piece of YAMS code that runs every control period and writes an output to the motor, and it keeps doing that until it is stopped. So it has to be started or stopped to match the kind of control you want:
+## Driving the motor controller yourself
 
-| You want                                                     | The SystemCore closed loop must be | Why                                                                                 |
-| ------------------------------------------------------------ | ---------------------------------- | ----------------------------------------------------------------------------------- |
-| Position or velocity control                                 | Running                            | A stopped loop does nothing with the setpoint, so the mechanism does not move to it |
-| Voltage or duty cycle control                                | Stopped                            | A running loop writes its own output on its next run and overrides yours            |
+You can skip the mechanism and call the `SmartMotorController` from `arm.getMotorController()`, with `setPosition(...)`, `setVelocity(...)`, `setVoltage(...)` or `setDutyCycle(...)`. That is what the built-in commands do inside. These calls do not start or stop the closed loop, so do it once when your command starts:
 
-**The mechanism classes do this for you.** The command helpers, such as `run(...)`, `runTo(...)`, `set(...)` and `setVoltage(...)`, and the direct setpoint methods, such as `setMechanismPositionSetpoint(...)` and `setVoltageSetpoint(...)`, all put the loop in the state they need:
-
-* A position or velocity setpoint starts the loop if it was stopped, from where the mechanism is now. A loop that is already running carries on as it is, so sending the setpoint every loop does not reset it.
-* A voltage or duty cycle setpoint stops the loop.
-
-So after a default command that coasts the motor with `set(0)` or `setDutyCycleSetpoint(0)`, the next position or velocity command starts the loop again by itself.
-
-You only start and stop it yourself when you skip the mechanism class and call the `SmartMotorController` directly, with `setPosition(...)`, `setVelocity(...)`, `setVoltage(...)` or `setDutyCycle(...)`:
-
-<pre class="language-java"><code class="lang-java"><strong>arm.getMotorController().startClosedLoopController(); // before position or velocity control
-</strong><strong>arm.getMotorController().stopClosedLoopController();  // before voltage or duty cycle control
-</strong></code></pre>
-
-The pattern is then always the same: put the loop in the state your command needs when the command starts.
+<figure><img src="../.gitbook/assets/setpoint-closed-loop-state.png" alt="Two panels. Position or velocity setpoints, such as setMechanismPositionSetpoint and setMechanismVelocitySetpoint, need the closed loop running: call startClosedLoopController once when your command starts, or the setpoint is ignored and the mechanism does not move. Voltage or duty cycle setpoints, setVoltageSetpoint and setDutyCycleSetpoint, need the closed loop stopped: call stopClosedLoopController once when your command starts, or the loop overwrites your output on its next run. This only matters when the closed loop runs on the SystemCore, and the command helpers do it for you."><figcaption><p>Start the closed loop for position and velocity. Stop it for voltage and duty cycle.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Commands v2" %}
-Use `startRun` to set the loop up once and then run every loop.
-
 ```java
-/** Drive the arm's motor by voltage, for example from a joystick. */
-public Command manual(Supplier<Voltage> volts) {
+// In ArmSubsystem. arm is the YAMS Arm field.
+/** Drive the arm by voltage, for example from a joystick. */
+public Command manual(Supplier<Voltage> volts)
+{
   SmartMotorController motor = arm.getMotorController();
   return startRun(
-          motor::stopClosedLoopController,           // once, at the start
-          () -> motor.setVoltage(volts.get()))       // every loop
+          motor::stopClosedLoopController,      // once, at the start
+          () -> motor.setVoltage(volts.get()))  // every loop
       .withName("Arm Manual");
 }
 
 /** Hold an angle that can change while the command runs. */
-public Command track(Supplier<Angle> angle) {
+public Command track(Supplier<Angle> angle)
+{
   SmartMotorController motor = arm.getMotorController();
   return startRun(
-          motor::startClosedLoopController,          // once, at the start
-          () -> motor.setPosition(angle.get()))      // every loop
+          motor::startClosedLoopController,     // once, at the start
+          () -> motor.setPosition(angle.get())) // every loop
       .withName("Arm Track");
 }
 ```
 {% endtab %}
 
 {% tab title="Commands v3" %}
-Set the loop up before the `while (true)` loop.
-
 ```java
-/** Drive the arm's motor by voltage, for example from a joystick. */
-public Command manual(Supplier<Voltage> volts) {
+// In ArmMechanism. arm is the YAMS Arm field.
+/** Drive the arm by voltage, for example from a joystick. */
+public Command manual(Supplier<Voltage> volts)
+{
   SmartMotorController motor = arm.getMotorController();
   return run(coroutine -> {
-    motor.stopClosedLoopController();                // once, at the start
-    while (true) {
-      motor.setVoltage(volts.get());                 // every loop
+    motor.stopClosedLoopController();           // once, at the start
+    while (true)
+    {
+      motor.setVoltage(volts.get());            // every loop
       coroutine.yield();
     }
   }).named("Arm Manual");
 }
 
 /** Hold an angle that can change while the command runs. */
-public Command track(Supplier<Angle> angle) {
+public Command track(Supplier<Angle> angle)
+{
   SmartMotorController motor = arm.getMotorController();
   return run(coroutine -> {
-    motor.startClosedLoopController();               // once, at the start
-    while (true) {
-      motor.setPosition(angle.get());                // every loop
+    motor.startClosedLoopController();          // once, at the start
+    while (true)
+    {
+      motor.setPosition(angle.get());           // every loop
       coroutine.yield();
     }
   }).named("Arm Track");
@@ -391,118 +248,8 @@ public Command track(Supplier<Angle> angle) {
 {% endtab %}
 {% endtabs %}
 
-{% hint style="info" %}
-**Starting a stopped loop resets it.** `startClosedLoopController()` resets the PID controller, the LQR's state estimate and the motion profile to where the mechanism is now, but only when the loop was stopped. On a running loop it does nothing, so calling it every loop is safe. It also starts the loop of each loosely coupled follower.
-{% endhint %}
+Some closed loops run on the motor controller and some on the SystemCore: [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) lists which. When the loop runs on the motor controller, `startClosedLoopController()` and `stopClosedLoopController()` do nothing, so the same code works everywhere and keeps working if you change motor controller later. Both also start or stop the loop of each loosely coupled follower.
 
-{% hint style="success" %}
-**The same code is safe on every motor controller.** When the closed loop runs on the motor controller itself, there is no SystemCore loop, and both calls do nothing. So you can write commands this way without knowing where the loop runs, and they keep working if you change motor controller or profile later.
-{% endhint %}
+## Next
 
-## Setpoint method support matrix
-
-Every Mechanism class inherits all of these methods, but not all of them make sense for every mechanism. "No" below means the method does not apply to that mechanism.
-
-### Position setpoint methods
-
-| Method                                     | Arm | Pivot | Elevator | FlyWheel |
-| ------------------------------------------ | --- | ----- | -------- | -------- |
-| `setMechanismPositionSetpoint(Angle)`      | Yes | Yes   | Yes      | No       |
-| `setMeasurementPositionSetpoint(Distance)` | No  | No    | Yes      | No       |
-
-### Velocity setpoint methods
-
-| Method                                           | Arm | Pivot | Elevator | FlyWheel |
-| ------------------------------------------------ | --- | ----- | -------- | -------- |
-| `setMechanismVelocitySetpoint(AngularVelocity)`  | Yes | Yes   | Yes      | Yes      |
-| `setMeasurementVelocitySetpoint(LinearVelocity)` | No  | No    | Yes      | Yes\*    |
-
-\*FlyWheel requires circumference to be configured for linear velocity.
-
-### Open loop setpoint methods
-
-| Method                         | Arm | Pivot | Elevator | FlyWheel |
-| ------------------------------ | --- | ----- | -------- | -------- |
-| `setVoltageSetpoint(Voltage)`  | Yes | Yes   | Yes      | Yes      |
-| `setDutyCycleSetpoint(double)` | Yes | Yes   | Yes      | Yes      |
-
-{% hint style="warning" %}
-**Linear Methods**: The `Distance` and `LinearVelocity` methods convert through the mechanism circumference in the `SmartMotorControllerConfig`. Calling one without a circumference configured (like `setMeasurementPositionSetpoint(Distance)` on an `Arm`) throws a `SmartMotorControllerConfigurationException`, and `FlyWheel.setMeasurementVelocitySetpoint(LinearVelocity)` throws a `FlyWheelConfigurationException` if the FlyWheel diameter is not set. Check the matrix above before using direct setpoint methods.
-{% endhint %}
-
-## Checking position with near() and isNear()
-
-To check if a mechanism is near a target, use `near()`, which returns a `Trigger`:
-
-```java
-// Arm / Pivot - uses Angle.isNear() internally
-Trigger nearTarget = arm.near(Degrees.of(45), Degrees.of(2));
-
-// Elevator - uses Distance.isNear() internally  
-Trigger nearHeight = elevator.near(Meters.of(1.0), Centimeters.of(2));
-
-// FlyWheel - uses AngularVelocity.isNear() internally
-Trigger atSpeed = flywheel.near(RPM.of(5000), RPM.of(100));
-```
-
-These methods use WPILib's built-in `isNear()` function on the `Angle`, `Distance`, and `AngularVelocity` measure classes for accurate tolerance checking.
-
-{% hint style="info" %}
-The `Trigger` factory used to be called `isNear()` and was renamed to `near()` to match the other Trigger factories (`gte()`, `lte()`, `between()`, `max()`, `min()`). `isNear()` with the same arguments still exists and returns a plain `boolean`, for use outside a `Command` or `Trigger`.
-{% endhint %}
-
-<figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
-
-### Using near() in commands
-
-{% tabs %}
-{% tab title="Commands v2" %}
-```java
-// Wait until arm is near target
-Commands.waitUntil(arm.near(Degrees.of(45), Degrees.of(1)))
-
-// Conditional logic based on position
-arm.near(Degrees.of(90), Degrees.of(5)).onTrue(ledSubsystem.setGreen());
-
-// In a command's isFinished(), use the boolean isNear()
-@Override
-public boolean isFinished() {
-    return arm.isNear(targetAngle, tolerance);
-}
-```
-{% endtab %}
-
-{% tab title="Commands v3" %}
-```java
-// Wait until arm is near target, inside a coroutine
-coroutine.waitUntil(arm.near(Degrees.of(45), Degrees.of(1)));
-
-// Conditional logic based on position
-arm.near(Degrees.of(90), Degrees.of(5)).onTrue(leds.setGreen());
-
-// Plain boolean check, e.g. in an if statement inside a coroutine
-if (arm.isNear(targetAngle, tolerance)) {
-  // ...
-}
-```
-{% endtab %}
-{% endtabs %}
-
-## Decision guide
-
-<figure><img src="../.gitbook/assets/setpoint-decision.png" alt="A decision diagram. If the mechanism is controlled by a button binding or an autonomous sequence, use a command helper such as arm.run, arm.runTo or arm.setAngle. If it is controlled by a custom command, an IO class or a state machine, use a direct setpoint method such as arm.setMechanismPositionSetpoint, elevator.setMeasurementPositionSetpoint or arm.setVoltageSetpoint."><figcaption><p>Start from what is making the call.</p></figcaption></figure>
-
-## Best practices
-
-1. **Prefer Command Helpers** - They handle subsystem requirements and closed loop lifecycle
-2. **Use run() for Teleop** - Continuous control that responds to interruption
-3. **Use runTo() for Sequences** - When you need to wait for the mechanism to reach a target
-4. **Use Direct Methods for IO** - When implementing AdvantageKit IO or custom commands
-5. **Always Check Support** - Verify the method is supported before using direct setpoint methods
-6. **Use Triggers for State** - Use `near()`, `max()`, `min()` triggers instead of polling
-
-## See also
-
-* [run() vs runTo() Commands](run-vs-runto.md) - Important differences between continuous and goal-based commands
-* [AdvantageKit Integration](advantagekit-integration.md) - Using YAMS with AdvantageKit's IO pattern
-* [Live Tuning](live-tuning/) - Units for all tunable parameters
+[When mechanism commands end](run-vs-runto.md) explains how your command fits with `runTo` and the default command.

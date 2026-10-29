@@ -60,7 +60,8 @@ public final class Constants {
             .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 4, 3)))
             .withClosedLoopController(5, 0, 0.1)
             .withFeedforward(new ArmFeedforward(0.1, 0.3, 0.5, 0.01))
-            .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0));
+            .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0))
+            .withStartingPosition(Degrees.of(0));  // Where the arm is when the robot turns on
     
     public static final ArmConfig ARM_CONFIG = 
         new ArmConfig()  // No SmartMotorController yet!
@@ -78,7 +79,8 @@ public final class Constants {
             .withDrumRadius(Inches.of(0.75))
             .withClosedLoopController(10, 0, 0.5)
             .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))
-            .withTrapezoidalProfile(MetersPerSecond.of(1.0), MetersPerSecondPerSecond.of(2.0));
+            .withTrapezoidalProfile(MetersPerSecond.of(1.0), MetersPerSecondPerSecond.of(2.0))
+            .withStartingPosition(Meters.of(0));  // Height when the robot turns on
     
     public static final ElevatorConfig ELEVATOR_CONFIG = 
         new ElevatorConfig()
@@ -103,6 +105,10 @@ public final class Constants {
   }
 }
 ```
+
+{% hint style="warning" %}
+**Give arms and elevators a starting position.** The starting position lives on the `SmartMotorControllerConfig`, so it belongs in the constant too. Without `withStartingPosition(...)`, creating an `Arm` in simulation throws `Arm starting angle is empty`, and an `Elevator` throws `Starting height is not configured!`. It must also sit inside the mechanism's hard limits.
+{% endhint %}
 
 Then in your subsystems, use `.withSubsystem()` to bind the config:
 
@@ -179,7 +185,8 @@ public final class Constants {
             .withClosedLoopController(5, 0, 0.1)
             .withFeedforward(new ArmFeedforward(0.1, 0.3, 0.5, 0.01))
             .withTrapezoidalProfile(RotationsPerSecond.of(1.0), RotationsPerSecondPerSecond.of(2.0))
-            .withZeroPower(MotorMode.BRAKE);
+            .withZeroPower(MotorMode.BRAKE)
+            .withStartingPosition(Degrees.of(0)); // Required: Arm throws without it in simulation
     
     public static final ArmConfig ARM_CONFIG = 
         new ArmConfig()
@@ -200,7 +207,8 @@ public final class Constants {
             .withClosedLoopController(10, 0, 0.5)
             .withFeedforward(new ElevatorFeedforward(0.1, 0.2, 0.5, 0.01))
             .withTrapezoidalProfile(MetersPerSecond.of(1.0), MetersPerSecondPerSecond.of(2.0))
-            .withZeroPower(MotorMode.BRAKE);
+            .withZeroPower(MotorMode.BRAKE)
+            .withStartingPosition(Meters.of(0)); // Required: Elevator throws without it in simulation
     
     public static final ElevatorConfig ELEVATOR_CONFIG = 
         new ElevatorConfig()
@@ -295,6 +303,21 @@ public class ArmSubsystem extends SubsystemBase {
 }
 ```
 
+## After live tuning: copy the values into Constants
+
+[Live tuning](live-tuning/) changes gains while the robot runs, but the values are lost when the code restarts. With this pattern the gains live in `Constants`, so that is where you copy them:
+
+```java
+// Before
+.withClosedLoopController(5, 0, 0.1)
+.withFeedforward(new ArmFeedforward(0.1, 0.3, 0.5, 0.01))
+// After: the kP, kI, kD and kS, kG, kV, kA you found
+.withClosedLoopController(8, 0, 0.3)
+.withFeedforward(new ArmFeedforward(0.12, 0.45, 0.5, 0.01))
+```
+
+If the config also has `withSimClosedLoopController(...)` or `withSimFeedforward(...)`, values found in simulation belong in those lines, because the simulation uses them.
+
 ## Organizing multiple config files
 
 For larger robots, you may want to split configs into separate files:
@@ -314,7 +337,7 @@ first/robot/
 ```
 
 {% hint style="info" %}
-**Important**: When using this pattern, you **must** call `.withSubsystem()` (`.withMechanism()` in Commands v3) before passing the `SmartMotorControllerConfig` to a `SmartMotorController`. It can only be called once per config and throws a `SmartMotorControllerConfigurationException` if a subsystem is already set, so call `.clone()` on the shared constant first and bind the copy. Never pass the same config instance to more than one `SmartMotorController`. Pass the `SmartMotorController` directly as the second argument to the mechanism constructor (e.g., `new Arm(armConfig, smc)`).
+**Important**: When using this pattern, you **must** call `.withSubsystem()` (`.withMechanism()` in Commands v3) before passing the `SmartMotorControllerConfig` to a `SmartMotorController`. It can only be called once per config and throws a `SmartMotorControllerConfigurationException` if a subsystem is already set, so call `.clone()` on the shared constant first and bind the copy. Never pass the same config instance to more than one `SmartMotorController`. `clone()` copies the settings but shares the gain objects (the PID controllers and feedforwards) with the original, so do not clone one constant for two motors that run their own closed loop. Give each mechanism its own constant. Pass the `SmartMotorController` directly as the second argument to the mechanism constructor (e.g., `new Arm(armConfig, smc)`).
 {% endhint %}
 
 ## When not to use this pattern

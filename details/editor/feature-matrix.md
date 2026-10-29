@@ -4,7 +4,7 @@ icon: table-cells
 
 # Motor controller feature matrix
 
-This page provides a comprehensive comparison of supported `SmartMotorControllerConfig` features across all motor controller wrappers in YAMS.
+Every `SmartMotorControllerConfig` option against every motor controller wrapper in YAMS. This is the one full list: each [SmartMotorControllerConfig](config/README.md) page repeats the row for its own options.
 
 ## Supported motor controllers
 
@@ -39,116 +39,7 @@ Each wrapper accepts a specific vendor configuration class via `SmartMotorContro
 **NovaWrapper Note**: The vendor config must be a `NovaConfig.Config`, usually a `NovaConfigBatch` (in C++ it must be a `thrifty::NovaConfigBatch`). Anything else throws a `SmartMotorControllerConfigurationException`. The vendor config is sent to the Nova before the YAMS config, which overrides it.
 {% endhint %}
 
-### Vendor config examples
-
-#### TalonFX with TalonFXConfiguration
-
-```java
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-
-TalonFXConfiguration vendorConfig = new TalonFXConfiguration();
-// Configure vendor-specific settings not exposed by YAMS
-vendorConfig.Audio.BeepOnBoot = false;
-vendorConfig.Audio.BeepOnConfig = false;
-
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
-    .withVendorConfig(vendorConfig)  // Must be TalonFXConfiguration
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(1, 0, 0)
-    // ... other YAMS config
-    ;
-
-SmartMotorController smc = new TalonFXWrapper(talonFX, DCMotor.getKrakenX60(1), config);
-```
-
-#### TalonFXS with TalonFXSConfiguration
-
-```java
-import com.ctre.phoenix6.configs.TalonFXSConfiguration;
-import com.ctre.phoenix6.signals.MotorArrangementValue;
-
-TalonFXSConfiguration vendorConfig = new TalonFXSConfiguration();
-// Note: Motor arrangement is auto-detected by YAMS based on DCMotor type
-// but you can configure other vendor-specific settings here
-
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
-    .withVendorConfig(vendorConfig)  // Must be TalonFXSConfiguration
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(0.5, 0, 0)
-    // ... other YAMS config
-    ;
-
-SmartMotorController smc = new TalonFXSWrapper(talonFXS, DCMotor.getNEO(1), config);
-```
-
-#### SparkMax with SparkMaxConfig
-
-```java
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.util.CANPorts;
-
-SparkMaxConfig vendorConfig = new SparkMaxConfig();
-// Configure vendor-specific settings not exposed by YAMS
-vendorConfig.signals.primaryEncoderPositionPeriodMs(10);
-vendorConfig.signals.primaryEncoderVelocityPeriodMs(20);
-
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
-    .withVendorConfig(vendorConfig)  // Must be SparkMaxConfig for SparkMax
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(1, 0, 0)
-    // ... other YAMS config
-    ;
-
-SparkMax sparkMax = new SparkMax(CANPorts.fromBusId(1), 1, MotorType.kBrushless);
-SmartMotorController smc = new SparkWrapper(sparkMax, DCMotor.getNEO(1), config);
-```
-
-#### SparkFlex with SparkFlexConfig
-
-```java
-import com.revrobotics.spark.config.SparkFlexConfig;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.util.CANPorts;
-
-SparkFlexConfig vendorConfig = new SparkFlexConfig();
-// Configure vendor-specific settings not exposed by YAMS
-
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
-    .withVendorConfig(vendorConfig)  // Must be SparkFlexConfig for SparkFlex
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(1, 0, 0)
-    // ... other YAMS config
-    ;
-
-SparkFlex sparkFlex = new SparkFlex(CANPorts.fromBusId(1), 1, MotorType.kBrushless);
-SmartMotorController smc = new SparkWrapper(sparkFlex, DCMotor.getNeoVortex(1), config);
-```
-
-#### Thrifty Nova with NovaConfigBatch
-
-```java
-import com.thrifty.core.Motor.MotorType;
-import com.thrifty.nova.Nova;
-import com.thrifty.nova.NovaConfig;
-import com.thrifty.nova.NovaConfigBatch;
-
-// Configure vendor-specific settings not exposed by YAMS
-NovaConfigBatch vendorConfig = new NovaConfigBatch(NovaConfig.tempThrottleEnable(true));
-
-SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
-    .withVendorConfig(vendorConfig)  // Must be a NovaConfig.Config, such as NovaConfigBatch
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(0.2, 0, 0)
-    // ... other YAMS config
-    ;
-
-Nova nova = new Nova(0, 3, MotorType.NEO); // CAN bus 0, CAN ID 3
-SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
-```
+[How do I use a vendor hardware config?](../../how-to/how-do-i-use-a-vendor-hardware-config.md) has an example for each vendor.
 
 {% hint style="info" %}
 **Configuration Priority**: Settings in `SmartMotorControllerConfig` always take precedence over vendor config settings. The vendor config is applied first as a base, then YAMS overwrites any settings it manages directly.
@@ -177,6 +68,7 @@ This is every option against every motor controller. What each option does, with
 | Zero Power Mode (Brake/Coast)   | ✅       | ✅        | ✅             | ✅ |
 | Reset Previous Config     | ✅       | ✅        | ✅             | ✅ |
 | Vendor Config Passthrough | ✅       | ✅        | ✅             | ✅ |
+| Vendor Control Request    | ✅       | ✅        | ❌             | ❌ |
 | Starting Position         | ✅       | ✅        | ✅             | ✅ |
 
 ### Current limits
@@ -224,9 +116,9 @@ This is every option against every motor controller. What each option does, with
 
 | Feature                 | TalonFX      | TalonFXS     | SparkMax/Flex                        | Nova |
 | ----------------------- | ------------ | ------------ | ------------------------------------ | ---- |
-| PID Controller          | ✅               | ✅               | ✅                                                      | ⚠️ (SystemCore)                 |
+| PID Controller          | ✅               | ✅               | ✅                                                      | ✅ (runs on the SystemCore)     |
 | [LQR Controller](lqr-controllers.md)          | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore)                                        | ⚠️ (SystemCore)                 |
-| Closed Loop Tolerance   | ❌               | ❌               | ✅ (not with [LQR](lqr-controllers.md))                                       | ✅ (not with [LQR](lqr-controllers.md))                |
+| Closed Loop Tolerance   | ❌               | ❌               | ⚠️ (not with [LQR](lqr-controllers.md))                                       | ⚠️ (not with [LQR](lqr-controllers.md))                |
 | Control Period Override | ❌               | ❌               | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 | Closed Loop Slots       | ⚠️ (`SLOT_0` to `SLOT_2`) | ⚠️ (`SLOT_0` to `SLOT_2`) | ✅ | ✅ |
 
@@ -266,9 +158,13 @@ This is every option against every motor controller. What each option does, with
 
 | Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova |
 | -------------------- | ------- | -------- | ------------- | ---- |
-| Angle Soft Limits    | ✅       | ✅        | ✅             | ✅ |
-| Distance Soft Limits | ✅       | ✅        | ✅             | ✅ |
+| Angle Soft Limits    | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop setpoints only) |
+| Distance Soft Limits | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop setpoints only) |
 | Continuous Wrapping  | ✅       | ✅        | ✅             | ✅ |
+
+{% hint style="warning" %}
+**Soft limits** are only enforced in `ControlMode.CLOSED_LOOP`. On a TalonFX, TalonFXS or SPARK they are set on the motor controller and stop any output past them, voltage and duty cycle included. On a Thrifty Nova a position setpoint past a limit is moved to the limit, but a voltage or duty cycle is not stopped. See [`withSoftLimits`](config/limits-and-protection.md#withsoftlimits).
+{% endhint %}
 
 ### External encoders
 
@@ -276,8 +172,9 @@ This is every option against every motor controller. What each option does, with
 | ---------------------------- | ------- | -------- | ------------------------------------------------------ | ---- |
 | External Encoder Support     | ✅       | ✅        | ✅                                                      | ✅ |
 | External Encoder Inversion   | ✅       | ✅        | ✅                                                      | ✅ |
-| External Encoder Zero Offset | ✅       | ✅        | ✅                                                      | ⚠️ (absolute and CAN encoders only) |
-| Use External for Feedback    | ✅       | ✅        | ✅                                                      | ✅ |
+| External Encoder Zero Offset | ✅       | ✅        | ⚠️ (absolute encoders only)                            | ⚠️ (absolute and CAN encoders only) |
+| Discontinuity Point          | ✅       | ✅        | ⚠️ (absolute encoders only)                            | ⚠️ (absolute and CAN encoders only) |
+| Use External for Feedback    | ⚠️ (`false` ignores the external encoder) | ⚠️ (`false` ignores the external encoder) | ✅ | ✅ |
 | Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (requires closed loop mode) |
 
 **Supported External Encoder Types:**
@@ -286,7 +183,7 @@ This is every option against every motor controller. What each option does, with
 | ------------- | ---------------------------------------------- |
 | TalonFX       | `CANcoder`, `CANdi` (PWM1/PWM2)                |
 | TalonFXS      | `CANcoder`, `CANdi` (PWM1/PWM2)                |
-| SparkMax/Flex | `SparkAbsoluteEncoder` (Through Bore, REV Hex) |
+| SparkMax/Flex | `SparkAbsoluteEncoder` (an absolute encoder on the SPARK, such as a Through Bore), `SparkMaxAlternateEncoder` or `SparkFlexExternalEncoder` (a quadrature encoder on the SPARK), `DetachedEncoder` (a REV absolute encoder read over CAN) |
 | Nova          | `FeedbackSensorType.ABS` (absolute encoder on the data port), `FeedbackSensorType.QUAD` (quadrature encoder on the data port), `CanEncoder` (Thrifty CAN Encoder) |
 
 {% hint style="info" %}
@@ -368,6 +265,8 @@ Set with the `MotorType` given to the `Nova` constructor (`com.thrifty.core.Moto
 
 ## Configuration examples
 
+These are fragments: each goes inside a subsystem, which is the `this` passed to the config.
+
 ### TalonFX with CANcoder
 
 ```java
@@ -408,7 +307,7 @@ SmartMotorController smc = new TalonFXSWrapper(motor, DCMotor.getNEO(1), config)
 ### SparkMax with absolute encoder
 
 ```java
-SparkMax spark = new SparkMax(CANPorts.fromBusId(1), 1, MotorType.kBrushless);
+SparkMax spark = new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless);
 
 SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
@@ -453,7 +352,8 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 
 * Exponential profiles run on the SystemCore, not on the motor controller
 * Supply current limits are not supported
-* External encoders must be REV-compatible (Through Bore, Hex)
+* External encoders must be REV encoders the SPARK reads itself: its absolute encoder, its alternate or external quadrature encoder, or a `DetachedEncoder`
+* Soft limits are only enforced in closed loop mode
 
 ### TalonFX/TalonFXS
 

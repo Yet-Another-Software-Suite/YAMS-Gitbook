@@ -130,6 +130,14 @@ BatterySim.enableDischarge(18.0, Volts.of(12.9), MilliOhms.of(20));
 
 See [Battery Simulation → Capacity derating](../understanding/battery-simulation.md#capacity-derating) for where the default curve comes from and the C++ equivalent.
 
+## Check it
+
+1. Publish `BatterySim.getStateOfCharge()` as shown above, and start the simulation.
+2. Run your mechanisms hard for a minute or two (spin up a shooter, drive the swerve back and forth).
+3. `Battery/StateOfCharge` should start at 1 and fall steadily while mechanisms run, and stay put while they are idle. The robot's battery voltage should sag more under the same load late in the run than at the start.
+
+If the state of charge never moves, `enableDischarge(...)` was not called. If it barely moves, check the moments of inertia: see [Make sure your mechanisms report accurate current draw](#make-sure-your-mechanisms-report-accurate-current-draw).
+
 ## Related pages
 
 * [Battery Simulation](../understanding/battery-simulation.md), the full explanation of the shared-battery model and why it matters

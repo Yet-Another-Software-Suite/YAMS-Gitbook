@@ -1,30 +1,74 @@
-# How do I find my mechanism's circumference?
+# How do I command my elevator in meters?
 
-YAMS converts between rotational encoder counts and real-world linear distance using a mechanism's circumference. Getting this value right is critical: an incorrect circumference causes every position setpoint to be off by a constant factor, making closed-loop control impossible to tune.
+**Goal:** tell YAMS how far your elevator (or wheel, or linear slide) moves for each rotation, so you can give it targets in meters or inches instead of rotations.
 
-<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
+YAMS turns rotations into distance with the **mechanism circumference**: the distance the mechanism moves for one rotation of its final shaft (after the gearbox). If the circumference is wrong, every height is off by the same factor, and the gains you tune will not make sense.
 
-Mechanism circumference is used to convert mechanism rotations to measurements. This is primarily useful for Elevators or Linear Slides where the primary unit of control is in `Distance` (usually meters).
+<figure><img src="../.gitbook/assets/image.png" alt="A swerve style wheel, its shaft, a gearbox and a NEO motor laid out in a row. The motor shaft is labelled Rotor, the shaft after the gearbox is labelled Mechanism, and the wheel's outer edge is labelled Measurement. Rotor and Mechanism are an angle and angular velocity; Measurement is a distance and linear velocity."><figcaption><p>The circumference turns Mechanism rotations into a Measurement distance.</p></figcaption></figure>
 
-Your **Mechanism Circumference** is the circumference of your final sprocket/gear which translates directly to Distance.
+## Find the circumference
 
-For elevators this is the drum circumference $$c = 2*\pi * r$$ OR if driven by a sprocket $$c = pitch*teeth$$
+The circumference belongs to the last part that turns: the drum, sprocket, pulley or wheel that moves the load.
+
+* **Drum or wheel:** circumference = 2 × π × radius = π × diameter.
+* **Sprocket on chain:** circumference = chain pitch × number of teeth. For example #25 chain (0.25 inch pitch) on a 22 tooth sprocket moves 5.5 inches per rotation.
 
 <figure><img src="../.gitbook/assets/howto-mechanism-circumference.gif" alt="Animation of a 4 inch drum and a 22 tooth sprocket on 0.25 inch pitch chain, each turning two rotations. The drum moves its cable 12.57 inches per rotation, 25.13 inches in total. The sprocket moves its chain 5.50 inches per rotation, 11 inches in total."><figcaption><p>Each rotation of the mechanism moves it by one circumference.</p></figcaption></figure>
 
-{% hint style="warning" %}
-Remember that you measurement ≠ actual height of the mechanism UNLESS you set the elevator starting height to be relative to the floor AND adjust your limits accordingly
-{% endhint %}
+## Set it in YAMS
 
-## Set the circumference in YAMS
+Use **exactly one** of these methods in your `SmartMotorControllerConfig`. They all set the same value, so if you call more than one, the last call wins. Pick the one that matches what you can measure. Each line below is a fragment that goes in the config chain.
 
 ```java
-SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Elevator drum radius API: pass the chain pitch and tooth count directly.
-  .withDrumRadius(Inches.of(0.25), 22)
-  .withMechanismCircumference(Inches.of(4).times(Math.PI)) // 4in * PI
-  .withWheelDiameter(Inches.of(4)) // Same as above
-  .withWheelRadius(Inches.of(2)) // Same as above
-  .withStartingPosition(Meters.of(0));
+// A sprocket on chain: pass the chain pitch and the tooth count.
+.withDrumRadius(Inches.of(0.25), 22)        // 0.25 in × 22 = 5.5 in per rotation
 ```
+
+```java
+// A drum or spool, measured across the middle.
+.withWheelDiameter(Inches.of(2))            // π × 2 in = 6.28 in per rotation
+```
+
+```java
+// A drum or spool, measured from the center to the edge.
+.withDrumRadius(Inches.of(1))               // same as withWheelRadius(Inches.of(1))
+```
+
+```java
+// You already know the distance per rotation.
+.withMechanismCircumference(Inches.of(5.5))
+```
+
+A complete elevator config, using the sprocket:
+
+{% code title="ExampleSubsystem.java (fragment)" %}
+```java
+SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+    // The one circumference call: 0.25 inch pitch chain on a 22 tooth sprocket.
+    .withDrumRadius(Inches.of(0.25), 22)
+    // Where the carriage is when the robot turns on.
+    .withStartingPosition(Meters.of(0))
+    .withTelemetry("ElevatorMotor", TelemetryVerbosity.HIGH);
+```
+{% endcode %}
+
+{% hint style="warning" %}
+The height YAMS reports is measured from where the carriage was when the robot turned on, not from the floor. If you want heights from the floor, set `withStartingPosition` to the carriage's real starting height and set your limits to match.
+{% endhint %}
+
+## Check it
+
+1. Deploy (or start the simulation) and open the motor's `measurement/position` value under **NetworkTables > Mechanisms**. It is in meters.
+2. On the robot, disable it and move the carriage by hand a known distance, for example 0.5 m with a tape measure.
+3. `measurement/position` should change by the same amount. If it changes by twice as much, or half, the circumference or the gearing is wrong.
+
+## If it did not work
+
+* **The reading is off by a constant factor.** Check the gearing first (`withGearing`), then the circumference. A cascade elevator also needs `withCascadingElevatorStages`, since the top stage moves faster than the chain.
+* **The reading goes the wrong way.** The motor is inverted; see [Troubleshooting](../tutorials/troubleshooting.md).
+
+## Next
+
+Send the elevator to a height: [How do I set an elevator's target height?](how-to-set-an-elevators-target-height.md)

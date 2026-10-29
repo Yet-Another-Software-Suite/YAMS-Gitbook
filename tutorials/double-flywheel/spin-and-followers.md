@@ -1,8 +1,8 @@
 ---
-description: A spin ratio between the two flywheels, and what to do when they share a shaft.
+description: A spin ratio between the two flywheels, and what to change when two motors drive one wheel.
 ---
 
-# Step 3: Spin control and followers
+# Step 3: Spin ratio and shared shafts
 
 ## A spin ratio
 
@@ -85,6 +85,41 @@ wpi::cmd::CommandPtr DoubleFlywheelSubsystem::SetSpinShot(wpi::units::revolution
 
 **For your robot:** the 25% is how much the two wheels may differ at most. Raise it for more spin.
 
+### Try it
+
+Bind it to a button to see it work. The right bumper here shoots at 3000 RPM with half the most backspin: the upper wheel at 2625 RPM and the lower at 3375 RPM.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+{% code title="RobotContainer.java" %}
+```java
+// Right bumper: 3000 RPM with some backspin.
+driverController.rightBumper().onTrue(doubleFlywheel.setSpinShot(RPM.of(3000), 0.5));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+{% code title="ExampleTeleop.java" %}
+```java
+// Right bumper: 3000 RPM with some backspin.
+robot.exampleController.rightBumper().onTrue(robot.doubleFlywheel.setSpinShot(RPM.of(3000), 0.5));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/RobotContainer.cpp" %}
+```cpp
+// Right bumper: 3000 RPM with some backspin.
+driverController.RightBumper().OnTrue(doubleFlywheel.SetSpinShot(3000_rpm, 0.5));
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**Check it:** in simulation, graph the two speeds as in [step 2](commands.md#check-it-in-simulation) and press the right bumper. The upper line settles at about 44 rotations per second (2625 RPM) and the lower at about 56 (3375 RPM).
+
 ### The complete file
 
 {% tabs %}
@@ -94,14 +129,14 @@ The highlighted lines are new in this step.
 <pre class="language-java" data-title="subsystems/DoubleFlywheelSubsystem.java" data-line-numbers><code class="lang-java">package first.robot.subsystems;
 
 import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 import static org.wpilib.units.Units.RPM;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.button.Trigger;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
 import org.wpilib.math.system.DCMotor;
@@ -125,11 +160,12 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -142,8 +178,8 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -187,15 +223,19 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
     return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
   }
 
-  /** Bring both flywheels to a stop. */
+  /** Let both flywheels coast to a stop. */
   public Command stopFlywheels() {
-    return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+    return runOnce(() -> {
+      // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+      upperMotor.setDutyCycle(0);
+      lowerMotor.setDutyCycle(0);
+    }).withName("Stop FlyWheels");
   }
 
-  /** True when both flywheels are within the tolerance of their target speeds. */
-  public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
-    return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
-        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+  /** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+  public Trigger atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+    return new Trigger(() -> upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance));
   }
 
 <strong>  /**
@@ -235,14 +275,14 @@ The highlighted lines are new in this step.
 <pre class="language-java" data-title="mechanisms/DoubleFlywheelMechanism.java" data-line-numbers><code class="lang-java">package first.robot.mechanisms;
 
 import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 import static org.wpilib.units.Units.RPM;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Mechanism;
+import org.wpilib.command3.Trigger;
 import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
 import org.wpilib.math.system.DCMotor;
@@ -266,11 +306,12 @@ public class DoubleFlywheelMechanism implements Mechanism {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -283,8 +324,8 @@ public class DoubleFlywheelMechanism implements Mechanism {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -331,15 +372,19 @@ public class DoubleFlywheelMechanism implements Mechanism {
     return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
   }
 
-  /** Bring both flywheels to a stop. */
+  /** Let both flywheels coast to a stop. */
   public Command stopFlywheels() {
-    return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+    return run(coroutine -> {
+      // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+      upperMotor.setDutyCycle(0);
+      lowerMotor.setDutyCycle(0);
+    }).named("Stop FlyWheels");
   }
 
-  /** True when both flywheels are within the tolerance of their target speeds. */
-  public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
-    return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
-        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+  /** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+  public Trigger atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+    return new Trigger(() -> upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance));
   }
 
 <strong>  /**
@@ -383,6 +428,7 @@ The highlighted lines are new in this step.
 #include &#x3C;ctre/phoenix6/TalonFX.hpp>
 #include &#x3C;wpi/commands2/CommandPtr.hpp>
 #include &#x3C;wpi/commands2/SubsystemBase.hpp>
+#include &#x3C;wpi/commands2/button/Trigger.hpp>
 #include &#x3C;wpi/units/angular_velocity.hpp>
 
 #include "yams/motorcontrollers/SmartMotorControllerConfig.hpp"
@@ -405,13 +451,13 @@ class DoubleFlywheelSubsystem : public wpi::cmd::SubsystemBase {
   /** The upper flywheel faster: topspin. */
   wpi::cmd::CommandPtr TopspinShot();
 
-  /** Bring both flywheels to a stop. */
+  /** Let both flywheels coast to a stop. */
   wpi::cmd::CommandPtr StopFlywheels();
 
-  /** True when both flywheels are within the tolerance of their target speeds. */
-  bool AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
-                        wpi::units::revolutions_per_minute_t lowerTarget,
-                        wpi::units::revolutions_per_minute_t tolerance);
+  /** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+  wpi::cmd::Trigger AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+                                     wpi::units::revolutions_per_minute_t lowerTarget,
+                                     wpi::units::revolutions_per_minute_t tolerance);
 
 <strong>  /**
 </strong><strong>   * Spin both flywheels around a base speed, with a spin ratio between them.
@@ -446,8 +492,7 @@ class DoubleFlywheelSubsystem : public wpi::cmd::SubsystemBase {
 #include &#x3C;wpi/math/system/DCMotor.hpp>
 #include &#x3C;wpi/units/angle.hpp>
 #include &#x3C;wpi/units/current.hpp>
-#include &#x3C;wpi/units/length.hpp>
-#include &#x3C;wpi/units/mass.hpp>
+#include &#x3C;wpi/units/moment_of_inertia.hpp>
 #include &#x3C;wpi/units/math.hpp>
 #include &#x3C;wpi/units/voltage.hpp>
 
@@ -469,11 +514,13 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .WithMOI(4_in, 1_lb)
+      .WithSimFeedforward(feedforward)
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(false)
       .WithZeroPower(Cfg::MotorMode::COAST)
       .WithStatorCurrentLimit(40_A)
@@ -486,8 +533,9 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-      .WithMOI(4_in, 1_lb)
+      .WithSimFeedforward(feedforward)
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(true)
       .WithZeroPower(Cfg::MotorMode::COAST)
       .WithStatorCurrentLimit(40_A)
@@ -525,14 +573,20 @@ wpi::cmd::CommandPtr DoubleFlywheelSubsystem::TopspinShot() {
 }
 
 wpi::cmd::CommandPtr DoubleFlywheelSubsystem::StopFlywheels() {
-  return SetFlywheelSpeeds(0_rpm, 0_rpm);
+  return RunOnce([this] {
+    // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+    m_upperMotor->SetDutyCycle(0);
+    m_lowerMotor->SetDutyCycle(0);
+  }).WithName("Stop FlyWheels");
 }
 
-bool DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
-                                               wpi::units::revolutions_per_minute_t lowerTarget,
-                                               wpi::units::revolutions_per_minute_t tolerance) {
-  return wpi::units::math::abs(m_upperMotor->GetMechanismVelocity() - upperTarget) &#x3C;= tolerance &#x26;&#x26;
-         wpi::units::math::abs(m_lowerMotor->GetMechanismVelocity() - lowerTarget) &#x3C;= tolerance;
+wpi::cmd::Trigger DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+                                                            wpi::units::revolutions_per_minute_t lowerTarget,
+                                                            wpi::units::revolutions_per_minute_t tolerance) {
+  return wpi::cmd::Trigger([this, upperTarget, lowerTarget, tolerance] {
+    return wpi::units::math::abs(m_upperMotor->GetMechanismVelocity() - upperTarget) &#x3C;= tolerance &#x26;&#x26;
+           wpi::units::math::abs(m_lowerMotor->GetMechanismVelocity() - lowerTarget) &#x3C;= tolerance;
+  });
 }
 
 <strong>wpi::cmd::CommandPtr DoubleFlywheelSubsystem::SetSpinShot(wpi::units::revolutions_per_minute_t baseSpeed,
@@ -559,9 +613,51 @@ void DoubleFlywheelSubsystem::SimulationPeriodic() {
 {% endtab %}
 {% endtabs %}
 
-## Loosely coupled followers
+## Two motors on one wheel
 
-If you want both wheels to always get the **same** setpoint, you do not need to command each one yourself. Make one a loosely coupled follower of the other, and command only the leader:
+So far each wheel has one motor. If a wheel is driven by two motors on the same shaft or gearbox, the second motor must always turn with the first. Make it a **follower**: it copies the leader's output, and you do not give it a config or a `SmartMotorController` of its own.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+```java
+private final SmartMotorControllerConfig upperConfig = new SmartMotorControllerConfig(this)
+    // ... config options from step 1
+    // A second Kraken X60 on the upper wheel's shaft, CAN ID 3. true: it faces the other way.
+    .withFollowers(Pair.of(new TalonFX(3, new CANBus(CANPort.CAN_S0)), true));
+```
+{% endtab %}
+
+{% tab title="Java, Commands v3" %}
+The same as Commands v2, with `SmartMotorControllerConfig` from `yams.commands3.config`.
+
+```java
+private final SmartMotorControllerConfig upperConfig = new SmartMotorControllerConfig(this)
+    // ... config options from step 1
+    // A second Kraken X60 on the upper wheel's shaft, CAN ID 3. true: it faces the other way.
+    .withFollowers(Pair.of(new TalonFX(3, new CANBus(CANPort.CAN_S0)), true));
+```
+{% endtab %}
+
+{% tab title="C++" %}
+Keep the follower's `TalonFX` as a member, next to the leader's, and name it in the leader's config:
+
+```cpp
+// In the header: a second Kraken X60 on the upper wheel's shaft, CAN ID 3.
+ctre::phoenix6::hardware::TalonFX m_upperFollowerTalon{3, ctre::phoenix6::CANBus{}};
+
+// In the constructor. true: it faces the other way.
+m_upperConfig
+    // ... config options from step 1
+    .WithFollowers({{&m_upperFollowerTalon, true}});
+```
+{% endtab %}
+{% endtabs %}
+
+`Pair` is `org.wpilib.util.Pair`. Change the `DCMotor` in that wheel's `SmartMotorController` to two motors, `DCMotor.getKrakenX60(2)`, so the simulation knows. The follower must be the same vendor as the leader. [Followers](../../details/editor/config/followers.md#withfollowers) has the details.
+
+## Both wheels at the same speed
+
+If you want both wheels to always get the **same** setpoint, you do not need to command each one yourself. Make one a **loosely coupled follower** of the other, and command only the leader. Unlike a follower above, it keeps its own config and runs its own closed loop, because it is on a different shaft:
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -625,7 +721,7 @@ You now have a double flywheel shooter with:
 
 * Independent velocity control of the upper and lower flywheels
 * Preset shots for no spin, backspin and topspin, and a spin ratio for anything in between
-* Full simulation support
+* Simulation of both wheels, which you can graph
 * Telemetry and live tuning for both flywheels
 
 The differences from a single flywheel are:
@@ -633,3 +729,9 @@ The differences from a single flywheel are:
 1. Two `SmartMotorControllerConfig`s and two `SmartMotorController`s, controlled directly instead of through a `FlyWheel` mechanism
 2. The subsystem calls `setupTelemetry()`, `updateTelemetry()` and `simIterate()` on each `SmartMotorController` itself
 3. One command sets both velocity setpoints
+
+## Tune it and run it on the robot
+
+Tune each wheel with [the shooter tutorial's tune step](../shooter-flywheels/tune.md). Do it once for `UpperFlyWheel` and once for `LowerFlyWheel`: their values are under `NT:/Tuning/UpperFlyWheel/` and `NT:/Tuning/LowerFlyWheel/`, and the `Live Tuning` command is under the subsystem's name, `NT:/Tuning/DoubleFlywheelSubsystem/Live Tuning` (Commands v3: `DoubleFlywheelMechanism`).
+
+Then put it on the robot with [the arm's step 6: Run it on the robot](../arm/robot.md), using the flywheel differences at the end of the shooter's tune step.
