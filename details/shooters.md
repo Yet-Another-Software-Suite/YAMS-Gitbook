@@ -270,7 +270,7 @@ The [Shooter/FlyWheels tutorial](../tutorials/shooter-flywheels/tune.md) walks t
 * **kP only needs to be small.** Its job is to bring the wheel back after a game piece slows it. Too much makes the speed ripple.
 * **There is no kG and no position.** Nothing to hold up, and no soft limits.
 * **Choose the tolerance by shooting.** Shoot at the edges of your `atSpeed` tolerance, and use the widest one where the shots still land, so the shooter is ready sooner.
-* **A brownout is not a tuning problem.** If spinning up browns out the robot, add a [velocity profile](editor/config/motion-profiles.md#a-velocity-profile) or a [current limit](editor/config/limits-and-protection.md#current-limits), and test it against the [battery simulation](../understanding/battery-simulation.md).
+* **A brownout is not a tuning problem.** If spinning up browns out the robot, add a [velocity profile](editor/config/motion-profiles.md#velocity-profiles-for-flywheels) or a [current limit](editor/config/limits-and-protection.md#current-limits), and test it against the [battery simulation](../understanding/battery-simulation.md).
 
 ## FlyWheelConfig options
 

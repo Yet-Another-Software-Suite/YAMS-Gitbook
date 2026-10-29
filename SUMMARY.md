@@ -6,6 +6,7 @@
 ## Tutorials
 
 * [Create a project and install YAMS](tutorials/project-setup.md)
+* [How YAMS drives a motor](details/how-yams-drives-a-motor.md)
 * [Arm](tutorials/arm.md)
   * [Step 1: The motor controller](tutorials/arm/motor-controller.md)
   * [Step 2: The arm](tutorials/arm/mechanism.md)

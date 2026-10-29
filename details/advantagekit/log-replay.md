@@ -19,23 +19,29 @@ public class ArmIOReplay implements ArmIO {
 }
 ```
 
-In RobotContainer, only check for replay mode (the YAMS AdvantageKit examples define `Mode` and `currentMode` in `Robot`):
+In RobotContainer, only check for replay mode. `Robot.currentMode` comes from [Step 0](setup.md):
 
 ```java
-public RobotContainer() {
-  if (Robot.currentMode == Robot.Mode.REPLAY) {
-    // Replay mode: empty IO, AdvantageKit injects logged values
-    arm = new ArmSubsystem(new ArmIOReplay());
-    elevator = new ElevatorSubsystem(new ElevatorIOReplay());
-    shooter = new ShooterSubsystem(new ShooterIOReplay());
-  } else {
-    // Real AND Sim: same IO class works for both!
-    arm = new ArmSubsystem(new ArmIOTalonFX(arm, 1));
-    elevator = new ElevatorSubsystem(new ElevatorIOTalonFX(elevator, 2));
-    shooter = new ShooterSubsystem(new ShooterIOTalonFX(shooter, 3));
-  }
+package first.robot;
+
+import first.robot.subsystems.akit.ArmIOReplay;
+import first.robot.subsystems.akit.ArmIOTalonFX;
+import first.robot.subsystems.akit.ArmSubsystem;
+
+public class RobotContainer {
+
+  // Replay mode: the empty IO class, AdvantageKit fills the inputs from the log.
+  // Real AND sim: the same IO class works for both.
+  private final ArmSubsystem arm = new ArmSubsystem(
+      Robot.currentMode == Robot.Mode.REPLAY ? subsystem -> new ArmIOReplay() : ArmIOTalonFX::new);
+
+  // The elevator and shooter follow the same pattern with ElevatorIOReplay and ShooterIOReplay.
 }
 ```
+
+To replay a log, set `simMode` in `Robot` to `Mode.REPLAY` and run the simulation. `LogFileUtil.findReplayLog()` uses the log open in AdvantageScope, or asks you for one. See [How To: Traditional Replay](https://docs.advantagekit.org/getting-started/traditional-replay) in the AdvantageKit docs.
+
+**Check:** a new log file ending in `_sim` appears next to the one you replayed. Open both in AdvantageScope: `Arm/positionRotations` is the same in both.
 
 {% hint style="success" %}
 **Summary**: With YAMS + AdvantageKit, you only need **2 IO classes** per mechanism:
@@ -53,7 +59,7 @@ The examples in this tutorial demonstrate the recommended pattern for using YAMS
 1. **Create Mechanism classes** (`Arm`, `Elevator`, `FlyWheel`, etc.) for high-level control
 2. **Get the underlying `SmartMotorController`** via `mechanism.getMotor()`
 3. **Pull telemetry from `SmartMotorController`** for AdvantageKit logging
-4. **Use Mechanism methods** like `setMechanismPositionSetpoint()` for control
+4. **Send setpoints with the `SmartMotorController`**, such as `motor.setPosition(angle)` or `motor.setVelocity(velocity)`, as the IO classes in [Step 2](io-implementation.md) do
 5. **Optionally expose the Mechanism** via a getter for command helpers like `run()` and `runTo()`
 
 This pattern gives you the best of both worlds:
@@ -71,10 +77,10 @@ See the YAMS AdvantageKit examples for complete robot projects that log YAMS mec
 When checking if a mechanism is at its target, use the `isNear()` method from WPILib's unit classes (`Angle`, `Distance`, `AngularVelocity`):
 
 ```java
-// In your subsystem, check if position is near target
+// In your subsystem, check if the logged position is near the target
 Angle currentPosition = Rotations.of(inputs.positionRotations);
-Angle targetPosition = Rotations.of(targetRotations);
-Angle tolerance = Rotations.of(0.01);
+Angle targetPosition = Degrees.of(45);
+Angle tolerance = Degrees.of(2);
 
 boolean atTarget = currentPosition.isNear(targetPosition, tolerance);
 ```

@@ -45,7 +45,7 @@ Give it the fastest speed you expect. `disableSpeedometerSimulation()` turns it 
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | How heavy the wheel is in simulation | [`withMomentOfInertia`](../editor/config/simulation.md#withmomentofinertia) on the motor config          |
 | Holding a speed                      | [`SimpleMotorFeedforward`](../editor/config/feedforward.md#withfeedforward) with `kV`, plus a small `kP` |
-| A smooth spin up                     | [A velocity profile](../editor/config/motion-profiles.md#a-velocity-profile)                             |
+| A smooth spin up                     | [A velocity profile](../editor/config/motion-profiles.md#velocity-profiles-for-flywheels)                             |
 | A roller that only needs a voltage   | [`ControlMode.OPEN_LOOP`](../editor/config/motor-basics.md#withcontrolmode)                              |
 | Coasting when stopped                | [`MotorMode.COAST`](../editor/config/motor-basics.md#withzeropower)                                      |
 
