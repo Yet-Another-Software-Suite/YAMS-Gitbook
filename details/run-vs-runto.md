@@ -193,4 +193,4 @@ Should the command end by itself?
 
 ## Next
 
-To write a command that the built-in ones do not cover, see [How do I write my own mechanism command?](setpoint-methods.md)
+To write a command that the built-in ones do not cover, see [How do I write my own mechanism command?](../how-to/how-do-i-write-my-own-mechanism-command.md)

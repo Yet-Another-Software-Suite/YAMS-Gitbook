@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 408" width="760" height="408" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
-<title id="t">Start or stop the closed loop to match the setpoint</title>
-<desc id="d">Two panels. Position or velocity setpoints, such as setMechanismPositionSetpoint and setMechanismVelocitySetpoint, need the closed loop running: call startClosedLoopController once when your command starts, or the setpoint is ignored and the mechanism does not move. Voltage or duty cycle setpoints, setVoltageSetpoint and setDutyCycleSetpoint, need the closed loop stopped: call stopClosedLoopController once when your command starts, or the loop overwrites your output on its next run. This only matters when the closed loop runs on the SystemCore, and the command helpers do it for you.</desc>
+<title id="t">Calling the SmartMotorController yourself</title>
+<desc id="d">Two panels for calls made straight to the SmartMotorController. Position or velocity requests, setPosition and setVelocity, need the closed loop running: call startClosedLoopController once when your command starts, or the request is ignored and the mechanism does not move. Voltage or duty cycle requests, setVoltage and setDutyCycle, need the closed loop stopped: call stopClosedLoopController once when your command starts, or the loop overwrites your output on its next run. This only matters when the closed loop runs on the SystemCore. The mechanism setpoint functions and command helpers do it for you.</desc>
 <defs><marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker><marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#c2630b"/></marker><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#6b46c1"/></marker><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#147d6f"/></marker><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#d64545"/></marker><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3e6da8"/></marker></defs>
 <rect width="760" height="408" fill="#f5f7fa"/>
 <rect x="16.0" y="16.0" width="728.0" height="376.0" rx="10" fill="#ffffff" stroke="#cbd2d9" stroke-width="1" />
-<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Start or stop the closed loop to match the setpoint</text>
+<text x="34.0" y="46.0" font-size="15" font-weight="700" text-anchor="start" fill="#1f2933" >Calling the SmartMotorController yourself</text>
 <text x="34.0" y="65.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#52606d" >A closed loop on the SystemCore keeps writing to the motor until it is stopped.</text>
-<rect x="34.0" y="78.0" width="336.0" height="262.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="98.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >Position or velocity setpoints</text>
-<text x="54.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">setMechanismPositionSetpoint(...)</text>
-<text x="54.0" y="139.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">setMechanismVelocitySetpoint(...)</text>
-<text x="54.0" y="156.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" >and the measurement versions</text>
+<rect x="34.0" y="78.0" width="336.0" height="262.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="46.0" y="98.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#147d6f" >Position or velocity requests</text>
+<text x="54.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">motor.setPosition(...)</text>
+<text x="54.0" y="139.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">motor.setVelocity(...)</text>
+<text x="54.0" y="156.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" ></text>
 <line x1="202.0" y1="166.0" x2="202.0" y2="186.0" stroke="#147d6f" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ag)"/>
 <rect x="54.0" y="190.0" width="296.0" height="56.0" rx="8" fill="#d5f0ea" stroke="#147d6f" stroke-width="1.6" />
 <text x="202.0" y="215.0" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1f2933" >The closed loop must be RUNNING</text>
 <text x="202.0" y="231.5" font-size="11.5" font-weight="400" text-anchor="middle" fill="#52606d" font-family="Consolas, Menlo, monospace">startClosedLoopController()</text>
 <text x="202.0" y="276.0" font-size="11" font-weight="700" text-anchor="middle" fill="#1f2933" >Call it once, when your command starts.</text>
-<text x="202.0" y="304.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#d64545" >If it is stopped: the setpoint is ignored</text>
+<text x="202.0" y="304.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#d64545" >If it is stopped: the request is ignored</text>
 <text x="202.0" y="319.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#d64545" >and the mechanism does not move.</text>
-<rect x="390.0" y="78.0" width="336.0" height="262.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="402.0" y="98.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#c2630b" >Voltage or duty cycle setpoints</text>
-<text x="410.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">setVoltageSetpoint(...)</text>
-<text x="410.0" y="139.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">setDutyCycleSetpoint(...)</text>
+<rect x="390.0" y="78.0" width="336.0" height="262.0" rx="8" fill="#fafbfc" stroke="#cbd2d9" stroke-width="1.2" /><text x="402.0" y="98.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#c2630b" >Voltage or duty cycle requests</text>
+<text x="410.0" y="122.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">motor.setVoltage(...)</text>
+<text x="410.0" y="139.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">motor.setDutyCycle(...)</text>
 <text x="410.0" y="156.0" font-size="10.5" font-weight="400" text-anchor="start" fill="#52606d" ></text>
 <line x1="558.0" y1="166.0" x2="558.0" y2="186.0" stroke="#c2630b" stroke-width="1.8" stroke-linecap="round" marker-end="url(#ao)"/>
 <rect x="410.0" y="190.0" width="296.0" height="56.0" rx="8" fill="#fde3c8" stroke="#c2630b" stroke-width="1.6" />
@@ -29,5 +29,5 @@
 <text x="558.0" y="304.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#d64545" >If it is running: it overwrites your output</text>
 <text x="558.0" y="319.0" font-size="10.5" font-weight="400" text-anchor="middle" fill="#d64545" >on its next run.</text>
 <text x="34.0" y="366.0" font-size="11.5" font-weight="700" text-anchor="start" fill="#1f2933" >This only matters when the closed loop runs on the SystemCore. When it runs on the motor controller, both calls do nothing.</text>
-<text x="34.0" y="384.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >The command helpers do this for you. With the direct setpoint methods it is your job.</text>
+<text x="34.0" y="384.0" font-size="11" font-weight="400" text-anchor="start" fill="#52606d" >The mechanism setpoint functions and command helpers do this for you. When you call the motor controller directly, it is your job.</text>
 </svg>

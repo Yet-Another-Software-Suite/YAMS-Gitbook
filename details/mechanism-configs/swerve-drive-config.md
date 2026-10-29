@@ -78,7 +78,7 @@ config.withTranslationController(new PIDController(4, 0, 0))
 
 They are used by [auto-align](../swerve-drive.md#auto-align) and by the heading, aim and translation-only modes of a [`SwerveInputStream`](../swerve-input-stream-aim.md#modes-are-chosen-automatically), which throw a `SwerveDriveConfigurationException` if no rotation controller is set. Normal stick driving does not use them.
 
-`withSimTranslationController` and `withSimRotationController` give different gains for simulation only. [Live tuning](../live-tuning/README.md#tune-auto-align) shows how to find the values.
+`withSimTranslationController` and `withSimRotationController` give different gains for simulation only. [Tune a swerve drive](../live-tuning/swerve-drive.md#tune-auto-align) shows how to find the values.
 
 ## Driving corrections
 
@@ -154,7 +154,7 @@ Names the drive and chooses what it publishes. The default name is `swerve`.
 config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 ```
 
-[Telemetry](../../understanding/telemetry.md#swerve-drive-telemetry) lists what each level publishes, and [Live tuning](../live-tuning/README.md#swerve-drive) needs `HIGH`.
+[Telemetry](../../understanding/telemetry.md#swerve-drive-telemetry) lists what each level publishes, and [Tune a swerve drive](../live-tuning/swerve-drive.md) needs `HIGH`.
 
 ## Code reference
 

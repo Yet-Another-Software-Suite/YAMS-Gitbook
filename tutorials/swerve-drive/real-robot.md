@@ -113,9 +113,9 @@ SetupModule(m_frontLeft, "frontleft", wpi::math::Translation2d{24_in, 24_in}, 64
 {% step %}
 ### Check the directions
 
-Every angle in WPILib is counter-clockwise positive, seen from above, and every motor has to agree. The [swerve tuning command](../../details/live-tuning/README.md#swerve-drive) makes this easy: it turns every wheel to an angle, or runs every wheel at a speed, that you type on the dashboard.
+Every angle in WPILib is counter-clockwise positive, seen from above, and every motor has to agree. The [swerve tuning command](../../details/live-tuning/swerve-drive.md) makes this easy: it turns every wheel to an angle, or runs every wheel at a speed, that you type on the dashboard.
 
-Enable the robot in Teleoperated, still on blocks, and start the tuning command `NT:/Tuning/swerve/Live Tuning` as [Start the tuning command](../../details/live-tuning/README.md#start-the-tuning-command) shows. The values you type are under `NT:/Tuning/swerve/`.
+Enable the robot in Teleoperated, still on blocks, and start the tuning command `NT:/Tuning/swerve/Live Tuning` as [Start the tuning command](../../details/live-tuning/swerve-drive.md#start-the-tuning-command) shows. The values you type are under `NT:/Tuning/swerve/`.
 
 **Azimuth.** Type `0` into `modules/azimuth/angle`, set `modules/azimuth/enabled` to `true`, then type `90`.
 
@@ -153,13 +153,13 @@ Disable the robot. Watch `NT:/Mechanisms/swerve/gyro`, the heading in degrees, a
 {% step %}
 ### Tune the modules
 
-The gains from step 1 are placeholders. Tune the real modules on blocks, azimuth first so that the wheels point where they are told, then drive, the same way you practiced in [Step 4: Tune it](tune.md). [Tune the swerve modules](../../details/live-tuning/README.md#tune-the-swerve-modules) has every value and what the graph should look like.
+The gains from step 1 are placeholders. Tune the real modules on blocks, azimuth first so that the wheels point where they are told, then drive, the same way you practiced in [Step 4: Tune it](tune.md). [Tune the swerve modules](../../details/live-tuning/swerve-drive.md#tune-the-swerve-modules) has every value and what the graph should look like.
 
 Copy the gains you find into `buildAzimuthCfg()` and `buildDriveCfg()` (C++: `ConfigureAzimuth` and `ConfigureDrive`), then deploy again. Values typed on the dashboard are lost when the code restarts.
 
 **What you should see:** stepping `modules/azimuth/angle` between `0` and `90` snaps every wheel to the angle without shaking, and a `modules/drive/velocity` of `1` holds each wheel's measured speed at 1 m/s.
 
-**If not:** the modules are still slow, or shake. See [When tuning does not help](../../details/live-tuning/README.md#when-tuning-does-not-help).
+**If not:** the modules are still slow, or shake. See [When tuning does not help](../troubleshooting.md#when-tuning-does-not-help).
 {% endstep %}
 
 {% step %}
@@ -189,7 +189,7 @@ These make a good drive better. Do them once the robot drives well by hand:
 * **Speed limits.** Measure the real top speed by driving flat out, and set [`withMaximumModuleSpeed` and `withMaximumChassisSpeed`](../../details/mechanism-configs/swerve-drive-config.md#speed-limits) a little below it.
 * **Drift while spinning.** Drive in a straight line while spinning. If the path bends, set [`withDiscretizationTime`](../../details/mechanism-configs/swerve-drive-config.md#withdiscretizationtime) to the loop time, then [`withGyroAngularVelocityScaleFactor`](../../details/mechanism-configs/swerve-drive-config.md#withgyroangularvelocityscalefactor) if some remains.
 * **Odometry creep.** If the pose moves when the wheels only steer, set [`withCouplingRatio`](../../details/mechanism-configs/swerve-module-config.md#withcouplingratio).
-* **Auto-align.** Tune the `driveToPose()` controllers last: see [Tune auto-align](../../details/live-tuning/README.md#tune-auto-align).
+* **Auto-align.** Tune the `driveToPose()` controllers last: see [Tune auto-align](../../details/live-tuning/swerve-drive.md#tune-auto-align).
 
 ## Read more
 

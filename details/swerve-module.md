@@ -198,7 +198,7 @@ If the robot stops short or will not creep, lower the deadband. If the wheels tw
 moduleConfig.withVelocityDeadband(MetersPerSecond.of(0.05));
 ```
 
-The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](live-tuning/README.md#swerve-drive) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
+The deadband does not apply when the drive locks its wheels with [`lockPose()`](swerve-drive.md#locking-the-wheels-x-pattern): `SwerveModule.setAzimuthAngle(Rotation2d)` uses `SwerveModuleConfig.getLockedState(...)`, which turns the wheel to the lock angle at zero speed instead of holding it where it is. Azimuth [live tuning](live-tuning/swerve-drive.md) turns the wheels the same way, through `SwerveDrive.setAzimuthAngles(Rotation2d)`.
 
 ## Steer to drive coupling
 

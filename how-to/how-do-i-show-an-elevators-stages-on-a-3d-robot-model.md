@@ -41,19 +41,38 @@ Publish the stage poses in place of the carriage's `getPose3d()`, and put any me
 
 {% tabs %}
 {% tab title="Java" %}
-{% code title="ElevatorSubsystem.java and RobotContainer.java (fragments)" %}
+{% code title="ElevatorSubsystem.java (fragment)" %}
 ```java
 import static org.wpilib.units.Units.Meters;
 
+import java.util.List;
+import org.wpilib.math.geometry.Pose3d;
+
+// Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
+new ElevatorConfig()
+    // ... the rest of the config
+    .withStages(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5));
+
+/** Every stage's pose, for a cascading elevator: the first stage, the second, then the carriage. */
+public List<Pose3d> getCascadePose3d() {
+  return elevator.getCascadePose3d();
+}
+
+/** Every stage's pose, for a continuous elevator: true if the carriage moves first. */
+public List<Pose3d> getContinuousPose3d(boolean carriageFirst) {
+  return elevator.getContinuousPose3d(carriageFirst);
+}
+```
+{% endcode %}
+
+`elevator` inside `ElevatorSubsystem` is the YAMS `Elevator`. In Commands v3, put the two methods in your `ElevatorMechanism` instead.
+
+{% code title="RobotContainer.java (fragment)" %}
+```java
 import java.util.ArrayList;
 import java.util.List;
 import org.wpilib.math.geometry.Pose3d;
 import org.wpilib.telemetry.Telemetry;
-
-// In ElevatorSubsystem: two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
-new ElevatorConfig()
-    // ... the rest of the config
-    .withStages(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5));
 
 // Every loop, where the elevator and the arm are both visible (see the 3D robot model page).
 // The first stage, the second stage, then the carriage, which is elevator.getPose3d().
@@ -64,7 +83,7 @@ Telemetry.log("Robot/Components", components.toArray(Pose3d[]::new), Pose3d.stru
 ```
 {% endcode %}
 
-`elevator` and `arm` here are the subsystems, each with a method that returns its mechanism's poses, as on the 3D robot model page.
+`elevator` and `arm` here are the subsystems, each with methods that return its mechanism's poses, as on the 3D robot model page.
 {% endtab %}
 
 {% tab title="C++" %}
@@ -92,7 +111,7 @@ Both need 2 or more stages, and throw an `ElevatorConfigurationException` withou
 
 ## Line up the stages
 
-Export each stage as its own component, as the robot model page's [Export the model](how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#id-3.-export-the-model) does for any part, in the order you publish the poses. Then zero each one as in [Line each part up with its pose](how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#id-4.-line-each-part-up-with-its-pose): a stage sits as it does with the elevator all the way down, moved by the same offset as the carriage.
+Export each stage as its own component, as the robot model page's [Export the model](how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#export-the-model) does for any part, in the order you publish the poses. Then zero each one as in [Line each part up with its pose](how-do-i-show-my-mechanisms-on-a-3d-robot-model.md#line-each-part-up-with-its-pose): a stage sits as it does with the elevator all the way down, moved by the same offset as the carriage.
 
 ## Check it
 

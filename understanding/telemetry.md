@@ -217,7 +217,7 @@ Both behave like `DoubleTelemetry`: they can be enabled per field, sent to Netwo
 
 ### Live tuning
 
-At `HIGH` verbosity `SwerveDriveTelemetryConfig` also publishes tunable keys for auto-align and for the drive and azimuth motors under `NT:/Tuning/<name>/`. See [Live tuning: Swerve drive](../details/live-tuning/README.md#swerve-drive) for the keys and how to use them.
+At `HIGH` verbosity `SwerveDriveTelemetryConfig` also publishes tunable keys for auto-align and for the drive and azimuth motors under `NT:/Tuning/<name>/`. See [Tune a swerve drive](../details/live-tuning/swerve-drive.md) for the keys and how to use them.
 
 ## Units
 

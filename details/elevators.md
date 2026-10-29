@@ -301,7 +301,7 @@ Everything is measured at the carriage, which moves several times further than t
 * **Check the stage count first.** The distance check in the configuration steps is what catches a wrong `withCascadingElevatorStages`.
 * **Expect a larger kG.** The motor lifts the carriage through a mechanical disadvantage, and lifts the moving stages as well, so it needs more voltage to hold than a single stage with the same carriage.
 * **Profile limits are the carriage's.** A maximum velocity of 1.5 m/s is the carriage moving at 1.5 m/s. The first stage moves at a fraction of that.
-* **Watch the current.** Because of the disadvantage, a cascading elevator draws more current for the same load. If it cannot reach the top, see [when tuning does not help](live-tuning/#when-tuning-does-not-help).
+* **Watch the current.** Because of the disadvantage, a cascading elevator draws more current for the same load. If it cannot reach the top, see [when tuning does not help](../tutorials/troubleshooting.md#when-tuning-does-not-help).
 {% endtab %}
 
 {% tab title="Continuous" %}

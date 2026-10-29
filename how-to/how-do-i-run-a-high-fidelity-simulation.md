@@ -115,16 +115,20 @@ In Commands v3 the simulation already runs in a `Notifier` that `Robot.simulatio
 {% code title="Robot.java (fragment)" %}
 ```java
 import static org.wpilib.units.Units.Milliseconds;
-import static org.wpilib.units.Units.Seconds;
+
+import org.wpilib.units.measure.Time;
 
 @Override
 public void simulationInit() {
   // Must match withSimulationPeriod on the arm's motor.
-  startSimulation("Arm", armMechanism::simulationPeriodic, Milliseconds.of(1).in(Seconds));
+  startSimulation("Arm", arm::simulationPeriodic, Milliseconds.of(1));
 }
 
-/** Runs a mechanism's simulation in its own Notifier, every period seconds. */
-private void startSimulation(String name, Runnable simulationPeriodic, double period) {
+// Keep the tutorial's startSimulation(name, simulationPeriodic), which runs every robot loop,
+// for mechanisms left on the default 20 ms period, and add this overload beside it.
+
+/** Runs a mechanism's simulation in its own Notifier, every period. */
+private void startSimulation(String name, Runnable simulationPeriodic, Time period) {
   Notifier notifier = new Notifier(simulationPeriodic);
   notifier.setName(name + " Simulation");
   notifier.startPeriodic(period);
@@ -133,7 +137,7 @@ private void startSimulation(String name, Runnable simulationPeriodic, double pe
 ```
 {% endcode %}
 
-`ArmMechanism.simulationPeriodic()` stays as it is, calling `arm.simIterate()`. Mechanisms left on the default 20 ms period keep `getPeriod()`.
+`arm` is the `ArmMechanism` field in the tutorial's `Robot`, and `ArmMechanism.simulationPeriodic()` stays as it is, calling `arm.simIterate()`. Mechanisms left on the default 20 ms period keep calling the two-argument `startSimulation(...)`.
 {% endtab %}
 
 {% tab title="C++" %}

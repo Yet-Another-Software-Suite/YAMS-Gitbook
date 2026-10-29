@@ -815,7 +815,7 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 {% endtabs %}
 
 {% hint style="info" %}
-These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [How do I write my own mechanism command?](../../details/setpoint-methods.md).
+These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [How do I write my own mechanism command?](../../how-to/how-do-i-write-my-own-mechanism-command.md).
 {% endhint %}
 
 ## Which command ends?

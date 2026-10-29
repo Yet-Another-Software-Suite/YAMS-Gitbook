@@ -2,7 +2,7 @@
 icon: ruler
 ---
 
-# How do I command my elevator in meters?
+# How do I tell YAMS my drum or sprocket size?
 
 **Goal:** tell YAMS how far your elevator (or wheel, or linear slide) moves for each rotation, so you can give it targets in meters or inches instead of rotations.
 
@@ -58,6 +58,20 @@ SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 ```
 {% endcode %}
 
+### A cascading elevator
+
+In a cascading elevator each stage pulls the next, so the carriage moves faster than the chain or cable: with two moving stages, twice as fast. Tell the motor config with `withCascadingElevatorStages(2)`, called **after** `withGearing(...)`: it divides the gearing already set by the number of stages, so a `withGearing` call after it replaces the result. See [`withCascadingElevatorStages`](../details/editor/config/gearing-and-units.md#withcascadingelevatorstages).
+
+{% code title="ExampleSubsystem.java (fragment)" %}
+```java
+.withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+.withCascadingElevatorStages(2) // after withGearing: the carriage moves 2 × the chain
+.withDrumRadius(Inches.of(0.25), 22)
+```
+{% endcode %}
+
+`ElevatorConfig.withStages(...)` is a different thing: it gives the height each stage travels, so YAMS can draw every stage on a 3D model. It does not change the gearing, so a cascading elevator needs both. See [How do I show an elevator's stages on a 3D robot model?](how-do-i-show-an-elevators-stages-on-a-3d-robot-model.md)
+
 {% hint style="warning" %}
 The height YAMS reports is measured from where the carriage was when the robot turned on, not from the floor. If you want heights from the floor, set `withStartingPosition` to the carriage's real starting height and set your limits to match.
 {% endhint %}
@@ -70,9 +84,9 @@ The height YAMS reports is measured from where the carriage was when the robot t
 
 ## If it did not work
 
-* **The reading is off by a constant factor.** Check the gearing first (`withGearing`), then the circumference. A cascade elevator also needs `withCascadingElevatorStages`, since the top stage moves faster than the chain.
+* **The reading is off by a constant factor.** Check the gearing first (`withGearing`), then the circumference. A cascading elevator also needs `withCascadingElevatorStages`, after `withGearing`: see [A cascading elevator](#a-cascading-elevator).
 * **The reading goes the wrong way.** The motor is inverted; see [Troubleshooting](../tutorials/troubleshooting.md).
 
-## Next
+## Read more
 
-Send the elevator to a height: [How do I set an elevator's target height?](how-to-set-an-elevators-target-height.md)
+Send the elevator to a height in meters: [How do I set an elevator's target height?](how-to-set-an-elevators-target-height.md)

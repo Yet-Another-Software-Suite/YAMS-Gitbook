@@ -44,7 +44,7 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 
 `withOutputCurrentLimit` is another name for `withStatorCurrentLimit`, and `withInputCurrentLimit` is another name for `withSupplyCurrentLimit`. They do exactly the same thing.
 
-[Limiting power consumption](../limiting-power-consumption.md#current-limits) explains how to choose them, with starting limits for common motors, and how to test them against the [battery simulation](../../../understanding/battery-simulation.md).
+[How do I limit power consumption?](../limiting-power-consumption.md#set-a-starting-limit-on-each-motor) explains how to choose them, with starting limits for common motors, and how to test them against the [battery simulation](../../../understanding/battery-simulation.md).
 
 **Not supported everywhere.** `withSupplyCurrentLimit` is not available on SPARKs.
 
@@ -63,7 +63,7 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 .withClosedLoopRampRate(Seconds.of(0.1))
 ```
 
-A ramp rate is the last thing to reach for. It slows everything the motor does, including the closed loop controller's reactions. [Limit each load in this order](../limiting-power-consumption.md#limit-each-load-in-this-order) lists what to try first.
+A ramp rate is the last thing to reach for. It slows everything the motor does, including the closed loop controller's reactions. [Lower the biggest load first](../limiting-power-consumption.md#lower-the-biggest-load-first) lists what to try first.
 
 **Not supported everywhere.**
 

@@ -12,9 +12,11 @@ This is a fallback for when there is no room or time for a real sensor. A beam b
 
 This page builds on the `IntakeSubsystem` from [How do I set up an intake roller?](how-do-i-set-up-an-intake-roller.md)
 
-## Step 1: Measure your current
+{% stepper %}
+{% step %}
+### Measure your current
 
-Pick the threshold from your robot, not from this page.
+Simulation does not model a game piece, so this step has to be done on the real robot. Pick the threshold from your robot, not from this page.
 
 1. Deploy the intake from [How do I set up an intake roller?](how-do-i-set-up-an-intake-roller.md) to the robot and open the motor's `current/stator` value under **NetworkTables > Mechanisms** as a graph (Elastic, AdvantageScope or the Glass graph widget).
 2. Run the intake with nothing in it. Note the current once it is up to speed; a roller like this one often sits around 5 to 15 amps.
@@ -26,9 +28,11 @@ Choose a threshold between the two, well clear of both: if it runs at 10 A empty
 **Keep the threshold below the stator current limit.** The limit (`withStatorCurrentLimit(Amps.of(40))`) stops the current from going over 40 A, so a stalled roller reads at or just under 40 A. A threshold equal to the limit may never be reached, or flicker on and off.
 {% endhint %}
 
-Simulation does not model a game piece, so this step has to be done on the real robot.
+**Check it:** you have two readings, empty and jammed, at least 10 A apart, and a threshold between them.
+{% endstep %}
 
-## Step 2: Add the detection
+{% step %}
+### Add the detection
 
 Add a `Debouncer` and a method to the intake class. The `Debouncer` only reports `true` once the current has stayed over the threshold for 0.1 seconds, so the short spike when the motor starts does not count as a game piece. These lines are a fragment: they go in the `IntakeSubsystem` (or `IntakeMechanism`) class, next to the `motor` field.
 
@@ -52,7 +56,11 @@ public boolean hasGamePiece() {
 ```
 {% endcode %}
 
-## Step 3: Use it
+**Check it:** the code builds.
+{% endstep %}
+
+{% step %}
+### Use it
 
 Run the intake until it has a game piece, then stop.
 
@@ -93,6 +101,10 @@ To use it as a `Trigger` elsewhere, wrap it: `new Trigger(intake::hasGamePiece)`
 {% endtab %}
 {% endtabs %}
 
+**Check it:** the code builds, and the intake runs when you press its button.
+{% endstep %}
+{% endstepper %}
+
 ## Check it
 
 1. On the robot, graph `current/stator` and `hasGamePiece()` together (publish `hasGamePiece()` with `Telemetry.log`, or watch the command end).
@@ -105,7 +117,7 @@ To use it as a `Trigger` elsewhere, wrap it: `new Trigger(intake::hasGamePiece)`
 * **It detects a game piece when the intake starts.** The start up spike lasts longer than 0.1 seconds. Raise the `Debouncer` time to 0.2 or 0.25 seconds, or the threshold.
 * **It works with a full battery but not a low one.** A tired battery slows the roller and changes the current. Use `setVoltage` rather than `set` for the intake, and measure again with a used battery.
 
-## Next
+## Read more
 
 To feed that game piece into a shooter, see [How do I shoot with a shooter?](how-to-shoot-with-a-shooter.md)
 

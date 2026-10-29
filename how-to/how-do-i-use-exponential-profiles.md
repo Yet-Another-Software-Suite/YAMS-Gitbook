@@ -58,10 +58,6 @@ Start the simulation, command a new height, and graph the motor's `closedloop/se
 * **The setpoint jumps straight to the target, or the elevator does not move.** The profile is missing or empty: check that `withGearing` comes before `withExponentialProfile`, and that the drum radius and carriage weight are right.
 * **The elevator falls behind the setpoint and then overshoots.** The feedforward is missing or `kG` is 0. See [Feedforward](../details/editor/config/feedforward.md).
 
-## Next
-
-Refine the profile on the robot: [Refining the profile live](../details/editor/exponential-profiles.md#refining-the-profile-live).
-
 ## Code reference
 
-{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ExponentiallyProfiledArmSubsystem.java" %}
+{% @github-files/github-code-block url="https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/simple_robot-2027/src/main/java/first/robot/subsystems/ExponentiallyProfiledElevatorSubsystem.java" %}

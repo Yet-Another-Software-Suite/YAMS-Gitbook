@@ -36,7 +36,9 @@ So a typical elevator config uses linear closed loop control without you asking 
 
 Turning it off does not stop YAMS reporting distances. `getMeasurementPosition()` and `getMeasurementVelocity()` still return meters, as long as the circumference is set.
 
-## Turn it off
+{% stepper %}
+{% step %}
+### Turn it off
 
 Add `withLinearClosedLoopController(false)` **after** every call in the list above. Those calls switch it back on, so if one comes later in the chain, your `false` is lost.
 
@@ -53,7 +55,17 @@ SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 ```
 {% endcode %}
 
-Your profile limits must then be angular too, for example `withTrapezoidalProfile(RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(4))`, placed before the `false`.
+**Check it:** the code builds, and `withLinearClosedLoopController(false)` is the last call in the chain.
+{% endstep %}
+
+{% step %}
+### Make the profile limits angular
+
+If the config has a motion profile, its limits must now be angular too, for example `withTrapezoidalProfile(RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(4))`, placed before the `false`. Your gains are now in volts per rotation, so tune `kP` again.
+
+**Check it:** the code builds, and a commanded move is neither much softer nor much harsher than you expect.
+{% endstep %}
+{% endstepper %}
 
 ## Check it
 
@@ -65,6 +77,6 @@ Your profile limits must then be angular too, for example `withTrapezoidalProfil
 * **The setpoint is still in meters.** A call from the list above comes after `withLinearClosedLoopController(false)`. Move the `false` to the end of the chain.
 * **The elevator is much too soft or too aggressive.** Your gains were tuned in the other unit. Tune `kP` again; see [Troubleshooting](../tutorials/troubleshooting.md).
 
-## Next
+## Read more
 
 Command the elevator in meters: [How do I set an elevator's target height?](how-to-set-an-elevators-target-height.md)

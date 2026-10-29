@@ -49,7 +49,7 @@ When a command ends, the motor keeps its last request. [When mechanism commands 
 
 ## Setpoint functions
 
-The commands are built on plain functions that set the target and return at once. Use them when something other than a ready-made command decides the target: your own command, an AdvantageKit IO class or a state machine. [How do I write my own mechanism command?](setpoint-methods.md) shows each.
+The commands are built on plain functions that set the target and return at once. Use them when something other than a ready-made command decides the target: your own command, an AdvantageKit IO class or a state machine. [How do I write my own mechanism command?](../how-to/how-do-i-write-my-own-mechanism-command.md) shows each.
 
 | Function                                         | `Arm`, `Pivot`                                                                                     | `Elevator`                         | `FlyWheel`                                                            |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
