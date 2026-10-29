@@ -4,33 +4,11 @@ icon: hand-pointer
 
 # Telemetry
 
-## The basics of telemetry
+Telemetry is what YAMS tells you about your mechanisms while the code runs: where each one is, where it was asked to go, and what its motors are doing. You watch it live on a dashboard, and you can record it to look at after a match.
 
-<figure><img src="../.gitbook/assets/telemetry-flow.png" alt="Your mechanism feeds MechanismTelemetry, which publishes the same values to NetworkTables, live and on by default and read by dashboards, and to a DataLog file, enabled with withDataLogName and opened in AdvantageScope after the match"><figcaption><p>One set of values, two places to send them.</p></figcaption></figure>
+## Where to find your mechanism's values
 
-| Destination         | On by default? | Turn it on or off with                | Use it for                   |
-| ------------------- | -------------- | ------------------------------------- | ---------------------------- |
-| NetworkTables (NT4) | Yes            | `withoutNetworkTables()` turns it off | Watching and tuning live     |
-| DataLog file        | No             | `withDataLogName(name)` turns it on   | Reviewing a match afterwards |
-
-Both are set on `SmartMotorControllerTelemetryConfig`. `MechanismTelemetry` does the work: every mechanism, and every `SwerveModule`, owns one, and it sends the same values to both destinations.
-
-{% hint style="success" %}
-Set a DataLog name for competition matches. It is one line, and it means you can see what actually happened on the field.
-{% endhint %}
-
-{% hint style="info" %}
-A DataLog uses storage on the SystemCore, and logging everything fills it quickly. Log only what you need. See the [WPILib DataLog docs](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog).
-{% endhint %}
-
-**Going further**
-
-* [DataLog Best Practices](../details/datalog-best-practices.md): choosing what to log, and how it works for `SwerveDrive`.
-* [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md): a step by step walkthrough.
-
-## NetworkTables
-
-YAMS publishes under two tables. Nothing goes under `NT:/SmartDashboard`.
+While the code runs, YAMS publishes to NetworkTables, which dashboards such as AdvantageScope and Elastic read. It uses two tables, and nothing goes under `NT:/SmartDashboard`.
 
 <figure><img src="../.gitbook/assets/telemetry-tree.png" alt="Two NetworkTables trees for an elevator named Elevator with a motor named ElevatorMotor. Under NT Mechanisms are the read-only values such as mechanism/position and motor/outputVoltage. Under NT Tuning are the editable values such as closedloop/feedback/kP, and the Live Tuning command"><figcaption><p>An elevator named <code>Elevator</code> with a motor named <code>ElevatorMotor</code>.</p></figcaption></figure>
 
@@ -41,22 +19,29 @@ YAMS publishes under two tables. Nothing goes under `NT:/SmartDashboard`.
 | `NT:/Tuning`     | Values you can edit                     | `NT:/Tuning/<Mechanism>/<Motor>/<key>`     |
 | `NT:/Tuning`     | The `Live Tuning` command               | `NT:/Tuning/<Subsystem>/Live Tuning`       |
 
-`<Mechanism>` and `<Motor>` are the telemetry names given to `withTelemetry(...)` on the mechanism config and on the `SmartMotorControllerConfig`. `<Subsystem>` is the subsystem's `getName()` in Commands v2 (its class name by default), or the Commands v3 `Mechanism`'s name. For the `ArmSubsystem` in the [Arm tutorial](../tutorials/arm.md), that is `NT:/Mechanisms/Arm/ArmMotor/...`, `NT:/Tuning/Arm/ArmMotor/...` and `NT:/Tuning/ArmSubsystem/Live Tuning`. See [Live tuning](../details/live-tuning/) for how to use the tunable side.
+`<Mechanism>` and `<Motor>` are the telemetry names given to `withTelemetry(...)` on the mechanism config and on the `SmartMotorControllerConfig`. `<Subsystem>` is the subsystem's `getName()` in Commands v2 (its class name by default), or the Commands v3 `Mechanism`'s name. For the `ArmSubsystem` in the [Arm tutorial](../tutorials/arm.md), that is `NT:/Mechanisms/Arm/ArmMotor/...`, `NT:/Tuning/Arm/ArmMotor/...` and `NT:/Tuning/ArmSubsystem/Live Tuning`. See [Live tuning](../details/live-tuning/README.md) for how to use the tunable side.
 
+## The Mechanism2d window
 
-## Simulation vs reality
+Every mechanism draws itself in a `Mechanism2d`, at `NT:/Mechanisms/<Mechanism>/mechanism`. It is the window you open in the Sim GUI or AdvantageScope in the tutorials' "Simulate it" step. It is published on the real robot too, but everything it shows is also in the numeric values, so you don't need it there.
 
-The simulation view of each mechanism is done with `Mechanism2d`'s. These windows could be outputted while on the actual robot but that is not necessary as all of the data from the `Mechanism2d` is in the Telemetry fields and accessible to the user.
+Besides the mechanism itself, it draws short lines at its limits and its setpoint:
+
+| Color | Shows |
+| --- | --- |
+| White | The setpoint |
+| Green | The upper hard limit |
+| Red | The lower hard limit |
+| Pink | The upper soft limit |
+| Yellow | The lower soft limit |
+
+Use them to see at a glance whether the mechanism is heading where you asked, and how close it is to its limits.
 
 {% embed url="https://docs.wpilib.org/en/stable/docs/software/dashboards/glass/mech2d-widget.html" %}
 
-## Mechanism telemetry
+## Choosing what a motor publishes
 
-A mechanism's table is a folder under `NT:/Mechanisms/<Mechanism>`: it holds the `Mechanism2d` (at `mechanism`) and one table for each `SmartMotorController` in the mechanism, so the values are easy to find. The tree in [NetworkTables](#networktables) above shows the layout for an elevator.
-
-## Smart motor controller telemetry
-
-There are two ways to choose what a motor publishes: pick a verbosity level, or pick the fields yourself.
+There are two ways to choose: pick a verbosity level, or pick the fields yourself.
 
 ### Verbosity levels
 
@@ -74,14 +59,15 @@ There are two ways to choose what a motor publishes: pick a verbosity level, or 
 
 Build a `SmartMotorControllerTelemetryConfig` and enable only what you want:
 
+A fragment from an arm subsystem:
+
 ```java
 SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControllerTelemetryConfig()
           .withMechanismPosition()
           .withRotorPosition()
           .withMechanismLowerLimit()
           .withMechanismUpperLimit();
-          
-// A fragment from an arm subsystem.
+
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withClosedLoopController(4, 0, 0)
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
@@ -103,14 +89,33 @@ SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControl
           }, false);
 ```
 
-|                | Java                                           | C++                                |
-| -------------- | ---------------------------------------------- | ---------------------------------- |
-| Switch a field | `withCustom(field, enabled)`                   | `WithCustom(field, enabled)`       |
-| Switch several | `withCustom(fields[], enabled)`                | `WithCustom(std::vector, enabled)` |
-| Package        | `yams.core.telemetry`                          |                                    |
-| Verbosity enum | `yams.core.telemetry.enums.TelemetryVerbosity` |                                    |
+In C++ the methods are `WithCustom(field, enabled)` and `WithCustom(std::vector, enabled)`. The Java classes are in `yams.core.telemetry`, and `TelemetryVerbosity` is in `yams.core.telemetry.enums`.
 
-See the `SmartMotorControllerTelemetryConfig` API reference page for the full method list.
+The [`SmartMotorControllerTelemetryConfig` javadoc](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/telemetry/SmartMotorControllerTelemetryConfig.html) lists every method.
+
+## Recording a match to a DataLog
+
+NetworkTables only shows what is happening now. To look back at a match afterwards, also send the same values to a DataLog file on the SystemCore.
+
+<figure><img src="../.gitbook/assets/telemetry-flow.png" alt="Your mechanism feeds MechanismTelemetry, which publishes the same values to NetworkTables, live and on by default and read by dashboards, and to a DataLog file, enabled with withDataLogName and opened in AdvantageScope after the match"><figcaption><p>One set of values, two places to send them.</p></figcaption></figure>
+
+| Destination         | On by default? | Turn it on or off with                | Use it for                   |
+| ------------------- | -------------- | ------------------------------------- | ---------------------------- |
+| NetworkTables (NT4) | Yes            | `withoutNetworkTables()` turns it off | Watching and tuning live     |
+| DataLog file        | No             | `withDataLogName(name)` turns it on   | Reviewing a match afterwards |
+
+Both are set on `SmartMotorControllerTelemetryConfig`. `MechanismTelemetry` does the work: every mechanism, and every `SwerveModule`, owns one, and it sends the same values to both destinations.
+
+{% hint style="success" %}
+Set a DataLog name for competition matches. It is one line, and it means you can see what actually happened on the field.
+{% endhint %}
+
+{% hint style="info" %}
+A DataLog uses storage on the SystemCore, and logging everything fills it quickly. Log only what you need. See the [WPILib DataLog docs](https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html#custom-data-logging-using-datalog).
+{% endhint %}
+
+* [DataLog Best Practices](../details/datalog-best-practices.md): choosing what to log, and how it works for `SwerveDrive`.
+* [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md): a step by step walkthrough.
 
 ## Swerve drive telemetry
 
@@ -175,73 +180,15 @@ Both behave like `DoubleTelemetry`: they can be enabled per field, sent to Netwo
 
 ### Live tuning
 
-At `HIGH` verbosity `SwerveDriveTelemetryConfig` also publishes tunable keys for auto-align and for the drive and azimuth motors under `NT:/Tuning/<name>/`. See [Live tuning: Swerve drive](../details/live-tuning/#swerve-drive) for the keys and how to use them.
+At `HIGH` verbosity `SwerveDriveTelemetryConfig` also publishes tunable keys for auto-align and for the drive and azimuth motors under `NT:/Tuning/<name>/`. See [Live tuning: Swerve drive](../details/live-tuning/README.md#swerve-drive) for the keys and how to use them.
 
-## Colors
+## Units
 
-You may notice there are different colors in the Mechanism windows displayed for simulation. These are there to provide you with reference points of your Soft and Hard Limits.
+Values you read under `NT:/Mechanisms` are in rotations and rotations per second, or meters and meters per second for a mechanism with a circumference. Values you type under `NT:/Tuning` are in degrees and RPM, or meters. AdvantageScope can show any value in other units: right-click it in a graph legend and choose **Convert Units...**.
 
-* Green is the upper hard limit
-* Red is the lower hard limit
-* Pink is the upper soft limit
-* Yellow is the lower soft limit
+[Live tuning keys and units](../details/live-tuning/keys-and-units.md#units-of-each-key) lists the unit of every key.
 
-These are provided to you so you can identify relative motion easily between the simulation and reality.
+## Next
 
-## Telemetry units
-
-All telemetry values in YAMS are logged with specific units. Understanding these units helps you interpret data correctly and configure your visualization tools.
-
-### Standard telemetry units
-
-Read-only keys are under `NT:/Mechanisms`. Keys marked **tunable** also have an editable copy under `NT:/Tuning`, typed in different units, shown in the last column.
-
-| NetworkTables key | Unit (read) | Description | Tunable copy under `NT:/Tuning` |
-| --- | --- | --- | --- |
-| `mechanism/position` | Rotations (rot) | Position of the mechanism output shaft | No |
-| `mechanism/velocity` | Rotations per second (rot/s) | Velocity of the mechanism output shaft | No |
-| `rotor/position` | Rotations (rot) | Position of the motor rotor, before gearing | No |
-| `rotor/velocity` | Rotations per second (rot/s) | Velocity of the motor rotor | No |
-| `closedloop/setpoint/position` | Rotations, or meters for linear mechanisms | Closed loop position target | **Tunable**, typed in degrees (or meters) |
-| `closedloop/setpoint/velocity` | rot/s, or m/s | Closed loop velocity target | **Tunable**, typed in RPM (or m/s) |
-| `mechanism/limit/lower`, `mechanism/limit/upper` | Degrees (deg) | Soft limits | **Tunable only**, in degrees |
-| `closedloop/feedback/*`, `closedloop/feedforward/*` | See [Gain units](../details/live-tuning/keys-and-units.md#gain-units) | Gains | **Tunable only** |
-| `motor/outputVoltage` | Volts (V) | Voltage being applied to the motor | No |
-| `closedloop/period` | Seconds (s) | How often the closed loop runs: 1 ms on the motor controller, or the closed loop control period on the SystemCore | No |
-| `current/supply` | Amps (A) | Current drawn from the battery | No (`current/limit/supply` is tunable) |
-| `current/stator` | Amps (A) | Current through the motor windings, which sets its torque | No (`current/limit/stator` is tunable) |
-| `motor/temperature` | Fahrenheit (°F) | Motor temperature | No |
-
-### LQR units
-
-A motor controller configured with an [LQR](../details/editor/lqr-controllers.md) publishes its values at `HIGH`, in place of kP, kI and kD, and only the ones its type uses. They are **tunable only**, under `NT:/Tuning`, and use the same units as the tunable setpoints.
-
-| NetworkTables key                                                                   | Unit                                               | Description                                      |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| `closedloop/lqr/qelms/position`                                                     | Degrees, or meters for an elevator                 | Position error tolerance. Arm and elevator only  |
-| `closedloop/lqr/qelms/velocity`                                                     | RPM, or m/s for an elevator                        | Velocity error tolerance                         |
-| `closedloop/lqr/relms`                                                              | Volts (V)                                          | Control effort tolerance                         |
-| `closedloop/lqr/model/position`, `closedloop/lqr/model/velocity`                    | Degrees and RPM, or meters and m/s for an elevator | Model standard deviations. Position: arm and elevator only |
-| `closedloop/lqr/encoder/position`                                                   | Degrees, or meters for an elevator                 | Encoder standard deviation. Arm and elevator only |
-| `closedloop/lqr/encoder/velocity`                                                   | RPM                                                | Encoder standard deviation. Flywheel only        |
-| `closedloop/lqr/maxVoltage`                                                         | Volts (V)                                          | Most voltage the LQR outputs                     |
-
-### Linear mechanism units
-
-When a mechanism has a circumference (from `.withMechanismCircumference()`, or one of the `.withWheelDiameter()`, `.withWheelRadius()` or `.withDrumRadius()` helpers), the linear keys are published too:
-
-| NetworkTables key                                    | Unit                    | Description                      |
-| ---------------------------------------------------- | ----------------------- | -------------------------------- |
-| `measurement/position`                               | Meters (m)              | Linear position of the mechanism |
-| `measurement/velocity`                               | Meters per second (m/s) | Linear velocity of the mechanism |
-| `measurement/limit/lower`, `measurement/limit/upper` | Meters (m)              | Soft limits in linear units. **Tunable only**, under `NT:/Tuning` |
-
-{% hint style="info" %}
-YAMS logs rotational units by default. Linear units are calculated from rotational units using your configured circumference: `linear = rotational × circumference`
-{% endhint %}
-
-## Viewing telemetry in other units
-
-The read-only values are in rotations and meters, while the tunable ones are typed in degrees, RPM and meters. AdvantageScope can convert any field for display without changing your code: right-click it in a graph legend and choose **Convert Units…**. For elevator height in inches, convert `measurement/position` from meters to inches.
-
-See [Live tuning keys and units](../details/live-tuning/keys-and-units.md#units-what-you-type-and-what-you-read) for every unit and the [recommended graph setup for a tuning session](../details/live-tuning/keys-and-units.md#see-both-in-the-same-units-with-advantagescope).
+* Watch your mechanism while you tune it: [Step 5: Tune it](../tutorials/arm/tune.md)
+* Review a match afterwards: [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md)

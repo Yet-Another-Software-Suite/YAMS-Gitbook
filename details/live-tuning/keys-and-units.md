@@ -254,3 +254,51 @@ On the dashboard, the trapezoidal values are typed in RPM and RPM per second, as
 </details>
 
 Next: go back to [Live tuning](README.md) and follow the [Tuning order](README.md#tuning-order) for your mechanism.
+
+## Units of each key
+
+### Read-only and tunable keys
+
+Read-only keys are under `NT:/Mechanisms`. Keys marked **tunable** also have an editable copy under `NT:/Tuning`, typed in different units, shown in the last column.
+
+| NetworkTables key | Unit (read) | Description | Tunable copy under `NT:/Tuning` |
+| --- | --- | --- | --- |
+| `mechanism/position` | Rotations (rot) | Position of the mechanism output shaft | No |
+| `mechanism/velocity` | Rotations per second (rot/s) | Velocity of the mechanism output shaft | No |
+| `rotor/position` | Rotations (rot) | Position of the motor rotor, before gearing | No |
+| `rotor/velocity` | Rotations per second (rot/s) | Velocity of the motor rotor | No |
+| `closedloop/setpoint/position` | Rotations, or meters for linear mechanisms | Closed loop position target | **Tunable**, typed in degrees (or meters) |
+| `closedloop/setpoint/velocity` | rot/s, or m/s | Closed loop velocity target | **Tunable**, typed in RPM (or m/s) |
+| `mechanism/limit/lower`, `mechanism/limit/upper` | Not published | Soft limits | **Tunable only**, typed in degrees |
+| `closedloop/feedback/*`, `closedloop/feedforward/*` | See [Gain units](#gain-units) | Gains | **Tunable only** |
+| `motor/outputVoltage` | Volts (V) | Voltage being applied to the motor | No |
+| `closedloop/period` | Seconds (s) | How often the closed loop runs: 1 ms on the motor controller, or the closed loop control period on the SystemCore | No |
+| `current/supply` | Amps (A) | Current drawn from the battery | No (`current/limit/supply` is tunable) |
+| `current/stator` | Amps (A) | Current through the motor windings, which sets its torque | No (`current/limit/stator` is tunable) |
+| `motor/temperature` | Fahrenheit (°F) | Motor temperature | No |
+
+### LQR keys
+
+A motor controller configured with an [LQR](../editor/lqr-controllers.md) publishes its values at `HIGH`, in place of kP, kI and kD, and only the ones its type uses. They are **tunable only**, under `NT:/Tuning`, and use the same units as the tunable setpoints.
+
+| NetworkTables key                                                                   | Unit                                               | Description                                      |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| `closedloop/lqr/qelms/position`                                                     | Degrees, or meters for an elevator                 | Position error tolerance. Arm and elevator only  |
+| `closedloop/lqr/qelms/velocity`                                                     | RPM, or m/s for an elevator                        | Velocity error tolerance                         |
+| `closedloop/lqr/relms`                                                              | Volts (V)                                          | Control effort tolerance                         |
+| `closedloop/lqr/model/position`, `closedloop/lqr/model/velocity`                    | Degrees and RPM, or meters and m/s for an elevator | Model standard deviations. Position: arm and elevator only |
+| `closedloop/lqr/encoder/position`                                                   | Degrees, or meters for an elevator                 | Encoder standard deviation. Arm and elevator only |
+| `closedloop/lqr/encoder/velocity`                                                   | RPM                                                | Encoder standard deviation. Flywheel only        |
+| `closedloop/lqr/maxVoltage`                                                         | Volts (V)                                          | Most voltage the LQR outputs                     |
+
+### Linear mechanism keys
+
+When a mechanism has a circumference (from `.withMechanismCircumference()`, or one of the `.withWheelDiameter()`, `.withWheelRadius()` or `.withDrumRadius()` helpers), the linear keys are published too:
+
+| NetworkTables key                                    | Unit                    | Description                      |
+| ---------------------------------------------------- | ----------------------- | -------------------------------- |
+| `measurement/position`                               | Meters (m)              | Linear position of the mechanism |
+| `measurement/velocity`                               | Meters per second (m/s) | Linear velocity of the mechanism |
+| `measurement/limit/lower`, `measurement/limit/upper` | Meters (m)              | Soft limits in linear units. **Tunable only**, under `NT:/Tuning` |
+
+Linear units are calculated from rotational units using your configured circumference: `linear = rotational × circumference`.
