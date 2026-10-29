@@ -202,7 +202,7 @@ These set what the drive does and return at once. They are what the commands abo
 
 ## Setting up a swerve drive on a real robot
 
-Setting the encoder offsets, checking every direction, tuning the modules and the first drive on the ground are steps in a tutorial now: see [Step 4: On the real robot](../tutorials/swerve-drive/real-robot.md). It ends with the speed limits, the drift corrections and auto-align, in the order to do them.
+Setting the encoder offsets, checking every direction, tuning the modules and the first drive on the ground are steps in a tutorial now: see [Step 5: On the real robot](../tutorials/swerve-drive/real-robot.md). It ends with the speed limits, the drift corrections and auto-align, in the order to do them.
 
 ## Module location drives the kinematics
 

@@ -52,8 +52,7 @@ Every step has a tab for **Java with Commands v2**, **Java with Commands v3** an
 | [Step 1: Two motor controllers](double-flywheel/motor-controllers.md) | One config and one `SmartMotorController` for each flywheel. |
 | [Step 2: Commands and buttons](double-flywheel/commands.md) | One command that sets both speeds, presets for each kind of shot, the buttons, and a check in simulation. |
 | [Step 3: Spin ratio and shared shafts](double-flywheel/spin-and-followers.md) | A spin ratio between the wheels, and what to change when two motors drive one wheel. |
-| [Tune it](shooter-flywheels/tune.md) | The shooter tutorial's tune step, once for each wheel: `UpperFlyWheel` and `LowerFlyWheel`. |
-| [Run it on the robot](arm/robot.md) | The arm's robot step, with the flywheel differences listed at the end of the shooter's tune step. |
+| [Step 4: Tune it](double-flywheel/tune.md) | Tune one wheel with the YAMS Live Tuner, copy its gains to the other, then put it on the robot. |
 
 {% hint style="info" %}
 A subsystem should hold at most one YAMS mechanism class, so that live tuning keeps working. Both flywheels here are driven together by one subsystem, so this tutorial controls the two `SmartMotorController`s directly instead of creating two `FlyWheel` mechanisms. This is the same approach as the `DoubleFlyWheelSubsystem` in the YAMS examples.

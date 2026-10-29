@@ -131,7 +131,7 @@ wpi::cmd::CommandPtr SwerveSubsystem::DriveWithSticks(std::function<double()> tr
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set the two maximum velocities to what a full stick should mean on your robot. Keep 1 m/s until the robot has driven on the ground in [Step 4](real-robot.md), then raise it.
+**For your robot:** Set the two maximum velocities to what a full stick should mean on your robot. Keep 1 m/s until the robot has driven on the ground in [Step 5](real-robot.md), then raise it.
 
 Want the details? [Swerve Input Stream](../../details/swerve-input-stream.md)
 
@@ -435,7 +435,7 @@ public class SwerveSubsystem extends SubsystemBase {
         // The CANcoder tells the module which way it points when the robot turns on.
         .withAbsoluteEncoder(absoluteEncoder.getAbsolutePosition().asSupplier())
         // The CANcoder's raw reading when the wheel points forward with its bevel gear to the left.
-        // Every module has its own. Step 4 measures it on the real robot.
+        // Every module has its own. Step 5 measures it on the real robot.
         .withAbsoluteEncoderOffset(encoderOffset)
         .withTelemetry(moduleName, TelemetryVerbosity.HIGH)
         // Where the module is on the robot: +X is forward, +Y is left.
@@ -447,7 +447,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public SwerveSubsystem() {
     // Each module is 24 inches forward or back and 24 inches left or right of the robot center.
     // CAN IDs are grouped by module: drive, azimuth, CANcoder.
-    // Every encoder offset is 0 until Step 4 measures the real ones.
+    // Every encoder offset is 0 until Step 5 measures the real ones.
     var frontLeft = createModule(new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless),
                                  new SparkMax(CANPort.CAN_S0, 2, MotorType.kBrushless),
                                  new CANcoder(3, new CANBus(CANPort.CAN_S0)), Degrees.of(0), "frontleft",
@@ -710,7 +710,7 @@ public class SwerveMechanism implements Mechanism {
         // The CANcoder tells the module which way it points when the robot turns on.
         .withAbsoluteEncoder(absoluteEncoder.getAbsolutePosition().asSupplier())
         // The CANcoder's raw reading when the wheel points forward with its bevel gear to the left.
-        // Every module has its own. Step 4 measures it on the real robot.
+        // Every module has its own. Step 5 measures it on the real robot.
         .withAbsoluteEncoderOffset(encoderOffset)
         .withTelemetry(moduleName, TelemetryVerbosity.HIGH)
         // Where the module is on the robot: +X is forward, +Y is left.
@@ -722,7 +722,7 @@ public class SwerveMechanism implements Mechanism {
   public SwerveMechanism() {
     // Each module is 24 inches forward or back and 24 inches left or right of the robot center.
     // CAN IDs are grouped by module: drive, azimuth, CANcoder.
-    // Every encoder offset is 0 until Step 4 measures the real ones.
+    // Every encoder offset is 0 until Step 5 measures the real ones.
     var frontLeft = createModule(new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless),
                                  new SparkMax(CANPort.CAN_S0, 2, MotorType.kBrushless),
                                  new CANcoder(3, new CANBus(CANPort.CAN_S0)), Degrees.of(0), "frontleft",
@@ -1018,7 +1018,7 @@ void SwerveSubsystem::SetupModule(Module&#x26; module, const std::string&#x26; n
         return wpi::units::turn_t{module.encoder.GetAbsolutePosition().GetValue()};
       })
       // The CANcoder's raw reading when the wheel points forward with its bevel gear to the left.
-      // Every module has its own. Step 4 measures it on the real robot.
+      // Every module has its own. Step 5 measures it on the real robot.
       .WithAbsoluteEncoderOffset(encoderOffset)
       .WithTelemetry(name, Cfg::TelemetryVerbosity::HIGH)
       // Where the module is on the robot: +X is forward, +Y is left.
@@ -1031,7 +1031,7 @@ void SwerveSubsystem::SetupModule(Module&#x26; module, const std::string&#x26; n
 
 SwerveSubsystem::SwerveSubsystem() {
   // Each module is 24 inches forward or back and 24 inches left or right of the robot center.
-  // Every encoder offset is 0 until Step 4 measures the real ones.
+  // Every encoder offset is 0 until Step 5 measures the real ones.
   SetupModule(m_frontLeft, "frontleft", wpi::math::Translation2d{24_in, 24_in}, 0_deg);
   SetupModule(m_frontRight, "frontright", wpi::math::Translation2d{24_in, -24_in}, 0_deg);
   SetupModule(m_backLeft, "backleft", wpi::math::Translation2d{-24_in, 24_in}, 0_deg);

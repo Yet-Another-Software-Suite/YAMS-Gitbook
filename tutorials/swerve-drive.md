@@ -33,7 +33,7 @@ YAMS simulates all eight motors, so a swerve simulation uses more of your comput
 
 ## The steps
 
-<figure><img src="../.gitbook/assets/tutorial-swerve-steps.png" alt="The three steps of the swerve drive tutorial. Step 1, the module motors: a config for the drive motors and a config for the azimuth motors. Step 2, the modules and the drive: four SwerveModules, a gyro and a SwerveDrive. Step 3, driving: drive commands, and a SwerveInputStream that reads the controller."><figcaption><p>The three coding steps, one page each. Step 4 then runs the drive on the real robot.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/tutorial-swerve-steps.png" alt="The three steps of the swerve drive tutorial. Step 1, the module motors: a config for the drive motors and a config for the azimuth motors. Step 2, the modules and the drive: four SwerveModules, a gyro and a SwerveDrive. Step 3, driving: drive commands, and a SwerveInputStream that reads the controller."><figcaption><p>The three coding steps, one page each. Step 4 then tunes it in simulation, and step 5 runs it on the real robot.</p></figcaption></figure>
 
 Every step has a tab for **Java with Commands v2**, **Java with Commands v3** and **C++**. Steps 1 to 3 each end with a check you can run, and each check names the likely failures. [Troubleshooting](troubleshooting.md) has more.
 
@@ -43,7 +43,8 @@ Every step has a tab for **Java with Commands v2**, **Java with Commands v3** an
 | [Step 1: The module motors](swerve-drive/module-motors.md)             | A config for the drive motors and a config for the azimuth motors.                                       |
 | [Step 2: The modules and the drive](swerve-drive/modules-and-drive.md) | Build four `SwerveModule`s, add the gyro, and create the `SwerveDrive`.                                  |
 | [Step 3: Driving](swerve-drive/driving.md)                             | Drive commands, a `SwerveInputStream` for the sticks, and the bindings.                                  |
-| [Step 4: On the real robot](swerve-drive/real-robot.md)                | Set the encoder offsets, check every direction, tune the modules and drive on the ground.                |
+| [Step 4: Tune it](swerve-drive/tune.md)                                | Practice tuning the azimuth and drive motors in simulation with AdvantageScope.                         |
+| [Step 5: On the real robot](swerve-drive/real-robot.md)                | Set the encoder offsets, check every direction, tune the modules and drive on the ground.                |
 
 ## Complete example
 

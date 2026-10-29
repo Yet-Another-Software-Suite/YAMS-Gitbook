@@ -730,9 +730,3 @@ The differences from a single flywheel are:
 1. Two `SmartMotorControllerConfig`s and two `SmartMotorController`s, controlled directly instead of through a `FlyWheel` mechanism
 2. The subsystem calls `setupTelemetry()`, `updateTelemetry()` and `simIterate()` on each `SmartMotorController` itself
 3. One command sets both velocity setpoints
-
-## Tune it and run it on the robot
-
-Tune each wheel with [the shooter tutorial's tune step](../shooter-flywheels/tune.md). Do it once for `UpperFlyWheel` and once for `LowerFlyWheel`: their values are under `NT:/Tuning/UpperFlyWheel/` and `NT:/Tuning/LowerFlyWheel/`, and the `Live Tuning` command is under the subsystem's name, `NT:/Tuning/DoubleFlywheelSubsystem/Live Tuning` (Commands v3: `DoubleFlywheelMechanism`).
-
-Then put it on the robot with [the arm's step 6: Run it on the robot](../arm/robot.md), using the flywheel differences at the end of the shooter's tune step.
