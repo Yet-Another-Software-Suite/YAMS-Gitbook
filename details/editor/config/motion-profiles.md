@@ -21,9 +21,23 @@ The distance version needs a [circumference](gearing-and-units.md#withmechanismc
 
 Choose limits the mechanism can really reach. If the profile asks for more than the motor can give, the mechanism falls behind and the PID fights to catch up: see [when tuning does not help](../../live-tuning/#when-tuning-does-not-help).
 
-## A velocity profile
+### Starting values
 
-For mechanisms that hold a speed, the same method takes a maximum acceleration and a maximum jerk instead.
+A place to start, not an answer. Add the profile after the feedforward and PID hold the mechanism and reach small moves cleanly.
+
+* **Maximum velocity:** about half the mechanism's free speed, which is the motor's free speed divided by your gearing. A NEO (about 95 rotations per second) through 12:1 is about 7.9 rotations per second, so start near 4 rotations per second (about 1400°/s). A heavy arm may need much less.
+* **Maximum acceleration:** about twice the maximum velocity, per second, so the mechanism reaches full speed in half a second.
+
+Graph the mechanism's velocity against the setpoint velocity during a long move. If the measured line falls behind the flat top, lower the maximum velocity. If it lags on the ramps or the stator current spikes, lower the acceleration. If it follows easily with voltage to spare, raise them a step at a time. [Step 5 of the Arm tutorial](../../../tutorials/arm/tune.md) and [Tuning order](../../live-tuning/README.md#tuning-order) walk through it.
+
+### Other ways to set it
+
+* `withProfile(TrapezoidProfile.Constraints)` takes WPILib's constraints directly, in rotations (or meters) per second and per second squared, and replaces any exponential profile. It prints a reminder of those units at startup. Prefer `withTrapezoidalProfile`, which takes units.
+* `withTrapezoidalProfileConstraints(TrapezoidProfile.Constraints)` replaces only the numbers of an existing trapezoidal profile, keeping whether it is a position or velocity profile and whether it is in rotations or meters. Live tuning uses it. You rarely need it in a config.
+
+## Velocity profiles for flywheels
+
+For mechanisms that hold a speed, such as a flywheel, the same method takes a maximum acceleration and a maximum jerk instead. Jerk is how quickly the acceleration changes, so limiting it rounds off the start and end of the spin up instead of slamming straight to full acceleration.
 
 <figure><img src="../../../.gitbook/assets/smc-velocity-profile.png" alt="A graph of velocity against time. The requested speed jumps up in a step. The setpoint rises to it in a smooth curve limited by a maximum acceleration and a maximum jerk, which is how quickly acceleration changes."><figcaption><p>A velocity setpoint limited by acceleration and jerk.</p></figcaption></figure>
 
@@ -45,6 +59,10 @@ An exponential profile follows what a DC motor can actually do: hard acceleratio
 .withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(2), Kilograms.of(8), Inches.of(1)) // elevator
 .withExponentialProfile(Volts.of(10), RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(8))
 ```
+
+Call it after [`withGearing`](gearing-and-units.md#withgearing): the versions that take a motor work the profile out from the gearing that is already set.
+
+`withProfile(ExponentialProfile.Constraints)` also sets an exponential profile from WPILib's constraints directly.
 
 You give it a maximum voltage and either the mechanism (its motor and its moment of inertia, or its mass and drum radius) or a maximum velocity and acceleration. YAMS works out starting values of the profile's kV and kA from those. Tune kV and kA directly from there, as CTRE's Motion Magic Expo documentation describes, and pass your tuned values with `ExponentialProfile.Constraints.fromCharacteristics(maxVoltage, kV, kA)`.
 

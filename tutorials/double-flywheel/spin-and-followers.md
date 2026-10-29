@@ -94,8 +94,7 @@ The highlighted lines are new in this step.
 <pre class="language-java" data-title="subsystems/DoubleFlywheelSubsystem.java" data-line-numbers><code class="lang-java">package first.robot.subsystems;
 
 import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 import static org.wpilib.units.Units.RPM;
 
 import com.ctre.phoenix6.CANBus;
@@ -125,11 +124,12 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -142,8 +142,8 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -235,8 +235,7 @@ The highlighted lines are new in this step.
 <pre class="language-java" data-title="mechanisms/DoubleFlywheelMechanism.java" data-line-numbers><code class="lang-java">package first.robot.mechanisms;
 
 import static org.wpilib.units.Units.Amps;
-import static org.wpilib.units.Units.Inches;
-import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.KilogramSquareMeters;
 import static org.wpilib.units.Units.RPM;
 
 import com.ctre.phoenix6.CANBus;
@@ -266,11 +265,12 @@ public class DoubleFlywheelMechanism implements Mechanism {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(false)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -283,8 +283,8 @@ public class DoubleFlywheelMechanism implements Mechanism {
       .withSimClosedLoopController(0.1, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
       .withSimFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0))
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3)))
-      .withMomentOfInertia(Inches.of(4), Pounds.of(1))
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
+      .withMomentOfInertia(KilogramSquareMeters.of(0.0006))
       .withMotorInverted(true)
       .withZeroPower(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40))
@@ -446,8 +446,7 @@ class DoubleFlywheelSubsystem : public wpi::cmd::SubsystemBase {
 #include &#x3C;wpi/math/system/DCMotor.hpp>
 #include &#x3C;wpi/units/angle.hpp>
 #include &#x3C;wpi/units/current.hpp>
-#include &#x3C;wpi/units/length.hpp>
-#include &#x3C;wpi/units/mass.hpp>
+#include &#x3C;wpi/units/moment_of_inertia.hpp>
 #include &#x3C;wpi/units/math.hpp>
 #include &#x3C;wpi/units/voltage.hpp>
 
@@ -469,11 +468,12 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
-      // Gearing from the motor rotor to the flywheel: 3:1.
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-      // There is no FlyWheel mechanism to describe the wheel, so the simulation
-      // gets the wheel's diameter and weight from here.
-      .WithMOI(4_in, 1_lb)
+      // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+      // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
+      // inertia from here: a 4 inch, 1 lb (0.45 kg) wheel as a solid disc is
+      // 0.5 x 0.45 kg x (0.0508 m)^2, about 0.0006 kg m^2.
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(false)
       .WithZeroPower(Cfg::MotorMode::COAST)
       .WithStatorCurrentLimit(40_A)
@@ -486,8 +486,8 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
-      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0})})
-      .WithMOI(4_in, 1_lb)
+      .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
+      .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(true)
       .WithZeroPower(Cfg::MotorMode::COAST)
       .WithStatorCurrentLimit(40_A)

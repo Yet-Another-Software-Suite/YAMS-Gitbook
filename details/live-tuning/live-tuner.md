@@ -312,7 +312,7 @@ The **Settings** card sits under the Live tune card. A line under its tabs says 
 | **Tuner** | Only in this tuner | The current trip, and the range of motion |
 | **Voltage** | Only in this tuner | What happens when you let go of the voltage, and the gravity hold voltage. Only shown while the Live tune card is on its **Voltage** tab |
 
-Type a new value: it is applied when you press **Enter** or click away. **Esc** puts the old value back. [What to tune and what to watch](README.md#what-to-tune-and-what-to-watch) lists what each gain does.
+Type a new value: it is applied when you press **Enter** or click away. **Esc** puts the old value back. [What to tune and what to watch](keys-and-units.md#what-to-tune-and-what-to-watch) lists what each gain does.
 
 * **was …:** under a setting you changed, **was** shows its value before the change. Press it to put that value back, and press it again to go one change further back. When more than one value is saved, the count is shown, as in **was 160 (2)**.
 * **Number fields:** a field only takes what fits it. Gains take up to 4 significant digits, and only kG can be negative. Current limits and the current trip are whole amps. A comma is read as a decimal point.

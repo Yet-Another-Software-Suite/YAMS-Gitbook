@@ -59,10 +59,11 @@ public SwerveModule createModule(SparkMax drive, SparkMax azimuth, CANcoder abso
       .withGearing(azimuthGearing)
       .withStatorCurrentLimit(Amps.of(20))
       // Granular per-field config (see "Granular control" below), chosen fields + its own DataLog name,
-      // instead of the name+verbosity shorthand used for the drive motor above.
+      // instead of the name+verbosity shorthand used for the drive motor above. The name nests the
+      // motor under its module, so it shows up as Swerve/<module>/angleMotor in AdvantageScope.
       .withTelemetry("angleMotor", new SmartMotorControllerTelemetryConfig()
           .withTelemetryVerbosity(TelemetryVerbosity.HIGH)
-          .withDataLogName(moduleName));
+          .withDataLogName("Swerve/" + moduleName + "/angleMotor"));
 
   SmartMotorController driveSMC   = new SparkWrapper(drive, DCMotor.getNEO(1), driveCfg);
   SmartMotorController azimuthSMC = new SparkWrapper(azimuth, DCMotor.getNEO(1), azimuthCfg);
@@ -137,7 +138,7 @@ A common competition pattern is to keep NT4 for practice/pit testing and drop it
 ```java
 .withTelemetry("angleMotor", new SmartMotorControllerTelemetryConfig()
     .withTelemetryVerbosity(TelemetryVerbosity.HIGH)
-    .withDataLogName(moduleName)
+    .withDataLogName("Swerve/" + moduleName + "/angleMotor")
     .withNetworkTables(!RobotState.isFMSAttached()));
 ```
 
@@ -149,16 +150,16 @@ Want the deeper rationale for choosing LOW vs. MID vs. HIGH, and why to prune be
 
 Deploy or simulate the robot, enable it, and drive around for a bit, every enabled loop writes to both NetworkTables and the DataLog for every field configured above.
 
-<figure><img src="../.gitbook/assets/datalog-walkthrough-2-run-in-sim.gif" alt=""><figcaption><p>Running the swerve example in WPILib simulation and driving it around in Teleoperated to generate telemetry.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-2-run-in-sim.gif" alt="The swerve example running in WPILib simulation in Teleoperated, with the robot driven around the field so that telemetry is being recorded."><figcaption><p>Running the swerve example in WPILib simulation and driving it around in Teleoperated to generate telemetry.</p></figcaption></figure>
 
 ## Pull the file and open it in AdvantageScope
 
 1. Grab the `.wpilog` off the SystemCore (USB drive, or copy it from `/home/systemcore/logs`), or straight from your sim project's `logs/` folder.
 2. Open **AdvantageScope**, then **File → Open File...** (or drag the `.wpilog` onto the window). Do **not** use "Connect to Robot/Simulator", that connects live over NetworkTables, which shows _current_ values, not the recorded run.
 
-<figure><img src="../.gitbook/assets/datalog-walkthrough-3-open-in-advantagescope.gif" alt=""><figcaption><p>Opening the recorded <code>.wpilog</code> via AdvantageScope's file picker, note the other logs from earlier runs sitting alongside it in the same <code>logs/</code> folder.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-3-open-in-advantagescope.gif" alt="AdvantageScope's File, Open File dialog showing the logs folder, with the newest .wpilog selected among the logs from earlier runs."><figcaption><p>Opening the recorded <code>.wpilog</code> via AdvantageScope's file picker, note the other logs from earlier runs sitting alongside it in the same <code>logs/</code> folder.</p></figcaption></figure>
 
-3. AdvantageScope reads every logged entry into a field tree in the sidebar, grouped by the DataLog name prefixes you set when configuring the SwerveDrive, with the `"Swerve"` prefix from this example, that's a single `Swerve` group containing `chassis/current`, `chassis/desired`, `pose`, `gyro`, and a `frontleft`/`frontright`/`backleft`/`backright` entry per module (plus that module's `angleMotor` DataLog entries from the granular control config).
+3. AdvantageScope reads every logged entry into a field tree in the sidebar, grouped by the DataLog name prefixes you set when configuring the SwerveDrive, with the `"Swerve"` prefix from this example, that's a single `Swerve` group containing `chassis/current`, `chassis/desired`, `pose`, `gyro`, and a `frontleft`/`frontright`/`backleft`/`backright` entry per module (plus an `angleMotor` group inside each module, from the `"Swerve/" + moduleName + "/angleMotor"` DataLog name on the azimuth motor).
 
 ## Explore the data
 
@@ -168,7 +169,7 @@ Add a tab to visualize the data:
 * **2D Field** tab, drag `Swerve/pose` in to see the robot's recorded path.
 * **Line Graph** tab, drag any numeric field (gyro angle, a motor's stator current, mechanism position) to plot it over time, and use **right-click → Convert Units...** to change the displayed unit without touching robot code (see [Telemetry](../understanding/telemetry.md#using-advantagescope-for-unit-conversion)).
 
-<figure><img src="../.gitbook/assets/datalog-walkthrough-4-explore-swerve-tab.gif" alt=""><figcaption><p>Expanding the field tree and dragging <code>Swerve/states/current</code> into the <strong>Swerve</strong> tab's Sources to visualize the recorded module states, the wheel angles/speeds shown here match exactly what the modules reported during the run.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/datalog-walkthrough-4-explore-swerve-tab.gif" alt="The AdvantageScope field tree expanded to Swerve, states, current, which is dragged into the Swerve tab's Sources list; the four module vectors then animate as the timeline plays."><figcaption><p>Expanding the field tree and dragging <code>Swerve/states/current</code> into the <strong>Swerve</strong> tab's Sources to visualize the recorded module states, the wheel angles/speeds shown here match exactly what the modules reported during the run.</p></figcaption></figure>
 
 Scrub the timeline at the top of the window to step through the run, or hit play to watch it back at normal speed.
 
@@ -176,9 +177,16 @@ Scrub the timeline at the top of the window to step through the run, or hit play
 Because this is just a file, you can open the same `.wpilog` in as many tabs/windows as you want, compare two different matches side by side, or hand the file to a teammate to look at independently, none of that requires the robot, the simulator, or AdvantageKit replay to be running.
 {% endhint %}
 
-## Related pages
+## Check it
 
-* [Telemetry](../understanding/telemetry.md)
-* [DataLog Best Practices](../details/datalog-best-practices.md)
-* [Swerve Drive](../tutorials/swerve-drive.md)
-* [AdvantageKit Integration](../details/advantagekit-integration.md), for the separate, unrelated concept of deterministic Log Replay
+In AdvantageScope's sidebar you should see a `Swerve` group with `pose`, `gyro`, the chassis speeds and one group per module, each with an `angleMotor` group inside. Dragging `Swerve/pose` into a 2D Field tab should replay the path you drove.
+
+## If it did not work
+
+* **There is no `.wpilog` file.** The DataLog never started: call `DataLogManager.start()` in your `Robot` constructor, as shown at the top of this page.
+* **The `Swerve` group is missing, but NetworkTables shows the values.** `withDataLogName(...)` is missing from that telemetry config. Each level (drive, module, motor) needs its own.
+* **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
+
+## Next
+
+Choose which fields to log before a competition: [DataLog Best Practices](../details/datalog-best-practices.md). For more on how YAMS telemetry is laid out, see [Telemetry](../understanding/telemetry.md).

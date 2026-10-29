@@ -23,8 +23,8 @@ Two ways to have more than one motor move one mechanism: **tightly coupled** fol
 Tightly coupled followers, for motors on the same shaft or gearbox. Each follower copies the leader's output, so only the leader needs a config.
 
 ```java
-.withFollowers(Pair.of(new SparkMax(CANPorts.fromBusId(1), 4, MotorType.kBrushless), false),
-               Pair.of(new SparkMax(CANPorts.fromBusId(1), 5, MotorType.kBrushless), true))
+.withFollowers(Pair.of(new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless), false),
+               Pair.of(new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless), true))
 ```
 
 Pass the vendor's motor object, not a `SmartMotorController`. The boolean is whether that follower is inverted relative to the leader: motors facing each other across a gearbox usually are.
@@ -121,7 +121,79 @@ public class IntakeArmSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-The same as Commands v2, with `SmartMotorControllerConfig` and `Arm` from `yams.commands3`, and the class a `Mechanism`. A `Mechanism` has no periodic hook, so call `updateTelemetry()` on the arm and on each follower from `Robot.robotPeriodic()`, and run their `simIterate()` in a `Notifier`, started from `Robot.simulationInit()`, as in [Where the tutorials put things](../../../tutorials/project-setup.md#where-the-tutorials-put-things).
+The same arm as a Commands v3 `Mechanism`, with `SmartMotorControllerConfig` and `Arm` from `yams.commands3`. A `Mechanism` has no periodic hook of its own, so the class gets a `periodic()` and a `simulationPeriodic()` that update the arm and the follower, and `Robot.java` calls them.
+
+{% code title="mechanisms/IntakeArmMechanism.java" %}
+```java
+public class IntakeArmMechanism implements Mechanism {
+
+  // The right side of the arm. Declare a follower before the leader, which names it.
+  private final SparkMax rightSpark = new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless);
+  private final SmartMotorController rightMotor = new SparkWrapper(rightSpark, DCMotor.getNEO(1),
+      new SmartMotorControllerConfig(this)
+          .withControlMode(ControlMode.CLOSED_LOOP)
+          .withClosedLoopController(50, 0, 0)
+          .withSimClosedLoopController(50, 0, 0)
+          .withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+          .withFeedforward(new ArmFeedforward(0, 0, 0))
+          .withSimFeedforward(new ArmFeedforward(0, 0, 0))
+          .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+          // The right motor faces the other way, so it is inverted here, in its own config.
+          .withMotorInverted(true)
+          .withZeroPower(MotorMode.BRAKE)
+          .withStatorCurrentLimit(Amps.of(40))
+          .withStartingPosition(Degrees.of(-5))
+          .withSoftLimits(Degrees.of(-20), Degrees.of(30))
+          .withTelemetry("IntakeArmRightMotor", TelemetryVerbosity.HIGH));
+
+  // The left side of the arm: the leader, which the Arm drives.
+  private final SparkMax leftSpark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+  private final SmartMotorController leftMotor = new SparkWrapper(leftSpark, DCMotor.getNEO(1),
+      new SmartMotorControllerConfig(this)
+          .withControlMode(ControlMode.CLOSED_LOOP)
+          .withClosedLoopController(50, 0, 0)
+          .withSimClosedLoopController(50, 0, 0)
+          .withTrapezoidalProfile(DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+          .withFeedforward(new ArmFeedforward(0, 0, 0))
+          .withSimFeedforward(new ArmFeedforward(0, 0, 0))
+          .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
+          .withMotorInverted(false)
+          .withZeroPower(MotorMode.BRAKE)
+          .withStatorCurrentLimit(Amps.of(40))
+          .withStartingPosition(Degrees.of(-5))
+          .withSoftLimits(Degrees.of(-20), Degrees.of(30))
+          .withTelemetry("IntakeArmLeftMotor", TelemetryVerbosity.HIGH)
+          // The right motor is sent every position and velocity setpoint the left motor is given.
+          .withLooselyCoupledFollowers(rightMotor));
+
+  private final Arm arm = new Arm(new ArmConfig()
+      .withHardLimits(Degrees.of(-25), Degrees.of(35))
+      .withLength(Meters.of(0.5))
+      .withTelemetry("IntakeArm", TelemetryVerbosity.HIGH),
+      leftMotor);
+
+  public Command setAngle(Angle angle) {
+    // Moves both motors.
+    return arm.setAngle(angle);
+  }
+
+  /** Call this from Robot.robotPeriodic(), before the scheduler runs. */
+  public void periodic() {
+    arm.updateTelemetry();
+    // The Arm only updates the leader. Update each follower yourself.
+    rightMotor.updateTelemetry();
+  }
+
+  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
+  public void simulationPeriodic() {
+    arm.simIterate();
+    rightMotor.simIterate();
+  }
+}
+```
+{% endcode %}
+
+In `Robot.java`, call `intakeArm.periodic()` from `robotPeriodic()` and start `intakeArm::simulationPeriodic` in a `Notifier` from `simulationInit()`, exactly as for any mechanism in [Where the tutorials put things](../../../tutorials/project-setup.md#where-the-tutorials-put-things). The imports are the ones in [Step 3 of the Arm tutorial](../../../tutorials/arm/commands.md), plus `Meters`, and the `simple_robot-2027` example has a complete [Commands v3 arm mechanism](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/simple_robot-2027/src/main/java/first/robot/mechanisms/ArmMechanism.java).
 {% endtab %}
 
 {% tab title="C++" %}
@@ -157,7 +229,7 @@ Call `UpdateTelemetry()` and `SimIterate()` on each follower, as on the arm.
 
 ### Common pitfalls
 
-* **The follower doesn't stop (YAMS v2026.10.15 and earlier).** A follower's closed loop runs on the SystemCore when it is a Thrifty Nova, a SPARK with an exponential profile, or any motor controller with an LQR. In YAMS v2026.10.15 and earlier, stopping the leader doesn't stop that loop, so the follower keeps driving to the last setpoint: on through `arm.set(0)`, and against the leader through `arm.set(...)`, `arm.setVoltage(...)` and SysId. Later releases stop it with the leader. Until you update, stop the follower's closed loop yourself while the leader is driven at a duty cycle or voltage:
+* **The follower doesn't stop (YAMS v2026.10.15 and earlier).** A follower's closed loop runs on the SystemCore when it is a Thrifty Nova, a SPARK with an exponential profile, or any motor controller with an LQR. In YAMS v2026.10.15 and earlier, stopping the leader doesn't stop that loop, so the follower keeps driving to the last setpoint: on through `arm.set(0)`, and against the leader through `arm.set(...)`, `arm.setVoltage(...)` and SysId. Later releases stop it with the leader. Until you update, stop the follower's closed loop yourself while the leader is driven at a duty cycle or voltage. In Commands v2:
 
   ```java
   arm.set(dutyCycle)

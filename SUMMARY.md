@@ -2,7 +2,6 @@
 
 * [Welcome](README.md)
 * [Why YAMS?](why-yams.md)
-* [Upgrading from 2026 to 2027](upgrading-from-2026-to-2027.md)
 
 ## Tutorials
 
@@ -12,6 +11,8 @@
   * [Step 2: The arm](tutorials/arm/mechanism.md)
   * [Step 3: Commands and buttons](tutorials/arm/commands.md)
   * [Step 4: Simulate it](tutorials/arm/simulate.md)
+  * [Step 5: Tune it](tutorials/arm/tune.md)
+  * [Step 6: Run it on the robot](tutorials/arm/robot.md)
 * [Elevator](tutorials/elevator.md)
   * [Step 1: The motor controller](tutorials/elevator/motor-controller.md)
   * [Step 2: The elevator](tutorials/elevator/mechanism.md)
@@ -30,6 +31,8 @@
   * [Step 1: The module motors](tutorials/swerve-drive/module-motors.md)
   * [Step 2: The modules and the drive](tutorials/swerve-drive/modules-and-drive.md)
   * [Step 3: Driving](tutorials/swerve-drive/driving.md)
+
+* [Troubleshooting](tutorials/troubleshooting.md)
 
 ## How-to: Mechanisms
 
@@ -110,3 +113,7 @@
   * [Log replay](details/advantagekit/log-replay.md)
   * [Swerve drive with AdvantageKit](details/advantagekit/swerve-drive.md)
   * [Without an IO layer](details/advantagekit/direct-subsystem.md)
+
+## Upgrading
+
+* [Upgrading from 2026 to 2027](upgrading-from-2026-to-2027.md)

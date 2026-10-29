@@ -632,4 +632,15 @@ Every option used here has its own section in the `SmartMotorControllerConfig` p
 * [Limits and protection](../../details/editor/config/limits-and-protection.md): soft limits and current limits
 * [Simulation](../../details/editor/config/simulation.md): the simulation only gains
 
-The PID and feedforward numbers on this page are a place to start, not tuned values. Tune them on your own mechanism with [Live tuning](../../details/live-tuning/README.md).
+The PID and feedforward numbers on this page are a place to start, not tuned values. You tune them in [Step 5: Tune it](tune.md).
+
+## Check it
+
+Open the command palette with <kbd>Ctrl+Shift+P</kbd> and run **WPILib: Build Robot Code**. It should build. Nothing moves yet, because nothing tells the motor what to do.
+
+* **`SparkMax` cannot be found:** REVLib is not installed. See [Install your motor controller's library](../project-setup.md#install-your-motor-controllers-library).
+* **`SmartMotorControllerConfig` cannot be found:** YAMS is not installed, or the import is from the other command framework (`yams.commands2` or `yams.commands3`).
+
+## Next
+
+[Step 2: The arm](mechanism.md)

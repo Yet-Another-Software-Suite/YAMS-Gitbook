@@ -41,7 +41,8 @@ YAMS publishes under two tables. Nothing goes under `NT:/SmartDashboard`.
 | `NT:/Tuning`     | Values you can edit                     | `NT:/Tuning/<Mechanism>/<Motor>/<key>`     |
 | `NT:/Tuning`     | The `Live Tuning` command               | `NT:/Tuning/<Subsystem>/Live Tuning`       |
 
-`<Mechanism>` and `<Motor>` are the telemetry names given to `withTelemetry(...)` on the mechanism config and on the `SmartMotorControllerConfig`. See [Live tuning](../details/live-tuning/) for how to use the tunable side.
+`<Mechanism>` and `<Motor>` are the telemetry names given to `withTelemetry(...)` on the mechanism config and on the `SmartMotorControllerConfig`. `<Subsystem>` is the subsystem's `getName()` in Commands v2 (its class name by default), or the Commands v3 `Mechanism`'s name. For the `ArmSubsystem` in the [Arm tutorial](../tutorials/arm.md), that is `NT:/Mechanisms/Arm/ArmMotor/...`, `NT:/Tuning/Arm/ArmMotor/...` and `NT:/Tuning/ArmSubsystem/Live Tuning`. See [Live tuning](../details/live-tuning/) for how to use the tunable side.
+
 
 ## Simulation vs reality
 
@@ -51,9 +52,7 @@ The simulation view of each mechanism is done with `Mechanism2d`'s. These window
 
 ## Mechanism telemetry
 
-A mechanism's table is a folder: it holds the `Mechanism2d` and one table for each `SmartMotorController` in the mechanism, so the values are easy to find.
-
-<figure><img src="../.gitbook/assets/image (20).png" alt=""><figcaption></figcaption></figure>
+A mechanism's table is a folder under `NT:/Mechanisms/<Mechanism>`: it holds the `Mechanism2d` (at `mechanism`) and one table for each `SmartMotorController` in the mechanism, so the values are easy to find. The tree in [NetworkTables](#networktables) above shows the layout for an elevator.
 
 ## Smart motor controller telemetry
 
@@ -82,13 +81,14 @@ SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControl
           .withMechanismLowerLimit()
           .withMechanismUpperLimit();
           
+// A fragment from an arm subsystem.
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
       .withClosedLoopController(4, 0, 0)
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
       .withSoftLimits(Degrees.of(-30), Degrees.of(100))
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
       .withZeroPower(MotorMode.BRAKE)
-      .withTelemetry("ElevatorMotor", motorTelemetryConfig);
+      .withTelemetry("ArmMotor", motorTelemetryConfig);
 ```
 
 `withCustom(...)` covers everything else. Use it for a field with no `with*()` method of its own, or to switch several fields in one call. It takes a `BooleanTelemetryField` or `DoubleTelemetryField`, or an array of either, and a boolean:
@@ -194,24 +194,27 @@ All telemetry values in YAMS are logged with specific units. Understanding these
 
 ### Standard telemetry units
 
-| NetworkTables key                                | Unit                                       | Description                                 |
-| ------------------------------------------------ | ------------------------------------------ | ------------------------------------------- |
-| `mechanism/position`                             | Rotations (rot)                            | Position of the mechanism output shaft      |
-| `mechanism/velocity`                             | Rotations per second (rot/s)               | Velocity of the mechanism output shaft      |
-| `rotor/position`                                 | Rotations (rot)                            | Position of the motor rotor, before gearing |
-| `rotor/velocity`                                 | Rotations per second (rot/s)               | Velocity of the motor rotor                 |
-| `closedloop/setpoint/position`                   | Rotations, or meters for linear mechanisms | Closed loop position target                 |
-| `closedloop/setpoint/velocity`                   | rot/s, or m/s                              | Closed loop velocity target                 |
-| `mechanism/limit/lower`, `mechanism/limit/upper` | Degrees (deg)                              | Soft limits                                 |
-| `motor/outputVoltage`                            | Volts (V)                                  | Voltage being applied to the motor          |
-| `closedloop/period`                              | Seconds (s)                                | How often the closed loop runs: 1 ms on the motor controller, or the closed loop control period on the SystemCore |
-| `current/supply`                                 | Amps (A)                                   | Current drawn from the battery              |
-| `current/stator`                                 | Amps (A)                                   | Current through the motor windings          |
-| `motor/temperature`                              | Fahrenheit (°F)                            | Motor temperature                           |
+Read-only keys are under `NT:/Mechanisms`. Keys marked **tunable** also have an editable copy under `NT:/Tuning`, typed in different units, shown in the last column.
+
+| NetworkTables key | Unit (read) | Description | Tunable copy under `NT:/Tuning` |
+| --- | --- | --- | --- |
+| `mechanism/position` | Rotations (rot) | Position of the mechanism output shaft | No |
+| `mechanism/velocity` | Rotations per second (rot/s) | Velocity of the mechanism output shaft | No |
+| `rotor/position` | Rotations (rot) | Position of the motor rotor, before gearing | No |
+| `rotor/velocity` | Rotations per second (rot/s) | Velocity of the motor rotor | No |
+| `closedloop/setpoint/position` | Rotations, or meters for linear mechanisms | Closed loop position target | **Tunable**, typed in degrees (or meters) |
+| `closedloop/setpoint/velocity` | rot/s, or m/s | Closed loop velocity target | **Tunable**, typed in RPM (or m/s) |
+| `mechanism/limit/lower`, `mechanism/limit/upper` | Degrees (deg) | Soft limits | **Tunable only**, in degrees |
+| `closedloop/feedback/*`, `closedloop/feedforward/*` | See [Gain units](../details/live-tuning/keys-and-units.md#gain-units) | Gains | **Tunable only** |
+| `motor/outputVoltage` | Volts (V) | Voltage being applied to the motor | No |
+| `closedloop/period` | Seconds (s) | How often the closed loop runs: 1 ms on the motor controller, or the closed loop control period on the SystemCore | No |
+| `current/supply` | Amps (A) | Current drawn from the battery | No (`current/limit/supply` is tunable) |
+| `current/stator` | Amps (A) | Current through the motor windings, which sets its torque | No (`current/limit/stator` is tunable) |
+| `motor/temperature` | Fahrenheit (°F) | Motor temperature | No |
 
 ### LQR units
 
-A motor controller configured with an [LQR](../details/editor/lqr-controllers.md) publishes its values at `HIGH`, in place of kP, kI and kD, and only the ones its type uses. They use the same units as the tunable setpoints.
+A motor controller configured with an [LQR](../details/editor/lqr-controllers.md) publishes its values at `HIGH`, in place of kP, kI and kD, and only the ones its type uses. They are **tunable only**, under `NT:/Tuning`, and use the same units as the tunable setpoints.
 
 | NetworkTables key                                                                   | Unit                                               | Description                                      |
 | ----------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
@@ -231,68 +234,14 @@ When a mechanism has a circumference (from `.withMechanismCircumference()`, or o
 | ---------------------------------------------------- | ----------------------- | -------------------------------- |
 | `measurement/position`                               | Meters (m)              | Linear position of the mechanism |
 | `measurement/velocity`                               | Meters per second (m/s) | Linear velocity of the mechanism |
-| `measurement/limit/lower`, `measurement/limit/upper` | Meters (m)              | Soft limits in linear units      |
+| `measurement/limit/lower`, `measurement/limit/upper` | Meters (m)              | Soft limits in linear units. **Tunable only**, under `NT:/Tuning` |
 
 {% hint style="info" %}
 YAMS logs rotational units by default. Linear units are calculated from rotational units using your configured circumference: `linear = rotational × circumference`
 {% endhint %}
 
-## Using AdvantageScope for unit conversion
+## Viewing telemetry in other units
 
-AdvantageScope provides powerful unit conversion capabilities that let you view telemetry data in whatever units make sense for your analysis, without changing your robot code.
+The read-only values are in rotations and meters, while the tunable ones are typed in degrees, RPM and meters. AdvantageScope can convert any field for display without changing your code: right-click it in a graph legend and choose **Convert Units…**. For elevator height in inches, convert `measurement/position` from meters to inches.
 
-### Changing display units
-
-To change how a value is displayed in AdvantageScope:
-
-1. Add the telemetry field to a graph (Line Graph, Discrete, etc.)
-2. Right-click on the field in the legend
-3. Select **"Convert Units..."**
-4. Choose your desired output unit from the list
-
-For example, you can convert:
-
-* Rotations → Degrees, Radians, or custom mechanism units
-* Rotations per Second → RPM, Degrees per Second, Radians per Second
-* Meters → Inches, Feet, Centimeters
-* Meters per Second → Feet per Second, Inches per Second
-
-### Multiple units on the same axis
-
-AdvantageScope allows you to plot values with **different units on the same axis**, which is incredibly useful for comparing related measurements:
-
-**Example: Comparing Position and Velocity** You can plot both `mechanism/position` (in degrees) and `mechanism/velocity` (in degrees/second) on the same graph to see how velocity changes relative to position during a motion profile.
-
-**Example: Comparing Setpoint vs Actual** Plot `closedloop/setpoint/position` and `mechanism/position` with the same unit conversion to directly compare your target trajectory against actual mechanism movement.
-
-**Example: Analyzing Current Draw** Plot `current/supply` and `current/stator` together to understand the relationship between battery load and motor torque output.
-
-### Setting up unit conversion in AdvantageScope
-
-1. **Open Line Graph**: Drag fields from the sidebar to a Line Graph tab
-2. **Access Unit Settings**: Right-click on any field in the graph legend
-3. **Select Convert Units**: Choose the conversion you want
-4. **Apply to Multiple Fields**: Each field can have its own conversion, allowing mixed-unit comparisons
-
-{% hint style="success" %}
-**Pro Tip**: When tuning a mechanism, convert position to your natural units (degrees for arms, inches for elevators) and plot alongside velocity. This helps you visualize how your motion profile executes and identify where the mechanism accelerates, cruises, and decelerates.
-{% endhint %}
-
-### Common unit conversions for FRC
-
-| Original Unit | Useful Conversions  | Use Case                             |
-| ------------- | ------------------- | ------------------------------------ |
-| Rotations     | Degrees, Radians    | Arm angles, turret position          |
-| Rotations     | Inches, Centimeters | Elevator height (with circumference) |
-| rot/s         | RPM                 | Flywheel speed                       |
-| rot/s         | deg/s, rad/s        | Arm angular velocity                 |
-| Meters        | Inches, Feet        | Elevator/linear mechanism position   |
-| m/s           | ft/s, in/s          | Linear mechanism velocity            |
-
-### Exporting data with units
-
-When exporting data from AdvantageScope, the exported values use the **converted units** you have selected in the display. This makes it easy to:
-
-* Share data with team members in familiar units
-* Import into spreadsheets for further analysis
-* Create documentation with consistent unit conventions
+See [Live tuning keys and units](../details/live-tuning/keys-and-units.md#units-what-you-type-and-what-you-read) for every unit and the [recommended graph setup for a tuning session](../details/live-tuning/keys-and-units.md#see-both-in-the-same-units-with-advantagescope).

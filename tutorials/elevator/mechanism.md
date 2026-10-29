@@ -4,7 +4,7 @@ description: Describe the elevator and create the Elevator mechanism.
 
 # Step 2: The elevator
 
-The `SmartMotorController` from step 1 can already spin the motor. An `Elevator` adds what makes it an elevator: a physics simulation, a drawing of the mechanism for your dashboard, and the commands and triggers you will use in step 3.
+The `SmartMotorController` from step 1 is configured, but nothing tells it to move yet. An `Elevator` adds what makes it an elevator: a physics simulation, a drawing of the mechanism for your dashboard, and the commands and triggers you will use in step 3.
 
 <figure><img src="../../.gitbook/assets/mech-two-configs.png" alt="A diagram. A mechanism config, which says what the mechanism is, such as its length, mass, hard stops and how it is drawn, and a SmartMotorControllerConfig, which says how its motor behaves, such as gearing, PID, feedforward, soft limits and current, both go into the mechanism class. The mechanism then drives the simulation's physics and Mechanism2d, and the real robot's commands and telemetry."><figcaption><p>Two configs go into one mechanism.</p></figcaption></figure>
 
@@ -114,14 +114,9 @@ Two calls keep the mechanism alive. `updateTelemetry()` publishes its telemetry 
 
 In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you, so there is nothing more to do.
 
-In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it. `Robot.java` has the two functions you need:
+In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it, the same way as in [the arm tutorial's step 2](../arm/mechanism.md#3-update-it-every-loop), which explains each part. Every mechanism gets one line in `robotPeriodic()`, before `scheduler.run()`, and one in `simulationInit()`.
 
-* **`robotPeriodic()`** runs every loop, on the robot and in simulation. Call the mechanism's `periodic()` here, before `scheduler.run()`, so that the commands see fresh values.
-* **`simulationInit()`** runs once, when the simulation starts. The template does not have it yet, so add it, and start the mechanism's `simulationPeriodic()` here with `startSimulation(...)`, which runs it in its own `Notifier` every loop, in simulation only. That keeps the simulation from adding to the robot loop's time, as [Where the tutorials put things](../project-setup.md#where-the-tutorials-put-things) explains.
-
-Every mechanism you add to the robot gets one line in each of the two.
-
-Two smaller changes tidy up the template while you are here. Keep `Scheduler.getDefault()` in a `scheduler` attribute instead of asking for it every loop, and publish the scheduler with `Telemetry.log(...)` after it runs, so that a dashboard shows which commands are running and which mechanisms they hold.
+If your `Robot.java` already has `simulationInit()` and `startSimulation(...)` from the arm tutorial, add the lines below. If not, copy the whole `Robot.java` from the Commands v3 tab of [the complete file](#the-complete-file).
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -161,49 +156,16 @@ public void simulationPeriodic() {
 
 {% code title="Robot.java" %}
 ```java
-import java.util.ArrayList;
-import java.util.List;
-import org.wpilib.system.Notifier;
-import org.wpilib.telemetry.Telemetry;
 import first.robot.mechanisms.ElevatorMechanism;
 
-public class Robot extends OpModeRobot {
-  // ...
-  final ElevatorMechanism elevator = new ElevatorMechanism();
-  // ...
+// A field of Robot.
+final ElevatorMechanism elevator = new ElevatorMechanism();
 
-  // The scheduler that runs every command.
-  private final Scheduler scheduler = Scheduler.getDefault();
-  // Each mechanism's simulation Notifier, kept so that it is not garbage collected.
-  private final List<Notifier> simulationNotifiers = new ArrayList<>();
+// In robotPeriodic(), before scheduler.run():
+elevator.periodic();
 
-  // ...
-
-  @Override
-  public void robotPeriodic() {
-    // Runs every loop, on the robot and in simulation.
-    // Update the mechanism before the scheduler runs its commands.
-    elevator.periodic();
-    scheduler.run();
-    // Publish the scheduler, so that a dashboard shows which commands are running.
-    Telemetry.log("Scheduler", scheduler, Scheduler.proto);
-  }
-
-  @Override
-  public void simulationInit() {
-    // Runs once, when the simulation starts.
-    // Run each mechanism's simulation in its own Notifier, every robot loop.
-    startSimulation("Elevator", elevator::simulationPeriodic);
-  }
-
-  /** Runs a mechanism's simulation in its own Notifier, every robot loop period. */
-  private void startSimulation(String name, Runnable simulationPeriodic) {
-    Notifier notifier = new Notifier(simulationPeriodic);
-    notifier.setName(name + " Simulation");
-    notifier.startPeriodic(getPeriod());
-    simulationNotifiers.add(notifier);
-  }
-}
+// In simulationInit():
+startSimulation("Elevator", elevator::simulationPeriodic);
 ```
 {% endcode %}
 {% endtab %}
@@ -272,7 +234,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .withDrumRadius(Inches.of(0.25), 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .withClosedLoopController(4, 0, 0)
@@ -363,7 +326,8 @@ public class ElevatorMechanism implements Mechanism {
   private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .withDrumRadius(Inches.of(0.25), 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .withClosedLoopController(4, 0, 0)
@@ -534,15 +498,18 @@ ElevatorSubsystem::ElevatorSubsystem() {
       .WithSubsystem(this)
       .WithClosedLoopMode()
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .WithMechanismCircumference(0.25_in, 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .WithFeedback(4, 0, 0)
       .WithSimClosedLoopController(4, 0, 0)
       // The fastest the closed loop is allowed to move and accelerate the carriage.
       .WithLinearTrapezoidProfile(0.5_mps, 0.5_mps_sq)
-      // Feedforward constants: kS, kG and kV.
+      // Feedforward constants (kS, kG and kV), on the real robot and in simulation.
       .WithFeedforward(wpi::math::ElevatorFeedforward{
+          0_V, 0_V, wpi::units::unit_t&#x3C;wpi::math::ElevatorFeedforward::kv_unit>{0}})
+      .WithSimFeedforward(wpi::math::ElevatorFeedforward{
           0_V, 0_V, wpi::units::unit_t&#x3C;wpi::math::ElevatorFeedforward::kv_unit>{0}})
       // Gearing from the motor rotor to the sprocket: a 3:1 stage and a 4:1 stage, 12:1 in total.
       .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
@@ -584,3 +551,13 @@ ElevatorSubsystem::ElevatorSubsystem() {
 </strong></code></pre>
 {% endtab %}
 {% endtabs %}
+
+## Check it
+
+Build the code again. You can already run the simulation as in [step 4](simulate.md): the elevator is drawn with the carriage at 0 m, its starting position. It does not move yet, because nothing gives it a setpoint.
+
+* **`Elevator` cannot be found:** the import is from the other command framework. Commands v2 uses `yams.commands2.mechanisms.Elevator`, Commands v3 uses `yams.commands3.mechanisms.Elevator`.
+
+## Next
+
+[Step 3: Commands and buttons](commands.md)

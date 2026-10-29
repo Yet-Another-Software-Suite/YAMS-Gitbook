@@ -110,38 +110,30 @@ public class ArmSubsystem extends SubsystemBase {
 {% endtab %}
 
 {% tab title="Java, Commands v3" %}
-{% code title="mechanisms/ArmMechanism.java" %}
+In Commands v3 the simulation already runs in a `Notifier` that `Robot.simulationInit()` starts for each mechanism (see [Step 4: Simulate it](../tutorials/arm/simulate.md)). Keep that pattern and only change the period: start the arm's `Notifier` every 1 ms instead of every robot loop.
+
+{% code title="Robot.java (fragment)" %}
 ```java
 import static org.wpilib.units.Units.Milliseconds;
 import static org.wpilib.units.Units.Seconds;
 
-import org.wpilib.framework.RobotBase;
-import org.wpilib.system.Notifier;
+@Override
+public void simulationInit() {
+  // Must match withSimulationPeriod on the arm's motor.
+  startSimulation("Arm", armMechanism::simulationPeriodic, Milliseconds.of(1).in(Seconds));
+}
 
-public class ArmMechanism implements Mechanism {
-  // ...
-
-  // Steps the arm's physics simulation every millisecond, in simulation only.
-  private final Notifier simNotifier = new Notifier(() -> arm.simIterate());
-
-  public ArmMechanism() {
-    if (RobotBase.isSimulation()) {
-      simNotifier.setName("Arm simulation");
-      // Must match withSimulationPeriod on the arm's motor.
-      simNotifier.startPeriodic(Milliseconds.of(1).in(Seconds));
-    }
-  }
-
-  /** Call this from Robot.robotPeriodic(), before the scheduler runs. */
-  public void periodic() {
-    // Publishes the arm's telemetry, and applies anything changed through live tuning.
-    arm.updateTelemetry();
-  }
+/** Runs a mechanism's simulation in its own Notifier, every period seconds. */
+private void startSimulation(String name, Runnable simulationPeriodic, double period) {
+  Notifier notifier = new Notifier(simulationPeriodic);
+  notifier.setName(name + " Simulation");
+  notifier.startPeriodic(period);
+  simulationNotifiers.add(notifier);
 }
 ```
 {% endcode %}
 
-Remove the arm's `startSimulation(...)` call from `Robot.simulationInit()`, and the `simulationPeriodic()` method from `ArmMechanism`.
+`ArmMechanism.simulationPeriodic()` stays as it is, calling `arm.simIterate()`. Mechanisms left on the default 20 ms period keep `getPeriod()`.
 {% endtab %}
 
 {% tab title="C++" %}
@@ -206,6 +198,14 @@ Nothing else needs to change:
 * **It costs CPU.** Every mechanism now runs its physics 1000 times a second. If your computer cannot keep up, the `Notifier` runs late, and since each call still adds exactly 1 ms, the simulation runs slower than real time. With many mechanisms, one `Notifier` that calls every `simIterate()` is lighter than one per mechanism. A period of 2 ms or 5 ms is a good compromise: it is still 10 or 4 times finer than the default.
 * **Keep unit tests on the default period.** Stepping every millisecond makes tests much slower, especially on CI.
 
+## Check it
+
+Start the simulation and hold the arm at a setpoint. With stiff gains that oscillated before, the arm should now settle. The mechanism should also move at real speed: a move that takes 1 second on the robot should take about 1 second in simulation. If it is 20 times too fast or too slow, the simulation period and the `Notifier` period do not match.
+
+## Next
+
+Make the battery sag in simulation too: [How do I enable battery discharge simulation?](how-do-i-enable-battery-discharge-simulation.md)
+
 ## Code Reference
 
-* [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)
+* [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/motorcontrollers/SmartMotorControllerConfig.html)

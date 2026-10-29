@@ -14,13 +14,9 @@ Following WPILib, an arm is at 0° when it is parallel to the ground and 90° wh
 
 If your mechanism does not need gravity accounted for, because it turns about a vertical axis or is balanced, use a [Pivot](turrets-wrists.md) instead.
 
-<figure><img src="../.gitbook/assets/mech-flow.png" alt="A flow diagram. A command such as arm.run or arm.runTo gives a setpoint to the mechanism, which gives it to the SmartMotorController. The controller runs the profile, PID, feedforward and limits and sends volts to the motor, and reads back the encoder position and velocity. updateTelemetry is called every loop to publish values and draw the mechanism. simIterate is called every loop in simulation to step the physics."><figcaption><p>The same chain runs every mechanism.</p></figcaption></figure>
-
-A YAMS `Arm` is a thin layer over one [`SmartMotorController`](editor/). The `Arm` knows what the mechanism is, turns your commands into setpoints, and runs its simulation. The motor controller does the closed loop control. Keep one mechanism per subsystem, so live tuning and command requirements stay simple.
-
 ## Creating an arm
 
-The code is the same for Commands v2 and Commands v3 except for the package you import from and the class that owns the mechanism.
+This is the shape of an arm class, not a complete file: the imports and the motor controller object (`spark`, a `SparkMax`) are left out. [Step 2 of the Arm tutorial](../tutorials/arm/mechanism.md) builds the complete file. The code is the same for Commands v2 and Commands v3 except for the package you import from and the class that owns the mechanism.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -36,7 +32,7 @@ public class ArmSubsystem extends SubsystemBase
       .withClosedLoopController(4, 0, 0)
       .withFeedforward(new ArmFeedforward(0, 0.3, 1.2))
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
-      .withSoftLimits(Degrees.of(-30), Degrees.of(100))
+      .withSoftLimits(Degrees.of(-25), Degrees.of(105))
       .withStartingPosition(Degrees.of(0))
       .withMomentOfInertia(Feet.of(3), Pounds.of(4))
       .withStatorCurrentLimit(Amps.of(40))
@@ -45,7 +41,7 @@ public class ArmSubsystem extends SubsystemBase
   private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), motorConfig);
   private final ArmConfig config = new ArmConfig()
       .withLength(Feet.of(3))
-      .withHardLimits(Degrees.of(-100), Degrees.of(200))
+      .withHardLimits(Degrees.of(-30), Degrees.of(110))
       .withTelemetry("Arm", TelemetryVerbosity.HIGH);
   private final Arm arm = new Arm(config, motor);
 
@@ -79,7 +75,7 @@ public class ArmMechanism implements Mechanism
       .withClosedLoopController(4, 0, 0)
       .withFeedforward(new ArmFeedforward(0, 0.3, 1.2))
       .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
-      .withSoftLimits(Degrees.of(-30), Degrees.of(100))
+      .withSoftLimits(Degrees.of(-25), Degrees.of(105))
       .withStartingPosition(Degrees.of(0))
       .withMomentOfInertia(Feet.of(3), Pounds.of(4))
       .withStatorCurrentLimit(Amps.of(40))
@@ -88,7 +84,7 @@ public class ArmMechanism implements Mechanism
   private final SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), motorConfig);
   private final ArmConfig config = new ArmConfig()
       .withLength(Feet.of(3))
-      .withHardLimits(Degrees.of(-100), Degrees.of(200))
+      .withHardLimits(Degrees.of(-30), Degrees.of(110))
       .withTelemetry("Arm", TelemetryVerbosity.HIGH);
   private final Arm arm = new Arm(config, motor);
 
@@ -108,106 +104,15 @@ public class ArmMechanism implements Mechanism
 {% endtab %}
 {% endtabs %}
 
-The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/), and the options in `config` in [ArmConfig](mechanism-configs/arm-config.md).
+The options in `motorConfig` are explained in [SmartMotorControllerConfig](editor/config/), and the options in `config` in [ArmConfig](mechanism-configs/arm-config.md). The hard limits are the arm's physical stops, and the soft limits sit 5° inside them.
 
-## Commands
+{% hint style="info" %}
+The gains (`kP` of 4, `kG` of 0.3, `kV` of 1.2) and the profile are placeholders. In simulation the arm should move to its target and hold there, perhaps with some overshoot or sag. On your robot they will be wrong: [Step 5 of the Arm tutorial](../tutorials/arm/tune.md) finds the real ones.
+{% endhint %}
 
-Every command below exists with the same name in Commands v2 and Commands v3.
+## Controlling an arm
 
-<figure><img src="../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
-
-| Command                         | What it does                                       | Ends                                  |
-| ------------------------------- | -------------------------------------------------- | ------------------------------------- |
-| `setAngle(Angle)`, `run(Angle)` | Go to the angle and hold it. The two are the same. | Never, until interrupted.             |
-| `runTo(Angle, Angle tolerance)` | Go to the angle.                                   | When the arm is within the tolerance. |
-| `set(double)`                   | Output a duty cycle, with the closed loop off.     | Never, until interrupted.             |
-| `setVoltage(Voltage)`           | Output a voltage, with the closed loop off.        | Never, until interrupted.             |
-
-`setAngle`, `run` and `runTo` also take a `Supplier<Angle>`, and `set` and `setVoltage` a supplier too, for a setpoint that changes while the command runs.
-
-{% tabs %}
-{% tab title="Commands v2" %}
-```java
-// In the subsystem
-public Command hold(Angle angle)
-{
-  return arm.setAngle(angle); // never ends: a good default command
-}
-
-public Command moveTo(Angle angle)
-{
-  return arm.runTo(angle, Degrees.of(2)); // ends when it gets there
-}
-
-// In RobotContainer
-arm.setDefaultCommand(arm.hold(Degrees.of(0)));
-Command score = arm.moveTo(Degrees.of(80)).andThen(intake.eject());
-```
-{% endtab %}
-
-{% tab title="Commands v3" %}
-```java
-// In the mechanism
-public Command hold(Angle angle)
-{
-  return run(coroutine -> coroutine.await(arm.setAngle(angle)))
-      .withPriority(Command.LOWEST_PRIORITY) // so any other command can take over
-      .named("Arm Hold");
-}
-
-public Command moveTo(Angle angle)
-{
-  return arm.runTo(angle, Degrees.of(2)); // ends when it gets there
-}
-
-// In Robot
-arm.setDefaultCommand(arm.hold(Degrees.of(0)));
-Command score = Command.noRequirements(coroutine -> {
-  coroutine.await(arm.moveTo(Degrees.of(80)));
-  coroutine.await(intake.eject());
-}).named("Score");
-```
-{% endtab %}
-{% endtabs %}
-
-When a command ends the motor keeps its last request, so a mechanism that reached its goal stays there until another command, usually the default one, gives it something else. [run() vs runTo() Commands](run-vs-runto.md) covers the pitfalls, including a default command undoing a `runTo()`.
-
-## Setpoint functions
-
-The commands above are built on plain functions that set the setpoint and return at once. Use them when you write your own command, or when something other than a command decides the setpoint, such as an AdvantageKit IO layer.
-
-| Function                                   | What it does                                                                                                                                         |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `setMechanismPositionSetpoint(Angle)`      | Go to this angle with closed loop control.                                                                                                           |
-| `setMeasurementPositionSetpoint(Distance)` | Go to this distance. Needs a [circumference](editor/config/gearing-and-units.md#withmechanismcircumference).                                         |
-| `setVoltageSetpoint(Voltage)`              | Output this voltage. Stops the closed loop.                                                                                                          |
-| `setDutyCycleSetpoint(double)`             | Output this duty cycle, from -1 to 1. Stops the closed loop.                                                                                         |
-| `getMechanismSetpoint()`                   | The current position setpoint as an angle, if there is one.                                                                                          |
-| `getMeasurementSetpoint()`                 | The same setpoint as a distance. Empty if there is no setpoint or no [circumference](editor/config/gearing-and-units.md#withmechanismcircumference). |
-
-```java
-arm.setMechanismPositionSetpoint(Degrees.of(45));
-```
-
-These do not require the subsystem or mechanism, so nothing stops two callers fighting over the setpoint. Prefer the commands unless you need these. [Setpoint Methods vs Command Helpers](setpoint-methods.md) compares the two in detail.
-
-## Asking where it is
-
-<figure><img src="../.gitbook/assets/mech-triggers.png" alt="A number line from minus 30 to 120 degrees with a mechanism at 72 degrees. near 80 within 10 is true. between 0 and 60 is false. gte 45 is true. lte 45 is false. max and min, at the ends of the travel, are false. Each is a Trigger, and the is functions such as isNear give the same answers as booleans."><figcaption><p>The same questions as Triggers or as booleans.</p></figcaption></figure>
-
-| As a `Trigger`             | As a boolean                   | True when                                                                |
-| -------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
-| `near(angle, within)`      | `isNear(angle, within)`        | The arm is within `within` of `angle`.                                   |
-| `between(start, end)`      | `isBetween(start, end)`        | The arm is between the two angles.                                       |
-| `gte(angle)`, `lte(angle)` | `isGte(angle)`, `isLte(angle)` | The arm is at or above, or at or below, the angle.                       |
-| `max()`, `min()`           | `isAtMax()`, `isAtMin()`       | The arm is at its soft limit, or its hard limit if no soft limit is set. |
-
-`getAngle()` returns the arm's current angle.
-
-```java
-arm.near(Degrees.of(80), Degrees.of(2)).onTrue(intake.eject());
-if (arm.isNear(Degrees.of(0), Degrees.of(2))) { /* stowed */ }
-```
+An arm takes `Angle` targets: `arm.setAngle(Degrees.of(45))` goes to 45° and holds it, `arm.runTo(Degrees.of(45), Degrees.of(2))` ends when it gets there, and `arm.getAngle()` reads where it is. [Controlling a mechanism](controlling-a-mechanism.md) lists every command, setpoint function and check, and [When mechanism commands end](run-vs-runto.md) explains how they work with a default command.
 
 ## Absolute encoders
 
@@ -329,14 +234,14 @@ arm.setDefaultCommand(arm.rest());                     // then the motor rests
 {% endtabs %}
 
 {% hint style="info" %}
-Resting the motor with `set(0)` or `arm.setDutyCycleSetpoint(0)` stops a closed loop that runs on the SystemCore. The next move, with a command such as `runTo(...)` or with `arm.setMechanismPositionSetpoint(...)`, starts it again for you. Only when you call `arm.getMotorController()` directly do you start and stop it yourself, see [Starting and stopping the SystemCore closed loop](setpoint-methods.md#starting-and-stopping-the-systemcore-closed-loop).
+Resting the motor with `set(0)` or `arm.setDutyCycleSetpoint(0)` stops a closed loop that runs on the SystemCore. The next move, with a command such as `runTo(...)` or a function such as `arm.setMechanismPositionSetpoint(...)`, starts it again for you. Only when you call `arm.getMotorController()` directly do you start and stop it yourself: see [Driving the motor controller yourself](setpoint-methods.md#driving-the-motor-controller-yourself).
 {% endhint %}
 
 Soft limits still apply while the arm moves, with either kind of brake. The brake does not replace them.
 
 ## Configuring and tuning an arm, step by step
 
-Do the configuration steps first, in simulation, then the tuning steps on the real mechanism with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
+Do the configuration steps first, in simulation, then tune the real arm with [live tuning](live-tuning/). Tuning something that is configured wrong wastes the time.
 
 {% hint style="danger" %}
 Like all tuning, this can be dangerous. Keep clear of the mechanism, start with low current limits and small moves, and practice in simulation first.
@@ -382,47 +287,14 @@ Set [`withLength`](mechanism-configs/arm-config.md#withlength) and [`withMomentO
 {% endstep %}
 {% endstepper %}
 
-### Tune it
+### What is different when tuning an arm
 
-{% stepper %}
-{% step %}
-#### Find kG with the arm level
+[Step 5 of the Arm tutorial](../tutorials/arm/tune.md) walks through tuning an arm, and [Tuning order](live-tuning/#tuning-order) lists the order with the keys to watch. What sets an arm apart:
 
-Set kP, kI, kD and the other feedforward gains to 0. Hold the arm level and raise `closedloop/feedforward/kG` until the arm stays where you leave it. Level is where gravity pulls hardest, so a kG found there is right at every angle.
-{% endstep %}
-
-{% step %}
-#### Find kS
-
-Raise `closedloop/feedforward/kS` until the arm is just about to move, then back off a little.
-{% endstep %}
-
-{% step %}
-#### Raise kP, then add kD
-
-Raise kP until the arm reaches the setpoint quickly, and stop when it starts to shake. Add a little kD if it overshoots. Without a profile a new setpoint is a sudden jump, so tune with small moves, a few degrees or centimeters at a time.
-{% endstep %}
-
-{% step %}
-#### Add the motion profile last
-
-Once the arm holds and reaches small setpoints cleanly, set a maximum velocity and acceleration the arm can really reach, and raise them a step at a time. If the arm cannot keep up, the profile is too fast, not the gains too low.
-{% endstep %}
-
-{% step %}
-#### Find kV with the profile
-
-kV only acts while the setpoint is moving, so it is tuned with the profile. Run a long move and watch the setpoint velocity against `mechanism/velocity` in the middle of it. Raise kV until they match.
-{% endstep %}
-
-{% step %}
-#### Check it everywhere
-
-Test near both limits, straight up, level, and holding a game piece. If the loaded arm needs different gains, put them in a second [slot](editor/config/closed-loop-control.md#slots). [How do I control a mechanism that carries a game piece?](../how-to/how-do-i-control-a-mechanism-that-carries-a-game-piece.md) explains how much the gains change, and how to switch them.
-{% endstep %}
-{% endstepper %}
-
-[Tuning order](live-tuning/#tuning-order) has the same steps with the NetworkTables keys to watch.
+* **kG comes first, found with the arm level.** Gravity pulls hardest on a level arm, and `ArmFeedforward` scales kG by the cosine of the angle, so a kG that holds the arm level holds it everywhere.
+* **Zero must really be level.** If the encoder is a few degrees off, kG is applied at the wrong strength and the arm sags at some angles and drifts up at others.
+* **Straight up needs no kG.** Check the arm near vertical too, where kP alone holds it.
+* **A game piece changes the gains.** Test it loaded. If it needs different gains, put them in a second [slot](editor/config/closed-loop-control.md#slots): [How do I control a mechanism that carries a game piece?](../how-to/how-do-i-control-a-mechanism-that-carries-a-game-piece.md) shows how.
 
 ### Tuning an arm with a brake
 

@@ -4,10 +4,6 @@ description: Learn how to program an Arm.
 
 # Arm
 
-{% hint style="info" %}
-Two motors on one shaft or gearbox? Add the second as a follower with `withFollowers`. Two motors that aren't on the same shaft or gearbox, such as one on each side of the mechanism? Make the second a loosely coupled follower with `withLooselyCoupledFollowers`: the mechanism still works as this tutorial shows. [Followers](../details/editor/config/followers.md) explains both.
-{% endhint %}
-
 ## Intro
 
 At the end of this tutorial you will have an `Arm` that works in both real life and simulation with the same code!
@@ -51,6 +47,12 @@ Every step has a tab for **Java with Commands v2**, **Java with Commands v3** an
 | [Step 2: The arm](arm/mechanism.md)                     | Describe the arm with an `ArmConfig` and create the `Arm`.                                    |
 | [Step 3: Commands and buttons](arm/commands.md)         | Turn the `Arm` into commands and bind them to controller buttons.                             |
 | [Step 4: Simulate it](arm/simulate.md)                  | Run the code on your computer and drive the arm with a controller.                            |
+| [Step 5: Tune it](arm/tune.md) | Tune the gains while the simulation runs, and copy them into your code. |
+| [Step 6: Run it on the robot](arm/robot.md) | Check the arm safely on the robot, then tune it there. |
+
+## More than one motor
+
+Two motors on one shaft or gearbox? Add the second as a follower with `withFollowers`. Two motors that aren't on the same shaft or gearbox, such as one on each side of the mechanism? Make the second a loosely coupled follower with `withLooselyCoupledFollowers`: the mechanism still works as this tutorial shows. [Followers](../details/editor/config/followers.md) explains both.
 
 ## Complete Example
 

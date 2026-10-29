@@ -42,7 +42,7 @@ Every field is disabled by default. `withTelemetryVerbosity()` gives you a cumul
 
 A few guidelines:
 
-* **Don't just reach for `HIGH` everywhere.** `HIGH` includes PID gains, feedforward gains, current limits, and every boolean status flag, useful while tuning, but mostly redundant once a mechanism is dialed in. Prefer `LOW` or `MID` plus the handful of fields you actually watch (current, temperature, setpoint error) for a competition build.
+* **Don't just reach for `HIGH` everywhere.** `HIGH` includes PID gains, feedforward gains, current limits, and every boolean status flag, useful while tuning, but mostly redundant once a mechanism is dialed in. Prefer `LOW` or `MID` plus the handful of fields you actually watch (current, temperature, setpoint and position) for a competition build.
 * **Prune before you log, not after.** DataLog files only grow, there's no way to selectively remove a field after the fact without re-recording. Decide what you need before the match, not while reviewing the log afterward.
 * **DataLog is not a substitute for NetworkTables during development.** Live tools (Elastic, Shuffleboard, AdvantageScope in live mode) read NT4, not DataLog. Keep NetworkTables on while you're actively tuning, and consider disabling it only for fields you truly don't need live, once you're locking in a competition build.
 

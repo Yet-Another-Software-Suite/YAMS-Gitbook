@@ -1,10 +1,10 @@
 # How do I use a DCMotor that isn't in WPILib?
 
-WPILib ships physics models for common FRC motors (NEO, Falcon, CIM, etc.), but third-party or custom motors are not included. When your simulation needs accurate physics for an unlisted motor, you construct a `DCMotor` directly from its datasheet constants, stall torque, stall current, free speed, and free current, so the simulated plant behaves the same as your real hardware. Use this whenever you are simulating a mechanism driven by a motor that `DCMotor` does not already have a static factory for.
+**Goal:** simulate a motor that WPILib has no `DCMotor` for, by building one from its datasheet and giving it to your `SmartMotorController`.
 
-Sometimes the motor you use is not yet included in WPILib.
+Every YAMS wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`) takes a `DCMotor` (`org.wpilib.math.system.DCMotor`). YAMS uses it to simulate the motor, so a wrong `DCMotor` makes the simulation faster or slower and stronger or weaker than the real robot.
 
-WPILib's `org.wpilib.math.system.DCMotor` has static factories for the motors it knows about (`getNEO`, `getNeo550`, `getNeoVortex`, `getFalcon500`, `getKrakenX60`, `getKrakenX44`, `getMinion`, and more). Each one is just a call to the `DCMotor` constructor, for example the Kraken X60:
+WPILib has static factories for the motors it knows about (`getNEO`, `getNeo550`, `getNeoVortex`, `getFalcon500`, `getKrakenX60`, `getKrakenX44`, `getMinion` and more). Use one of those if your motor is listed. Each is just a call to the `DCMotor` constructor, for example the Kraken X60:
 
 ```java
 public static DCMotor getKrakenX60(int numMotors) {
@@ -14,41 +14,70 @@ public static DCMotor getKrakenX60(int numMotors) {
 }
 ```
 
-Create a `DCMotor` from the datasheet values. Use ReCa.lc to calculate them.
+## Step 1: Find the datasheet values
+
+You need four numbers, measured at a nominal voltage (usually 12 V): stall torque, stall current, free current and free speed. Get them from the manufacturer's datasheet, or look the motor up on ReCalc:
 
 {% embed url="https://www.reca.lc/motors" %}
 
-```java
-/**
- * Constructs a DC motor.
- *
- * @param nominalVoltage Voltage at which the motor constants were measured.
- * @param stallTorque Torque when stalled.
- * @param stallCurrent Current draw when stalled.
- * @param freeCurrent Current draw under no load.
- * @param freeSpeed Angular velocity under no load.
- * @param numMotors Number of motors in a gearbox.
- */
-public DCMotor(
-    double nominalVoltage,
-    double stallTorque,
-    double stallCurrent,
-    double freeCurrent,
-    double freeSpeed,
-    int numMotors)
-```
-
-Torque is in newton-meters, current in amps and free speed in radians per second.
-
 <figure><img src="../.gitbook/assets/howto-dcmotor-curve.png" alt="A graph of torque and current against motor speed for a Minion at 12 volts. Torque falls in a straight line from the stall torque of 3.1 newton meters at zero speed to zero at the free speed of 7200 RPM. Current falls from the stall current of 200.46 amps to the free current of 1.43 amps. Beside it, the DCMotor constructor takes the nominal voltage, stall torque, stall current, free current, free speed and number of motors, in that order."><figcaption><p>The four datasheet values and where each goes in the constructor.</p></figcaption></figure>
+
+## Step 2: Build the DCMotor
+
+The constructor takes the values in this order. Torque is in newton meters, current in amps and free speed in radians per second.
+
+```java
+public DCMotor(
+    double nominalVoltage,  // volts the values were measured at
+    double stallTorque,     // newton meters
+    double stallCurrent,    // amps
+    double freeCurrent,     // amps
+    double freeSpeed,       // radians per second
+    int numMotors)          // motors in the gearbox
+```
 
 For example, before WPILib added `DCMotor.getMinion()`, a [Minion motor](https://store.ctr-electronics.com/products/minion-brushless-motor) could be created with:
 
+{% code title="ExampleSubsystem.java (fragment)" %}
 ```java
 import static org.wpilib.units.Units.RPM;
 import static org.wpilib.units.Units.RadiansPerSecond;
 import org.wpilib.math.system.DCMotor;
 
-int numMotors = 1;
-new DCMotor(12, 3.1, 200.46, 1.43, RPM.of(7200).in(RadiansPerSecond), numMotors);
+// One Minion: 12 V, 3.1 N·m stall torque, 200.46 A stall current,
+// 1.43 A free current, 7200 RPM free speed.
+private final DCMotor minion =
+    new DCMotor(12, 3.1, 200.46, 1.43, RPM.of(7200).in(RadiansPerSecond), 1);
 ```
+{% endcode %}
+
+## Step 3: Give it to the wrapper
+
+Pass your `DCMotor` where the examples pass `DCMotor.getNEO(1)`. This fragment goes in the same class, after the `smcConfig` field:
+
+{% code title="ExampleSubsystem.java (fragment)" %}
+```java
+private final SparkMax spark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
+
+// The custom DCMotor replaces DCMotor.getNEO(1).
+private final SmartMotorController motor = new SparkWrapper(spark, minion, smcConfig);
+```
+{% endcode %}
+
+{% hint style="warning" %}
+`TalonFXSWrapper` uses the `DCMotor` to choose the TalonFXS motor arrangement, so it only accepts the motors it knows (Minion, NEO, NEO 550, NEO Vortex and Thrifty Pulsar), compared value for value. Any other `DCMotor` throws an `IllegalArgumentException` ("Unknown motor for TalonFXS"). With a TalonFXS, use the WPILib factory, for example `DCMotor.getMinion(1)`.
+{% endhint %}
+
+## Check it
+
+1. Start the simulation and run the mechanism at full output (for example a `set(1)` command).
+2. Watch the motor's `rotor/velocity` under **NetworkTables > Mechanisms**. With little load it should level off near the motor's free speed: 7200 RPM is 120 rotations per second.
+
+## If it did not work
+
+* **The simulated motor is far too fast or too slow.** A value is in the wrong unit: free speed must be in radians per second (convert RPM with `RPM.of(x).in(RadiansPerSecond)`), and torque in newton meters, not inch pounds.
+* **`IllegalArgumentException: Unknown motor for TalonFXS`.** See the warning above.
+
+## Next
+
+Tune the mechanism now that the simulation matches the motor: [Step 5: Tune it](../tutorials/arm/tune.md).

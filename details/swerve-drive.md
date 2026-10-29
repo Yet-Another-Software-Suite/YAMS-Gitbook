@@ -4,7 +4,7 @@ icon: car-side
 
 # Swerve drive
 
-Every `SwerveDriveConfig` option, with a graphic and an example, is on the [SwerveDriveConfig](mechanism-configs/swerve-drive-config.md) page under this one.
+This page explains how `SwerveDrive` works and what it can do. Every `SwerveDriveConfig` option, with a graphic and an example, is on the [SwerveDriveConfig](mechanism-configs/swerve-drive-config.md) page under this one. To build one from scratch, follow the [Swerve Drive tutorial](../tutorials/swerve-drive.md).
 
 ## How a swerve drive works
 
@@ -20,7 +20,7 @@ Every other mechanism in YAMS (`Arm`, `Elevator`, `Pivot`, `FlyWheel`) wraps a s
 
 ## Basic swerve config
 
-Given the [tutorial](../tutorials/swerve-drive.md), here is the shape of a four-module config. Modules are ordered clockwise from front-left: FL, FR, BL, BR.
+Here is the shape of a four-module config, condensed from the [tutorial](../tutorials/swerve-drive.md). The modules are passed front left, front right, back left, back right. The kinematics come from each module's location, so that order is not what makes the robot drive, but arrays such as `getModuleStates()` and the feedforward `Force[]` use the same order.
 
 Robot code imports `SmartMotorControllerConfig`, `SwerveDriveConfig`, `SwerveDrive` and `SwerveInputStream` from the command framework package that matches your vendordep, and everything else from `yams.core`:
 
@@ -58,19 +58,21 @@ In Commands v3, `this` is your `Mechanism` instead of a `Subsystem`.
 {% endtab %}
 {% endtabs %}
 
+A fragment for your subsystem's or mechanism's constructor. `driveMotor`, `azimuthMotor`, `encoder` and `gyro` are your hardware objects, and the gains are placeholders:
+
 ```java
 SmartMotorControllerConfig driveCfg = new SmartMotorControllerConfig(this)
       .withWheelDiameter(Inches.of(4))
       .withGearing(new MechanismGearing(6.75))
       .withClosedLoopController(0.3, 0, 0)
-      .withFeedforward(new SimpleMotorFeedforward(0, 1.9, 0.01))
+      .withFeedforward(new SimpleMotorFeedforward(0, 0.85))
       .withStatorCurrentLimit(Amps.of(40))
       .withTelemetry("driveMotor", TelemetryVerbosity.HIGH);
 
 SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
+      .withClosedLoopController(4, 0, 0)
+      .withContinuousWrapping(Rotations.of(-0.5), Rotations.of(0.5))
       .withGearing(new MechanismGearing(12.8))
-      .withClosedLoopController(1.0, 0, 0)
-      .withFeedforward(new SimpleMotorFeedforward(0, 1))
       .withStatorCurrentLimit(Amps.of(20))
       .withTelemetry("angleMotor", TelemetryVerbosity.HIGH);
 
@@ -79,6 +81,7 @@ SmartMotorController azimuthSMC = new SparkWrapper(azimuthMotor, DCMotor.getNEO(
 
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
       .withAbsoluteEncoder(encoder.getAbsolutePosition().asSupplier())
+      .withAbsoluteEncoderOffset(Degrees.of(64.2)) // this module's own reading, wheel forward
       .withLocation(Meters.of(0.3), Meters.of(0.3)) // front, left, from robot center
       .withOptimization(true)
       .withTelemetry("frontleft", TelemetryVerbosity.HIGH);
@@ -108,7 +111,7 @@ SwerveDrive drive = new SwerveDrive(config);
 | `isNear(Pose2d, Distance, Angle)`      | ✅           | ✅           | Whether the robot is within the tolerances of a pose.                                                                                                        |
 | `stop()`                               | ✅           | ✅           | Commands zero speed.                                                                                                                                         |
 
-Field relative driving from a controller is a command you write around a [`SwerveInputStream`](swerve-input-stream.md):
+Field relative driving from a controller is a command you write around a [`SwerveInputStream`](swerve-input-stream.md). These are outlines of the class: `config` is the `SwerveDriveConfig` from above.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -117,7 +120,7 @@ public class SwerveSubsystem extends SubsystemBase
 {
   private final SwerveDrive drive = new SwerveDrive(config);
 
-  public Command driveWith(SwerveInputStream input)
+  public Command driveFieldRelative(SwerveInputStream input)
   {
     return run(() -> drive.setFieldRelativeChassisSpeeds(input.get()));
   }
@@ -143,7 +146,7 @@ public class SwerveMechanism implements Mechanism
 {
   private final SwerveDrive drive = new SwerveDrive(config);
 
-  public Command driveWith(SwerveInputStream input)
+  public Command driveFieldRelative(SwerveInputStream input)
   {
     return run(coroutine -> {
       while (true)
@@ -197,68 +200,13 @@ These set what the drive does and return at once. They are what the commands abo
 | `getDistanceFromPose(Pose2d)`, `getAngleDifferenceFromPose(Pose2d)` | How far the robot is from a pose.                                                       |
 | `getField2d()`                                                      | The `Field2d` the drive publishes its pose to. Use this one instead of making your own. |
 
-## Configuring and tuning a swerve drive, step by step
+## Setting up a swerve drive on a real robot
 
-Work from the wheels outward: a drive cannot be tuned until its modules are.
-
-{% stepper %}
-{% step %}
-#### Configure each module
-
-Set each module's two motors, its location, its absolute encoder and offset: see [Swerve Module](swerve-module.md#configuring-and-tuning-a-swerve-module-step-by-step).
-{% endstep %}
-
-{% step %}
-#### Check the module order and locations
-
-With the robot lifted on blocks and every wheel clear of them, drive forward slowly. Every wheel should point forward and spin forward. Then spin in place: the wheels should form a circle. A wheel pointing the wrong way means a wrong [location](mechanism-configs/swerve-module-config.md#withlocation) or [encoder offset](mechanism-configs/swerve-module-config.md#the-absolute-encoder).
-{% endstep %}
-
-{% step %}
-#### Check the gyro direction
-
-Turn the robot counter-clockwise by hand and watch the heading. It must go up. If it goes down, set [`withGyroInverted`](mechanism-configs/swerve-drive-config.md#the-gyro).
-{% endstep %}
-
-{% step %}
-#### Tune the modules
-
-Tune the azimuth motors, then the drive motors, with the swerve tuning command: see [Tune the swerve modules](live-tuning/#tune-the-swerve-modules). Always start on the real robot, lifted with its wheels clear of the blocks. Tuning in simulation first is great practice, but it is not enough by itself: do not rely on simulated gains for the first run of the real modules.
-{% endstep %}
-
-{% step %}
-#### Set the speed limits
-
-Measure the real top speed by driving flat out, and set [`withMaximumModuleSpeed` and `withMaximumChassisSpeed`](mechanism-configs/swerve-drive-config.md#speed-limits) a little below it.
-{% endstep %}
-
-{% step %}
-#### Correct the drift while spinning
-
-Drive in a straight line while spinning. If the path bends, set [`withDiscretizationTime`](mechanism-configs/swerve-drive-config.md#withdiscretizationtime) to the loop time, then adjust [`withGyroAngularVelocityScaleFactor`](mechanism-configs/swerve-drive-config.md#withgyroangularvelocityscalefactor) if some remains.
-{% endstep %}
-
-{% step %}
-#### Tune auto-align last
-
-Tune the translation and rotation controllers once the robot drives well by hand: see [Tune auto-align](live-tuning/#tune-auto-align).
-{% endstep %}
-{% endstepper %}
+Setting the encoder offsets, checking every direction, tuning the modules and the first drive on the ground are steps in a tutorial now: see [Step 4: On the real robot](../tutorials/swerve-drive/real-robot.md). It ends with the speed limits, the drift corrections and auto-align, in the order to do them.
 
 ## Module location drives the kinematics
 
-`SwerveModuleConfig.withLocation(front, left)` (or `withDistanceFromCenterOfRotation`) is not just bookkeeping. `SwerveDrive` builds its `SwerveDriveKinematics` directly from the locations of every module you pass it, so the drive/rotate math is always correct for your specific chassis dimensions without you ever constructing a `SwerveDriveKinematics` yourself.
-
-```java
-SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC)
-      .withLocation(Meters.of(0.3), Meters.of(0.3)); // X = forward, Y = left, from robot center
-```
-
-`withDistanceFromCenterOfRotation` is an equivalent alternate form:
-
-```java
-moduleConfig.withDistanceFromCenterOfRotation(Meters.of(0.3), Meters.of(0.3));
-```
+[`SwerveModuleConfig.withLocation(front, left)`](mechanism-configs/swerve-module-config.md#withlocation) is not just bookkeeping. `SwerveDrive` builds its `SwerveDriveKinematics` directly from the locations of every module you pass it, so the drive and rotate math is always right for your chassis without you ever constructing a `SwerveDriveKinematics` yourself.
 
 {% hint style="warning" %}
 Every module needs its location set before it's handed to `SwerveDriveConfig`. A missing or wrong location silently produces incorrect kinematics rather than a compile error, so double check trackwidth/wheelbase math when a robot doesn't drive straight.
@@ -274,12 +222,7 @@ The `withOptimization(true)` seen in the config above is a per-module flag, not 
 drive.setFieldRelativeChassisSpeeds(new ChassisVelocities(1.0, 0, 0));
 ```
 
-`SwerveDriveConfig.withGyroOffset` and `withGyroInverted` exist so the gyro's raw zero and sign can be corrected without touching your drive code. Both apply to the heading (the yaw):
-
-```java
-config.withGyroOffset(Degrees.of(90))
-      .withGyroInverted(true);
-```
+[`withGyroOffset` and `withGyroInverted`](mechanism-configs/swerve-drive-config.md#the-gyro) correct the gyro's zero and sign without touching your drive code. Both apply to the heading (the yaw).
 
 ### Gyros mounted on their side
 
@@ -308,20 +251,17 @@ The gyro's attitude is rotated into the robot's frame first, then `withGyroInver
 Rotation2d heading = drive.getGyroRotation3d().toRotation2d();
 ```
 
-{% hint style="warning" %}
-**Breaking change:** `getGyroAngle()` was removed from the Java `SwerveDriveConfig` and `SwerveDrive`. Use `getGyroRotation3d()` instead; its heading wraps at +/-180 degrees. `GyroAxis`, `withGyroHeadingAxis` and `getGyroRotation3d` are Java only: C++ still takes a heading with `WithGyro(std::function<wpi::units::degree_t()>)` and reads it back with `GetGyroAngle()`.
+{% hint style="info" %}
+`GyroAxis`, `withGyroHeadingAxis` and `getGyroRotation3d` are Java only. C++ takes a heading with `WithGyro(std::function<wpi::units::degree_t()>)` and reads it back with `GetGyroAngle()`.
 {% endhint %}
 
-`withGyroVelocity`/`withGyroAngularVelocityScaleFactor` let you feed the gyro's own angular velocity measurement into pose estimation instead of relying solely on module odometry, which is usually more accurate during fast rotation:
-
-```java
-config.withGyroVelocity(() -> DegreesPerSecond.of(gyro.getRate()))
-      .withGyroAngularVelocityScaleFactor(1.0);
-```
+`withGyroVelocity` and `withGyroAngularVelocityScaleFactor` correct the path of a robot that drives and turns at the same time, using how fast the gyro says the robot is turning. [`withGyroAngularVelocityScaleFactor`](mechanism-configs/swerve-drive-config.md#withgyroangularvelocityscalefactor) explains how to find the value.
 
 {% hint style="info" %}
 `SwerveInputStream` is the recommended way to turn raw joystick axes into a field-relative `ChassisVelocities` supplier; it handles deadbanding, axis cubing, and alliance-relative flipping so you don't have to write that math by hand. See [Swerve Input Stream](swerve-input-stream.md) for the full picture, or the [tutorial](../tutorials/swerve-drive.md) for a worked example.
 {% endhint %}
+
+A Commands v2 fragment, in the subsystem's constructor. `controller` is a `CommandGamepad`:
 
 ```java
 SwerveInputStream input =
@@ -364,7 +304,7 @@ In Java each module is locked through `SwerveModule.setAzimuthAngle(Rotation2d)`
 `lockPose()` is not compatible with AdvantageKit, like the other `SwerveDrive` methods that command the modules directly.
 {% endhint %}
 
-## PathPlanner integration and feedforward forces
+## How to: follow PathPlanner paths with feedforward forces
 
 `setRobotRelativeChassisSpeeds` has an overload that accepts a per-module drive-wheel feedforward `Force[]` (FL, FR, BL, BR order, matching module order) alongside the `ChassisVelocities`:
 
@@ -407,18 +347,20 @@ Each module's drive `SmartMotorController` converts its share of the `Force[]` i
 
 The commands and `driveToPoseSetpoint` use the translation and rotation `PIDController`s from `SwerveDriveConfig.withTranslationController(...)` and `withRotationController(...)`. Each command is a Commands v2 or Commands v3 `Command`, depending on which `SwerveDrive` you use, and all of them exist in both.
 
+A fragment for your bindings. `driver` is a `CommandGamepad`:
+
 ```java
 // Hold to align: drives to the pose for as long as the button is held.
-driver.a().whileTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO)));
+driver.faceDown().whileTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO)));
 
 // Press to align: ends by itself within 5 cm and 3 degrees, so it can be used in a sequence or an auto.
-driver.b().onTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO), Centimeters.of(5), Degrees.of(3)));
+driver.faceRight().onTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO), Centimeters.of(5), Degrees.of(3)));
 ```
 
 Use the version with tolerances whenever something has to happen after the robot arrives. The version without them never ends on its own.
 
 {% hint style="success" %}
-The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/#swerve-drive).
+The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/README.md#swerve-drive).
 {% endhint %}
 
 ## Telemetry verbosity

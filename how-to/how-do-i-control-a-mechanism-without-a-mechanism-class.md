@@ -6,358 +6,283 @@ description: >-
 
 # How do I control a mechanism without a mechanism class?
 
-YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel`, etc.) drive one motor, along with its followers. Motors on one shaft or gearbox are [followers](../details/editor/config/followers.md#withfollowers). Motors that aren't, but must move together, such as one on each side of an intake arm, are [loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers), and still work with a mechanism class.
+**Goal:** drive two motors that belong to one mechanism, but need **different** setpoints, from one subsystem with your own commands.
 
-Control each `SmartMotorController` yourself, as this page shows, when the motors need different setpoints, such as two flywheels spinning at different speeds, or when one subsystem holds more than one mechanism, such as a shooter and an indexer. You still get YAMS's telemetry, current limiting and profiling.
+The example is a shooter with a top wheel and a bottom wheel. Spinning the bottom wheel faster than the top one puts backspin on the game piece, so the two wheels need different speeds at the same time.
+
+## Do you need this page?
+
+YAMS mechanism classes (`Arm`, `Elevator`, `FlyWheel` and so on) drive one motor and its followers with one setpoint. Use them when you can:
+
+* **Motors on one shaft or gearbox** that always do the same thing: make the others [followers](../details/editor/config/followers.md#withfollowers).
+* **Separate motors that must move together**, such as one on each side of an intake arm: make the others [loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers).
+* **Two different mechanisms**, such as a shooter and a feeder: give each its own subsystem and mechanism class. One YAMS mechanism per subsystem.
 
 <figure><img src="../.gitbook/assets/smc-followers.png" alt="Two panels. Tightly coupled, withFollowers: a leader and a follower are on one shaft or gearbox and the follower copies the leader's output. The motors are mechanically locked, there is one closed loop and one config, the followers are the same vendor as the leader, and voltage and duty cycle reach every motor. Loosely coupled, withLooselyCoupledFollowers: two separate motors joined only by the mechanism get the same setpoint and each runs its own PID. They are not mechanically locked, each has its own closed loop and config, vendors can be mixed, and voltage and duty cycle are not forwarded, so the leader moves alone."><figcaption><p>Tightly coupled followers share a shaft. Loosely coupled followers are separate motors.</p></figcaption></figure>
 
-## Subsystems with `SmartMotorController`'s
+If none of those fit, control each `SmartMotorController` yourself, as below. The [Double FlyWheel tutorial](../tutorials/double-flywheel.md) builds this same shooter step by step, with C++ as well; this page is the short version. You still get YAMS's telemetry, live tuning, current limiting, closed loop control and simulation for each motor. Without a mechanism class, your subsystem does three of its jobs: call `setupTelemetry()` on each motor once, `updateTelemetry()` every loop, and `simIterate()` every loop in simulation. You do not get the mechanism's drawing in the dashboard, or its ready-made commands and triggers.
 
-Subsystems given when you create the `SmartMotorControllerConfig` are only used for YAMS generated commands. This means that if you're using a YAMS generated command like `Arm.run`, `Arm.setVoltage`, or `Elevator.run` that command will be the **ONLY** command allowed to run on that subsystems.&#x20;
+## Why not two `FlyWheel`s in one subsystem?
 
-## Controlling an Elevator without Elevator.run()
+Every YAMS-generated command (such as `FlyWheel.run` or `Arm.setVoltage`) requires the subsystem you passed to `new SmartMotorControllerConfig(this)`. A subsystem runs one command at a time. So if `topWheel.run(...)` and `bottomWheel.run(...)` both require the same subsystem, scheduling the second **cancels the first**, and only one wheel spins.
 
-If you're comfortable with command-based programming, you can write your own commands and control the `SmartMotorController` without the mechanism. Still create the mechanism and its config, because the mechanism modifies and re-applies the `SmartMotorControllerConfig`.
+The fix is one command that sets both motors, which is what this page writes.
 
-The following example shows exactly how you can recreate the commands used in YAMS without using the helpful functions to create them in the first place and could allow you to use multiple mechanisms in the same Subsystem if you needed it. (For example a shooter and indexer)
+## The subsystem
 
-An example of this for an Elevator would be as follows
+The code uses two SPARK MAXes (CAN IDs 4 and 5), each driving a NEO 1:1 to a 4 inch wheel. The gains are **placeholders**: with them the wheels reach roughly the right speed in simulation, but tune them for your robot with [Step 5: Tune it](../tutorials/arm/tune.md) (for a flywheel, find `kV` first, then `kP`).
 
 {% tabs %}
 {% tab title="Commands v2" %}
-<pre class="language-java"><code class="lang-java">public class ExampleSubsystem extends SubsystemBase {
-  
-  // Chain driven elevator drum calculation
-  private Distance chainPitch = Inches.of(0.25);
-  private int teethCount = 22;
-  private Distance drumCircumference = chainPitch.times(teethCount);
-  private Distance drumRadius = drumCircumference.div(2*Math.PI);
-  
-  // Gearing from the motor rotor to final shaft.
-  // In this example GearBox.fromReductionStages(3,4) is the same as GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  private MechanismGearing gearing = new MechanismGearing(GearBox.fromReductionStages(3,4));
-  
-  // Profiled PID Controller
-  private double kP = 4, kI = 0, kD = 0;
-  private LinearVelocity maxVel = MetersPerSecond.of(0.5);
-  private LinearAcceleration maxAccel = MetersPerSecondPerSecond.of(0.5);
-  
-  // Feedforwards
-  private ElevatorFeedforward realFeedforward = new ElevatorFeedforward(0,0,0);
-  private ElevatorFeedforward simFeedforward = new ElevatorFeedforward(0,0,0);
-  
-  private MotorMode idle = MotorMode.BRAKE;
-  private Current statorLimit = Amps.of(40);
-  // Ramp rate is how long the motor should take to run from 0 to 100%
-  private Time openLoopRampRate = Seconds.of(0.25);
-  private Time closedLoopRampRate = Seconds.of(0.25);
-  
-  private SmartMotorControllerConfig leftSmcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Elevator drum radius: derived from chain pitch and tooth count.
-  .withDrumRadius(drumRadius)
-  // Starting height of the elevator, used for simulation.
-  .withStartingPosition(Meters.of(0.5))
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(kP, kI, kD)
-  .withTrapezoidalProfile(maxVel, maxAccel)
-  // Uncomment below to set sim only values.
-  //.withSimClosedLoopController(4, 0, 0)
-  // Feedforward Constants
-  .withFeedforward(realFeedforward)
-  .withSimFeedforward(simFeedforward)
-  // Telemetry name and verbosity level
-  .withTelemetry("LeftElevatorMotor", TelemetryVerbosity.HIGH)
-  // Gearing from the motor rotor to final shaft.
-  // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  .withGearing(gearing)
-  // Motor properties to prevent over currenting.
-  .withMotorInverted(false)
-  .withZeroPower(idle)
-  .withStatorCurrentLimit(statorLimit)
-  .withClosedLoopRampRate(closedLoopRampRate)
-  .withOpenLoopRampRate(openLoopRampRate);
-  
-  private SmartMotorControllerConfig rightSmcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Elevator drum radius: derived from chain pitch and tooth count.
-  .withDrumRadius(drumRadius)
-  // Starting height of the elevator, used for simulation.
-  .withStartingPosition(Meters.of(0.5))
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(kP, kI, kD)
-  .withTrapezoidalProfile(maxVel, maxAccel)
-  // Uncomment below to set sim only values.
-  //.withSimClosedLoopController(4, 0, 0)
-  // Feedforward Constants
-  .withFeedforward(realFeedforward)
-  .withSimFeedforward(simFeedforward)
-  // Telemetry name and verbosity level
-  .withTelemetry("RightElevatorMotor", TelemetryVerbosity.HIGH)
-  // Gearing from the motor rotor to final shaft.
-  // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  .withGearing(gearing)
-  // Motor properties to prevent over currenting.
-  .withMotorInverted(false)
-  .withZeroPower(idle)
-  .withStatorCurrentLimit(statorLimit)
-  .withClosedLoopRampRate(closedLoopRampRate)
-  .withOpenLoopRampRate(openLoopRampRate);
-
-  // Vendor motor controller object
-  private SparkMax leftSpark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
-  private SparkMax rightSpark = new SparkMax(CANPort.CAN_S0, 6, MotorType.kBrushless);
-
-  // Create our SmartMotorController from our Spark and config with the NEO.
-  private SmartMotorController leftSparkSmartMotorController = new SparkWrapper(leftSpark, DCMotor.getNEO(1), leftSmcConfig);
-  private SmartMotorController rightSparkSmartMotorController = new SparkWrapper(rightSpark, DCMotor.getNEO(1), rightSmcConfig);
-  
-  // Include this only if you want a pretty sim
-  /*
-  private ElevatorConfig elevconfig = new ElevatorConfig()
-      .withHardLimits(Meters.of(0), Meters.of(3))
-      .withTelemetry("Elevator", TelemetryVerbosity.HIGH)
-      .withCarriageWeight(Pounds.of(16));
-
-  // Elevator Mechanism
-  private Elevator elevator = new Elevator(elevconfig, leftSparkSmartMotorController);
-  */
-  
-  /**
-   * Set the dutycycle of the SmartMotorController without interrupting 
-   *
-   * @param dutycycle Value between [-1, 1] which will control the speed of the motor.
-   * @return StartRun command which turns off the closed loop controller, sets the dutycycle of the SMC then turns the closed loop controller back on when interrupted.
-   */
-<strong>  public Command setDutyCycle(double dutycycle)
-</strong><strong>  {
-</strong><strong>    return startRun(()->{leftSparkSmartMotorController.stopClosedLoopController();rightSparkSmartMotorController.stopClosedLoopController();}, // Stop the closed loop controller since the motor is in ControlMode.CLOSED_LOOP
-</strong><strong>           () -> {leftSparkSmartMotorController.setDutyCycle(dutycycle);rightSparkSmartMotorController.setDutyCycle(dutycycle);}) // Apply the dutycycle given
-</strong><strong>                   .finallyDo(()->{leftSparkSmartMotorController.startClosedLoopController();rightSparkSmartMotorController.startClosedLoopController();}) // Start the closed loop controller when this command is interrupted
-</strong><strong>                   .withName("Custom SetDutyCycle"); // Be nice, give your command name :)
-</strong><strong>  }
-</strong>  
-  /**
-   * Set the position of the spark motor controller.
-   * @param position Mechanism position to go to.
-   * @return RunCommand which will set the position of the mechanism until interrupted.
-   */
-<strong>  public Command setMechanismPosition(Angle position)
-</strong><strong>  {
-</strong><strong>    return run(() -> {leftSparkSmartMotorController.setPosition(position);rightSparkSmartMotorController.setPosition(position);})
-</strong><strong>            .withName("Custom SetPosition");
-</strong><strong>  }
-</strong>  
-  /**
-   * Set the position of the spark motor controller.
-   * @param height Measurement position to go to.
-   * @return RunCommand which will set the position of the measurement until interrupted.
-   */
-<strong>  public Command setMechanismPosition(Distance height)
-</strong><strong>  {
-</strong><strong>    return run(() -> {leftSparkSmartMotorController.setPosition(height);rightSparkSmartMotorController.setPosition(height);})
-</strong><strong>            .withName("Custom SetPosition with Height");
-</strong><strong>  }
-</strong>  
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-    leftSparkSmartMotorController.updateTelemetry();
-    rightSparkSmartMotorController.updateTelemetry();
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
-    leftSparkSmartMotorController.simIterate();
-    rightSparkSmartMotorController.simIterate();
-  }
-}
-</code></pre>
-{% endtab %}
-
-{% tab title="Commands v3" %}
+{% code title="subsystems/ShooterSubsystem.java" lineNumbers="true" %}
 ```java
-public class ExampleMechanism implements Mechanism {
-  
-  // Chain driven elevator drum calculation
-  private Distance chainPitch = Inches.of(0.25);
-  private int teethCount = 22;
-  private Distance drumCircumference = chainPitch.times(teethCount);
-  private Distance drumRadius = drumCircumference.div(2*Math.PI);
-  
-  // Gearing from the motor rotor to final shaft.
-  // In this example GearBox.fromReductionStages(3,4) is the same as GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  private MechanismGearing gearing = new MechanismGearing(GearBox.fromReductionStages(3,4));
-  
-  // Profiled PID Controller
-  private double kP = 4, kI = 0, kD = 0;
-  private LinearVelocity maxVel = MetersPerSecond.of(0.5);
-  private LinearAcceleration maxAccel = MetersPerSecondPerSecond.of(0.5);
-  
-  // Feedforwards
-  private ElevatorFeedforward realFeedforward = new ElevatorFeedforward(0,0,0);
-  private ElevatorFeedforward simFeedforward = new ElevatorFeedforward(0,0,0);
-  
-  private MotorMode idle = MotorMode.BRAKE;
-  private Current statorLimit = Amps.of(40);
-  // Ramp rate is how long the motor should take to run from 0 to 100%
-  private Time openLoopRampRate = Seconds.of(0.25);
-  private Time closedLoopRampRate = Seconds.of(0.25);
-  
-  private SmartMotorControllerConfig leftSmcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Elevator drum radius: derived from chain pitch and tooth count.
-  .withDrumRadius(drumRadius)
-  // Starting height of the elevator, used for simulation.
-  .withStartingPosition(Meters.of(0.5))
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(kP, kI, kD)
-  .withTrapezoidalProfile(maxVel, maxAccel)
-  // Uncomment below to set sim only values.
-  //.withSimClosedLoopController(4, 0, 0)
-  // Feedforward Constants
-  .withFeedforward(realFeedforward)
-  .withSimFeedforward(simFeedforward)
-  // Telemetry name and verbosity level
-  .withTelemetry("LeftElevatorMotor", TelemetryVerbosity.HIGH)
-  // Gearing from the motor rotor to final shaft.
-  // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  .withGearing(gearing)
-  // Motor properties to prevent over currenting.
-  .withMotorInverted(false)
-  .withZeroPower(idle)
-  .withStatorCurrentLimit(statorLimit)
-  .withClosedLoopRampRate(closedLoopRampRate)
-  .withOpenLoopRampRate(openLoopRampRate);
-  
-  private SmartMotorControllerConfig rightSmcConfig = new SmartMotorControllerConfig(this)
-  .withControlMode(ControlMode.CLOSED_LOOP)
-  // Elevator drum radius: derived from chain pitch and tooth count.
-  .withDrumRadius(drumRadius)
-  // Starting height of the elevator, used for simulation.
-  .withStartingPosition(Meters.of(0.5))
-  // Feedback Constants (PID Constants)
-  .withClosedLoopController(kP, kI, kD)
-  .withTrapezoidalProfile(maxVel, maxAccel)
-  // Uncomment below to set sim only values.
-  //.withSimClosedLoopController(4, 0, 0)
-  // Feedforward Constants
-  .withFeedforward(realFeedforward)
-  .withSimFeedforward(simFeedforward)
-  // Telemetry name and verbosity level
-  .withTelemetry("RightElevatorMotor", TelemetryVerbosity.HIGH)
-  // Gearing from the motor rotor to final shaft.
-  // In this example gearbox(3,4) is the same as gearbox("3:1","4:1") which corresponds to the gearbox attached to your motor.
-  .withGearing(gearing)
-  // Motor properties to prevent over currenting.
-  .withMotorInverted(false)
-  .withZeroPower(idle)
-  .withStatorCurrentLimit(statorLimit)
-  .withClosedLoopRampRate(closedLoopRampRate)
-  .withOpenLoopRampRate(openLoopRampRate);
+package first.robot.subsystems;
 
-  // Vendor motor controller object
-  private SparkMax leftSpark = new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless);
-  private SparkMax rightSpark = new SparkMax(CANPort.CAN_S0, 6, MotorType.kBrushless);
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.RPM;
 
-  // Create our SmartMotorController from our Spark and config with the NEO.
-  private SmartMotorController leftSparkSmartMotorController = new SparkWrapper(leftSpark, DCMotor.getNEO(1), leftSmcConfig);
-  private SmartMotorController rightSparkSmartMotorController = new SparkWrapper(rightSpark, DCMotor.getNEO(1), rightSmcConfig);
-  
-  // Include this only if you want a pretty sim
-  /*
-  private ElevatorConfig elevconfig = new ElevatorConfig()
-      .withHardLimits(Meters.of(0), Meters.of(3))
-      .withTelemetry("Elevator", TelemetryVerbosity.HIGH)
-      .withCarriageWeight(Pounds.of(16));
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.button.Trigger;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.AngularVelocity;
+import yams.commands2.config.SmartMotorControllerConfig;
+import yams.core.gearing.MechanismGearing;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
 
-  // Elevator Mechanism
-  private Elevator elevator = new Elevator(elevconfig, leftSparkSmartMotorController);
-  */
-  
-  /**
-   * Set the dutycycle of the SmartMotorController without interrupting 
-   *
-   * @param dutycycle Value between [-1, 1] which will control the speed of the motor.
-   * @return Command which turns off the closed loop controller, sets the dutycycle of the SMC every loop, then turns the closed loop controller back on when it is canceled.
-   */
-  public Command setDutyCycle(double dutycycle)
-  {
-    return run(coroutine -> {
-      // Stop the closed loop controller since the motors are being driven directly
-      leftSparkSmartMotorController.stopClosedLoopController();
-      rightSparkSmartMotorController.stopClosedLoopController();
-      while (true) {
-        // Apply the dutycycle given
-        leftSparkSmartMotorController.setDutyCycle(dutycycle);
-        rightSparkSmartMotorController.setDutyCycle(dutycycle);
-        coroutine.yield();
-      }
-    }).whenCanceled(() -> {
-      // Start the closed loop controller again when the command is interrupted
-      leftSparkSmartMotorController.startClosedLoopController();
-      rightSparkSmartMotorController.startClosedLoopController();
-    }).named("Custom SetDutyCycle"); // Be nice, give your command name :)
+public class ShooterSubsystem extends SubsystemBase {
+
+  private final SmartMotorController top = new SparkWrapper(
+      new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless), DCMotor.getNEO(1), wheelConfig("TopWheel"));
+
+  private final SmartMotorController bottom = new SparkWrapper(
+      new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless), DCMotor.getNEO(1), wheelConfig("BottomWheel"));
+
+  /** Both wheels are built the same way, so one method makes both configs. */
+  private SmartMotorControllerConfig wheelConfig(String name) {
+    return new SmartMotorControllerConfig(this)
+        .withControlMode(ControlMode.CLOSED_LOOP)
+        .withGearing(new MechanismGearing(1))
+        // PLACEHOLDER gains. kV is volts per rotation per second.
+        .withClosedLoopController(0.1, 0, 0)
+        .withFeedforward(new SimpleMotorFeedforward(0, 0.12, 0))
+        // Wheel radius and mass, used by the standalone simulation.
+        .withMomentOfInertia(Inches.of(2), Pounds.of(1))
+        .withZeroPower(MotorMode.COAST)
+        .withStatorCurrentLimit(Amps.of(40))
+        .withTelemetry(name, TelemetryVerbosity.HIGH);
   }
-  
-  /**
-   * Set the position of the spark motor controller.
-   * @param position Mechanism position to go to.
-   * @return Command which will set the position of the mechanism until interrupted.
-   */
-  public Command setMechanismPosition(Angle position)
-  {
-    return run(coroutine -> {
-      while (true) {
-        leftSparkSmartMotorController.setPosition(position);
-        rightSparkSmartMotorController.setPosition(position);
-        coroutine.yield();
-      }
-    }).named("Custom SetPosition");
+
+  public ShooterSubsystem() {
+    // A mechanism class would do this for you. Without one, set up the telemetry
+    // (and live tuning) of each motor controller once.
+    top.setupTelemetry();
+    bottom.setupTelemetry();
   }
-  
-  /**
-   * Set the position of the spark motor controller.
-   * @param height Measurement position to go to.
-   * @return Command which will set the position of the measurement until interrupted.
-   */
-  public Command setMechanismPosition(Distance height)
-  {
-    return run(coroutine -> {
-      while (true) {
-        leftSparkSmartMotorController.setPosition(height);
-        rightSparkSmartMotorController.setPosition(height);
-        coroutine.yield();
-      }
-    }).named("Custom SetPosition with Height");
+
+  /** Spin each wheel at its own speed. Runs until interrupted. */
+  public Command spin(AngularVelocity topSpeed, AngularVelocity bottomSpeed) {
+    return startRun(
+        () -> {
+          // A stop() command may have turned the closed loop off.
+          top.startClosedLoopController();
+          bottom.startClosedLoopController();
+        },
+        () -> {
+          top.setVelocity(topSpeed);
+          bottom.setVelocity(bottomSpeed);
+        })
+        .withName("Shooter Spin");
   }
-  
+
+  /** Let both wheels coast. For the default command. */
+  public Command stop() {
+    return startRun(
+        () -> {
+          top.stopClosedLoopController();
+          bottom.stopClosedLoopController();
+        },
+        () -> {
+          top.setDutyCycle(0);
+          bottom.setDutyCycle(0);
+        })
+        .withName("Shooter Stop");
+  }
+
+  /** True while both wheels are within 100 RPM of their speeds. */
+  public Trigger atSpeed(AngularVelocity topSpeed, AngularVelocity bottomSpeed) {
+    return new Trigger(() ->
+        top.getMechanismVelocity().isNear(topSpeed, RPM.of(100))
+            && bottom.getMechanismVelocity().isNear(bottomSpeed, RPM.of(100)));
+  }
+
+  @Override
   public void periodic() {
-    // A Commands v3 Mechanism has no periodic hook: call this from Robot.robotPeriodic()
-    leftSparkSmartMotorController.updateTelemetry();
-    rightSparkSmartMotorController.updateTelemetry();
+    top.updateTelemetry();
+    bottom.updateTelemetry();
   }
 
+  @Override
   public void simulationPeriodic() {
-    // A Commands v3 Mechanism has no periodic hook: Robot.simulationInit() runs this in its own Notifier
-    leftSparkSmartMotorController.simIterate();
-    rightSparkSmartMotorController.simIterate();
+    top.simIterate();
+    bottom.simIterate();
   }
 }
 ```
+{% endcode %}
+
+Bind it in `RobotContainer`:
+
+{% code title="RobotContainer.java (fragment)" %}
+```java
+shooter.setDefaultCommand(shooter.stop());
+// Backspin: bottom wheel faster than the top.
+m_driverController.rightTrigger().whileTrue(shooter.spin(RPM.of(2500), RPM.of(3500)));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Commands v3" %}
+{% code title="mechanisms/ShooterMechanism.java" lineNumbers="true" %}
+```java
+package first.robot.mechanisms;
+
+import static org.wpilib.units.Units.Amps;
+import static org.wpilib.units.Units.Inches;
+import static org.wpilib.units.Units.Pounds;
+import static org.wpilib.units.Units.RPM;
+
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import org.wpilib.command3.Command;
+import org.wpilib.command3.Mechanism;
+import org.wpilib.command3.Trigger;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.controller.SimpleMotorFeedforward;
+import org.wpilib.math.system.DCMotor;
+import org.wpilib.units.measure.AngularVelocity;
+import yams.commands3.config.SmartMotorControllerConfig;
+import yams.core.gearing.MechanismGearing;
+import yams.core.motorcontrollers.SmartMotorController;
+import yams.core.motorcontrollers.enums.ControlMode;
+import yams.core.motorcontrollers.enums.MotorMode;
+import yams.core.motorcontrollers.local.SparkWrapper;
+import yams.core.telemetry.enums.TelemetryVerbosity;
+
+public class ShooterMechanism implements Mechanism {
+
+  private final SmartMotorController top = new SparkWrapper(
+      new SparkMax(CANPort.CAN_S0, 4, MotorType.kBrushless), DCMotor.getNEO(1), wheelConfig("TopWheel"));
+
+  private final SmartMotorController bottom = new SparkWrapper(
+      new SparkMax(CANPort.CAN_S0, 5, MotorType.kBrushless), DCMotor.getNEO(1), wheelConfig("BottomWheel"));
+
+  /** Both wheels are built the same way, so one method makes both configs. */
+  private SmartMotorControllerConfig wheelConfig(String name) {
+    return new SmartMotorControllerConfig(this)
+        .withControlMode(ControlMode.CLOSED_LOOP)
+        .withGearing(new MechanismGearing(1))
+        // PLACEHOLDER gains. kV is volts per rotation per second.
+        .withClosedLoopController(0.1, 0, 0)
+        .withFeedforward(new SimpleMotorFeedforward(0, 0.12, 0))
+        // Wheel radius and mass, used by the standalone simulation.
+        .withMomentOfInertia(Inches.of(2), Pounds.of(1))
+        .withZeroPower(MotorMode.COAST)
+        .withStatorCurrentLimit(Amps.of(40))
+        .withTelemetry(name, TelemetryVerbosity.HIGH);
+  }
+
+  public ShooterMechanism() {
+    // A mechanism class would do this for you. Without one, set up the telemetry
+    // (and live tuning) of each motor controller once.
+    top.setupTelemetry();
+    bottom.setupTelemetry();
+  }
+
+  /** Spin each wheel at its own speed. Runs until interrupted. */
+  public Command spin(AngularVelocity topSpeed, AngularVelocity bottomSpeed) {
+    return run(coroutine -> {
+      // An idle() command may have turned the closed loop off.
+      top.startClosedLoopController();
+      bottom.startClosedLoopController();
+      while (true) {
+        top.setVelocity(topSpeed);
+        bottom.setVelocity(bottomSpeed);
+        coroutine.yield();
+      }
+    }).named("Shooter Spin");
+  }
+
+  /** Let both wheels coast at the lowest priority, so any other shooter command can take over. */
+  public Command idle() {
+    return run(coroutine -> {
+      top.stopClosedLoopController();
+      bottom.stopClosedLoopController();
+      while (true) {
+        top.setDutyCycle(0);
+        bottom.setDutyCycle(0);
+        coroutine.yield();
+      }
+    }).withPriority(Command.LOWEST_PRIORITY).named("Shooter Idle");
+  }
+
+  /** True while both wheels are within 100 RPM of their speeds. */
+  public Trigger atSpeed(AngularVelocity topSpeed, AngularVelocity bottomSpeed) {
+    return new Trigger(() ->
+        top.getMechanismVelocity().isNear(topSpeed, RPM.of(100))
+            && bottom.getMechanismVelocity().isNear(bottomSpeed, RPM.of(100)));
+  }
+
+  /** Call this from Robot.robotPeriodic(), before the scheduler runs. */
+  public void periodic() {
+    top.updateTelemetry();
+    bottom.updateTelemetry();
+  }
+
+  /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
+  public void simulationPeriodic() {
+    top.simIterate();
+    bottom.simIterate();
+  }
+}
+```
+{% endcode %}
+
+In `Robot`, set `shooter.setDefaultCommand(shooter.idle())`, call `periodic()` from `robotPeriodic()` and start the simulation `Notifier` in `simulationInit()`, as in the [Shooter/FlyWheels tutorial](../tutorials/shooter-flywheels/commands.md). Then in your opmode:
+
+{% code title="ExampleTeleop.java (fragment)" %}
+```java
+// Backspin: bottom wheel faster than the top.
+controller.rightTrigger().whileTrue(robot.shooter.spin(RPM.of(2500), RPM.of(3500)));
+```
+{% endcode %}
 {% endtab %}
 {% endtabs %}
 
-{% hint style="info" %}
-For Commands v2, `SmartMotorControllerConfig` and `Elevator` come from `yams.commands2.config` and `yams.commands2.mechanisms`. `SmartMotorController`, `SparkWrapper`, `ElevatorConfig`, the gearing classes and the enums come from `yams.core`. With Commands v3, use the `yams.commands3` classes and write the commands as coroutines on your `Mechanism` instead of `startRun(...)` and `run(...)`.
+Each motor's simulation runs on its own, from the moment of inertia in its config, so `simIterate()` works without a mechanism class.
 
-If both motors should simply chase the same position or velocity setpoint, make one a [loosely coupled follower](../details/editor/config/followers.md#withlooselycoupledfollowers) of the other instead. Keep at most one YAMS mechanism class per subsystem so live tuning keeps working.
-{% endhint %}
+## Check it
 
-{% hint style="success" %}
-Remember that mechanisms will re-apply a modified `SmartMotorControllerConfig` with changes from their respective config classes when the mechanism is created!&#x20;
+1. Start the simulation and open **NetworkTables > Mechanisms** in your dashboard. There is one entry per motor: `TopWheel` and `BottomWheel`.
+2. Hold the right trigger. `TopWheel`'s `mechanism/velocity` should rise to about 41.7 rotations per second (2500 RPM), and `BottomWheel`'s to about 58.3 (3500 RPM), **at the same time**.
+3. Release it. Both coast down.
 
-So even if you're not going to use the mechanism you should still create it!
-{% endhint %}
+## If it did not work
+
+* **Only one wheel spins.** Two commands that require this subsystem are fighting, so the second cancels the first. Set both motors from one command, as `spin` does.
+* **The wheels do not start again after `stop`.** `stop` turned the closed loop off. Call `startClosedLoopController()` when a velocity command starts, as `spin` does.
+* **The wheels settle well below their speeds.** `kV` is too low; see [How do I shoot with a shooter?](how-to-shoot-with-a-shooter.md)
+
+## Next
+
+Feed the game piece only once both wheels are at speed, with `atSpeed(...)` and a feeder: [How do I shoot with a shooter?](how-to-shoot-with-a-shooter.md)

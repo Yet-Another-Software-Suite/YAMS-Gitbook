@@ -256,7 +256,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .withDrumRadius(Inches.of(0.25), 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .withClosedLoopController(4, 0, 0)
@@ -433,7 +434,8 @@ public class ElevatorMechanism implements Mechanism {
   private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .withDrumRadius(Inches.of(0.25), 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .withClosedLoopController(4, 0, 0)
@@ -664,15 +666,18 @@ ElevatorSubsystem::ElevatorSubsystem() {
       .WithSubsystem(this)
       .WithClosedLoopMode()
       // How far the carriage moves for each turn of the output shaft:
-      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth.
+      // #25 chain has a 0.25 inch pitch, and the sprocket has 22 teeth,
+      // so one turn moves the chain pitch x teeth = 5.5 inches.
       .WithMechanismCircumference(0.25_in, 22)
       // Feedback constants (PID), on the real robot and in simulation.
       .WithFeedback(4, 0, 0)
       .WithSimClosedLoopController(4, 0, 0)
       // The fastest the closed loop is allowed to move and accelerate the carriage.
       .WithLinearTrapezoidProfile(0.5_mps, 0.5_mps_sq)
-      // Feedforward constants: kS, kG and kV.
+      // Feedforward constants (kS, kG and kV), on the real robot and in simulation.
       .WithFeedforward(wpi::math::ElevatorFeedforward{
+          0_V, 0_V, wpi::units::unit_t&#x3C;wpi::math::ElevatorFeedforward::kv_unit>{0}})
+      .WithSimFeedforward(wpi::math::ElevatorFeedforward{
           0_V, 0_V, wpi::units::unit_t&#x3C;wpi::math::ElevatorFeedforward::kv_unit>{0}})
       // Gearing from the motor rotor to the sprocket: a 3:1 stage and a 4:1 stage, 12:1 in total.
       .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({3.0, 4.0})})
@@ -806,6 +811,14 @@ These commands are helpers that start and stop the closed loop for you. If you w
 
 ## Which command ends?
 
-<figure><img src="../../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID, run until interrupted, and the closed loop controller comes back when they end."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID and run until interrupted. The closed loop starts again when the next run or runTo command begins, such as the default command."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
 
 The buttons here use the command that never ends, because a button that is held should keep holding the carriage. Use the one that ends when you need to know the carriage has arrived, such as in an autonomous sequence. [run() vs runTo() Commands](../../details/run-vs-runto.md) covers the difference, and [How do I set an elevator's target height?](../../how-to/how-to-set-an-elevators-target-height.md) has more examples.
+
+## Check it
+
+Build the code. If it builds, every button is bound. Next you run it and press them.
+
+## Next
+
+[Step 4: Simulate it](simulate.md)

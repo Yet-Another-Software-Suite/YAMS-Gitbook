@@ -24,11 +24,29 @@ layout:
 
 Welcome to the Yet Another Mechanism System (YAMS) documentation.
 
-<figure><img src=".gitbook/assets/YAMS.png" alt=""><figcaption></figcaption></figure>
+<figure><img src=".gitbook/assets/YAMS.png" alt="The YAMS logo"><figcaption></figcaption></figure>
 
 YAMS fuses simulation and real control as closely as possible to real life. You can debug and program your robot without the actual robot. You can also program your robot before it is built.
 
 YAMS targets WPILib 2027 (`2027_alpha7`) and the SystemCore. Upgrading a 2026 project? See [Upgrading from 2026 to 2027](upgrading-from-2026-to-2027.md).
+
+### Start here
+
+These docs are written for FRC student programmers. You should know some Java (or C++) and have used a WPILib [command-based](https://docs.wpilib.org/en/stable/docs/software/commandbased/index.html) project. You don't need to know PID or feedforward yet: the tutorials teach what you need as you go.
+
+{% hint style="success" %}
+**New to YAMS?** Start with [Create a project and install YAMS](tutorials/project-setup.md), then follow the [Arm](tutorials/arm.md) tutorial from start to finish.
+{% endhint %}
+
+The arm tutorial takes you the whole way:
+
+1. [Create a project and install YAMS](tutorials/project-setup.md)
+2. [Configure the motor controller](tutorials/arm/motor-controller.md), [describe the arm](tutorials/arm/mechanism.md) and [bind it to buttons](tutorials/arm/commands.md)
+3. [Run it in simulation](tutorials/arm/simulate.md)
+4. [Tune it](tutorials/arm/tune.md)
+5. [Run it on the robot](tutorials/arm/robot.md)
+
+Stuck? See [Troubleshooting](tutorials/troubleshooting.md).
 
 ### Installation
 
@@ -46,6 +64,7 @@ If you are not sure which one you need, use Commands v2. The [tutorials](tutoria
 1. In VS Code, open the command palette with <kbd>Ctrl+Shift+P</kbd> (<kbd>Cmd+Shift+P</kbd> on macOS).
 2. Run **WPILib: Manage Vendor Libraries**, then **Install new libraries (online)**.
 3. Paste the vendordep URL for your command framework from the table above and press Enter.
+4. Install your motor controller's vendor library too, such as REVLib or Phoenix 6. YAMS drives the vendor's own motor controller objects, so it needs their library.
 {% endtab %}
 
 {% tab title="Offline" %}

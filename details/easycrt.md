@@ -9,74 +9,49 @@ icon: simplybuilt
 `EasyCRT` was made entirely by Team 6911!
 {% endhint %}
 
-## Whitepaper
+`EasyCRT` finds the absolute angle of a mechanism that turns more than once, usually a turret, from two absolute encoders. Each encoder sits on a pinion with a different tooth count, and both pinions mesh with the same gear. Neither encoder knows the angle on its own, but the pair of readings is unique over a much longer travel than either one.
 
-Team 4967 has made this excellent white paper describing exactly how Chinese Remainder Theorem works theoretically
+This page explains how it works, then how to set it up step by step, then how to fix it when it misbehaves.
+
+## How it works
+
+<figure><img src="../.gitbook/assets/easycrt-how-it-works.gif" alt="Animation: as the turret turns, encoder A and encoder B readings wrap at different rates, and EasyCRT reports the one turret angle that fits both"><figcaption><p>Each encoder wraps many times, at different rates. Only one turret angle fits both readings.</p></figcaption></figure>
+
+1. Encoder A's reading fits several angles of the gear both pinions mesh with (the **shared gear**), one for each number of whole turns the pinion could have made. `EasyCRT` lists every one inside the travel.
+2. For each candidate it predicts what encoder B should read.
+3. The candidate whose prediction is closest to encoder B's real reading wins.
+
+This is not a textbook Chinese Remainder Theorem solve. It is the same idea done as a search, which keeps working with backlash and sensor noise.
+
+The readings only repeat after the shared gear has turned a long way. That distance is the **unique range**. Past it, two positions give the same pair of readings, so the travel of your mechanism has to fit inside it.
+
+Team 4967 wrote a white paper describing how the Chinese Remainder Theorem works for gears:
 
 {% file src="../.gitbook/assets/Chinese Remainder Theorem (for Gears)-1.pdf" %}
 
-## Warnings
+### What to know before you choose it
 
-{% hint style="danger" %}
-### Debugging a read failure by 2181
+* Solve for the absolute angle **once** at startup, then seed the motor controller with the result. Do not use `EasyCRT` as closed loop feedback.
+* CRT is sensitive to any delay between the two encoder reads, so it is unreliable while the mechanism moves. Read both encoders while the mechanism is still.
+* Backlash between the two encoders, and loose pinions or magnets, cause failures. `solve` returns an empty result instead of a guess when the two readings do not agree, so your code has to handle an empty result.
+* `EasyCRT` has no offset or inversion settings. Both encoders must read zero with the mechanism at zero, and both must count up when the mechanism moves in its positive direction.
 
-Your range will affect your reading.
+### Alternatives
 
-If `solve` comes back empty near the ends of travel, your turret/mechanism is probably sitting just outside the range you gave. Use a range with room on both sides!
-
-For example, instead of `solve(a, b, Rotations.of(0), Rotations.of(2))` use `solve(a, b, Rotations.of(-0.1), Rotations.of(2.1))`, as long as the range is still shorter than `getUniqueRange()`. That way the range can't easily be exceeded. `solve(a, b)` already does this for travel centered on zero: it allows half of the unique range either side of zero.
-
-If your turret/mechanism is outside the unique range your CRT reading will be very **VERY** off.
-{% endhint %}
-
-* You should **ONLY** solve for the turrets absolute angle **ONCE** on startup, then seed the motor controller with the result. Do not use `EasyCRT` as closed loop feedback.
-* CRT is very sensitive to any latency between the two encoder reads (in practice this makes it unreliable if used with measurements taken when the mechanism is in motion). Read both encoders while the mechanism is still.
-* There are other pitfalls with the technique (eg backlash between the two encoders, loose pinions or magnets) that can manifest in reliability issues. `solve` returns an empty result instead of a guess when the two readings do not agree, so your code has to handle an empty result.
-* The absolute encoder pinion tooth counts should share no common factor (coprime). Sharing a factor throws unique range away.
-* `EasyCRT` has no offset or inversion settings. Both encoders MUST read zero with the mechanism at zero, and both MUST count up when the mechanism moves in its positive direction.
-* CRT works within a unique range based off the shared gear teeth and the absolute encoder pinion teeth.
-  * When you exceed that range CRT will resolve to different values.
-
-## Alternatives
-
-CRT is not the only way to find the absolute angle of your turret and you should choose what is the easiest for you
+CRT is not the only way to find the absolute angle of your turret. Choose whatever is easiest for you:
 
 * A zero sensor (limit switch, magnetic limit switch) and rotating to hit it
 * A 10-turn pot on a reduction
 * An absolute encoder with a 1:1 reduction
-  * Optionally add a slightly less than 1:1 pinon on a second absolute encoder and find how many turns there are algebraically.
+  * Optionally add a slightly less than 1:1 pinion on a second absolute encoder and find how many turns there are algebraically.
 
-## EasyCRT guide
+## Set it up
 
-`EasyCRT` finds the absolute angle of a mechanism that turns more than once, usually a turret, from two absolute encoders. Each encoder sits on a pinion with a different tooth count, and both pinions mesh with the same gear. Neither encoder knows the angle on its own, but the pair of readings is unique over a much longer travel than either one.
+{% hint style="info" %}
+Coming from the 2026 `EasyCRTConfig` API? See [Upgrading from 2026 to 2027](../upgrading-from-2026-to-2027.md#easycrt) for the before and after.
+{% endhint %}
 
-{% tabs %}
-{% tab title="Java" %}
-```java
-import yams.core.units.EasyCRT;
-
-// 100 tooth turret gear, 19 tooth pinion on encoder A, 21 tooth pinion on encoder B.
-EasyCRT crt = new EasyCRT(100, 19, 21);
-
-// Read once at startup, while the turret is not moving.
-Optional<Angle> turretAngle = crt.solve(encoderA.get(), encoderB.get());
-```
-{% endtab %}
-
-{% tab title="C++" %}
-```cpp
-#include "yams/units/EasyCRT.hpp"
-
-// 100 tooth turret gear, 19 tooth pinion on encoder A, 21 tooth pinion on encoder B.
-yams::units::EasyCRT crt{100, 19, 21};
-
-// Read once at startup, while the turret is not moving.
-std::optional<wpi::units::turn_t> turretAngle = crt.Solve(encoderA, encoderB);
-```
-{% endtab %}
-{% endtabs %}
-
-That is the whole API:
+The whole API:
 
 | Java | C++ | What it does |
 | ---- | --- | ------------ |
@@ -85,41 +60,9 @@ That is the whole API:
 | `solve(a, b, min, max)` | `Solve(a, b, min, max)` | The same, for travel that is not centered on zero. |
 | `getUniqueRange()` | `GetUniqueRange()` | How far the shared gear can turn before the readings repeat. |
 
-`solve` returns an empty `Optional` (`std::nullopt` in C++) when the two readings do not agree on one angle.
+`solve` returns an empty `Optional` (`std::nullopt` in C++) when the two readings do not agree on one angle. Everything else (choosing gears, zeroing, inversion, gear trains, checking your margin) is something you do yourself, with the steps below.
 
-Everything else you might want (choosing gears, zeroing, inversion, gear trains, checking your margin) is something you do yourself, and the rest of this guide shows how.
-
-{% hint style="info" %}
-Coming from the 2026 `EasyCRTConfig` API? See [Upgrading from 2026 to 2027](../upgrading-from-2026-to-2027.md#easycrt) for the before and after.
-{% endhint %}
-
-### How the solver works
-
-<figure><img src="../.gitbook/assets/easycrt-how-it-works.gif" alt="Animation: as the turret turns, encoder A and encoder B readings wrap at different rates, and EasyCRT reports the one turret angle that fits both"><figcaption><p>Each encoder wraps many times, at different rates. Only one turret angle fits both readings.</p></figcaption></figure>
-
-1. Encoder A's reading fits several shared gear angles, one for each number of whole turns the pinion could have made. `EasyCRT` lists every one inside the travel.
-2. For each candidate it predicts what encoder B should read.
-3. The candidate whose prediction is closest to encoder B's real reading wins.
-
-This is not a textbook Chinese Remainder Theorem solve. It is the same idea done as a search, which keeps working with backlash and sensor noise.
-
-### Before you call solve
-
-<figure><img src="../.gitbook/assets/easycrt-zeroing.gif" alt="Animation: the turret is moved to the middle of its travel, both absolute encoders are zeroed there, and solve then reports angles either side of zero"><figcaption><p>Center the turret, zero both encoders there, then check both directions.</p></figcaption></figure>
-
-<figure><img src="../.gitbook/assets/easycrt-encoder-direction.gif" alt="Animation: with encoder B counting down, solve returns empty; after inverting encoder B so both count up, solve returns the turret angle"><figcaption><p>Both encoders have to count up when the turret turns in its positive direction.</p></figcaption></figure>
-
-`EasyCRT` takes the two readings as they are, so the encoders have to be set up first:
-
-* **Zero both encoders with the mechanism at zero.** Use the vendor tool to set each encoder's offset. If an encoder cannot store an offset, subtract it yourself: `crt.solve(encoderA.get().minus(offsetA), encoderB.get().minus(offsetB))`.
-* **Both encoders must count up when the mechanism moves in its positive direction.** A pinion turns the opposite way to the gear it meshes with, so this usually means inverting both encoders. Set the direction on the encoder, or negate the reading before passing it in.
-* **Read while the mechanism is still.** The two readings are taken one after the other, so any motion between them looks like disagreement. Solve once at startup and seed the motor with the result. Do not use `EasyCRT` as closed loop feedback.
-
-{% hint style="warning" %}
-Set each offset and inversion in one place only: on the encoder, or in your code before calling `solve`. Doing it in both places gives shifted or mirrored angles.
-{% endhint %}
-
-### Choosing tooth counts
+### Step 1: Choose tooth counts
 
 The readings repeat together every `lcm(a, b)` teeth of the shared gear, so:
 
@@ -127,7 +70,7 @@ The readings repeat together every `lcm(a, b)` teeth of the shared gear, so:
 unique range (rotations of the shared gear) = lcm(a, b) / shared
 ```
 
-Pick pinions with no common factor, so the lcm is their product. Sharing a factor throws range away: 20 and 30 teeth only cover 60 teeth of the shared gear, not 600.
+Pick pinions with no common factor (coprime), so the lcm is their product. Sharing a factor throws range away: 20 and 30 teeth only cover 60 teeth of the shared gear, not 600.
 
 | Pinion A | Pinion B | Teeth covered | Range on a 100 tooth gear | Range on a 200 tooth gear |
 | -------- | -------- | ------------- | ------------------------- | ------------------------- |
@@ -156,52 +99,52 @@ wpi::units::turn_t range = yams::units::EasyCRT{200, 19, 21}.GetUniqueRange(); /
 {% endtab %}
 {% endtabs %}
 
-### Travel that is not centered on zero
+**Check:** the range is longer than your travel, with room on both sides.
 
-`solve(a, b)` assumes the mechanism's zero is in the middle of its travel, and returns an angle within half the unique range either side of zero. For a turret that goes from 0 to 540 degrees, give the travel:
+### Step 2: Zero the encoders and check their direction
 
-{% tabs %}
-{% tab title="Java" %}
-```java
-Optional<Angle> angle = crt.solve(encoderA.get(), encoderB.get(), Degrees.of(0), Degrees.of(540));
-```
-{% endtab %}
+<figure><img src="../.gitbook/assets/easycrt-zeroing.gif" alt="Animation: the turret is moved to the middle of its travel, both absolute encoders are zeroed there, and solve then reports angles either side of zero"><figcaption><p>Center the turret, zero both encoders there, then check both directions.</p></figcaption></figure>
 
-{% tab title="C++" %}
-```cpp
-std::optional<wpi::units::turn_t> angle =
-    crt.Solve(encoderA, encoderB, wpi::units::turn_t{0.0}, wpi::units::turn_t{1.5});
-```
-{% endtab %}
-{% endtabs %}
+<figure><img src="../.gitbook/assets/easycrt-encoder-direction.gif" alt="Animation: with encoder B counting down, solve returns empty; after inverting encoder B so both count up, solve returns the turret angle"><figcaption><p>Both encoders have to count up when the turret turns in its positive direction.</p></figcaption></figure>
 
-Give the real travel, not the whole unique range. A tighter range leaves fewer candidates, and it keeps a reading taken slightly past an end stop from wrapping to the other end.
+`EasyCRT` takes the two readings as they are, so the encoders have to be set up first:
 
-### Gear layouts
+* **Zero both encoders with the mechanism at zero.** Use the vendor tool to set each encoder's offset. If an encoder cannot store an offset, subtract it yourself: `crt.solve(encoderA.get().minus(offsetA), encoderB.get().minus(offsetB))`.
+* **Both encoders must count up when the mechanism moves in its positive direction.** A pinion turns the opposite way to the gear it meshes with, so the direction depends on the layout (see Step 3). Set the direction on the encoder, or negate the reading before passing it in.
+* **Read while the mechanism is still.** The two readings are taken one after the other, so any motion between them looks like disagreement.
 
-There are four common places to put the two encoder pinions on a turret. In every one, the gear
-both pinions mesh with is the **shared gear**: give `EasyCRT` its tooth count, and `solve` returns
-its angle. What changes is whether that angle is already the turret angle.
+{% hint style="warning" %}
+Set each offset and inversion in one place only: on the encoder, or in your code before calling `solve`. Doing it in both places gives shifted or mirrored angles.
+{% endhint %}
+
+**Check:** turn the mechanism by hand in its positive direction. Both readings go up.
+
+### Step 3: Solve once at startup and seed the motor
+
+There are four common places to put the two encoder pinions on a turret. In every one, the gear both pinions mesh with is the shared gear.
 
 <figure><img src="../.gitbook/assets/easycrt-layouts.png" alt="Four EasyCRT gear layouts: pinions on the turret gear, on the drive gear, on a common gear, or on a second gear on the drive shaft"><figcaption><p>The four places to put the CRT pinions. Not to scale.</p></figcaption></figure>
 
-Each example sets up the turret's `SmartMotorController` with its gearing and then sets its encoder
-position from `EasyCRT`. Two gearings are involved, and they are not the same thing:
+Two gearings are involved, and they are not the same thing:
 
-- **The motor's gearing** (`motorToTurret`) goes in the `SmartMotorControllerConfig` with
-  `withGearing(...)`. It is the whole reduction from the motor to the turret, and it is the same in
-  every layout because the motor drives the turret the same way.
-- **The shared gear's gearing** (`driveToTurret`, `commonToTurret`) is only used to turn the solved
-  angle into the turret angle, in layouts 2, 3 and 4.
+* **The motor's gearing** (`motorToTurret`) goes in the `SmartMotorControllerConfig` with `withGearing(...)`. It is the whole reduction from the motor to the turret.
+* **The shared gear's gearing** is only needed in layout 4, to turn the solved angle into the turret angle.
 
-`setEncoderPosition(...)` always takes the turret angle. The tooth counts are examples.
+`setEncoderPosition(...)` always takes the turret angle, and applies the motor's gearing itself. The tooth counts below are examples.
 
-#### Layout 1: CRT gears on the turret gear
+#### Layouts 1, 2 and 3: use the turret's tooth count
 
-<figure><img src="../.gitbook/assets/easycrt-layout-1-motion.gif" alt="Animation of layout 1: the turret gear turns the drive gear and both encoder pinions, and solve returns the turret angle"><figcaption><p>Layout 1: the turret gear is the shared gear.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/easycrt-shortcut.png" alt="Turret gear, drive gear and encoder pinion in a row: 200 over 40 times 40 over 19 is 200 over 19, so the drive gear cancels"><figcaption><p>A gear that only meshes passes teeth through one for one.</p></figcaption></figure>
 
-The motor's drive gear and both encoder pinions mesh with the turret gear. The turret gear is the
-shared gear, so there is nothing to convert.
+When every gear between the pinions and the turret simply meshes with the next one, the gears in between cancel out: each pinion turns `200 / 19` or `200 / 21` times per turret turn, whichever gear it touches. So in these three layouts you give `EasyCRT` the **turret** gear's tooth count, and `solve` returns the turret angle with no conversion:
+
+| Layout | Where the pinions mesh | Encoder direction |
+| --- | --- | --- |
+| 1 | On the turret gear | Pinions turn opposite to the turret, so both encoders usually need inverting |
+| 2 | On the motor's drive gear, which drives the turret gear | Two meshes away, so the pinions turn the same way as the turret |
+| 3 | On a common gear that meshes with the turret gear | Two meshes away, the same way as the turret |
+
+<figure><img src="../.gitbook/assets/easycrt-layout-1-motion.gif" alt="Animation of layout 1: the turret gear turns the drive gear and both encoder pinions, and solve returns the turret angle"><figcaption><p>Layout 1: the pinions mesh with the turret gear.</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Java" %}
@@ -215,10 +158,11 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withClosedLoopController(20, 0, 0);
 SmartMotorController motor = new SparkWrapper(sparkMax, DCMotor.getNEO(1), motorConfig);
 
-EasyCRT crt = new EasyCRT(200, 19, 21); // turret gear, pinion A, pinion B
+// Layouts 1, 2 and 3: the 200 tooth turret gear, pinion A, pinion B.
+EasyCRT crt = new EasyCRT(200, 19, 21);
 
-// The turret gear is the shared gear, so the solved angle is the turret angle.
-// setEncoderPosition takes the turret angle and applies motorToTurret itself.
+// Once, at startup, with the turret still. The result is the turret angle,
+// and setEncoderPosition applies motorToTurret itself.
 crt.solve(encoderA.get(), encoderB.get()).ifPresent(motor::setEncoderPosition);
 ```
 {% endtab %}
@@ -231,10 +175,11 @@ yams::gearing::MechanismGearing motorToTurret{
 motorConfig.WithMotorGearing(motorToTurret);
 // ... finish motorConfig and build the SmartMotorController `motor` with it.
 
-yams::units::EasyCRT crt{200, 19, 21};  // turret gear, pinion A, pinion B
+// Layouts 1, 2 and 3: the 200 tooth turret gear, pinion A, pinion B.
+yams::units::EasyCRT crt{200, 19, 21};
 
-// The turret gear is the shared gear, so the solved angle is the turret angle.
-// SetEncoderPosition takes the turret angle and applies motorToTurret itself.
+// Once, at startup, with the turret still. The result is the turret angle,
+// and SetEncoderPosition applies motorToTurret itself.
 if (auto turretAngle = crt.Solve(encoderA, encoderB)) {
   motor.SetEncoderPosition(*turretAngle);
 }
@@ -242,126 +187,25 @@ if (auto turretAngle = crt.Solve(encoderA, encoderB)) {
 {% endtab %}
 {% endtabs %}
 
-Each pinion turns the opposite way to the turret, so both encoders usually need inverting.
+<details>
 
-#### Layout 2: CRT gears on the drive gear
+<summary>Layouts 2 and 3 in motion</summary>
 
-<figure><img src="../.gitbook/assets/easycrt-layout-2-motion.gif" alt="Animation of layout 2: both encoder pinions mesh with the motor drive gear, and the drive gear angle is scaled to the turret angle"><figcaption><p>Layout 2: the drive gear is the shared gear.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/easycrt-layout-2-motion.gif" alt="Animation of layout 2: both encoder pinions mesh with the motor drive gear, which drives the turret gear"><figcaption><p>Layout 2: the pinions mesh with the drive gear.</p></figcaption></figure>
 
-Both pinions mesh with the gear on the motor's output, which drives the turret gear. The drive gear
-is the shared gear, so `solve` returns the drive gear angle. Describe the drive gear to turret stage
-as a `MechanismGearing` and multiply by `getRotorToMechanismRatio()` to get the turret angle.
+<figure><img src="../.gitbook/assets/easycrt-layout-3-motion.gif" alt="Animation of layout 3: the turret gear turns the common gear, which turns both encoder pinions"><figcaption><p>Layout 3: the pinions mesh with a common gear.</p></figcaption></figure>
 
-{% tabs %}
-{% tab title="Java" %}
-```java
-// Motor: 10:1 gearbox, then the 40 tooth drive gear on the 200 tooth turret gear (5:1).
-MechanismGearing motorToTurret = new MechanismGearing(GearBox.fromReductionStages(10, 200.0 / 40));
+You can also give `EasyCRT` the drive gear's or common gear's own tooth count and scale the result by that stage's `MechanismGearing`, as in layout 4. The answer and the unique range in turret turns are the same.
 
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-    .withGearing(motorToTurret)
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(20, 0, 0);
-SmartMotorController motor = new SparkWrapper(sparkMax, DCMotor.getNEO(1), motorConfig);
-
-// The pinions mesh with the 40 tooth drive gear, which turns 5 times per turret turn.
-MechanismGearing driveToTurret = new MechanismGearing(GearBox.fromTeeth(40, 200));
-EasyCRT crt = new EasyCRT(40, 19, 21); // drive gear, pinion A, pinion B
-
-crt.solve(encoderA.get(), encoderB.get()).ifPresent(driveGearAngle -> {
-  // Scale the drive gear angle down to the turret, then seed the motor with the turret angle.
-  Angle turretAngle = driveGearAngle.times(driveToTurret.getRotorToMechanismRatio());
-  motor.setEncoderPosition(turretAngle);
-});
-```
-{% endtab %}
-
-{% tab title="C++" %}
-```cpp
-// Motor: 10:1 gearbox, then the 40 tooth drive gear on the 200 tooth turret gear (5:1).
-yams::gearing::MechanismGearing motorToTurret{
-    yams::gearing::GearBox::FromReductionStages({10.0, 200.0 / 40.0})};
-motorConfig.WithMotorGearing(motorToTurret);
-// ... finish motorConfig and build the SmartMotorController `motor` with it.
-
-// The pinions mesh with the 40 tooth drive gear, which turns 5 times per turret turn.
-yams::gearing::MechanismGearing driveToTurret{yams::gearing::GearBox::FromTeeth({40, 200})};
-yams::units::EasyCRT crt{40, 19, 21};  // drive gear, pinion A, pinion B
-
-if (auto driveGearAngle = crt.Solve(encoderA, encoderB)) {
-  // Scale the drive gear angle down to the turret, then seed the motor with the turret angle.
-  wpi::units::turn_t turretAngle = *driveGearAngle * driveToTurret.GetRotorToMechanismRatio();
-  motor.SetEncoderPosition(turretAngle);
-}
-```
-{% endtab %}
-{% endtabs %}
-
-The pinions are two meshes away from the turret, so they turn the same way as the turret.
-
-#### Layout 3: CRT gears on a common gear
-
-<figure><img src="../.gitbook/assets/easycrt-layout-3-motion.gif" alt="Animation of layout 3: the turret gear turns the common gear, which turns both encoder pinions, and the common gear angle is scaled to the turret angle"><figcaption><p>Layout 3: the common gear is the shared gear.</p></figcaption></figure>
-
-Both pinions mesh with their own gear, which meshes with the turret gear. The motor's drive gear
-also meshes with the turret gear. The common gear is the shared gear, so `solve` returns the common
-gear angle, and the conversion works the same way as layout 2.
-
-{% tabs %}
-{% tab title="Java" %}
-```java
-// Motor: 10:1 gearbox, then the 40 tooth drive gear on the 200 tooth turret gear (5:1).
-MechanismGearing motorToTurret = new MechanismGearing(GearBox.fromReductionStages(10, 200.0 / 40));
-
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-    .withGearing(motorToTurret)
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(20, 0, 0);
-SmartMotorController motor = new SparkWrapper(sparkMax, DCMotor.getNEO(1), motorConfig);
-
-// The pinions mesh with a 30 tooth common gear, which turns 6.67 times per turret turn.
-MechanismGearing commonToTurret = new MechanismGearing(GearBox.fromTeeth(30, 200));
-EasyCRT crt = new EasyCRT(30, 19, 21); // common gear, pinion A, pinion B
-
-crt.solve(encoderA.get(), encoderB.get()).ifPresent(commonGearAngle -> {
-  // Scale the common gear angle down to the turret, then seed the motor with the turret angle.
-  Angle turretAngle = commonGearAngle.times(commonToTurret.getRotorToMechanismRatio());
-  motor.setEncoderPosition(turretAngle);
-});
-```
-{% endtab %}
-
-{% tab title="C++" %}
-```cpp
-// Motor: 10:1 gearbox, then the 40 tooth drive gear on the 200 tooth turret gear (5:1).
-yams::gearing::MechanismGearing motorToTurret{
-    yams::gearing::GearBox::FromReductionStages({10.0, 200.0 / 40.0})};
-motorConfig.WithMotorGearing(motorToTurret);
-// ... finish motorConfig and build the SmartMotorController `motor` with it.
-
-// The pinions mesh with a 30 tooth common gear, which turns 6.67 times per turret turn.
-yams::gearing::MechanismGearing commonToTurret{yams::gearing::GearBox::FromTeeth({30, 200})};
-yams::units::EasyCRT crt{30, 19, 21};  // common gear, pinion A, pinion B
-
-if (auto commonGearAngle = crt.Solve(encoderA, encoderB)) {
-  // Scale the common gear angle down to the turret, then seed the motor with the turret angle.
-  wpi::units::turn_t turretAngle = *commonGearAngle * commonToTurret.GetRotorToMechanismRatio();
-  motor.SetEncoderPosition(turretAngle);
-}
-```
-{% endtab %}
-{% endtabs %}
-
-As in layout 2, the pinions turn the same way as the turret.
+</details>
 
 #### Layout 4: CRT gears on the drive shaft
 
 <figure><img src="../.gitbook/assets/easycrt-layout-4-motion.gif" alt="Animation of layout 4: a 60 tooth gear shares a shaft with the 40 tooth drive gear, both encoder pinions mesh with the 60 tooth gear, and the shaft angle is scaled to the turret angle"><figcaption><p>Layout 4: the 60 tooth gear on the drive shaft is the shared gear.</p></figcaption></figure>
 
-Both pinions mesh with a second gear that is fixed to the same shaft as the motor's drive gear.
-The 60 tooth gear on that shaft is the shared gear, so `solve` returns the shaft angle. The shaft
-turns the turret through the 40 tooth drive gear, so that stage is the `MechanismGearing` to
-multiply by.
+<figure><img src="../.gitbook/assets/easycrt-compound.png" alt="A 60 tooth shared gear and a 40 tooth drive gear on the same shaft, with the drive gear meshing with the turret gear, so the tooth counts do not cancel"><figcaption><p>Two different gears on one shaft change the ratio.</p></figcaption></figure>
+
+Both pinions mesh with a second gear fixed to the same shaft as the motor's drive gear. Two different gears on one shaft do not cancel, so the shortcut does not work. Give `EasyCRT` the 60 tooth gear, which makes `solve` return the shaft angle, and multiply by the shaft to turret `MechanismGearing`. The same applies whenever the shared gear sits behind a gearbox stage. The pinions turn the same way as the turret.
 
 {% tabs %}
 {% tab title="Java" %}
@@ -410,53 +254,55 @@ if (auto shaftAngle = crt.Solve(encoderA, encoderB)) {
 {% endtab %}
 {% endtabs %}
 
-The pinions turn the same way as the turret. Because two different gears share the shaft, the
-shortcut below does not apply to this layout, and its unique range is shorter (see below).
+Layout 4 also has a shorter unique range. 399 teeth of the 60 tooth gear is `399 / 60 = 6.65` turns of the shaft, which is `6.65 / 5 = 1.33` turns of the turret, against 1.995 in layouts 1 to 3. A bigger gear on the shaft uses the range up faster. The unique range in turret turns is `getUniqueRange()` multiplied by `shaftToTurret.getRotorToMechanismRatio()`.
 
-#### Travel, range and shortcuts
+#### Travel that is not centered on zero
+
+`solve(a, b)` assumes the mechanism's zero is in the middle of its travel, and returns an angle within half the unique range either side of zero. For a turret that goes from 0 to 540 degrees, give the travel:
+
+{% tabs %}
+{% tab title="Java" %}
+```java
+Optional<Angle> angle = crt.solve(encoderA.get(), encoderB.get(), Degrees.of(0), Degrees.of(540));
+```
+{% endtab %}
+
+{% tab title="C++" %}
+```cpp
+std::optional<wpi::units::turn_t> angle =
+    crt.Solve(encoderA, encoderB, wpi::units::turn_t{0.0}, wpi::units::turn_t{1.5});
+```
+{% endtab %}
+{% endtabs %}
+
+Give the real travel, not the whole unique range. A tighter range leaves fewer candidates, and it keeps a reading taken slightly past an end stop from wrapping to the other end.
 
 <figure><img src="../.gitbook/assets/easycrt-travel.png" alt="Turret travel of minus 200 to plus 200 degrees is the same motion as minus 1000 to plus 1000 degrees of a drive gear that turns 5 times per turret turn"><figcaption><p>The same motion, as turret angles and as shared gear angles.</p></figcaption></figure>
 
-`solve(a, b)` and `solve(a, b, min, max)` work in shared gear angles. In layouts 2, 3 and 4 that is
-not the turret, so convert the turret's travel before passing it in:
+The travel is in shared gear angles. In layouts 1 to 3 with the turret's tooth count, that is the turret angle. In layout 4, convert the turret's travel to shaft angles first:
 
 ```java
-// Turret travel of -200 to 200 degrees, expressed as drive gear angles.
-double driveTurnsPerTurretTurn = driveToTurret.getMechanismToRotorRatio(); // 5
+// Layout 4: turret travel of -200 to 200 degrees, expressed as shaft angles.
+double shaftTurnsPerTurretTurn = shaftToTurret.getMechanismToRotorRatio(); // 5
 crt.solve(encoderA.get(), encoderB.get(),
-    Degrees.of(-200).times(driveTurnsPerTurretTurn), Degrees.of(200).times(driveTurnsPerTurretTurn));
+    Degrees.of(-200).times(shaftTurnsPerTurretTurn), Degrees.of(200).times(shaftTurnsPerTurretTurn));
 ```
 
 <figure><img src="../.gitbook/assets/easycrt-range.png" alt="Number line of the turret angle showing the 1.995 turn unique range with the turret travel and hard stops inside it"><figcaption><p>The travel has to fit inside the unique range.</p></figcaption></figure>
 
-The unique range is the same in layouts 1, 2 and 3. Meshing gears pass the same number of teeth,
-so the readings repeat every `lcm(19, 21) = 399` teeth on whichever gear you look at, which is
-`399 / 200 = 1.995` turns of the turret. Layout 4 is different: 399 teeth of the 60 tooth gear is
-`399 / 60 = 6.65` turns of the shaft, which is `6.65 / 5 = 1.33` turns of the turret. A bigger
-gear on the shaft uses the range up faster, so check `getUniqueRange()` against your travel.
-
-<figure><img src="../.gitbook/assets/easycrt-shortcut.png" alt="Turret gear, drive gear and encoder pinion in a row: 200 over 40 times 40 over 19 is 200 over 19, so the drive gear cancels"><figcaption><p>A gear that only meshes passes teeth through one for one.</p></figcaption></figure>
-
-{% hint style="success" %}
-**Shortcut for layouts 2 and 3.** When every gear between the pinions and the turret simply meshes
-with the next one, the gears in between cancel out: each pinion turns `200 / 19` or `200 / 21`
-times per turret turn no matter which gear it touches. So you can use the turret tooth count,
-`new EasyCRT(200, 19, 21)`, and the result is the turret angle with no conversion. Only the encoder
-directions differ between layouts.
+{% hint style="info" %}
+Pass `setEncoderPosition(...)` the mechanism angle, not the rotor angle: it applies the `MechanismGearing` from the config, so multiplying first would apply the gearing twice. The rotor angle it ends up setting is `turretAngle.times(motorToTurret.getMechanismToRotorRatio())`.
 {% endhint %}
-
-<figure><img src="../.gitbook/assets/easycrt-compound.png" alt="A 60 tooth shared gear and a 40 tooth drive gear on the same shaft, with the drive gear meshing with the turret gear, so the tooth counts do not cancel"><figcaption><p>Two different gears on one shaft change the ratio.</p></figcaption></figure>
 
 {% hint style="warning" %}
-**When you need the ratio.** The shortcut does not work if the shared gear sits on a shaft with a
-different gear, as in layout 4, or behind a gearbox stage. Then use the shared gear's own tooth
-count and a `MechanismGearing` for everything between that shaft and the turret. The unique range
-in turret turns is `getUniqueRange()` multiplied by the same `getRotorToMechanismRatio()`.
+Decide what happens when the result is empty. Raising an alert and refusing to move the mechanism is safer than assuming it is at zero.
 {% endhint %}
 
-In every layout, check the encoder directions on the robot instead of assuming them: both must count up when the turret moves in its positive direction.
+The `BroncBotz_2026` examples have a complete `Turret` class: [Commands v2](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/BroncBotz_2026/java/first/robot/subsystems/Turret.java) and [Commands v3](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/BroncBotz_2026/java/first/robot/mechanisms/Turret.java).
 
-### Margin: how much backlash is too much
+**Check:** after a power cycle, the turret's `mechanism/position` matches its real angle at several positions across the travel.
+
+### Step 4: Check your margin
 
 `EasyCRT` has no tolerance setting. It works the tolerance out from the gears:
 
@@ -466,9 +312,16 @@ In every layout, check the encoder directions on the robot instead of assuming t
 So the backlash and noise between the two encoders, measured at encoder B, has to stay under a quarter of the gap. To measure what you actually have, log the error yourself while moving the mechanism slowly by hand through its travel:
 
 ```java
-// Encoder B rotations per rotation of the shared gear is shared / b.
-double predictedB = solvedAngle.in(Rotations) * 100.0 / 21.0;
-double error = MathUtil.inputModulus(predictedB - encoderB.get().in(Rotations), -0.5, 0.5);
+// The tooth counts given to EasyCRT.
+static final int SHARED_GEAR_TEETH = 200;
+static final int PINION_B_TEETH = 21;
+
+// Encoder B turns SHARED_GEAR_TEETH / PINION_B_TEETH times per turn of the shared gear.
+Angle predictedB = solvedAngle.times((double) SHARED_GEAR_TEETH / PINION_B_TEETH);
+// The gap between predicted and real encoder B, wrapped to -0.5 to 0.5 rotations.
+double errorRotations = MathUtil.inputModulus(
+    predictedB.minus(encoderB.get()).in(Rotations), -0.5, 0.5);
+// Must stay well under a quarter of 1 / PINION_B_TEETH (here 1/84 of a rotation).
 ```
 
 If the error gets near the limit:
@@ -479,72 +332,17 @@ If the error gets near the limit:
 
 The accuracy of the result comes from encoder A alone: an error on encoder A shows up divided by `shared / a`.
 
-### Seeding a motor controller
+## Troubleshooting
 
-Use the solved angle to tell the motor where the mechanism is, once, at startup.
+{% hint style="danger" %}
+**Empty near the ends of travel? Your range affects your reading** (found by Team 2181).
 
-The motor's relative encoder counts rotor rotations, which is the turret angle multiplied by the reduction between the motor and the turret. Put that reduction in a `MechanismGearing`, give it to the `SmartMotorController` config, and `setEncoderPosition(...)` does the multiplication for you. This is the usual layout when three gears mesh with the turret gear: the two encoder pinions and the motor's pinion.
+If `solve` comes back empty near the ends of travel, your turret is probably sitting just outside the range you gave. Use a range with room on both sides.
 
-{% tabs %}
-{% tab title="Java" %}
-```java
-// Three gears mesh with the 200 tooth turret gear: the two encoder pinions and the motor's
-// 40 tooth drive gear, which is driven through a 10:1 gearbox.
-MechanismGearing turretGearing = new MechanismGearing(GearBox.fromReductionStages(10, 200.0 / 40));
-EasyCRT crt = new EasyCRT(200, 19, 21);
+For example, instead of `solve(a, b, Rotations.of(0), Rotations.of(2))` use `solve(a, b, Rotations.of(-0.1), Rotations.of(2.1))`, as long as the range is still shorter than `getUniqueRange()`. `solve(a, b)` already does this for travel centered on zero: it allows half of the unique range either side of zero.
 
-SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
-    .withGearing(turretGearing)
-    .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(20, 0, 0);
-SmartMotorController motor = new SparkWrapper(sparkMax, DCMotor.getNEO(1), motorConfig);
-
-crt.solve(encoderA.get(), encoderB.get()).ifPresent(turretAngle -> {
-  // The turret gear is the shared gear, so the solved angle is already the turret angle.
-  // setEncoderPosition takes the mechanism angle and sets the motor's relative encoder to
-  // turretAngle.times(turretGearing.getMechanismToRotorRatio()) for you.
-  motor.setEncoderPosition(turretAngle);
-
-  // The same conversion, if you want the rotor angle yourself (for logging or a sanity check):
-  Angle rotorAngle = turretAngle.times(turretGearing.getMechanismToRotorRatio());
-});
-```
-{% endtab %}
-
-{% tab title="C++" %}
-```cpp
-// Three gears mesh with the 200 tooth turret gear: the two encoder pinions and the motor's
-// 40 tooth drive gear, which is driven through a 10:1 gearbox.
-yams::gearing::MechanismGearing turretGearing{
-    yams::gearing::GearBox::FromReductionStages({10.0, 200.0 / 40.0})};
-yams::units::EasyCRT crt{200, 19, 21};
-
-// motor is a yams::motorcontrollers::SmartMotorController whose config has
-// WithMotorGearing(turretGearing).
-if (auto turretAngle = crt.Solve(encoderA, encoderB)) {
-  // The turret gear is the shared gear, so the solved angle is already the turret angle.
-  // SetEncoderPosition takes the mechanism angle and sets the motor's relative encoder to
-  // *turretAngle * turretGearing.GetMechanismToRotorRatio() for you.
-  motor.SetEncoderPosition(*turretAngle);
-
-  // The same conversion, if you want the rotor angle yourself (for logging or a sanity check):
-  wpi::units::turn_t rotorAngle = *turretAngle * turretGearing.GetMechanismToRotorRatio();
-}
-```
-{% endtab %}
-{% endtabs %}
-
-{% hint style="info" %}
-Pass `setEncoderPosition(...)` the mechanism angle, not the rotor angle: it applies the `MechanismGearing` from the config, so multiplying first would apply the gearing twice. `turretAngle.times(turretGearing.getMechanismToRotorRatio())` is the rotor angle it ends up setting. If the pinions mesh with a gear that is not the mechanism, convert the solved angle to the mechanism angle first (see [Gear layouts](#gear-layouts)).
+If your turret is outside the unique range, your CRT reading will be very **VERY** off.
 {% endhint %}
-
-{% hint style="warning" %}
-Decide what happens when the result is empty. Raising an alert and refusing to move the mechanism is safer than assuming it is at zero.
-{% endhint %}
-
-The `BroncBotz_2026` examples have a complete `Turret` class: [Commands v2](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands2/BroncBotz_2026/java/first/robot/subsystems/Turret.java) and [Commands v3](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/examples/commands3/BroncBotz_2026/java/first/robot/mechanisms/Turret.java).
-
-### Troubleshooting
 
 Two failures are worth seeing in motion.
 
@@ -555,8 +353,8 @@ Two failures are worth seeing in motion.
 | Symptom | Likely cause |
 | ------- | ------------ |
 | Always empty | An encoder is not zeroed at the mechanism's zero, or one encoder counts the wrong way. |
-| Empty in some positions only | Backlash or a loose pinion is using up the margin. See [Margin: how much backlash is too much](#margin-how-much-backlash-is-too-much). |
-| Empty at the ends of travel | The mechanism is past the travel you gave, or the travel is the whole unique range. |
+| Empty in some positions only | Backlash or a loose pinion is using up the margin. See [Step 4: Check your margin](#step-4-check-your-margin). |
+| Empty at the ends of travel | The mechanism is past the travel you gave, or the travel is the whole unique range. See the warning above. |
 | Angle is off by a fixed amount | Encoder A's zero is off. The result follows encoder A. |
 | Angle is off by a whole number of pinion turns | The readings were taken while moving, or encoder B's zero is off. |
 | Angle is mirrored | Both encoders count the wrong way. |

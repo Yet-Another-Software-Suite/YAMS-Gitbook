@@ -22,14 +22,37 @@ Takes one of WPILib's three feedforward classes.
 
 | Gain | What it is for                                        | How to find it                                                                              |
 | ---- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `kS` | The voltage that just overcomes friction.             | Raise the voltage slowly until the mechanism starts to move.                                |
+| `kS` | The voltage that just overcomes friction.             | Raise the voltage in steps of about 0.05 V until the mechanism starts to move. [Drive a motor at a voltage](../../live-tuning/README.md#drive-a-motor-at-a-voltage) shows how. |
 | `kG` | The voltage that holds the mechanism against gravity. | The voltage at which it neither rises nor falls. For an arm, measure it with the arm level. |
 | `kV` | The voltage per unit of speed.                        | Volts above `kS` divided by the steady speed it gives.                                      |
 | `kA` | The voltage per unit of acceleration.                 | Usually small. Raise it if the mechanism lags at the start of a move.                       |
 
-`ArmFeedforward` and `SimpleMotorFeedforward` gains are per rotation of the mechanism. `ElevatorFeedforward` gains are per meter, and giving one makes the controller [distance based](closed-loop-control.md#withlinearclosedloopcontroller).
+The units:
 
-[Live tuning](../../live-tuning/) has the full order for finding these.
+* **`kS` and `kG`** are volts.
+* **`kV`** is volts per mechanism rotation per second for `ArmFeedforward` and `SimpleMotorFeedforward`, and volts per meter per second for `ElevatorFeedforward`. A `kV` of 2 on an arm adds 2 V for every rotation per second it moves.
+* **`kA`** is the same, per second squared.
+
+Giving an `ElevatorFeedforward` makes the controller [distance based](closed-loop-control.md#withlinearclosedloopcontroller).
+
+{% hint style="info" %}
+**`ArmFeedforward` is per rotation in YAMS, not per radian.** WPILib documents an `ArmFeedforward`'s `kV` and `kA` per radian. In YAMS they are per mechanism rotation, like every other gain, and YAMS converts them for WPILib's math. A `kV` you copied from a per radian calculation is 2π (about 6.28) times too small for YAMS.
+{% endhint %}
+
+### Starting values
+
+These are only places to start, so you can see which way to go. Tune `kS` and `kG` first, with the PID gains at 0.
+
+| Gain | Start at                                                       | Change it                                                                                     |
+| ---- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `kG` | `0`                                                            | Raise in 0.05 V steps until the arm (held level) or the elevator stays where it is.            |
+| `kS` | `0`                                                            | Raise in 0.05 V steps until the mechanism is just about to move, then back off a little.      |
+| `kV` | 12 V divided by the mechanism's free speed                     | Raise if the speed settles below the setpoint, lower if it settles above.                     |
+| `kA` | `0`                                                            | Raise only if the mechanism lags while it speeds up.                                          |
+
+The mechanism's free speed is the motor's free speed divided by your gearing. A NEO (about 95 rotations per second) through 12:1 gives about 7.9 rotations per second, so `kV` starts near 12 / 7.9 = 1.5. A Kraken X60 (about 100 rotations per second) driving a flywheel 1:1 starts near 0.12. For an elevator, multiply the mechanism's free speed by the [circumference](gearing-and-units.md#withmechanismcircumference) to get meters per second first.
+
+Graph velocity against the setpoint velocity during a long move. [Step 5 of the Arm tutorial](../../../tutorials/arm/tune.md) walks through it, and [Tuning order](../../live-tuning/README.md#tuning-order) has the order for each mechanism.
 
 ### These are not an exponential profile's `kV` and `kA`
 

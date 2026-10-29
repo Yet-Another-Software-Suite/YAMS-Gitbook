@@ -1,10 +1,10 @@
 # How do I use a vendor hardware config?
 
-Some motor controllers ship with on-board configurations stored in flash, and vendor APIs expose options that YAMS does not surface directly, things like CANivore bus selection, custom status frame rates, or audio feedback settings. YAMS integrates with these through a hardware config layer: you pre-build a vendor config object and hand it to `SmartMotorControllerConfig.withVendorConfig()`, and YAMS merges its own settings on top without discarding the rest. Understanding when to use a vendor hardware config (versus configuring purely through YAMS) helps you avoid conflicting settings between the vendor's stored config and YAMS's runtime config.
+**Goal:** use a motor controller option that YAMS does not have a method for, such as beep settings, peak voltages or status frame rates.
 
-YAMS configures your motor controller automatically based on your `SmartMotorControllerConfig`. But sometimes you need to reach features that YAMS doesn't expose directly, custom voltage limits, CANivore bus names, status frame rates, or device-specific options only available through the vendor's own configuration object.
+YAMS configures your motor controller from your `SmartMotorControllerConfig`. For anything else, build the vendor's own config object and pass it to `SmartMotorControllerConfig.withVendorConfig(...)`. YAMS starts from it and applies its own settings on top, so anything you set in `SmartMotorControllerConfig` wins, and everything else in the vendor object is kept.
 
-`SmartMotorControllerConfig.withVendorConfig(Object config)` lets you supply a pre-built vendor config as a baseline. YAMS merges its own settings on top of it, so anything you set in `SmartMotorControllerConfig` always wins, but everything else you configured in the vendor object is preserved.
+Each example below is a fragment for your subsystem's fields or constructor.
 
 ## CTRE TalonFX
 
@@ -33,7 +33,7 @@ Pass a `TalonFXSConfiguration` object:
 ```java
 TalonFXSConfiguration talonConfig = new TalonFXSConfiguration()
     .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
-    .withCommutation(new CommutationConfigs().withMotorArrangement(MotorArrangementValue.Minion_JST));
+    .withAudio(new AudioConfigs().withBeepOnBoot(false));
 
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withVendorConfig(talonConfig)
@@ -42,8 +42,10 @@ SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)));
 
 TalonFXS talonFXS = new TalonFXS(1, new CANBus(CANPort.CAN_S0));
-SmartMotorController smc = new TalonFXSWrapper(talonFXS, DCMotor.getKrakenX60(1), motorConfig);
+SmartMotorController smc = new TalonFXSWrapper(talonFXS, DCMotor.getMinion(1), motorConfig);
 ```
+
+`TalonFXSWrapper` sets the motor arrangement (Minion, NEO, NEO 550, NEO Vortex) from the `DCMotor` you pass, so you do not set it in the vendor config. A `DCMotor` it does not recognize, such as `DCMotor.getKrakenX60(1)`, throws an `IllegalArgumentException` ("Unknown motor for TalonFXS"), because a Kraken X60 cannot run on a TalonFXS.
 
 ## REV SparkMax
 
@@ -114,8 +116,33 @@ YAMS uses your vendor config as a starting point and then writes its own setting
 
 If you set the same option in both places, `SmartMotorControllerConfig` wins. Think of the vendor config as the floor, not the ceiling.
 
+## Factory reset: `withResetPreviousConfig`
+
+Motor controllers keep their settings in flash, across power cycles and code deploys. Before applying your config, YAMS resets the controller to its factory defaults, so settings left over from last season, or from someone clicking around in the vendor's tool, cannot sneak in. This is `withResetPreviousConfig(true)`, the default.
+
+```java
+// Keep what is already saved on the controller, and only change what this config sets.
+.withResetPreviousConfig(false)
+```
+
+Turn the reset off only when you configured something on purpose in the vendor's tool (Phoenix Tuner X or REV Hardware Client) and want to keep it. With the reset off, any old setting you did not set yourself stays, which is a common cause of a motor that behaves differently from its twin. A vendor config passed to `withVendorConfig` is applied either way.
+
 <figure><img src="../.gitbook/assets/smc-config-layers.png" alt="Two stacks of layers applied top to bottom. With the reset on, the default, the controller starts from factory defaults, then your vendor config if you gave one, then your SmartMotorControllerConfig options. With the reset off it starts from whatever is already saved on the controller, so old settings you did not set stay."><figcaption><p>What the controller ends up with, with and without the reset.</p></figcaption></figure>
 
 {% hint style="warning" %}
 Always verify the final applied configuration on your hardware. Use your vendor's tuning tool (such as Phoenix Tuner X or REV Hardware Client) to confirm that YAMS didn't silently overwrite a setting you intended to keep from your vendor config.
 {% endhint %}
+
+## Check it
+
+Open the controller in Phoenix Tuner X or REV Hardware Client after the robot code has started, and check that the vendor setting you added is there (for example, the TalonFX no longer beeps on boot), and that the settings from your `SmartMotorControllerConfig` (gear ratio, current limit, brake mode) are there too.
+
+## If it did not work
+
+* **`SmartMotorControllerConfigurationException` about the vendor config.** The object is the wrong type for the wrapper: a TalonFX needs a `TalonFXConfiguration`, a TalonFXS a `TalonFXSConfiguration`, and a SPARK MAX a `SparkMaxConfig`.
+* **Your vendor setting is gone.** `SmartMotorControllerConfig` sets the same option, and it wins. Set it there instead.
+* **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
+
+## Next
+
+To see every option `SmartMotorControllerConfig` does have, see [SmartMotorControllerConfig](../details/editor/config/README.md).

@@ -2,6 +2,8 @@
 
 With YAMS, you only need **one IO implementation** that works for both real hardware and simulation. The `SmartMotorController` automatically detects when it's running in simulation and uses physics simulation instead of real hardware.
 
+Each IO class takes the subsystem that owns it in its constructor, because the `SmartMotorControllerConfig` needs it. The subsystem builds its own IO class in [Step 3](subsystem-and-robotcontainer.md), passing itself in. The CAN ID is a constant in the IO class.
+
 ## Arm IO implementation (works for real and sim)
 
 ```java
@@ -15,6 +17,7 @@ import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.controller.ArmFeedforward;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.units.measure.Angle;
 import yams.commands2.config.SmartMotorControllerConfig;
 import yams.core.gearing.GearBox;
 import yams.core.gearing.MechanismGearing;
@@ -30,11 +33,13 @@ import yams.core.telemetry.enums.TelemetryVerbosity;
  */
 public class ArmIOTalonFX implements ArmIO {
 
+  private static final int CAN_ID = 1;
+
   private final Arm arm;
   private final SmartMotorController motor;
 
-  public ArmIOTalonFX(SubsystemBase subsystem, int canId) {
-    TalonFX talonFX = new TalonFX(canId, new CANBus(CANPort.CAN_S0));
+  public ArmIOTalonFX(SubsystemBase subsystem) {
+    TalonFX talonFX = new TalonFX(CAN_ID, new CANBus(CANPort.CAN_S0));
     
     // Step 1: Create SmartMotorControllerConfig
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
@@ -75,9 +80,9 @@ public class ArmIOTalonFX implements ArmIO {
   }
 
   @Override
-  public void setTargetAngle(double rotations) {
+  public void setTargetAngle(Angle angle) {
     // Use SmartMotorController's setPosition method
-    motor.setPosition(Rotations.of(rotations));
+    motor.setPosition(angle);
   }
 
   @Override
@@ -115,6 +120,7 @@ import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.controller.ElevatorFeedforward;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.units.measure.Distance;
 import yams.commands2.config.SmartMotorControllerConfig;
 import yams.core.gearing.GearBox;
 import yams.core.gearing.MechanismGearing;
@@ -129,11 +135,13 @@ import yams.core.telemetry.enums.TelemetryVerbosity;
  */
 public class ElevatorIOTalonFX implements ElevatorIO {
 
+  private static final int CAN_ID = 2;
+
   private final Elevator elevator;
   private final SmartMotorController motor;
 
-  public ElevatorIOTalonFX(SubsystemBase subsystem, int canId) {
-    TalonFX talonFX = new TalonFX(canId, new CANBus(CANPort.CAN_S0));
+  public ElevatorIOTalonFX(SubsystemBase subsystem) {
+    TalonFX talonFX = new TalonFX(CAN_ID, new CANBus(CANPort.CAN_S0));
     
     // Step 1: Create SmartMotorControllerConfig
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
@@ -176,9 +184,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   }
 
   @Override
-  public void setTargetHeight(double meters) {
+  public void setTargetHeight(Distance height) {
     // Use SmartMotorController's setPosition method with Distance
-    motor.setPosition(Meters.of(meters));
+    motor.setPosition(height);
   }
 
   @Override
@@ -216,6 +224,7 @@ import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.units.measure.AngularVelocity;
 import yams.commands2.config.SmartMotorControllerConfig;
 import yams.core.gearing.GearBox;
 import yams.core.gearing.MechanismGearing;
@@ -230,17 +239,18 @@ import yams.core.telemetry.enums.TelemetryVerbosity;
  */
 public class ShooterIOTalonFX implements ShooterIO {
 
+  private static final int CAN_ID = 3;
+
   private final FlyWheel flywheel;
   private final SmartMotorController motor;
 
-  public ShooterIOTalonFX(SubsystemBase subsystem, int canId) {
-    TalonFX talonFX = new TalonFX(canId, new CANBus(CANPort.CAN_S0));
+  public ShooterIOTalonFX(SubsystemBase subsystem) {
+    TalonFX talonFX = new TalonFX(CAN_ID, new CANBus(CANPort.CAN_S0));
     
     // Step 1: Create SmartMotorControllerConfig
     SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(subsystem)
         .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))  // Direct drive
         .withClosedLoopController(0.5, 0, 0)
-        .withSoftLimits(RPM.of(0), RPM.of(6000))  // Velocity soft limits
         .withFeedforward(new SimpleMotorFeedforward(0.1, 0.12, 0.01));
     
     // Step 2: Create SmartMotorController (TalonFXWrapper)
@@ -271,9 +281,9 @@ public class ShooterIOTalonFX implements ShooterIO {
   }
 
   @Override
-  public void setTargetVelocity(double rotationsPerSec) {
+  public void setTargetVelocity(AngularVelocity velocity) {
     // Use SmartMotorController's setVelocity method
-    motor.setVelocity(RotationsPerSecond.of(rotationsPerSec));
+    motor.setVelocity(velocity);
   }
 
   @Override
@@ -301,5 +311,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 {% hint style="success" %}
 **Why this works**: YAMS's passive simulation is built into every wrapper. When `Robot.isSimulation()` is true, the `TalonFXWrapper` (and all other wrappers) automatically uses the `DCMotor`, gearing, and mass/MOI you provided to simulate physics. You get accurate simulation without writing any simulation-specific code.
 {% endhint %}
+
+**Check:** the project builds. Nothing runs yet: no subsystem creates these classes until the next step.
 
 Next: [Steps 3 and 4: The subsystem and RobotContainer](subsystem-and-robotcontainer.md)
