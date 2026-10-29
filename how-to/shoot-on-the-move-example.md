@@ -1153,7 +1153,7 @@ public class ExampleTeleop implements OpMode {
 
 Holding the right bumper does three things at once:
 
-1. **Aims.** [`withAim`](../details/swerve-input-stream.md#aim-at-a-target) turns the robot to face the shot's target while the left stick keeps driving, and [`withAimLookahead`](../details/swerve-input-stream.md#aim-lookahead) covers the short delay before the game piece leaves.
+1. **Aims.** [`withAim`](../details/swerve-input-stream-aim.md#aim-at-a-target) turns the robot to face the shot's target while the left stick keeps driving, and [`withAimLookahead`](../details/swerve-input-stream-aim.md#aim-lookahead) covers the short delay before the game piece leaves.
 2. **Sets the shooter speed.** `shooter.track(...)` keeps the flywheel at the speed the shot needs, which changes as the robot moves.
 3. **Shoots, but only when it is safe to.** The feeder runs only while `ready` is true.
 
@@ -1161,14 +1161,14 @@ Holding the right bumper does three things at once:
 
 | Check | Why |
 | ----- | --- |
-| [`aimLock`](../details/swerve-input-stream.md#aim-lock): the robot is aiming and within 2 degrees of the aim heading | A shot fired while the robot is still turning goes wide. It is also false whenever the bumper is not held, so nothing feeds by accident. |
+| [`aimLock`](../details/swerve-input-stream-aim.md#aim-lock): the robot is aiming and within 2 degrees of the aim heading | A shot fired while the robot is still turning goes wide. It is also false whenever the bumper is not held, so nothing feeds by accident. |
 | `shooter.atSpeed(...)`: the flywheel is within 50 RPM of the shot's speed | A flywheel that is still spinning up, or still recovering from the last shot, throws short. |
 | `ShotCalculator.inRange(...)`: the robot is at a distance you measured | Outside the tables, the lookup just repeats its last entry and the shot misses. |
 | `debounce(0.1)` | One loop where everything happens to line up is not a ready shot. |
 
 Releasing the bumper ends the aim and the flywheel command. `ready` goes false, the feeder stops, and the default commands let the flywheel coast.
 
-**For your robot:** tune the lookahead, the 2 degree and 50 RPM tolerances, and the debounce. Tighter is more accurate and slower to fire. If your shooter does not point out of the front of the robot, add [`withAimHeadingOffset`](../details/swerve-input-stream.md#aim-heading-offset).
+**For your robot:** tune the lookahead, the 2 degree and 50 RPM tolerances, and the debounce. Tighter is more accurate and slower to fire. If your shooter does not point out of the front of the robot, add [`withAimHeadingOffset`](../details/swerve-input-stream-aim.md#aim-heading-offset).
 {% endstep %}
 
 {% step %}
@@ -1180,7 +1180,7 @@ Run **WPILib: Simulate Robot Code**, connect a controller, and enable teleop. Ho
 
 ## If it did not work
 
-* **The robot does not turn to face the target.** The rotation controller in `SwerveDriveConfig` has no gain, or the aim command is not running. See the [Swerve Input Stream](../details/swerve-input-stream.md#aim-at-a-target) page.
+* **The robot does not turn to face the target.** The rotation controller in `SwerveDriveConfig` has no gain, or the aim command is not running. See the [Swerve Input Stream](../details/swerve-input-stream-aim.md#aim-at-a-target) page.
 * **The feeder never runs.** The flywheel never gets within its tolerance; tune it with [How do I shoot with a shooter?](how-to-shoot-with-a-shooter.md)
 * **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
 
