@@ -32,7 +32,7 @@ Give each mechanism a `MechanismPositionConfig`: where it is mounted on the robo
 | Mechanism                  | Where it is mounted                                    | Its pose                                                        |
 | -------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
 | `Arm`, `Pivot`             | The axis it turns about                                 | The axis, turned to its angle                                   |
-| `Elevator`                 | The carriage at zero height                             | The carriage, moved by its height along the elevator's angle. `getCascadePose3d()` or `getContinuousPose3d(carriageFirst)` for each stage: see [Elevator stages](#elevator-stages) |
+| `Elevator`                 | The carriage at zero height                             | The carriage, moved by its height along the elevator's angle. For each stage of a multi-stage elevator, see [How do I show an elevator's stages on a 3D robot model?](how-do-i-show-an-elevators-stages-on-a-3d-robot-model.md) |
 | `FlyWheel`                 | Its axle                                                | The axle, turned by the wheel's position                        |
 | `DoubleJointedArm`         | The lower arm's axis                                    | `getPose3d()` for the lower arm, `getUpperPose3d()` for the upper arm at the elbow |
 
@@ -143,93 +143,40 @@ Publish every component's pose in one array, in the same order as the components
 
 {% tabs %}
 {% tab title="Java" %}
+Commands v2: add a method to `RobotContainer`, where all three subsystems are, and call it from `Robot.robotPeriodic()`. Commands v3: put the call in `Robot.robotPeriodic()`.
+
+{% code title="RobotContainer.java (fragment)" %}
 ```java
 import org.wpilib.math.geometry.Pose3d;
 import org.wpilib.telemetry.Telemetry;
 
-// Where all three subsystems are visible: RobotContainer with Commands v2 (call it every loop,
-// for example from Robot.robotPeriodic()), or Robot.robotPeriodic() with Commands v3.
-Telemetry.log("Robot/Components",
-              new Pose3d[] {elevator.getPose3d(), arm.getPose3d(), turret.getPose3d()},
-              Pose3d.struct);
+/** Publishes every component's pose. Call it every loop from Robot.robotPeriodic(). */
+public void publishComponents() {
+  Telemetry.log("Robot/Components",
+                new Pose3d[] {elevator.getPose3d(), arm.getPose3d(), turret.getPose3d()},
+                Pose3d.struct);
+}
 ```
+{% endcode %}
 {% endtab %}
 
 {% tab title="C++" %}
+{% code title="cpp/RobotContainer.cpp (fragment)" %}
 ```cpp
 #include <array>
 #include <span>
 #include <wpi/telemetry/Telemetry.hpp>
 
-// In Periodic().
+// In a method you call every loop from Robot::RobotPeriodic().
 std::array<wpi::math::Pose3d, 3> components{m_elevator->GetPose3d(), m_arm->GetPose3d(),
                                             m_turret->GetPose3d()};
 wpi::telemetry::Log("Robot/Components", std::span<const wpi::math::Pose3d>{components});
 ```
+{% endcode %}
 {% endtab %}
 {% endtabs %}
 
 With AdvantageKit, record the same array with `Logger.recordOutput("Robot/Components", poses)`.
-
-### Elevator stages
-
-An elevator with moving stages has a component for each stage. Give its `ElevatorConfig` the stages with [`withStages`](../details/mechanism-configs/elevator-config.md#withstages): how far each moving stage travels relative to the stage below it, one height for each stage, the carriage last. The heights must add up to the elevator's maximum height, and without hard limits they set it.
-
-YAMS only knows the carriage's height, `getHeight()`. Where each stage below it sits depends on how the elevator is rigged, so there are two methods. Both return a pose for each moving stage, in order from the stage nearest the fixed stage to the carriage, and the last pose is always the carriage, the same as `getPose3d()`. Each pose is the stage's bottom, moved straight along the elevator's angle from where the elevator is mounted.
-
-#### Cascading elevators
-
-In a cascading elevator every stage is rigged to the one below it, so every stage moves at once. Use `getCascadePose3d()`: each stage moves its share of the carriage's height, its travel divided by the total travel, on top of the stage below it. With stages of 0.6 m, 0.6 m and 0.5 m, a carriage at 0.85 m, halfway, puts stage 1 at 0.3 m, stage 2 at 0.6 m and the carriage at 0.85 m.
-
-<figure><img src="../.gitbook/assets/howto-elevator-cascade-stages.gif" alt="Animation of a cascading elevator with a fixed stage, stage 1, stage 2 and a carriage, rising from 0 to 1.7 meters and back down. Every stage moves at the same time. A bar for each stage shows how far it has moved along the stage below it, and all three bars fill and empty together. At 0.9 meters stage 1 is at 0.32 meters, stage 2 at 0.64 meters and the carriage at 0.9 meters."><figcaption><p>A cascading elevator: every stage is always the same fraction of the way up the stage below it.</p></figcaption></figure>
-
-#### Continuous elevators
-
-In a continuous elevator one rope runs through every stage, so the stages move one at a time. Which moves first depends on how it is rigged, and on friction and the weight it carries, so watch your elevator move and tell `getContinuousPose3d(carriageFirst)` which it is. Either way, the carriage is always at the elevator's height.
-
-**Carriage first: `getContinuousPose3d(true)`.** The carriage rises the whole of its travel first, then the stage below it, and so on out to the stage nearest the fixed stage. Going down, the stage nearest the fixed stage lowers first, and the carriage last. With the same stages, a carriage at 0.85 m has risen its whole 0.5 m and stage 2 the other 0.35 m, so stage 1 is at 0 m, stage 2 at 0.35 m and the carriage at 0.85 m.
-
-<figure><img src="../.gitbook/assets/howto-elevator-continuous-stages.gif" alt="Animation of a continuous elevator with a fixed stage, stage 1, stage 2 and a carriage, rising from 0 to 1.7 meters and back down. The carriage rises its whole 0.5 meters first while the stages stay down, then stage 2 rises its 0.6 meters, then stage 1. Coming down, stage 1 lowers first, then stage 2, then the carriage."><figcaption><p>A continuous elevator that moves the carriage first: <code>getContinuousPose3d(true)</code>.</p></figcaption></figure>
-
-**Carriage last: `getContinuousPose3d(false)`.** The stage nearest the fixed stage rises the whole of its travel first, then the next, and the carriage last. Going down, the carriage lowers first, and the stage nearest the fixed stage last. With the same stages, a carriage at 0.85 m has stage 1 at the top of its 0.6 m, and stage 2 has risen the other 0.25 m, so stage 1 is at 0.6 m, and stage 2 and the carriage are both at 0.85 m.
-
-<figure><img src="../.gitbook/assets/howto-elevator-continuous-carriage-last-stages.gif" alt="Animation of a continuous elevator with a fixed stage, stage 1, stage 2 and a carriage, rising from 0 to 1.7 meters and back down. Stage 1 rises its whole 0.6 meters first, carrying stage 2 and the carriage with it, then stage 2 rises its 0.6 meters, then the carriage its 0.5 meters. Coming down, the carriage lowers first, then stage 2, then stage 1."><figcaption><p>A continuous elevator that moves the carriage last: <code>getContinuousPose3d(false)</code>.</p></figcaption></figure>
-
-#### Publishing the stages
-
-Publish the stage poses in place of the carriage's `getPose3d()`, and put any mechanism mounted on the carriage after them:
-
-{% tabs %}
-{% tab title="Java" %}
-```java
-// Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
-new ElevatorConfig()
-    // ... the rest of the config
-    .withStages(Meters.of(0.6), Meters.of(0.6), Meters.of(0.5));
-
-// The first stage, the second stage, then the carriage, which is elevator.getPose3d().
-// A continuous elevator uses elevator.getContinuousPose3d(true), or (false) if its carriage moves last.
-List<Pose3d> components = new ArrayList<>(elevator.getCascadePose3d());
-components.add(arm.getPose3d());
-Telemetry.log("Robot/Components", components.toArray(Pose3d[]::new), Pose3d.struct);
-```
-{% endtab %}
-
-{% tab title="C++" %}
-```cpp
-// Two stages that each travel 0.6 m, then a carriage that travels 0.5 m.
-m_elevatorConfig.WithStages(0.6_m, 0.6_m, 0.5_m);
-
-// The first stage, the second stage, then the carriage, which is m_elevator->GetPose3d().
-// A continuous elevator uses m_elevator->GetContinuousPose3d(true), or (false) if its carriage moves last.
-std::vector<wpi::math::Pose3d> components = m_elevator->GetCascadePose3d();
-components.push_back(m_arm->GetPose3d());
-wpi::telemetry::Log("Robot/Components", std::span<const wpi::math::Pose3d>{components});
-```
-{% endtab %}
-{% endtabs %}
-
-Both need 2 or more stages, and throw an `ElevatorConfigurationException` without them: an elevator with only a carriage uses `getPose3d()`. In AdvantageScope each stage is a component, zeroed like the carriage: as it sits with the elevator all the way down.
 
 ## 3. Export the model
 
@@ -259,15 +206,14 @@ AdvantageScope moves each component from where its `zeroedRotations` and `zeroed
 | -------------------- | --------------------------------------------------------------------------------------------- |
 | An arm or pivot      | Its axis at the origin, pointing along +X at 0° (+Y in the YZ plane)                          |
 | An elevator carriage | The carriage's reference point, the point you gave as its relative position, at the origin   |
-| An elevator stage    | The stage as it sits with the elevator down, moved by the same offset as the carriage         |
 | A flywheel           | Its axle at the origin                                                                        |
 | A part on another    | As for its own kind: its relative position is from its parent, not the robot                  |
 
 To set them:
 
-1. Publish a zeroed robot pose, such as `Pose2d.ZERO`, select it as the robot's pose in AdvantageScope, and pick the "Axes" field, which shows the origin.
+1. Publish a zeroed robot pose every loop, such as `Telemetry.log("Robot/ZeroPose", Pose2d.ZERO, Pose2d.struct);`, select it as the robot's pose in AdvantageScope, and pick the "Axes" field, which shows the origin.
 2. Adjust the model's `rotations`, then its `position`, until the robot is upright, facing +X, with its center on the origin and its wheels on the floor.
-3. Publish an array of zeroed poses, one for each component (`new Pose3d[] {Pose3d.ZERO, Pose3d.ZERO, Pose3d.ZERO}`), and select it as the component poses.
+3. Publish an array of zeroed poses, one for each component, such as `Telemetry.log("Robot/ZeroComponents", new Pose3d[] {Pose3d.ZERO, Pose3d.ZERO, Pose3d.ZERO}, Pose3d.struct);`, and select it as the component poses.
 4. For each component, adjust its `zeroedRotations`, then its `zeroedPosition`, until it sits at the origin as the table above says.
 5. Publish the real poses, as in [Publish the poses](#id-2.-publish-the-poses). Each part now moves with its mechanism.
 
@@ -301,6 +247,7 @@ Export every part where it is at the robot's starting position. A part exported 
 
 Start the simulation, open AdvantageScope's 3D Field tab with your robot model, and move each mechanism. Each part should move with its mechanism and stay attached to the robot, and the arm should rise with the elevator's carriage. If a part is in the wrong place, see the pitfalls above.
 
-## Next
+## Read more
 
-Record a match and replay it in AdvantageScope: [How do I view my DataLog in AdvantageScope?](how-do-i-view-my-datalog-in-advantagescope.md)
+* Elevator stages: [How do I show an elevator's stages on a 3D robot model?](how-do-i-show-an-elevators-stages-on-a-3d-robot-model.md)
+* Record a match and replay it: [How do I view my DataLog in AdvantageScope?](how-do-i-view-my-datalog-in-advantagescope.md)
