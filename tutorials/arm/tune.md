@@ -53,10 +53,11 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 
 1. Tick every item on the pre-motion checklist, leave **Current trip (A)** at 40, and press **Continue**.
 2. Tick the confirmation and press **Start voltage control**.
-3. Type `1` under **Type a voltage** and press **Enter**. The arm swings up, and keeps going until it reaches its hard stop, so type `0` once the box is ticked.
-4. Type `0`, then press **Finish check**.
+3. Drag the voltage slider all the way to the right and hold it. The arm swings up, and with no closed loop it keeps going until its hard stop, so let go once **Positive voltage moves forward** is ticked. The slider goes back to 0 V when you let go.
+4. If the arm does not move with the slider all the way to the right, select the number at the slider's right end, 1.00 V to start with, and raise it a little. The number at the left end sets how far the slider goes the other way.
+5. Press **Finish check**.
 
-<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-inversions.png" alt="Holding a typed 1 V: Positive voltage moves forward is ticked, the position reads 41.7 degrees, and Finish check is enabled"><figcaption><p>At 1 V the arm swings up, so <strong>Positive voltage moves forward</strong> is ticked.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-inversions.png" alt="Holding 1 V: Positive voltage moves forward is ticked, the position reads 41.7 degrees, and Finish check is enabled"><figcaption><p>At 1 V the arm swings up, so <strong>Positive voltage moves forward</strong> is ticked.</p></figcaption></figure>
 
 **Check it:** **Positive voltage moves forward** was ticked when the arm swung up. If the Live Tuner warns that the angle went the wrong way, the motor or encoder inversion in step 1 is wrong.
 {% endstep %}
@@ -78,7 +79,7 @@ Press **Start Live Tuning**. The setpoints and gains you send are now applied to
 
 `kG` is the voltage it takes to hold the arm level against gravity. YAMS scales it by the cosine of the angle, so the arm gets all of it when level and none when it points straight up or down. With `kG` at 0, only `kP` holds the arm up, so the arm sags a little below its setpoint.
 
-1. On the **Setpoints** tab, type `0` and press **Send**.
+1. On the **Setpoints** tab, drag the slider to 0 degrees and let go. The setpoint is sent when you let go.
 2. Once the arm has stopped, read its output voltage on the telemetry card. For this arm it reads about `0.12`.
 3. Type that voltage into **kG** on the Settings card's **Gains** tab, and press **Enter**.
 
