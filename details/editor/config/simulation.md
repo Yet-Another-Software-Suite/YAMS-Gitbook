@@ -38,9 +38,12 @@ It is most useful with an absolute encoder: the real robot reads its position fr
 How hard the simulated load is to spin up. An `Arm`, `Pivot` and `FlyWheel` simulate with this value, and so does a `SmartMotorController` simulated on its own. The default is 0.02 kg·m², so set it for anything heavier than a small roller. An `Elevator` uses its carriage mass instead.
 
 ```java
-.withMomentOfInertia(KilogramSquareMeters.of(0.02))
-.withMomentOfInertia(Inches.of(4), Pounds.of(1)) // a rod of this length and weight
+.withMomentOfInertia(KilogramSquareMeters.of(0.02))          // from CAD
+.withMomentOfInertia(Inches.of(18), Pounds.of(8))           // an arm: a rod of this length and mass, turning about one end
+.withWheelMomentOfInertia(Inches.of(4), Pounds.of(1))       // a wheel or roller: a solid disk of this diameter and mass
 ```
+
+Use exactly one; the last call wins. For a wheel, `withWheelMomentOfInertia` gives about a third of what the arm version gives for the same numbers, so don't use the arm version for wheels.
 
 ## `withSimulationPeriod`
 

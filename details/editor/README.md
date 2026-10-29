@@ -54,9 +54,9 @@ SparkFlex sparkFlex = (SparkFlex) smartMotorController.getMotorController();
 SparkFlexConfig sparkFlexConfig = (SparkFlexConfig) smartMotorController.getMotorControllerConfig();
 ```
 
-## Mechanism options set the motor options
+## Motor options stay on the motor config
 
-A mechanism option such as `withSoftLimits` on an `ArmConfig` often just calls `SmartMotorControllerConfig.withSoftLimits` for you, so you can set it where it reads best. [Mechanism configs](../mechanism-configs/README.md) lists them.
+A mechanism config such as `ArmConfig` never changes the `SmartMotorControllerConfig`. Soft limits, the starting position, gearing and gains are always set on the motor config. [Mechanism configs](../mechanism-configs/README.md) lists what each mechanism config sets.
 
 ## Simulation without a mechanism
 

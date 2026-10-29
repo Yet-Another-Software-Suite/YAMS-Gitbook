@@ -59,8 +59,8 @@ Motor controllers differ. Some options only exist on one of them, and some only 
 Every option on the following pages has a table showing where it works. The [motor controller feature matrix](../feature-matrix.md#feature-support-matrix) has every option against every motor controller in one place. The ones that most often catch teams out:
 
 * **TalonFX and TalonFXS:** no [`withClosedLoopTolerance`](closed-loop-control.md#withclosedlooptolerance), no [`withVoltageCompensation`](limits-and-protection.md#withvoltagecompensation), no `SLOT_3`, and [`withEncoderInverted`](encoders.md#withencoderinverted) only on a TalonFXS.
-* **SPARK MAX and SPARK Flex:** no [supply current limit](limits-and-protection.md#current-limits) and no [`withVendorControlRequest`](motor-basics.md#withvendorcontrolrequest). Several options only work when the loop runs on the SystemCore, with an exponential profile or an [LQR](../lqr-controllers.md).
-* **Thrifty Nova:** everything closed loop runs on the SystemCore, and it has [one ramp rate](limits-and-protection.md#ramp-rates) for open and closed loop control.
+* **SPARK MAX and SPARK Flex:** no [supply current limit](limits-and-protection.md#withstatorcurrentlimit-and-withsupplycurrentlimit) and no [`withVendorControlRequest`](motor-basics.md#withvendorcontrolrequest). Several options only work when the loop runs on the SystemCore, with an exponential profile or an [LQR](../lqr-controllers.md).
+* **Thrifty Nova:** everything closed loop runs on the SystemCore, and it has [one ramp rate](limits-and-protection.md#withopenloopramprate-and-withclosedloopramprate) for open and closed loop control.
 * **Everywhere:** [soft limits](limits-and-protection.md#withsoftlimits) only work in closed loop mode, and [`withVendorConfig`](motor-basics.md#withvendorconfig), [`withExternalEncoder`](encoders.md#withexternalencoder) and [`withFollowers`](followers.md#withfollowers) only take that vendor's own parts.
 
 Many of these depend on where the closed loop runs, which is explained in [where the loop runs](closed-loop-control.md#where-the-loop-runs).

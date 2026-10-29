@@ -31,7 +31,7 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 | --------------------------- | --------------------------- | --------------------------- | -------------------------------------------------------- |
 | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ closed loop setpoints only, not voltage or duty cycle |
 
-## Current limits
+## `withStatorCurrentLimit` and `withSupplyCurrentLimit`
 
 `withStatorCurrentLimit` limits the current through the motor, which limits its torque and heat. `withSupplyCurrentLimit` limits the current drawn from the battery, which protects the breaker and the battery voltage.
 
@@ -52,7 +52,7 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 | ------- | -------- | ------------------------------------------------------------------------------------------ | ------------ |
 | ✅       | ✅        | ⚠️ stator limit only: a supply limit throws a `SmartMotorControllerConfigurationException` | ✅            |
 
-## Ramp rates
+## `withOpenLoopRampRate` and `withClosedLoopRampRate`
 
 `withOpenLoopRampRate` and `withClosedLoopRampRate` set the shortest time the output may take to go from zero to full.
 

@@ -277,7 +277,7 @@ Put [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits) where
 {% step %}
 #### Protect the motor
 
-Set a low [stator current limit](editor/config/limits-and-protection.md#current-limits) to start with, and `MotorMode.BRAKE`.
+Set a low [stator current limit](editor/config/limits-and-protection.md#withstatorcurrentlimit-and-withsupplycurrentlimit) to start with, and `MotorMode.BRAKE`.
 {% endstep %}
 
 {% step %}
