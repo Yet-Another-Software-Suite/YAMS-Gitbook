@@ -36,6 +36,14 @@
   * [Step 3: Driving](tutorials/swerve-drive/driving.md)
   * [Step 4: On the real robot](tutorials/swerve-drive/real-robot.md)
 
+* [AdvantageKit](details/advantagekit-integration.md)
+  * [Step 0: Install AdvantageKit and set up Robot](details/advantagekit/setup.md)
+  * [Step 1: Define the IO interface](details/advantagekit/io-interface.md)
+  * [Step 2: Implement the IO class](details/advantagekit/io-implementation.md)
+  * [Steps 3 and 4: The subsystem and RobotContainer](details/advantagekit/subsystem-and-robotcontainer.md)
+  * [Log replay](details/advantagekit/log-replay.md)
+  * [Swerve drive with AdvantageKit](details/advantagekit/swerve-drive.md)
+  * [Without an IO layer](details/advantagekit/direct-subsystem.md)
 * [Troubleshooting](tutorials/troubleshooting.md)
 
 ## How-to: Mechanisms
@@ -50,6 +58,7 @@
 * [How do I zero a mechanism without limit switches?](how-to/how-do-i-zero-a-mechanism-without-limit-switches.md)
 * [How do I control a mechanism that carries a game piece?](how-to/how-do-i-control-a-mechanism-that-carries-a-game-piece.md)
 * [How do I set up an intake roller?](how-to/how-do-i-set-up-an-intake-roller.md)
+* [How do I write my own mechanism command?](details/setpoint-methods.md)
 * [How do I control a mechanism without a mechanism class?](how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md)
 
 ## How-to: Motor controllers and sensors
@@ -61,6 +70,7 @@
 * [How do I tune my elevator in rotations instead of meters?](how-to/how-to-disable-linear-closed-loop-control.md)
 * [How do I detect a game piece from motor current?](how-to/how-do-i-sense-activity-based-off-of-the-current.md)
 * [How do I use a gyro mounted on its side?](how-to/how-do-i-use-a-gyro-mounted-on-its-side.md)
+* [How do I limit power consumption?](details/editor/limiting-power-consumption.md)
 
 ## How-to: Simulation and logging
 
@@ -69,10 +79,33 @@
 * [How do I view my DataLog in AdvantageScope?](how-to/how-do-i-view-my-datalog-in-advantagescope.md)
 * [How do I show my mechanisms on a 3D robot model?](how-to/how-do-i-show-my-mechanisms-on-a-3d-robot-model.md)
 
+## How-to: Tuning
+
+* [Live tuning](details/live-tuning/README.md)
+  * [YAMS Live Tuner](details/live-tuning/live-tuner.md)
+  * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
+
 ## Understanding
 
 * [Organizing configs in constants](details/config-organization.md)
+* [Arms](details/arms.md)
+* [Elevators](details/elevators.md)
+* [Turrets/Wrists](details/turrets-wrists.md)
+* [Shooters](details/shooters.md)
+* [Swerve Drive](details/swerve-drive.md)
+  * [Swerve Module](details/swerve-module.md)
+* [When mechanism commands end](details/run-vs-runto.md)
+* [Sensors](details/sensors.md)
+* [Simulation-only PID + feedforward](details/editor/simulation-only-pid-+-feedforward.md)
+* [Exponential profiles](details/editor/exponential-profiles.md)
+* [LQR controllers](details/editor/lqr-controllers.md)
+* [EasyCRT](details/easycrt.md)
 * [Battery simulation](understanding/battery-simulation.md)
+* [Telemetry](understanding/telemetry.md)
+* [DataLog best practices](details/datalog-best-practices.md)
+
+## Reference
+
 * [Smart motor controllers](details/editor/README.md)
   * [SmartMotorControllerConfig](details/editor/config/README.md)
     * [Motor basics](details/editor/config/motor-basics.md)
@@ -85,46 +118,19 @@
     * [Followers](details/editor/config/followers.md)
     * [Simulation](details/editor/config/simulation.md)
   * [Motor controller feature matrix](details/editor/feature-matrix.md)
-  * [Simulation-only PID + feedforward](details/editor/simulation-only-pid-+-feedforward.md)
-  * [Limiting power consumption](details/editor/limiting-power-consumption.md)
-  * [Exponential profiles](details/editor/exponential-profiles.md)
-  * [LQR controllers](details/editor/lqr-controllers.md)
+* [Controlling a mechanism](details/controlling-a-mechanism.md)
 * [Mechanism configs](details/mechanism-configs/README.md)
   * [Shared options](details/mechanism-configs/shared-options.md)
-* [Sensors](details/sensors.md)
-* [Controlling a mechanism](details/controlling-a-mechanism.md)
-* [Arms](details/arms.md)
   * [ArmConfig](details/mechanism-configs/arm-config.md)
-* [Elevators](details/elevators.md)
   * [ElevatorConfig](details/mechanism-configs/elevator-config.md)
-* [Turrets/Wrists](details/turrets-wrists.md)
   * [PivotConfig](details/mechanism-configs/pivot-config.md)
-* [Shooters](details/shooters.md)
   * [FlyWheelConfig](details/mechanism-configs/flywheel-config.md)
-* [Swerve Drive](details/swerve-drive.md)
   * [SwerveDriveConfig](details/mechanism-configs/swerve-drive-config.md)
-  * [Swerve Module](details/swerve-module.md)
-    * [SwerveModuleConfig](details/mechanism-configs/swerve-module-config.md)
-  * [Swerve Input Stream](details/swerve-input-stream.md)
-    * [Heading and aim modes](details/swerve-input-stream-aim.md)
-    * [Input stream telemetry and live tuning](details/swerve-input-stream-telemetry.md)
-* [When mechanism commands end](details/run-vs-runto.md)
-* [How do I write my own mechanism command?](details/setpoint-methods.md)
-* [Telemetry](understanding/telemetry.md)
-* [DataLog best practices](details/datalog-best-practices.md)
-* [Live tuning](details/live-tuning/README.md)
-  * [YAMS Live Tuner](details/live-tuning/live-tuner.md)
-  * [Live tuning keys and units](details/live-tuning/keys-and-units.md)
-  * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
-* [EasyCRT](details/easycrt.md)
-* [AdvantageKit Integration](details/advantagekit-integration.md)
-  * [Step 0: Install AdvantageKit and set up Robot](details/advantagekit/setup.md)
-  * [Step 1: Define the IO interface](details/advantagekit/io-interface.md)
-  * [Step 2: Implement the IO class](details/advantagekit/io-implementation.md)
-  * [Steps 3 and 4: The subsystem and RobotContainer](details/advantagekit/subsystem-and-robotcontainer.md)
-  * [Log replay](details/advantagekit/log-replay.md)
-  * [Swerve drive with AdvantageKit](details/advantagekit/swerve-drive.md)
-  * [Without an IO layer](details/advantagekit/direct-subsystem.md)
+  * [SwerveModuleConfig](details/mechanism-configs/swerve-module-config.md)
+* [Swerve Input Stream](details/swerve-input-stream.md)
+  * [Heading and aim modes](details/swerve-input-stream-aim.md)
+  * [Input stream telemetry and live tuning](details/swerve-input-stream-telemetry.md)
+* [Live tuning keys and units](details/live-tuning/keys-and-units.md)
 
 ## Upgrading
 
