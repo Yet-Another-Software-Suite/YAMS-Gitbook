@@ -14,7 +14,7 @@ An arm's target is an `Angle` (`org.wpilib.units.measure.Angle`), for example `D
 
 <figure><img src="../.gitbook/assets/howto-arm-run-vs-runto.gif" alt="Animation of the same arm moving to 45 degrees with two commands, with a default command of run to 0 degrees. With run the command keeps running after the arm arrives, and the arm stays at 45 degrees. With runTo and a tolerance of 3 degrees the command ends once the arm has stayed inside the tolerance for 0.1 seconds, then the default command takes over and moves the arm back to 0 degrees."><figcaption><p><code>run()</code> keeps running until something interrupts it. <code>runTo()</code> ends at the setpoint, and the default command takes over.</p></figcaption></figure>
 
-All three start the closed loop controller again if an open loop command (`set` or `setVoltage`) stopped it. For more on the difference, see [run() vs runTo() Commands](../details/run-vs-runto.md).
+All three start the closed loop controller again if an open loop command (`set` or `setVoltage`) stopped it. For more on the difference, see [When mechanism commands end](../details/run-vs-runto.md).
 
 ## Add the commands to your subsystem
 

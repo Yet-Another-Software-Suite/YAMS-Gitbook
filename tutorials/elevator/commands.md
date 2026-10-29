@@ -97,7 +97,7 @@ wpi::cmd::CommandPtr ElevatorSubsystem::Set(double dutycycle) {
 
 **For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
 
-Want the details? [run() vs runTo() Commands](../../details/run-vs-runto.md)
+Want the details? [When mechanism commands end](../../details/run-vs-runto.md)
 
 ## 2. Set the default command
 
@@ -806,14 +806,14 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 {% endtabs %}
 
 {% hint style="info" %}
-These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [Setpoint Methods vs Command Helpers](../../details/setpoint-methods.md).
+These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [How do I write my own mechanism command?](../../details/setpoint-methods.md).
 {% endhint %}
 
 ## Which command ends?
 
 <figure><img src="../../.gitbook/assets/mech-commands.png" alt="Three timelines starting when the command is scheduled. run(setpoint), also called setAngle or setHeight, runs until something else takes the mechanism and holds the setpoint the whole time. runTo(setpoint, tolerance) ends when the mechanism is within the tolerance, and then the default command takes over. set(dutycycle) and setVoltage(volts) are open loop with no PID and run until interrupted. The closed loop starts again when the next run or runTo command begins, such as the default command."><figcaption><p>When each kind of command ends.</p></figcaption></figure>
 
-The buttons here use the command that never ends, because a button that is held should keep holding the carriage. Use the one that ends when you need to know the carriage has arrived, such as in an autonomous sequence. [run() vs runTo() Commands](../../details/run-vs-runto.md) covers the difference, and [How do I set an elevator's target height?](../../how-to/how-to-set-an-elevators-target-height.md) has more examples.
+The buttons here use the command that never ends, because a button that is held should keep holding the carriage. Use the one that ends when you need to know the carriage has arrived, such as in an autonomous sequence. [When mechanism commands end](../../details/run-vs-runto.md) covers the difference, and [How do I set an elevator's target height?](../../how-to/how-to-set-an-elevators-target-height.md) has more examples.
 
 ## Check it
 

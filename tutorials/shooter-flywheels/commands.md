@@ -97,7 +97,7 @@ wpi::cmd::Trigger ShooterSubsystem::AtSpeed(wpi::units::revolutions_per_minute_t
 
 **For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
 
-Want the details? [run() vs runTo() Commands](../../details/run-vs-runto.md)
+Want the details? [When mechanism commands end](../../details/run-vs-runto.md)
 
 ## 2. Set the default command
 
@@ -780,7 +780,7 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 {% endtabs %}
 
 {% hint style="info" %}
-These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [Setpoint Methods vs Command Helpers](../../details/setpoint-methods.md).
+These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [How do I write my own mechanism command?](../../details/setpoint-methods.md).
 {% endhint %}
 
 ## Knowing when it is up to speed

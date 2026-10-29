@@ -12,7 +12,7 @@ An elevator's target is a `Distance` (`org.wpilib.units.measure.Distance`), for 
 | `elevator.runTo(height, tolerance)` | A step in a sequence or autonomous routine: go there, then move on. | Yes, once the carriage has stayed within `tolerance` of the height for 0.1 seconds. |
 | `elevator.setMeasurementPositionSetpoint(height)` | Your own code, inside a command you already wrote. | It is a method, not a command. It sets the target once. |
 
-All three start the closed loop controller again if an open loop command (`set` or `setVoltage`) stopped it. For more on the difference, see [run() vs runTo() Commands](../details/run-vs-runto.md).
+All three start the closed loop controller again if an open loop command (`set` or `setVoltage`) stopped it. For more on the difference, see [When mechanism commands end](../details/run-vs-runto.md).
 
 ## Add the commands to your subsystem
 

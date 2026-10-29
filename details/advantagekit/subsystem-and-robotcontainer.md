@@ -81,7 +81,7 @@ public class ArmSubsystem extends SubsystemBase {
 ```
 
 {% hint style="warning" %}
-See [run() vs runTo() Commands](../run-vs-runto.md) for important information about when commands end and how that interacts with default commands.
+See [When mechanism commands end](../run-vs-runto.md) for important information about when commands end and how that interacts with default commands.
 {% endhint %}
 
 ## Step 4: Wire it up in RobotContainer

@@ -97,7 +97,7 @@ wpi::cmd::CommandPtr ArmSubsystem::Set(double dutycycle) {
 
 **For your robot:** Rename these to suit your robot, or add more. Each one is a single line.
 
-Want the details? [run() vs runTo() Commands](../../details/run-vs-runto.md)
+Want the details? [When mechanism commands end](../../details/run-vs-runto.md)
 
 ## 2. Set the default command
 
@@ -790,14 +790,14 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 {% endtabs %}
 
 {% hint style="info" %}
-These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [Setpoint Methods vs Command Helpers](../../details/setpoint-methods.md).
+These commands are helpers that start and stop the closed loop for you. If you would rather set setpoints from your own command or state machine, see [How do I write my own mechanism command?](../../details/setpoint-methods.md).
 {% endhint %}
 
 ## run or runTo?
 
 <figure><img src="../../.gitbook/assets/howto-arm-run-vs-runto.gif" alt="Animation of the same arm moving to 45 degrees with two commands, with a default command of run to 0 degrees. With run the command keeps running after the arm arrives, and the arm stays at 45 degrees. With runTo and a tolerance of 3 degrees the command ends once the arm has stayed inside the tolerance for 0.1 seconds, then the default command takes over and moves the arm back to 0 degrees."><figcaption><p><code>run()</code> keeps running until something interrupts it. <code>runTo()</code> ends at the setpoint, and the default command takes over.</p></figcaption></figure>
 
-The buttons here use the command that never ends, because a button that is held should keep holding the arm. Use the one that ends when you need to know the arm has arrived, such as in an autonomous sequence. [run() vs runTo() Commands](../../details/run-vs-runto.md) covers the difference, and [How do I set an arm's target angle?](../../how-to/how-to-set-an-arms-target-angle.md) has more examples.
+The buttons here use the command that never ends, because a button that is held should keep holding the arm. Use the one that ends when you need to know the arm has arrived, such as in an autonomous sequence. [When mechanism commands end](../../details/run-vs-runto.md) covers the difference, and [How do I set an arm's target angle?](../../how-to/how-to-set-an-arms-target-angle.md) has more examples.
 
 ## Check it
 

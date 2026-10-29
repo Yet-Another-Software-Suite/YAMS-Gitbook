@@ -60,7 +60,7 @@ The flywheel's values are under two tables. Both use the names from `withTelemet
    * `motor/outputVoltage`: the voltage the motor is given.
 
 {% hint style="warning" %}
-**You type RPM, you read rotations per second.** A setpoint typed as `3000` (RPM) is graphed as `50` (rotations per second). Divide RPM by 60 to compare. To graph in RPM, see [See both in the same units with AdvantageScope](../../details/live-tuning/README.md#see-both-in-the-same-units-with-advantagescope).
+**You type RPM, you read rotations per second.** A setpoint typed as `3000` (RPM) is graphed as `50` (rotations per second). Divide RPM by 60 to compare. To graph in RPM, see [See both in the same units with AdvantageScope](../../details/live-tuning/keys-and-units.md#see-both-in-the-same-units-with-advantagescope).
 {% endhint %}
 
 **Check it:** the velocity lines are at 0.

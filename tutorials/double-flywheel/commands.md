@@ -72,14 +72,14 @@ wpi::cmd::CommandPtr DoubleFlywheelSubsystem::SetFlywheelSpeeds(
 
 ## 2. Preset shots
 
-Each preset is that one command with two speeds filled in.
+Each preset is that one command with two speeds filled in. Stop is different: it sets a duty cycle of 0, so the wheels coast down. A 0 RPM setpoint would also stop them, but the closed loop would brake them hard to get there.
 
 | Preset | Upper | Lower | Spin |
 | --- | --- | --- | --- |
 | Neutral shot | 3000 RPM | 3000 RPM | none |
 | Backspin shot | 2500 RPM | 3500 RPM | backspin |
 | Topspin shot | 3500 RPM | 2500 RPM | topspin |
-| Stop | 0 RPM | 0 RPM | |
+| Stop | coast | coast | |
 
 <figure><img src="../../.gitbook/assets/tutorial-double-flywheel-spin.gif" alt="Animation of a ball passing between an upper and a lower flywheel, three times. With both at 3000 RPM the ball leaves with no spin and flies straight. With the lower flywheel faster, 3500 against 2500 RPM, it leaves with backspin and its path lifts. With the upper flywheel faster it leaves with topspin and its path dips."><figcaption><p>The faster wheel drags its side of the ball forward. Lower wheel faster is backspin; upper wheel faster is topspin.</p></figcaption></figure>
 
@@ -102,9 +102,13 @@ public Command topspinShot() {
   return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
 }
 
-/** Bring both flywheels to a stop. */
+/** Let both flywheels coast to a stop. */
 public Command stopFlywheels() {
-  return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+  return runOnce(() -> {
+    // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+    upperMotor.setDutyCycle(0);
+    lowerMotor.setDutyCycle(0);
+  }).withName("Stop FlyWheels");
 }
 ```
 {% endcode %}
@@ -128,9 +132,13 @@ public Command topspinShot() {
   return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
 }
 
-/** Bring both flywheels to a stop. */
+/** Let both flywheels coast to a stop. */
 public Command stopFlywheels() {
-  return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+  return run(coroutine -> {
+    // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+    upperMotor.setDutyCycle(0);
+    lowerMotor.setDutyCycle(0);
+  }).named("Stop FlyWheels");
 }
 ```
 {% endcode %}
@@ -148,7 +156,7 @@ wpi::cmd::CommandPtr BackspinShot();
 /** The upper flywheel faster: topspin. */
 wpi::cmd::CommandPtr TopspinShot();
 
-/** Bring both flywheels to a stop. */
+/** Let both flywheels coast to a stop. */
 wpi::cmd::CommandPtr StopFlywheels();
 ```
 {% endcode %}
@@ -168,7 +176,11 @@ wpi::cmd::CommandPtr DoubleFlywheelSubsystem::TopspinShot() {
 }
 
 wpi::cmd::CommandPtr DoubleFlywheelSubsystem::StopFlywheels() {
-  return SetFlywheelSpeeds(0_rpm, 0_rpm);
+  return RunOnce([this] {
+    // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+    m_upperMotor->SetDutyCycle(0);
+    m_lowerMotor->SetDutyCycle(0);
+  }).WithName("Stop FlyWheels");
 }
 ```
 {% endcode %}
@@ -179,16 +191,16 @@ wpi::cmd::CommandPtr DoubleFlywheelSubsystem::StopFlywheels() {
 
 ## 3. Know when it is ready
 
-This tells you when both wheels have reached their speeds, so that you can hold the feeder back until the shooter is ready.
+This `Trigger` is true while both wheels are at their speeds, so that you can hold the feeder back until the shooter is ready. It works like `atSpeed` in [the shooter tutorial](../shooter-flywheels/commands.md#knowing-when-it-is-up-to-speed): bind a feeder command to it, or use it in a command sequence. Nothing in this tutorial uses it yet.
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
 {% code title="subsystems/DoubleFlywheelSubsystem.java" %}
 ```java
-/** True when both flywheels are within the tolerance of their target speeds. */
-public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
-  return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
-      && lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+/** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+public Trigger atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+  return new Trigger(() -> upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+      && lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance));
 }
 ```
 {% endcode %}
@@ -197,10 +209,10 @@ public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity low
 {% tab title="Java, Commands v3" %}
 {% code title="mechanisms/DoubleFlywheelMechanism.java" %}
 ```java
-/** True when both flywheels are within the tolerance of their target speeds. */
-public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
-  return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
-      && lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+/** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+public Trigger atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+  return new Trigger(() -> upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+      && lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance));
 }
 ```
 {% endcode %}
@@ -209,20 +221,22 @@ public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity low
 {% tab title="C++" %}
 {% code title="include/subsystems/DoubleFlywheelSubsystem.hpp" %}
 ```cpp
-/** True when both flywheels are within the tolerance of their target speeds. */
-bool AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
-                      wpi::units::revolutions_per_minute_t lowerTarget,
-                      wpi::units::revolutions_per_minute_t tolerance);
+/** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+wpi::cmd::Trigger AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+                                   wpi::units::revolutions_per_minute_t lowerTarget,
+                                   wpi::units::revolutions_per_minute_t tolerance);
 ```
 {% endcode %}
 
 {% code title="cpp/subsystems/DoubleFlywheelSubsystem.cpp" %}
 ```cpp
-bool DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
-                                               wpi::units::revolutions_per_minute_t lowerTarget,
-                                               wpi::units::revolutions_per_minute_t tolerance) {
-  return wpi::units::math::abs(m_upperMotor->GetMechanismVelocity() - upperTarget) <= tolerance &&
-         wpi::units::math::abs(m_lowerMotor->GetMechanismVelocity() - lowerTarget) <= tolerance;
+wpi::cmd::Trigger DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+                                                            wpi::units::revolutions_per_minute_t lowerTarget,
+                                                            wpi::units::revolutions_per_minute_t tolerance) {
+  return wpi::cmd::Trigger([this, upperTarget, lowerTarget, tolerance] {
+    return wpi::units::math::abs(m_upperMotor->GetMechanismVelocity() - upperTarget) <= tolerance &&
+           wpi::units::math::abs(m_lowerMotor->GetMechanismVelocity() - lowerTarget) <= tolerance;
+  });
 }
 ```
 {% endcode %}
@@ -305,7 +319,8 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
 <strong>import org.wpilib.command2.Command;
 </strong>import org.wpilib.command2.SubsystemBase;
-import org.wpilib.hardware.bus.CANPort;
+<strong>import org.wpilib.command2.button.Trigger;
+</strong>import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
 import org.wpilib.math.system.DCMotor;
 <strong>import org.wpilib.units.measure.AngularVelocity;
@@ -391,15 +406,19 @@ public class DoubleFlywheelSubsystem extends SubsystemBase {
 </strong><strong>    return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
 </strong><strong>  }
 </strong>
-<strong>  /** Bring both flywheels to a stop. */
+<strong>  /** Let both flywheels coast to a stop. */
 </strong><strong>  public Command stopFlywheels() {
-</strong><strong>    return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+</strong><strong>    return runOnce(() -> {
+</strong><strong>      // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+</strong><strong>      upperMotor.setDutyCycle(0);
+</strong><strong>      lowerMotor.setDutyCycle(0);
+</strong><strong>    }).withName("Stop FlyWheels");
 </strong><strong>  }
 </strong>
-<strong>  /** True when both flywheels are within the tolerance of their target speeds. */
-</strong><strong>  public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
-</strong><strong>    return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
-</strong><strong>        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+<strong>  /** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+</strong><strong>  public Trigger atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+</strong><strong>    return new Trigger(() -> upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+</strong><strong>        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance));
 </strong><strong>  }
 </strong>
   @Override
@@ -495,7 +514,8 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.TalonFX;
 <strong>import org.wpilib.command3.Command;
 </strong>import org.wpilib.command3.Mechanism;
-import org.wpilib.hardware.bus.CANPort;
+<strong>import org.wpilib.command3.Trigger;
+</strong>import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.controller.SimpleMotorFeedforward;
 import org.wpilib.math.system.DCMotor;
 <strong>import org.wpilib.units.measure.AngularVelocity;
@@ -584,15 +604,19 @@ public class DoubleFlywheelMechanism implements Mechanism {
 </strong><strong>    return setFlywheelSpeeds(RPM.of(3500), RPM.of(2500));
 </strong><strong>  }
 </strong>
-<strong>  /** Bring both flywheels to a stop. */
+<strong>  /** Let both flywheels coast to a stop. */
 </strong><strong>  public Command stopFlywheels() {
-</strong><strong>    return setFlywheelSpeeds(RPM.of(0), RPM.of(0));
+</strong><strong>    return run(coroutine -> {
+</strong><strong>      // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+</strong><strong>      upperMotor.setDutyCycle(0);
+</strong><strong>      lowerMotor.setDutyCycle(0);
+</strong><strong>    }).named("Stop FlyWheels");
 </strong><strong>  }
 </strong>
-<strong>  /** True when both flywheels are within the tolerance of their target speeds. */
-</strong><strong>  public boolean atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
-</strong><strong>    return upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
-</strong><strong>        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance);
+<strong>  /** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+</strong><strong>  public Trigger atTargetVelocity(AngularVelocity upperTarget, AngularVelocity lowerTarget, AngularVelocity tolerance) {
+</strong><strong>    return new Trigger(() -> upperMotor.getMechanismVelocity().isNear(upperTarget, tolerance)
+</strong><strong>        &#x26;&#x26; lowerMotor.getMechanismVelocity().isNear(lowerTarget, tolerance));
 </strong><strong>  }
 </strong>
   /** Call this from Robot.robotPeriodic(), before the scheduler runs. */
@@ -643,7 +667,8 @@ Declare the commands in `DoubleFlywheelSubsystem.hpp`, define them in `DoubleFly
 #include &#x3C;ctre/phoenix6/TalonFX.hpp>
 <strong>#include &#x3C;wpi/commands2/CommandPtr.hpp>
 </strong>#include &#x3C;wpi/commands2/SubsystemBase.hpp>
-<strong>#include &#x3C;wpi/units/angular_velocity.hpp>
+<strong>#include &#x3C;wpi/commands2/button/Trigger.hpp>
+</strong><strong>#include &#x3C;wpi/units/angular_velocity.hpp>
 </strong>
 #include "yams/motorcontrollers/SmartMotorControllerConfig.hpp"
 #include "yams/motorcontrollers/remote/TalonFXWrapper.hpp"
@@ -665,13 +690,13 @@ class DoubleFlywheelSubsystem : public wpi::cmd::SubsystemBase {
 <strong>  /** The upper flywheel faster: topspin. */
 </strong><strong>  wpi::cmd::CommandPtr TopspinShot();
 </strong>
-<strong>  /** Bring both flywheels to a stop. */
+<strong>  /** Let both flywheels coast to a stop. */
 </strong><strong>  wpi::cmd::CommandPtr StopFlywheels();
 </strong>
-<strong>  /** True when both flywheels are within the tolerance of their target speeds. */
-</strong><strong>  bool AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
-</strong><strong>                        wpi::units::revolutions_per_minute_t lowerTarget,
-</strong><strong>                        wpi::units::revolutions_per_minute_t tolerance);
+<strong>  /** A Trigger that is true while both flywheels are within the tolerance of their target speeds. */
+</strong><strong>  wpi::cmd::Trigger AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+</strong><strong>                                     wpi::units::revolutions_per_minute_t lowerTarget,
+</strong><strong>                                     wpi::units::revolutions_per_minute_t tolerance);
 </strong>
   void Periodic() override;
   void SimulationPeriodic() override;
@@ -778,14 +803,20 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
 </strong><strong>}
 </strong>
 <strong>wpi::cmd::CommandPtr DoubleFlywheelSubsystem::StopFlywheels() {
-</strong><strong>  return SetFlywheelSpeeds(0_rpm, 0_rpm);
+</strong><strong>  return RunOnce([this] {
+</strong><strong>    // A duty cycle of 0 lets the wheels coast down. A 0 RPM setpoint would brake them hard.
+</strong><strong>    m_upperMotor->SetDutyCycle(0);
+</strong><strong>    m_lowerMotor->SetDutyCycle(0);
+</strong><strong>  }).WithName("Stop FlyWheels");
 </strong><strong>}
 </strong>
-<strong>bool DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
-</strong><strong>                                               wpi::units::revolutions_per_minute_t lowerTarget,
-</strong><strong>                                               wpi::units::revolutions_per_minute_t tolerance) {
-</strong><strong>  return wpi::units::math::abs(m_upperMotor->GetMechanismVelocity() - upperTarget) &#x3C;= tolerance &#x26;&#x26;
-</strong><strong>         wpi::units::math::abs(m_lowerMotor->GetMechanismVelocity() - lowerTarget) &#x3C;= tolerance;
+<strong>wpi::cmd::Trigger DoubleFlywheelSubsystem::AtTargetVelocity(wpi::units::revolutions_per_minute_t upperTarget,
+</strong><strong>                                                            wpi::units::revolutions_per_minute_t lowerTarget,
+</strong><strong>                                                            wpi::units::revolutions_per_minute_t tolerance) {
+</strong><strong>  return wpi::cmd::Trigger([this, upperTarget, lowerTarget, tolerance] {
+</strong><strong>    return wpi::units::math::abs(m_upperMotor->GetMechanismVelocity() - upperTarget) &#x3C;= tolerance &#x26;&#x26;
+</strong><strong>           wpi::units::math::abs(m_lowerMotor->GetMechanismVelocity() - lowerTarget) &#x3C;= tolerance;
+</strong><strong>  });
 </strong><strong>}
 </strong>
 void DoubleFlywheelSubsystem::Periodic() {
@@ -870,3 +901,28 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 </code></pre>
 {% endtab %}
 {% endtabs %}
+
+## Check it in simulation
+
+There is no `FlyWheel` mechanism here, so there is no drawing of the wheels. Watch their speeds on a graph instead.
+
+1. Start the simulation as in [the shooter's step 4](../shooter-flywheels/simulate.md), with the controller on **Joystick\[0]**. Commands v3: pick the `ExampleTeleop` op mode, and check that `Robot.simulationInit()` starts the double flywheel's simulation.
+2. Open [AdvantageScope](https://docs.advantagescope.org/), connect it to the simulation (**File > Connect to Simulator**), and make a **Line Graph** of:
+   * `NT:/Mechanisms/UpperFlyWheel/mechanism/velocity`
+   * `NT:/Mechanisms/LowerFlyWheel/mechanism/velocity`
+
+   Each motor's values are under the name from its `withTelemetry`. The speeds are in rotations per second: divide RPM by 60.
+3. Enable **Teleoperated** and press the buttons.
+
+**What you should see:**
+
+* **A** (no spin): both lines rise to 50 (3000 RPM) and stay together.
+* **B** (backspin): the upper line settles at about 42 (2500 RPM) and the lower at about 58 (3500 RPM).
+* **X** (topspin): the other way round.
+* **Y**: both lines fall back toward 0 as the wheels coast down.
+
+If a line stays at 0, check that `setupTelemetry()` and `simIterate()` are called for that motor, as in step 1. More problems and fixes: [Troubleshooting](../troubleshooting.md).
+
+## Next
+
+[Step 3: Spin ratio and shared shafts](spin-and-followers.md)
