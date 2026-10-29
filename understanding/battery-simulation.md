@@ -106,7 +106,7 @@ Reach for this when:
 * **You're simulating a well-used competition battery**, which sags earlier and harder than a fresh one, a flatter, lower curve reproduces "that one tired battery" instead of assuming every match starts fresh.
 * **You have measured data**, e.g. from putting a real battery on a load tester, feeding in the actual voltage-vs-state-of-charge points gives the most accurate brownout predictions for that specific battery.
 
-The code is in [How do I enable battery discharge simulation?](../how-to/how-do-i-enable-battery-discharge-simulation.md#replace-the-state-of-charge-interpolation-curve-optional).
+The code is in [How do I enable battery discharge simulation?](../how-to/how-do-i-enable-battery-discharge-simulation.md#replace-the-state-of-charge-curve-optional).
 
 {% hint style="info" %}
 Keys and values should span the full `[0, 1]` state-of-charge range. Querying outside the range you defined just returns the nearest endpoint's voltage instead of extrapolating, so a table missing the low or high end will not sag realistically there.

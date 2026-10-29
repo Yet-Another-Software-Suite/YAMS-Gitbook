@@ -92,15 +92,17 @@ The azimuth motor takes a `yams::telemetry::SmartMotorControllerTelemetryConfig`
 Starting each name with `Swerve/` puts everything in one `Swerve` group in AdvantageScope. The drive motors are left out here; give them a DataLog name the same way if you want them.
 
 {% hint style="info" %}
-**At competition**, keep the DataLog but stop sending to NetworkTables on the field, so the dashboard link stays light:
+**At competition**, keep the DataLog but stop sending to NetworkTables, so the dashboard link stays light. `withNetworkTables(...)` is read once, when the code starts, so drive it from a constant you set to `true` before you deploy for matches:
 
 ```java
-// RobotState is org.wpilib.driverstation.RobotState.
+// Constants.COMPETITION is a boolean you add to Constants.java.
 .withTelemetry("angleMotor", new SmartMotorControllerTelemetryConfig()
     .withTelemetryVerbosity(TelemetryVerbosity.HIGH)
     .withDataLogName("Swerve/" + moduleName + "/angleMotor")
-    .withNetworkTables(!RobotState.isFMSAttached()));
+    .withNetworkTables(!Constants.COMPETITION));
 ```
+
+`RobotState.isFMSAttached()` does not work here: the code starts before the field connects, so it reads `false` and NetworkTables stays on.
 
 [DataLog best practices](../details/datalog-best-practices.md) covers choosing what to log.
 {% endhint %}

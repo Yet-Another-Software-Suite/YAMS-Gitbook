@@ -79,7 +79,6 @@ Keep `updateTelemetry()` where it is. Publishing telemetry every millisecond onl
 {% code title="subsystems/ArmSubsystem.java" %}
 ```java
 import static org.wpilib.units.Units.Milliseconds;
-import static org.wpilib.units.Units.Seconds;
 
 import org.wpilib.framework.RobotBase;
 import org.wpilib.system.Notifier;
@@ -94,7 +93,7 @@ public class ArmSubsystem extends SubsystemBase {
     if (RobotBase.isSimulation()) {
       simNotifier.setName("Arm simulation");
       // Must match withSimulationPeriod on the arm's motor.
-      simNotifier.startPeriodic(Milliseconds.of(1).in(Seconds));
+      simNotifier.startPeriodic(Milliseconds.of(1));
     }
   }
 
@@ -203,9 +202,9 @@ Nothing else needs to change:
 
 Start the simulation and hold the arm at a setpoint. With stiff gains that oscillated before, the arm should now settle. The mechanism should also move at real speed: a move that takes 1 second on the robot should take about 1 second in simulation. If it is 20 times too fast or too slow, the simulation period and the `Notifier` period do not match.
 
-## Next
+## Read more
 
-Make the battery sag in simulation too: [How do I enable battery discharge simulation?](how-do-i-enable-battery-discharge-simulation.md)
+* Make the battery run down in simulation too: [How do I enable battery discharge simulation?](how-do-i-enable-battery-discharge-simulation.md)
 
 ## Code Reference
 

@@ -59,16 +59,23 @@ SmartMotorControllerTelemetryConfig telemetryConfig = new SmartMotorControllerTe
 
 ## Enabling/disabling NetworkTables conditionally
 
-Because `withNetworkTables(boolean)` just takes a boolean, you can drive it from anything, including whether you're at an event:
+`withNetworkTables(boolean)` takes a plain boolean, read once when the config is built, so drive it from a constant you set before you deploy:
 
 ```java
+// Constants.java: set to true before you deploy for matches.
+public static final boolean COMPETITION = false;
+
 SmartMotorControllerTelemetryConfig telemetryConfig = new SmartMotorControllerTelemetryConfig()
     .withTelemetryVerbosity(TelemetryVerbosity.LOW)
     .withDataLogName("motors/shooter")
-    .withNetworkTables(!RobotState.isFMSAttached()); // org.wpilib.driverstation.RobotState
+    .withNetworkTables(!Constants.COMPETITION);
 ```
 
-This keeps full NT4 telemetry for pit testing and practice, then automatically drops NT4 traffic (while still writing to DataLog) once you're on the field at an event.
+This keeps full NT4 telemetry for pit testing and practice, and drops NT4 traffic (while still writing to DataLog) in the code you deploy for matches.
+
+{% hint style="warning" %}
+`RobotState.isFMSAttached()` does not work here. The config is built when the robot code starts, before the field connects, so it reads `false` and NetworkTables stays on in every match.
+{% endhint %}
 
 ## Swerve drive is different
 
