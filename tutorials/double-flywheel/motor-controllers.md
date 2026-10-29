@@ -12,13 +12,13 @@ Each flywheel gets its own `SmartMotorControllerConfig` and its own `SmartMotorC
 
 There is no `FlyWheel` mechanism in this tutorial, so three jobs a mechanism class would do fall to the subsystem:
 
-* **Describe the wheel.** `withMomentOfInertia(diameter, weight)` on the config gives the simulation the wheel it needs.
+* **Describe the wheel.** `withMomentOfInertia(...)` on the config tells the simulation how hard the wheel is to spin up. Without it the simulated wheel is far too heavy.
 * **Set up the telemetry.** `setupTelemetry()` on each `SmartMotorController`, once, in the constructor. This is also what makes live tuning work.
 * **Update every loop.** `updateTelemetry()` on each, and `simIterate()` on each in simulation.
 
 <figure><img src="../../.gitbook/assets/smc-followers.png" alt="Two panels. Tightly coupled, withFollowers: a leader and a follower are on one shaft or gearbox and the follower copies the leader's output. The motors are mechanically locked, there is one closed loop and one config, the followers are the same vendor as the leader, and voltage and duty cycle reach every motor. Loosely coupled, withLooselyCoupledFollowers: two separate motors joined only by the mechanism get the same setpoint and each runs its own PID. They are not mechanically locked, each has its own closed loop and config, vendors can be mixed, and voltage and duty cycle are not forwarded, so the leader moves alone."><figcaption><p>Tightly coupled followers share a shaft. Loosely coupled followers are separate motors.</p></figcaption></figure>
 
-The two wheels here are separate motors on separate shafts, each given its own setpoint. If yours share a shaft, see [step 3](spin-and-followers.md).
+The two wheels here are separate motors on separate shafts, each given its own setpoint. If two motors drive the same wheel, see [step 3](spin-and-followers.md#two-motors-on-one-wheel).
 
 {% hint style="success" %}
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
@@ -102,6 +102,7 @@ m_upperConfig
     .WithFeedback(0.1, 0, 0)
     .WithSimClosedLoopController(0.1, 0, 0)
     .WithFeedforward(feedforward)
+    .WithSimFeedforward(feedforward)
     // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
     .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
     // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
@@ -117,7 +118,13 @@ m_upperConfig
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Set your own gearing, wheel diameter and wheel weight. The gains are only a place to start: tune them with [Live tuning](../../details/live-tuning/README.md).
+The gains are **placeholders** worked out from the motor. A Kraken X60 turns at most about 6000 RPM, 100 rotations per second, on 12 volts. With no gearbox the wheel does too, so `kV` is 12 / 100 = `0.12` volts for each rotation per second. `kS` of `0.1` is a guess at the voltage friction takes. The [Shooter/FlyWheels](../shooter-flywheels/motor-controller.md) tutorial has a different `kV` (0.19) because it uses a different motor (a NEO, about 5676 RPM) through 1.5:1 gearing: its wheel tops out near 63 rotations per second, and 12 / 63 = 0.19.
+
+**What to expect with them:** in simulation each wheel reaches its preset in well under a second and holds it close to the setpoint. Tune them for your robot with [the shooter tutorial's tune step](../shooter-flywheels/tune.md).
+
+`withMomentOfInertia` takes the wheel's moment of inertia in kg m². For a solid wheel it is 0.5 x mass x radius squared: 0.5 x 0.45 kg x (0.0508 m)² for a 4 inch, 1 pound wheel. (There is also a `withMomentOfInertia(length, mass)` overload, but it treats the length as an arm swinging from one end, 1/3 x mass x length², so it does not fit a wheel.)
+
+**For your robot:** Set your own gearing (top speed = motor free speed / reduction, and keep your fastest shot below it), and your wheel's moment of inertia from its mass and radius. Work out a starting `kV` as 12 divided by the wheel's top speed in rotations per second.
 
 Want the details? [SmartMotorControllerConfig](../../details/editor/config/README.md)
 
@@ -176,6 +183,7 @@ m_lowerConfig
     .WithFeedback(0.1, 0, 0)
     .WithSimClosedLoopController(0.1, 0, 0)
     .WithFeedforward(feedforward)
+    .WithSimFeedforward(feedforward)
     .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
     .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
     .WithMotorInverted(true)
@@ -715,6 +723,7 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
+      .WithSimFeedforward(feedforward)
       // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
       .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
       // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
@@ -733,6 +742,7 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
+      .WithSimFeedforward(feedforward)
       .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
       .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(true)
@@ -777,3 +787,14 @@ Every option used here has its own section in the `SmartMotorControllerConfig` p
 * [Simulation](../../details/editor/config/simulation.md): the simulation only gains
 
 The PID and feedforward numbers on this page are a place to start, not tuned values. Tune them with [the shooter tutorial's tune step](../shooter-flywheels/tune.md), once for each wheel.
+
+## Check it
+
+Open the command palette with <kbd>Ctrl+Shift+P</kbd> and run **WPILib: Build Robot Code**. It should build. Nothing moves yet, because nothing gives the wheels a speed.
+
+* **`TalonFX` or `TalonFXWrapper` cannot be found:** Phoenix 6 is not installed. See [Install your motor controller's library](../project-setup.md#install-your-motor-controllers-library).
+* **`SmartMotorControllerConfig` cannot be found:** YAMS is not installed, or the import is from the other command framework (`yams.commands2` or `yams.commands3`).
+
+## Next
+
+[Step 2: Commands and buttons](commands.md)

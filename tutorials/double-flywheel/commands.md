@@ -719,6 +719,7 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
+      .WithSimFeedforward(feedforward)
       // Gearing from the motor rotor to the flywheel: 1:1, the wheel is on the motor's shaft.
       .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
       // There is no FlyWheel mechanism, so the simulation gets the wheel's moment of
@@ -737,6 +738,7 @@ DoubleFlywheelSubsystem::DoubleFlywheelSubsystem() {
       .WithFeedback(0.1, 0, 0)
       .WithSimClosedLoopController(0.1, 0, 0)
       .WithFeedforward(feedforward)
+      .WithSimFeedforward(feedforward)
       .WithMotorGearing(MechanismGearing{GearBox::FromReductionStages({1.0})})
       .WithMOI(wpi::units::kilogram_square_meter_t{0.0006})
       .WithMotorInverted(true)

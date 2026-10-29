@@ -32,6 +32,7 @@
   * [Step 1: The module motors](tutorials/swerve-drive/module-motors.md)
   * [Step 2: The modules and the drive](tutorials/swerve-drive/modules-and-drive.md)
   * [Step 3: Driving](tutorials/swerve-drive/driving.md)
+  * [Step 4: On the real robot](tutorials/swerve-drive/real-robot.md)
 
 * [Troubleshooting](tutorials/troubleshooting.md)
 
@@ -103,6 +104,8 @@
   * [Swerve Module](details/swerve-module.md)
     * [SwerveModuleConfig](details/mechanism-configs/swerve-module-config.md)
   * [Swerve Input Stream](details/swerve-input-stream.md)
+    * [Heading and aim modes](details/swerve-input-stream-aim.md)
+    * [Input stream telemetry and live tuning](details/swerve-input-stream-telemetry.md)
 * [When mechanism commands end](details/run-vs-runto.md)
 * [How do I write my own mechanism command?](details/setpoint-methods.md)
 * [Telemetry](understanding/telemetry.md)
