@@ -47,9 +47,9 @@ One module is enough to graph: the tuning command sends all four the same setpoi
 {% step %}
 ### Start the tuning command
 
-In the sidebar, open `Mechanisms/swerve/tuning` and click the dot next to `running`, so that it turns green.
+In the sidebar, open `Tuning/swerve/Live Tuning` and click the dot next to `running`, so that it turns green.
 
-<figure><img src="../../.gitbook/assets/advantagescope-tutorial-swerve-start.png" alt="AdvantageScope with the sidebar open at Mechanisms, swerve, tuning, a Command, where the running dot is green, next to the Swerve tab"><figcaption><p>The tuning command running.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/advantagescope-tutorial-swerve-start.png" alt="AdvantageScope with the sidebar open at Tuning, swerve, Live Tuning, a Command, where the running dot is green, next to the Swerve tab"><figcaption><p>The tuning command running.</p></figcaption></figure>
 
 **Check it:** `running` stays green, and the sticks no longer drive the robot. Nothing moves yet: no tuning mode is on.
 {% endstep %}
@@ -106,7 +106,7 @@ Open the drive graph. The drive values are under `Tuning/swerve/modules/drive`.
 ### Stop
 
 1. Click `enabled` under `drive` so that it turns red, and type `0` into `velocity`.
-2. Click `running` under `Mechanisms/swerve/tuning` so that it turns red.
+2. Click `running` under `Tuning/swerve/Live Tuning` so that it turns red.
 
 **Check it:** the sticks drive the robot again.
 {% endstep %}
@@ -114,9 +114,9 @@ Open the drive graph. The drive values are under `Tuning/swerve/modules/drive`.
 
 ## If it did not work
 
-* **Typing a value or clicking a dot does nothing.** Turn on AdvantageScope's tuning mode, and check that `running` under `Mechanisms/swerve/tuning` is green.
-* **`Mechanisms/swerve/tuning` is missing.** The tuning command is only there when `SwerveDriveConfig` has both a translation and a rotation controller, as in step 2, and the drive's telemetry is `TelemetryVerbosity.HIGH`.
-* **The modules do not turn to the angle.** Check that `enabled` under `azimuth` is green, and that `running` under `Mechanisms/swerve/tuning` still is.
+* **Typing a value or clicking a dot does nothing.** Turn on AdvantageScope's tuning mode, and check that `running` under `Tuning/swerve/Live Tuning` is green.
+* **`Tuning/swerve/Live Tuning` is missing.** The tuning command is only there when `SwerveDriveConfig` has both a translation and a rotation controller, as in step 2, and the drive's telemetry is `TelemetryVerbosity.HIGH`.
+* **The modules do not turn to the angle.** Check that `enabled` under `azimuth` is green, and that `running` under `Tuning/swerve/Live Tuning` still is.
 * **A wheel turns the other way and runs backwards.** The angle changed by 90 degrees or more. Step between closer angles, such as 0 and 45.
 
 For every tuning value, including auto-align, see [Swerve drive](../../details/live-tuning/README.md#swerve-drive) on the Live tuning page. More problems and fixes: [Troubleshooting](../troubleshooting.md).

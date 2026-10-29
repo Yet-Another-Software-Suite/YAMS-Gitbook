@@ -115,7 +115,7 @@ SetupModule(m_frontLeft, "frontleft", wpi::math::Translation2d{24_in, 24_in}, 64
 
 Every angle in WPILib is counter-clockwise positive, seen from above, and every motor has to agree. The [swerve tuning command](../../details/live-tuning/README.md#swerve-drive) makes this easy: it turns every wheel to an angle, or runs every wheel at a speed, that you type on the dashboard.
 
-Enable the robot in Teleoperated, still on blocks, and start the tuning command `NT:/Mechanisms/swerve/tuning` as [Start the tuning command](../../details/live-tuning/README.md#start-the-tuning-command) shows. The values you type are under `NT:/Tuning/swerve/`.
+Enable the robot in Teleoperated, still on blocks, and start the tuning command `NT:/Tuning/swerve/Live Tuning` as [Start the tuning command](../../details/live-tuning/README.md#start-the-tuning-command) shows. The values you type are under `NT:/Tuning/swerve/`.
 
 **Azimuth.** Type `0` into `modules/azimuth/angle`, set `modules/azimuth/enabled` to `true`, then type `90`.
 
