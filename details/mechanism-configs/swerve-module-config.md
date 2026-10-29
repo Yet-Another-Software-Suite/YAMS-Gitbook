@@ -146,7 +146,7 @@ Names the module and chooses what it publishes. The name appears under the drive
 config.withTelemetry("frontleft", TelemetryVerbosity.HIGH);
 ```
 
-[Module Telemetry](../swerve-module.md#module-telemetry) lists the keys, and [tuning the swerve modules](../live-tuning/README.md#tune-the-swerve-modules) uses them.
+[Module Telemetry](../swerve-module.md#module-telemetry) lists the keys, and [tuning the swerve modules](../live-tuning/swerve-drive.md#tune-the-swerve-modules) uses them.
 
 ## Code reference
 

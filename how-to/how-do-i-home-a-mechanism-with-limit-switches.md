@@ -166,7 +166,7 @@ Check the switch before trusting it: press it by hand and watch the field on you
 
 ### Soft limits keep the mechanism off the switch
 
-The motor controller stops the mechanism at its soft limits. A soft limit inside the hard stop stops the mechanism before it reaches the switch, so the switch only homes the mechanism when it is already resting there, such as when the robot turns on. Put the soft limit at the hard stop, or drive the mechanism onto the switch with a homing command that moves it slowly.
+Put the soft limit at the hard stop, where the switch is pressed. A soft limit inside the hard stop stops the mechanism before it reaches the switch, so the switch only homes it when it is already resting there, such as when the robot turns on. A homing command does not get around this: on a TalonFX or TalonFXS in `CLOSED_LOOP` mode, YAMS sets the soft limits on the Talon itself, and the Talon stops every request at them, including the voltage of `home()`.
 
 ### The encoder is set every loop
 
@@ -203,7 +203,3 @@ In REVLib 2027.0.0-alpha-7, the simulated SPARK sets its encoder back to its own
 ## If it did not work
 
 See the pitfalls above, or [Troubleshooting](../tutorials/troubleshooting.md).
-
-## Next
-
-No room for a limit switch? See [How do I zero a mechanism without limit switches?](how-do-i-zero-a-mechanism-without-limit-switches.md)

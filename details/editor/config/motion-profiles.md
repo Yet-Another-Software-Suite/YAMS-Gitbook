@@ -19,7 +19,7 @@ A maximum velocity and a maximum acceleration.
 
 The distance version needs a [circumference](gearing-and-units.md#withmechanismcircumference) and makes the controller [distance based](closed-loop-control.md#withlinearclosedloopcontroller).
 
-Choose limits the mechanism can really reach. If the profile asks for more than the motor can give, the mechanism falls behind and the PID fights to catch up: see [when tuning does not help](../../live-tuning/#when-tuning-does-not-help).
+Choose limits the mechanism can really reach. If the profile asks for more than the motor can give, the mechanism falls behind and the PID fights to catch up: see [when tuning does not help](../../../tutorials/troubleshooting.md#when-tuning-does-not-help).
 
 ### Starting values
 

@@ -360,7 +360,7 @@ driver.faceRight().onTrue(drive.driveToPose(new Pose2d(2, 4, Rotation2d.ZERO), C
 Use the version with tolerances whenever something has to happen after the robot arrives. The version without them never ends on its own.
 
 {% hint style="success" %}
-The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Live tuning: Swerve drive](live-tuning/README.md#swerve-drive).
+The auto-align gains, and the drive and azimuth motor gains, can be tuned from a dashboard without redeploying. See [Tune a swerve drive](live-tuning/swerve-drive.md).
 {% endhint %}
 
 ## Telemetry verbosity

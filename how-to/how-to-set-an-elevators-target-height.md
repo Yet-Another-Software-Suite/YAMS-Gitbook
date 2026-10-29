@@ -8,19 +8,18 @@ icon: elevator
 
 This page assumes you already have an `Elevator` in a subsystem. If you do not, build one with the [Elevator tutorial](../tutorials/elevator.md) first; it ends with complete files you can copy.
 
-An elevator's target is a `Distance` (`org.wpilib.units.measure.Distance`), for example `Meters.of(1)` or `Inches.of(30)`. YAMS turns it into motor rotations using the drum radius or circumference you set in the `SmartMotorControllerConfig` (see [How do I command my elevator in meters?](how-to-find-your-mechanism-circumference.md)). There are three ways to set it:
+An elevator works the same way as an arm: [How do I set an arm's target angle?](how-to-set-an-arms-target-angle.md) explains `run`, `runTo` and the setpoint method, the default command and the Commands v3 names. This page covers only what differs.
 
-| Use | When | Ends? |
-| --- | --- | --- |
-| `elevator.run(height)` | Hold a height for as long as a button is held, or as a default command. | No. It runs until something interrupts it. |
-| `elevator.runTo(height, tolerance)` | A step in a sequence or autonomous routine: go there, then move on. | Yes, once the carriage has stayed within `tolerance` of the height for 0.1 seconds. |
-| `elevator.setMeasurementPositionSetpoint(height)` | Your own code, inside a command you already wrote. | It is a method, not a command. It sets the target once. |
+## What differs from an arm
 
-All three start the closed loop controller again if an open loop command (`set` or `setVoltage`) stopped it. For more on the difference, see [When mechanism commands end](../details/run-vs-runto.md).
+* **The target is a `Distance`** (`org.wpilib.units.measure.Distance`), such as `Meters.of(1)` or `Inches.of(30)`, not an `Angle`. The tolerance of `runTo` is a `Distance` too, such as `Centimeters.of(2)`.
+* **The setpoint method is `setMeasurementPositionSetpoint(height)`**, the method for a distance, not `setMechanismPositionSetpoint`.
+* **YAMS needs the drum or sprocket size** to turn meters into motor rotations: `withDrumRadius(...)` or `withMechanismCircumference(...)` in the `SmartMotorControllerConfig`. See [How do I tell YAMS my drum or sprocket size?](how-to-find-your-mechanism-circumference.md)
+* **The carriage needs `kG` at every height,** since gravity pulls it down the same wherever it is, where an arm's `kG` is scaled by the cosine of its angle.
 
-## Add the commands to your subsystem
+## Add the commands and bind them
 
-These methods go in the subsystem (Commands v2) or mechanism (Commands v3) that owns the `elevator` field. They are fragments: the rest of the class is in the [Elevator tutorial](../tutorials/elevator/commands.md).
+The [Elevator tutorial](../tutorials/elevator/motor-controller.md) sets `.withSoftLimits(Meters.of(0), Meters.of(2))`, so every target here is between 0 and 2 meters.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -40,6 +39,15 @@ public Command runTo(Distance height, Distance tolerance) {
 public void setHeightSetpoint(Distance height) {
   elevator.setMeasurementPositionSetpoint(height);
 }
+```
+{% endcode %}
+
+{% code title="RobotContainer.java (fragment)" %}
+```java
+m_exampleSubsystem.setDefaultCommand(m_exampleSubsystem.run(Meters.of(0)));
+m_driverController.a().whileTrue(m_exampleSubsystem.run(Meters.of(0.5)));
+m_driverController.b().whileTrue(m_exampleSubsystem.run(Meters.of(1)));
+m_driverController.x().onTrue(m_exampleSubsystem.runTo(Meters.of(1), Centimeters.of(2)));
 ```
 {% endcode %}
 {% endtab %}
@@ -70,49 +78,46 @@ public void setHeightSetpoint(Distance height) {
 }
 ```
 {% endcode %}
-{% endtab %}
-{% endtabs %}
 
-## Bind them to buttons
-
-Every target must be inside your limits. This example assumes the tutorial's elevator, which travels from 0 to 3 meters.
-
-{% tabs %}
-{% tab title="Commands v2" %}
-{% code title="RobotContainer.java (fragment)" %}
-```java
-// Hold the carriage at the bottom when nothing else is using it.
-m_exampleSubsystem.setDefaultCommand(m_exampleSubsystem.run(Meters.of(0)));
-
-// Hold 0.5 m or 1 m while A or B is held.
-m_driverController.a().whileTrue(m_exampleSubsystem.run(Meters.of(0.5)));
-m_driverController.b().whileTrue(m_exampleSubsystem.run(Meters.of(1)));
-
-// Go to 1 m, then (once within 2 cm) do the next thing.
-m_driverController.x().onTrue(
-    m_exampleSubsystem.runTo(Meters.of(1), Centimeters.of(2))
-        .andThen(Commands.print("Elevator is at 1 m")));
-```
-{% endcode %}
-{% endtab %}
-
-{% tab title="Commands v3" %}
 {% code title="ExampleTeleop.java (fragment)" %}
 ```java
-// In Robot(): hold the carriage at the bottom when nothing else is using it.
+// In Robot():
 exampleMechanism.setDefaultCommand(exampleMechanism.hold(Meters.of(0)));
-
-// In the opmode constructor: hold 0.5 m or 1 m while A or B is held.
+// In the opmode constructor:
 controller.a().whileTrue(robot.exampleMechanism.setHeight(Meters.of(0.5)));
 controller.b().whileTrue(robot.exampleMechanism.setHeight(Meters.of(1)));
+controller.x().onTrue(robot.exampleMechanism.moveTo(Meters.of(1), Centimeters.of(2)));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ElevatorSubsystem.cpp (fragment)" %}
+```cpp
+wpi::cmd::CommandPtr ElevatorSubsystem::Run(wpi::units::meter_t height) {
+  return m_elevator->Run(height);
+}
+
+wpi::cmd::CommandPtr ElevatorSubsystem::RunTo(wpi::units::meter_t height, wpi::units::meter_t tolerance) {
+  return m_elevator->RunTo(height, tolerance);
+}
+
+void ElevatorSubsystem::SetHeightSetpoint(wpi::units::meter_t height) {
+  m_elevator->SetMeasurementPositionSetpoint(height);
+}
+```
+{% endcode %}
+
+{% code title="cpp/RobotContainer.cpp (fragment)" %}
+```cpp
+elevator.SetDefaultCommand(elevator.Run(0_m));
+driverController.FaceDown().WhileTrue(elevator.Run(0.5_m));
+driverController.FaceRight().WhileTrue(elevator.Run(1_m));
+driverController.FaceLeft().OnTrue(elevator.RunTo(1_m, 2_cm));
 ```
 {% endcode %}
 {% endtab %}
 {% endtabs %}
-
-In Commands v3 a `Mechanism` already has a `run(...)` method that takes a coroutine, so the wrappers are called `setHeight`, `moveTo` and `hold`, as in the tutorial.
-
-If the target comes from a `Supplier<Distance>`, `run(supplier)` and `runTo(supplier, tolerance)` follow the supplier every loop. `runTo` ends once the carriage has been within the tolerance of the supplier's current value for 0.1 seconds.
 
 ## Check it
 
@@ -123,10 +128,6 @@ If the target comes from a `Supplier<Distance>`, `run(supplier)` and `runTo(supp
 ## If it did not work
 
 * **The carriage stops short of the target.** The target is outside your soft limits. YAMS clamps the setpoint to the nearest limit and prints a warning in the Driver Station. A `runTo` to a clamped target never ends.
-* **The carriage sags below the target, or slides down when you let go.** `kG` is still 0. The tutorial's gains are placeholders. Find `kG` first (the voltage that holds the carriage still), then `kP`, with [Step 5: Tune it](../tutorials/elevator/tune.md).
-* **The carriage goes to the wrong height, off by the same factor every time.** The drum radius or circumference is wrong. See [How do I command my elevator in meters?](how-to-find-your-mechanism-circumference.md)
+* **The carriage sags below the target, or slides down when you let go.** `kG` is still 0. The tutorial's gains are placeholders. Find `kG` first (the voltage that holds the carriage still), then `kP`, with the [Elevator tutorial's Tune it step](../tutorials/elevator/tune.md).
+* **The carriage goes to the wrong height, off by the same factor every time.** The drum radius, circumference or cascading stage count is wrong. See [How do I tell YAMS my drum or sprocket size?](how-to-find-your-mechanism-circumference.md)
 * **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
-
-## Next
-
-Tune the elevator so it reaches the target quickly and holds it: [Step 5: Tune it](../tutorials/elevator/tune.md).

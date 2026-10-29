@@ -25,7 +25,9 @@ Configuring Custom Robot Models for AdvantageScope
 
 [AdvantageScope's custom assets page](https://docs.advantagescope.org/more-features/custom-assets) has the full reference.
 
-## 1. Tell YAMS where each mechanism is
+{% stepper %}
+{% step %}
+### Tell YAMS where each mechanism is
 
 Give each mechanism a `MechanismPositionConfig`: where it is mounted on the robot, and the plane it moves in. Positions are in meters from the robot's origin, which AdvantageScope puts at the center of the robot, **on the floor**: +X forward, +Y left and +Z up.
 
@@ -36,11 +38,7 @@ Give each mechanism a `MechanismPositionConfig`: where it is mounted on the robo
 | `FlyWheel`                 | Its axle                                                | The axle, turned by the wheel's position                        |
 | `DoubleJointedArm`         | The lower arm's axis                                    | `getPose3d()` for the lower arm, `getUpperPose3d()` for the upper arm at the elbow |
 
-A part turns about the axis normal to its movement plane:
-
-* **XZ** (the default), such as an arm that swings up over the front of the robot. At 0° the part points forward (+X), and a positive angle turns it up.
-* **YZ**, such as an arm that swings up over the side of the robot. At 0° the part points left (+Y), and a positive angle turns it up.
-* **XY**, such as a turret. At 0° the part points forward (+X), and a positive angle turns it left. A `Pivot` is in the XY plane unless you give it a `MechanismPositionConfig`.
+A part turns in its movement plane: **XZ** by default (it points forward at 0° and a positive angle turns it up, like an arm over the front), **YZ** for an arm over the side (it points left at 0°), or **XY** for a turret (it points forward at 0° and a positive angle turns it left). A `Pivot` is in the XY plane unless you give it a `MechanismPositionConfig`.
 
 {% tabs %}
 {% tab title="Java" %}
@@ -137,7 +135,11 @@ m_turretConfig.WithMechanismPositionConfig(
 
 `withRelativePosition(Transform3d)` turns the mechanism where it is mounted, such as an arm on the side of the robot facing left. With `withParent(...)`, the relative position is from the parent's pose, such as the elevator's carriage, rather than from the robot.
 
-## 2. Publish the poses
+**Check it:** the code builds.
+{% endstep %}
+
+{% step %}
+### Publish the poses
 
 Publish every component's pose in one array, in the same order as the components in the model (`model_0.glb`, `model_1.glb`, ...). Publish it every loop.
 
@@ -178,7 +180,11 @@ wpi::telemetry::Log("Robot/Components", std::span<const wpi::math::Pose3d>{compo
 
 With AdvantageKit, record the same array with `Logger.recordOutput("Robot/Components", poses)`.
 
-## 3. Export the model
+**Check it:** start the simulation. `Robot/Components` shows in AdvantageScope's sidebar as an array of `Pose3d`, one for each component.
+{% endstep %}
+
+{% step %}
+### Export the model
 
 Export the robot from CAD without the moving parts as `model.glb`, and each moving part as its own file: `model_0.glb`, `model_1.glb`, and so on, in the order you publish their poses. Export every part where it is when the robot is at its starting position. [Converting Onshape & STEP Files to glTF](https://docs.advantagescope.org/more-features/custom-assets/gltf-convert) explains how.
 
@@ -198,7 +204,11 @@ Put them in a folder named `Robot_<name>`, such as `Robot_Dozer`, with a `config
 }
 ```
 
-## 4. Line each part up with its pose
+**Check it:** restart AdvantageScope. Your robot's name is in the 3D Field tab's robot list, and the robot model is drawn.
+{% endstep %}
+
+{% step %}
+### Line each part up with its pose
 
 AdvantageScope moves each component from where its `zeroedRotations` and `zeroedPosition` put it, by the pose you publish. Set them so that each part sits at the origin as YAMS's pose for it at zero expects:
 
@@ -215,37 +225,24 @@ To set them:
 2. Adjust the model's `rotations`, then its `position`, until the robot is upright, facing +X, with its center on the origin and its wheels on the floor.
 3. Publish an array of zeroed poses, one for each component, such as `Telemetry.log("Robot/ZeroComponents", new Pose3d[] {Pose3d.ZERO, Pose3d.ZERO, Pose3d.ZERO}, Pose3d.struct);`, and select it as the component poses.
 4. For each component, adjust its `zeroedRotations`, then its `zeroedPosition`, until it sits at the origin as the table above says.
-5. Publish the real poses, as in [Publish the poses](#id-2.-publish-the-poses). Each part now moves with its mechanism.
+5. Publish the real poses, as in [Publish the poses](#publish-the-poses). Each part now moves with its mechanism.
 
-## Common pitfalls
-
-### The mechanism's 0° isn't where YAMS expects it
-
-An arm's pose is turned by the arm's angle, from 0° pointing forward. If your arm reads 0° straight down, it is drawn 90° off. Set the arm's angle so 0° is level, as YAMS's [arm feedforward expects](../details/arms.md), rather than turning the model to make up for it.
-
-### The model is measured from the bellypan
-
-AdvantageScope's robot origin is on the floor. Measure each mechanism's relative position from the floor, and line the robot model up with the floor in step 2.
-
-### The poses are in a different order from the components
-
-AdvantageScope gives the first pose to `model_0.glb`, the second to `model_1.glb`, and so on. A part that moves with another mechanism's pose is in the wrong place in the array.
-
-### A turret swings up instead of turning
-
-A `Pivot` turns in the XY plane, like a turret, unless you give it your own `MechanismPositionConfig`. A new `MechanismPositionConfig` is in the XZ plane, so set `withMovementPlane(Plane.XY)` on the one you give a turret.
-
-### A part on another mechanism doesn't move with it
-
-A part mounted on another, such as an arm on an elevator's carriage, needs `withParent(...)`. Without it, the arm's relative position is from the robot, and it stays put as the carriage rises.
-
-### The parts are exported away from their starting position
-
-Export every part where it is at the robot's starting position. A part exported partway through its travel is drawn that far off.
+**Check it:** with the zeroed poses, every part sits where the table above says.
+{% endstep %}
+{% endstepper %}
 
 ## Check it
 
-Start the simulation, open AdvantageScope's 3D Field tab with your robot model, and move each mechanism. Each part should move with its mechanism and stay attached to the robot, and the arm should rise with the elevator's carriage. If a part is in the wrong place, see the pitfalls above.
+Start the simulation, open AdvantageScope's 3D Field tab with your robot model, and move each mechanism. Each part should move with its mechanism and stay attached to the robot, and the arm should rise with the elevator's carriage.
+
+## If it did not work
+
+* **A part is drawn 90° off.** An arm's pose is turned by its angle from 0° pointing forward, so an arm that reads 0° straight down is drawn 90° off. Set the arm's angle so 0° is level, as YAMS's [arm feedforward expects](../details/arms.md), rather than turning the model to make up for it.
+* **The robot or the parts float or sink.** AdvantageScope's robot origin is on the floor. Measure each mechanism's relative position from the floor, not the bellypan, and line the robot model up with the floor as in [Line each part up with its pose](#line-each-part-up-with-its-pose).
+* **A part moves with another mechanism's pose.** The poses are in a different order from the components: AdvantageScope gives the first pose to `model_0.glb`, the second to `model_1.glb`, and so on.
+* **A turret swings up instead of turning.** A new `MechanismPositionConfig` is in the XZ plane, so set `withMovementPlane(Plane.XY)` on the one you give a turret.
+* **A part on another mechanism does not move with it.** It needs `withParent(...)`, such as an arm on an elevator's carriage. Without it, its relative position is from the robot, and it stays put as the carriage rises.
+* **Every part is off by the same amount all the time.** It was exported away from its starting position. Export every part where it is at the robot's starting position.
 
 ## Read more
 

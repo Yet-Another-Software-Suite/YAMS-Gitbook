@@ -270,7 +270,7 @@ SetupModule(m_backRight, "backright", wpi::math::Translation2d{-24_in, -24_in}, 
 {% step %}
 ### Configure and create the drive
 
-`SwerveDriveConfig` takes the four modules, the gyro's attitude, where on the field the robot starts, and the two PID controllers that `driveToPose()` uses in step 3. `withTelemetry("swerve", TelemetryVerbosity.HIGH)` names the drive: everything it publishes is under `NT:/Mechanisms/swerve`, and `HIGH` also publishes the keys that [live tuning](../../details/live-tuning/README.md#swerve-drive) uses in Step 4. `swerve` is also the default name, but setting it here makes it easy to find.
+`SwerveDriveConfig` takes the four modules, the gyro's attitude, where on the field the robot starts, and the two PID controllers that `driveToPose()` uses in step 3. `withTelemetry("swerve", TelemetryVerbosity.HIGH)` names the drive: everything it publishes is under `NT:/Mechanisms/swerve`, and `HIGH` also publishes the keys that [live tuning](../../details/live-tuning/swerve-drive.md) uses in Step 4. `swerve` is also the default name, but setting it here makes it easy to find.
 
 The starting pose of `0` degrees means the robot thinks it faces away from the blue driver station when the code starts. For now, always turn the robot on facing away from you: [Step 3](driving.md#what-forward-means) explains why.
 

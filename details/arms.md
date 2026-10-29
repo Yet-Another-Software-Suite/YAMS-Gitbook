@@ -234,7 +234,7 @@ arm.setDefaultCommand(arm.rest());                     // then the motor rests
 {% endtabs %}
 
 {% hint style="info" %}
-Resting the motor with `set(0)` or `arm.setDutyCycleSetpoint(0)` stops a closed loop that runs on the SystemCore. The next move, with a command such as `runTo(...)` or a function such as `arm.setMechanismPositionSetpoint(...)`, starts it again for you. Only when you call `arm.getMotorController()` directly do you start and stop it yourself: see [Driving the motor controller yourself](setpoint-methods.md#driving-the-motor-controller-yourself).
+Resting the motor with `set(0)` or `arm.setDutyCycleSetpoint(0)` stops a closed loop that runs on the SystemCore. The next move, with a command such as `runTo(...)` or a function such as `arm.setMechanismPositionSetpoint(...)`, starts it again for you. Only when you call `arm.getMotorController()` directly do you start and stop it yourself: see [Driving the motor controller yourself](../how-to/how-do-i-write-my-own-mechanism-command.md#driving-the-motor-controller-yourself).
 {% endhint %}
 
 Soft limits still apply while the arm moves, with either kind of brake. The brake does not replace them.

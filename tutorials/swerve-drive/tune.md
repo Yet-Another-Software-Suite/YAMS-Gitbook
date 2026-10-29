@@ -119,4 +119,4 @@ Open the drive graph. The drive values are under `Tuning/swerve/modules/drive`.
 * **The modules do not turn to the angle.** Check that `enabled` under `azimuth` is green, and that `running` under `Tuning/swerve/Live Tuning` still is.
 * **A wheel turns the other way and runs backwards.** The angle changed by 90 degrees or more. Step between closer angles, such as 0 and 45.
 
-For every tuning value, including auto-align, see [Swerve drive](../../details/live-tuning/README.md#swerve-drive) on the Live tuning page. More problems and fixes: [Troubleshooting](../troubleshooting.md).
+For every tuning value, including auto-align, see [Tune a swerve drive](../../details/live-tuning/swerve-drive.md) on the Live tuning page. More problems and fixes: [Troubleshooting](../troubleshooting.md).

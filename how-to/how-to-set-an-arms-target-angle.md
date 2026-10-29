@@ -8,7 +8,9 @@ icon: hand-fist
 
 This page assumes you already have an `Arm` in a subsystem. If you do not, build one with the [Arm tutorial](../tutorials/arm.md) first; it ends with complete files you can copy.
 
-An arm's target is an `Angle` (`org.wpilib.units.measure.Angle`), for example `Degrees.of(45)`. YAMS gives you three ways to set it:
+YAMS drives the arm to a target with **closed loop** control: you give it an angle, and its controller keeps adjusting the voltage until the encoder says the arm is there. **Open loop** commands (`set` and `setVoltage`) send an output straight to the motor instead. [Open loop and closed loop](../details/how-yams-drives-a-motor.md#open-loop-and-closed-loop) explains both.
+
+An arm's target is an `Angle` (`org.wpilib.units.measure.Angle`), for example `Degrees.of(25)`. YAMS gives you three ways to set it:
 
 | Use | When | Ends? |
 | --- | --- | --- |
@@ -16,9 +18,7 @@ An arm's target is an `Angle` (`org.wpilib.units.measure.Angle`), for example `D
 | `arm.runTo(angle, tolerance)` | A step in a sequence or autonomous routine: go there, then move on. | Yes, once the arm has stayed within `tolerance` of the angle for 0.1 seconds. |
 | `arm.setMechanismPositionSetpoint(angle)` | Your own code, inside a command you already wrote. | It is a method, not a command. It sets the target once. |
 
-<figure><img src="../.gitbook/assets/howto-arm-run-vs-runto.gif" alt="Animation of the same arm moving to 45 degrees with two commands, with a default command of run to 0 degrees. With run the command keeps running after the arm arrives, and the arm stays at 45 degrees. With runTo and a tolerance of 3 degrees the command ends once the arm has stayed inside the tolerance for 0.1 seconds, then the default command takes over and moves the arm back to 0 degrees."><figcaption><p><code>run()</code> keeps running until something interrupts it. <code>runTo()</code> ends at the setpoint, and the default command takes over.</p></figcaption></figure>
-
-All three start the closed loop controller again if an open loop command (`set` or `setVoltage`) stopped it. For more on the difference, see [When mechanism commands end](../details/run-vs-runto.md).
+All three start the closed loop controller again if an open loop command stopped it. [When mechanism commands end](../details/run-vs-runto.md) explains `run` and `runTo` with the default command.
 
 ## Add the commands to your subsystem
 
@@ -73,11 +73,34 @@ public void setAngleSetpoint(Angle angle) {
 ```
 {% endcode %}
 {% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/subsystems/ArmSubsystem.cpp (fragment)" %}
+```cpp
+// Go to an angle and hold it. Never ends on its own.
+wpi::cmd::CommandPtr ArmSubsystem::Run(wpi::units::degree_t angle) {
+  return m_arm->Run(angle);
+}
+
+// Go to an angle, then end once the arm is within tolerance.
+wpi::cmd::CommandPtr ArmSubsystem::RunTo(wpi::units::degree_t angle, wpi::units::degree_t tolerance) {
+  return m_arm->RunTo(angle, tolerance);
+}
+
+// Set the target from your own code.
+void ArmSubsystem::SetAngleSetpoint(wpi::units::degree_t angle) {
+  m_arm->SetMechanismPositionSetpoint(angle);
+}
+```
+{% endcode %}
+
+Declare the three in `ArmSubsystem.hpp`, as the [Arm tutorial](../tutorials/arm/commands.md) does for `Run` and `RunTo`.
+{% endtab %}
 {% endtabs %}
 
 ## Bind them to buttons
 
-Every target must be inside your soft limits. This example assumes `.withSoftLimits(Degrees.of(-20), Degrees.of(80))` in the `SmartMotorControllerConfig`, so -5 and 45 degrees are both reachable.
+Every target must be inside your soft limits. The [Arm tutorial](../tutorials/arm/motor-controller.md) sets `.withSoftLimits(Degrees.of(-20), Degrees.of(30))` in the `SmartMotorControllerConfig`, so -5 and 25 degrees are both reachable.
 
 {% tabs %}
 {% tab title="Commands v2" %}
@@ -86,14 +109,14 @@ Every target must be inside your soft limits. This example assumes `.withSoftLim
 // Hold the arm at 0 degrees when nothing else is using it.
 m_exampleSubsystem.setDefaultCommand(m_exampleSubsystem.run(Degrees.of(0)));
 
-// Hold -5 or 45 degrees while A or B is held.
+// Hold -5 or 25 degrees while A or B is held.
 m_driverController.a().whileTrue(m_exampleSubsystem.run(Degrees.of(-5)));
-m_driverController.b().whileTrue(m_exampleSubsystem.run(Degrees.of(45)));
+m_driverController.b().whileTrue(m_exampleSubsystem.run(Degrees.of(25)));
 
-// Go to 45 degrees, then (once within 2 degrees) do the next thing.
+// Go to 25 degrees, then (once within 2 degrees) do the next thing.
 m_driverController.x().onTrue(
-    m_exampleSubsystem.runTo(Degrees.of(45), Degrees.of(2))
-        .andThen(Commands.print("Arm is at 45 degrees")));
+    m_exampleSubsystem.runTo(Degrees.of(25), Degrees.of(2))
+        .andThen(Commands.print("Arm is at 25 degrees")));
 ```
 {% endcode %}
 {% endtab %}
@@ -104,9 +127,29 @@ m_driverController.x().onTrue(
 // In Robot(): hold the arm at 0 degrees when nothing else is using it.
 exampleMechanism.setDefaultCommand(exampleMechanism.hold(Degrees.of(0)));
 
-// In the opmode constructor: hold -5 or 45 degrees while A or B is held.
+// In the opmode constructor: hold -5 or 25 degrees while A or B is held.
 controller.a().whileTrue(robot.exampleMechanism.setAngle(Degrees.of(-5)));
-controller.b().whileTrue(robot.exampleMechanism.setAngle(Degrees.of(45)));
+controller.b().whileTrue(robot.exampleMechanism.setAngle(Degrees.of(25)));
+
+// Go to 25 degrees on a press of X. The command ends once the arm is within 2 degrees,
+// and the default command takes over.
+controller.x().onTrue(robot.exampleMechanism.moveTo(Degrees.of(25), Degrees.of(2)));
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="C++" %}
+{% code title="cpp/RobotContainer.cpp (fragment)" %}
+```cpp
+// Hold the arm at 0 degrees when nothing else is using it.
+arm.SetDefaultCommand(arm.Run(0_deg));
+
+// Hold -5 or 25 degrees while A or B is held.
+driverController.FaceDown().WhileTrue(arm.Run(-5_deg));
+driverController.FaceRight().WhileTrue(arm.Run(25_deg));
+
+// Go to 25 degrees on a press of X. The command ends once the arm is within 2 degrees.
+driverController.FaceLeft().OnTrue(arm.RunTo(25_deg, 2_deg));
 ```
 {% endcode %}
 {% endtab %}
@@ -119,7 +162,7 @@ If the target comes from a `Supplier<Angle>` (for example an aiming calculation)
 ## Check it
 
 1. Start the simulation (or enable the robot) and open **NetworkTables > Mechanisms > Arm > mechanism** in your dashboard. `Arm` is the name you gave `ArmConfig.withTelemetry`.
-2. Hold B. The drawn arm should swing to 45 degrees and stay there.
+2. Hold B. The drawn arm should swing to 25 degrees and stay there.
 3. Release B. The default command takes over and the arm returns to 0 degrees.
 
 ## If it did not work
@@ -129,6 +172,6 @@ If the target comes from a `Supplier<Angle>` (for example an aiming calculation)
 * **`runTo` never ends.** The tolerance is tighter than the arm can hold. Try 2 or 3 degrees, and tune `kP`.
 * **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
 
-## Next
+## Read more
 
-Tune the arm so it reaches the target quickly and holds it: [Step 5: Tune it](../tutorials/arm/tune.md).
+Tune the arm so it reaches the target quickly and holds it: [Arm tutorial: Tune it](../tutorials/arm/tune.md).

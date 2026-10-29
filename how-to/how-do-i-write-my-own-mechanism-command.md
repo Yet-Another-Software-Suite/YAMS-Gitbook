@@ -7,7 +7,7 @@ icon: sliders
 
 The built-in commands, `run`, `runTo`, `set` and `setVoltage`, cover most needs. When they do not, for example when the target needs extra logic every loop, when an AdvantageKit IO class sets it, or when a state machine decides it, set the target yourself with the mechanism's **setpoint functions**. This page shows each case.
 
-[Controlling a mechanism](controlling-a-mechanism.md#setpoint-functions) lists every setpoint function for each mechanism.
+[Controlling a mechanism](../details/controlling-a-mechanism.md#setpoint-functions) lists every setpoint function for each mechanism.
 
 <figure><img src="../.gitbook/assets/setpoint-two-ways.png" alt="Two paths to the same SmartMotorController. A command helper such as arm.run returns a Command that requires the subsystem; a button binding or auto sequence schedules it, and the scheduler stops it when another command needs the mechanism. A direct setpoint method such as arm.setMechanismPositionSetpoint returns nothing and sets the target at once; it is called from your own code, such as a custom command, an IO class or a state machine, and nothing is scheduled."><figcaption><p>A built-in command and a setpoint function end at the same motor controller.</p></figcaption></figure>
 
@@ -16,7 +16,7 @@ The built-in commands, `run`, `runTo`, `set` and `setVoltage`, cover most needs.
 * **A setpoint function sets the target and returns at once.** It is not a command, and it does not require the subsystem. Call it from inside a command that does, so two pieces of code never fight over the motor.
 * **Position and velocity setpoint functions start the closed loop if it was stopped.** Voltage and duty cycle ones stop it. You do not need to manage the loop when you use them.
 * **Starting a stopped loop resets it** to where the mechanism is now: the PID controller, the motion profile and the LQR's estimate start fresh. On a loop that is already running, starting it does nothing, so calling `setMechanismPositionSetpoint(...)` every loop is fine.
-* **The motor keeps its last request when your command ends,** as with the built-in commands. See [When mechanism commands end](run-vs-runto.md).
+* **The motor keeps its last request when your command ends,** as with the built-in commands. See [When mechanism commands end](../details/run-vs-runto.md).
 
 ## A command with extra logic
 
@@ -119,7 +119,7 @@ public class ArmIOYAMS implements ArmIO
 }
 ```
 
-[AdvantageKit Integration](advantagekit-integration.md) builds the whole IO layer.
+[AdvantageKit Integration](../details/advantagekit-integration.md) builds the whole IO layer.
 
 ## A state machine (Commands v3)
 
@@ -184,72 +184,10 @@ How it behaves:
 
 ## Driving the motor controller yourself
 
-You can skip the mechanism and call the `SmartMotorController` from `arm.getMotorController()`, with `setPosition(...)`, `setVelocity(...)`, `setVoltage(...)` or `setDutyCycle(...)`. That is what the built-in commands do inside. These calls do not start or stop the closed loop, so do it once when your command starts:
+You can skip the mechanism and call the `SmartMotorController` from `arm.getMotorController()`, with `setPosition(...)`, `setVelocity(...)`, `setVoltage(...)` or `setDutyCycle(...)`. Unlike the setpoint functions, these calls do not start or stop the closed loop, so your command calls `startClosedLoopController()` or `stopClosedLoopController()` once when it starts. [How do I control a mechanism without a mechanism class?](how-do-i-control-a-mechanism-without-a-mechanism-class.md) shows this in full.
 
-<figure><img src="../.gitbook/assets/setpoint-closed-loop-state.png" alt="Two panels. Position or velocity setpoints, such as setMechanismPositionSetpoint and setMechanismVelocitySetpoint, need the closed loop running: call startClosedLoopController once when your command starts, or the setpoint is ignored and the mechanism does not move. Voltage or duty cycle setpoints, setVoltageSetpoint and setDutyCycleSetpoint, need the closed loop stopped: call stopClosedLoopController once when your command starts, or the loop overwrites your output on its next run. This only matters when the closed loop runs on the SystemCore, and the command helpers do it for you."><figcaption><p>Start the closed loop for position and velocity. Stop it for voltage and duty cycle.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/setpoint-closed-loop-state.png" alt="Two panels for calls made straight to the SmartMotorController. Position or velocity requests, motor.setPosition and motor.setVelocity, need the closed loop running: call startClosedLoopController once when your command starts, or the request is ignored and the mechanism does not move. Voltage or duty cycle requests, motor.setVoltage and motor.setDutyCycle, need the closed loop stopped: call stopClosedLoopController once when your command starts, or the loop overwrites your output on its next run. This only matters when the closed loop runs on the SystemCore. The mechanism setpoint functions and command helpers do it for you."><figcaption><p>Calling the motor controller directly: start the closed loop for position and velocity, stop it for voltage and duty cycle. The setpoint functions do this for you.</p></figcaption></figure>
 
-{% tabs %}
-{% tab title="Commands v2" %}
-```java
-// In ArmSubsystem. arm is the YAMS Arm field.
-/** Drive the arm by voltage, for example from a joystick. */
-public Command manual(Supplier<Voltage> volts)
-{
-  SmartMotorController motor = arm.getMotorController();
-  return startRun(
-          motor::stopClosedLoopController,      // once, at the start
-          () -> motor.setVoltage(volts.get()))  // every loop
-      .withName("Arm Manual");
-}
+## Read more
 
-/** Hold an angle that can change while the command runs. */
-public Command track(Supplier<Angle> angle)
-{
-  SmartMotorController motor = arm.getMotorController();
-  return startRun(
-          motor::startClosedLoopController,     // once, at the start
-          () -> motor.setPosition(angle.get())) // every loop
-      .withName("Arm Track");
-}
-```
-{% endtab %}
-
-{% tab title="Commands v3" %}
-```java
-// In ArmMechanism. arm is the YAMS Arm field.
-/** Drive the arm by voltage, for example from a joystick. */
-public Command manual(Supplier<Voltage> volts)
-{
-  SmartMotorController motor = arm.getMotorController();
-  return run(coroutine -> {
-    motor.stopClosedLoopController();           // once, at the start
-    while (true)
-    {
-      motor.setVoltage(volts.get());            // every loop
-      coroutine.yield();
-    }
-  }).named("Arm Manual");
-}
-
-/** Hold an angle that can change while the command runs. */
-public Command track(Supplier<Angle> angle)
-{
-  SmartMotorController motor = arm.getMotorController();
-  return run(coroutine -> {
-    motor.startClosedLoopController();          // once, at the start
-    while (true)
-    {
-      motor.setPosition(angle.get());           // every loop
-      coroutine.yield();
-    }
-  }).named("Arm Track");
-}
-```
-{% endtab %}
-{% endtabs %}
-
-Some closed loops run on the motor controller and some on the SystemCore: [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) lists which. When the loop runs on the motor controller, `startClosedLoopController()` and `stopClosedLoopController()` do nothing, so the same code works everywhere and keeps working if you change motor controller later. Both also start or stop the loop of each loosely coupled follower.
-
-## Next
-
-[When mechanism commands end](run-vs-runto.md) explains how your command fits with `runTo` and the default command.
+[When mechanism commands end](../details/run-vs-runto.md) explains how your command fits with `runTo` and the default command.

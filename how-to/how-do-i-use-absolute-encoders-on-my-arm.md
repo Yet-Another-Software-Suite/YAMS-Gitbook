@@ -4,9 +4,9 @@ icon: compass-drafting
 
 # How do I use absolute encoders on my arm?
 
-Relative encoders (built into most NEOs and Falcons) lose their zero reference on every power cycle, so an arm must be homed before closed-loop control is accurate. Absolute encoders retain their position across power cycles and eliminate the homing step entirely, which is especially important for arms that park at a non-zero angle. YAMS accepts an absolute encoder offset that maps the encoder's native range to your arm's coordinate system.
+**Goal:** have the arm know its angle the moment the robot turns on, with no homing, by closing its loop on an absolute encoder.
 
-Absolute encoders report the physical position of a mechanism within a single rotation and retain that reading across power cycles and reboots. On an Arm (or Pivot) mechanism this means the robot always knows where the arm is the moment it powers on, no homing routine, no encoder drift from brownouts or e-stops.
+An absolute encoder keeps its reading through a power cycle, and YAMS maps that reading to your arm's angles with a zero offset and a discontinuity point.
 
 ## Supported encoder types
 
@@ -19,7 +19,11 @@ Each `SmartMotorController` wrapper only accepts the encoders from its own vendo
 | `TalonFXSWrapper` (TalonFXS / Minion) | `CANcoder`, `CANdi`                                                                       |
 | `NovaWrapper` (Thrifty Nova)          | `FeedbackSensorType.ABS` (absolute encoder on the Nova's data port), Thrifty `CanEncoder` |
 
-## Check your inversion
+Set the encoder up in this order, in your `SmartMotorControllerConfig`. The [complete examples](#complete-examples) below put every step together for each motor controller.
+
+{% stepper %}
+{% step %}
+### Check your inversion
 
 Using the vendor hardware client (REV Hardware Client or Phoenix Tuner X), apply positive power to the motor and graph the absolute encoder position. The position should **increase** as the motor turns in the positive direction.
 
@@ -31,11 +35,15 @@ If it decreases, invert the encoder reading:
 
 <figure><img src="../.gitbook/assets/smc-encoder-inverted.png" alt="Two panels. When the encoder reading goes up as the motor output is positive, the PID pushes toward the setpoint. When the encoder reading goes down instead, the PID pushes away from the setpoint and the mechanism runs off."><figcaption><p>What a backwards encoder does to closed loop control.</p></figcaption></figure>
 
-## Check your gear ratio and mount
+**Check it:** with positive power, the encoder position goes up.
+{% endstep %}
+
+{% step %}
+### Check your gear ratio and mount
 
 The absolute encoder must complete **at most one full rotation** across the entire range of motion of the arm. Confirm this in the hardware client by moving the arm through its full travel and watching the encoder position, it must never wrap from 1 rotation back to 0 more than once.
 
-Use `.withExternalEncoderGearing(1.0)` if the encoder is mounted directly on the mechanism shaft. If the encoder is driven through a reduction, pass the encoder-to-mechanism ratio.
+If the encoder is mounted directly on the arm's shaft (1:1), leave `withExternalEncoderGearing` unset. Only if the encoder is driven through a reduction, pass the encoder-to-mechanism ratio with `.withExternalEncoderGearing(...)`, and read the alert note in [Set the discontinuity point](#set-the-discontinuity-point).
 
 {% hint style="warning" %}
 If the gear ratio causes the encoder to exceed 1 rotation during the arm's range of motion, the encoder position will wrap unpredictably and **cannot** be used as the primary PID feedback device. Either remount the encoder closer to the mechanism output shaft or change the reduction so the encoder never exceeds 1 rotation.
@@ -43,7 +51,11 @@ If the gear ratio causes the encoder to exceed 1 rotation during the arm's range
 
 <figure><img src="../.gitbook/assets/smc-encoder-gearing-wrap.gif" alt="Animation of the same arm moving between hard stops 120 degrees apart, read through two encoder gearings. Each absolute encoder is drawn with a white line on its casing and a white line on its bearing, which line up at the discontinuity point. With a gearing of 2 the encoder turns 240 degrees, the lines never meet, and YAMS always reports the right angle. With a gearing of 4 the encoder needs 480 degrees, the lines meet partway through the travel, and YAMS then reports an angle 90 degrees too low."><figcaption><p>The same arm and hard stops. Both use a discontinuity point of 1 rotation, at the line on the casing. With a gearing of 2 the white lines never meet. With a gearing of 4 they do, and the reported angle is wrong.</p></figcaption></figure>
 
-## Set the discontinuity point
+**Check it:** across the arm's whole travel, the encoder turns less than one rotation.
+{% endstep %}
+
+{% step %}
+### Set the discontinuity point
 
 An absolute encoder wraps at its **discontinuity point**, the angle at which the reading jumps from its maximum value back to zero (or vice versa). There are two supported ranges:
 
@@ -66,7 +78,11 @@ If the arm's physical range of motion crosses the discontinuity point, the posit
 
 <figure><img src="../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm&#x27;s zero in both panels. With 1 rotation the discontinuity point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. With 0.5 rotations the discontinuity point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>With 1 rotation the discontinuity point is at the line on the casing. With 0.5 rotations it is 180° from it, and the line has not moved.</p></figcaption></figure>
 
-## Find your zero offset
+**Check it:** move the arm through its whole travel in the hardware client. The reading never jumps.
+{% endstep %}
+
+{% step %}
+### Find your zero offset
 
 Move the arm to exactly horizontal (0° from horizontal, parallel to the ground). Read the raw encoder position in the hardware client, with no offset set in the client: that value is your zero offset.
 
@@ -77,17 +93,17 @@ Move the arm to exactly horizontal (0° from horizontal, parallel to the ground)
 .withExternalEncoderZeroOffset(Degrees.of(33.25))     // the same, 0.0924 × 360
 ```
 
-Use one of the two, with your own reading. The offset is in **arm (mechanism) rotations**. With the encoder on the arm's shaft (1:1, as this page assumes), an encoder rotation and an arm rotation are the same, so the client's reading goes in as it is. If you set `withExternalEncoderGearing`, measure the offset as an arm angle instead.
+Use one of the two, with your own reading. The offset is in **arm (mechanism) rotations**. With the encoder on the arm's shaft (1:1) and no `withExternalEncoderGearing`, an encoder rotation and an arm rotation are the same, so the client's reading goes in as it is. If you set `withExternalEncoderGearing`, measure the offset as an arm angle instead.
 
-Negative offsets are automatically converted to their positive equivalent (1 rotation is added internally).
-
-The offset is applied to the absolute encoder itself (for example the CANcoder's magnet offset or the SPARK's absolute encoder zero offset). `TalonFXWrapper` and `TalonFXSWrapper` no longer set a separate rotor offset on the motor.
-
-To check the result, read the encoder back through the `SmartMotorController`: `getExternalEncoderMechanismPosition()` returns the absolute encoder's position in mechanism units (empty if there is no external encoder), and `getRelativeMechanismPosition()` returns the motor's built-in relative encoder position. With the offset set correctly, both should read about 0° with the arm horizontal.
+Negative offsets are automatically converted to their positive equivalent (1 rotation is added internally). The offset is applied to the absolute encoder itself, such as the CANcoder's magnet offset or the SPARK's absolute encoder zero offset.
 
 <figure><img src="../.gitbook/assets/smc-encoder-zero-offset-discontinuity.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its discontinuity point is opposite that, inside the arm&#x27;s travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the discontinuity point have both moved a quarter turn, the discontinuity point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the discontinuity point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
 
-## Configure the simulation starting position
+**Check it:** deploy and hold the arm horizontal. `getExternalEncoderMechanismPosition()` on the `SmartMotorController`, the absolute encoder's angle, reads about 0°, as does the arm's angle under **NetworkTables > Mechanisms**.
+{% endstep %}
+
+{% step %}
+### Configure the simulation starting position
 
 Simulation has no physical encoder, so the absolute encoder reading is unavailable in sim. Use `.withSimStartingPosition()` to tell the simulator where the arm starts. On a real robot this value is ignored, the true encoder reading is always used.
 
@@ -95,11 +111,15 @@ Simulation has no physical encoder, so the absolute encoder reading is unavailab
 .withSimStartingPosition(Degrees.of(0))  // arm starts horizontal in sim
 ```
 
+**Check it:** start the simulation. The arm starts at the angle you gave.
+{% endstep %}
+{% endstepper %}
+
 ***
 
 ## Complete examples
 
-The gains in these examples (`kP` of 4, and an `ArmFeedforward` of all zeros) are **placeholders**: with them the arm moves but sags below its setpoints. Find `kG` and then `kP` with [Step 5: Tune it](../tutorials/arm/tune.md).
+The gains in these examples (`kP` of 4, and an `ArmFeedforward` of all zeros) are **placeholders**: with them the arm moves but sags below its setpoints. Find `kG` and then `kP` with the [Arm tutorial's Tune it step](../tutorials/arm/tune.md).
 
 ### SparkMax + SparkAbsoluteEncoder
 
@@ -118,7 +138,6 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withStatorCurrentLimit(Amps.of(40))
     .withExternalEncoder(armMotor.getAbsoluteEncoder())
     .withExternalEncoderInverted(false)
-    .withExternalEncoderGearing(1.0)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
     .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
     .withUseExternalFeedbackEncoder(true)
@@ -145,7 +164,6 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withStatorCurrentLimit(Amps.of(40))
     .withExternalEncoder(cancoder)
     .withExternalEncoderInverted(false)
-    .withExternalEncoderGearing(1.0)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
     .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))  // [-0.5, 0.5] range
     .withUseExternalFeedbackEncoder(true)
@@ -156,7 +174,7 @@ private final SmartMotorController smc = new TalonFXWrapper(armMotor, DCMotor.ge
 
 ### TalonFXS + CANdi
 
-The `CANdi` connects to the TalonFXS via its PWM port and is treated the same as a CANcoder for configuration purposes.
+The absolute encoder plugs into one of the `CANdi`'s PWM inputs, and the TalonFXS reads the `CANdi` over CAN, so the encoder is not wired to the Talon at all. YAMS configures the `CANdi` the same way as a CANcoder.
 
 A `CANdi` has two PWM inputs, so tell the Talon which one the encoder is on with a vendor config. Without it, YAMS throws a `SmartMotorControllerConfigurationException` because no PWM input is selected. Use `SyncCANdiPWM1` for the PWM1 input or `SyncCANdiPWM2` for PWM2. YAMS sets the matching input on the `CANdi` from the other options here.
 
@@ -180,12 +198,11 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
             .withExternalFeedbackSensorSource(ExternalFeedbackSensorSourceValue.SyncCANdiPWM1)))
     .withExternalEncoder(candi)
     .withExternalEncoderInverted(false)
-    .withExternalEncoderGearing(1.0)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
     .withUseExternalFeedbackEncoder(true)
     .withSimStartingPosition(Degrees.of(0));
 
-private final SmartMotorController smc = new TalonFXSWrapper(armMotor, DCMotor.getKrakenX60(1), motorConfig);
+private final SmartMotorController smc = new TalonFXSWrapper(armMotor, DCMotor.getMinion(1), motorConfig);
 ```
 
 On a TalonFX the feedback source is in `Feedback` instead:
@@ -218,7 +235,6 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withVendorConfig(NovaConfig.absoluteEncoderType(AbsoluteEncoderType.REV_ENCODER))
     .withExternalEncoder(FeedbackSensorType.ABS)
     .withExternalEncoderInverted(false)
-    .withExternalEncoderGearing(1.0)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
     .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
     .withUseExternalFeedbackEncoder(true)
@@ -257,6 +273,6 @@ The arm example demonstrates configuring an arm with a CANcoder as its external 
 * **The angle jumps by 360° partway through the travel.** The discontinuity point is inside the travel; see [Set the discontinuity point](#set-the-discontinuity-point).
 * **The angle goes the wrong way.** See [Check your inversion](#check-your-inversion), or [Troubleshooting](../tutorials/troubleshooting.md).
 
-## Next
+## Read more
 
 Send the arm to an angle: [How do I set an arm's target angle?](how-to-set-an-arms-target-angle.md)

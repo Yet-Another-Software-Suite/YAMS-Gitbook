@@ -9,13 +9,13 @@ The [YAMS Live Tuner](https://tuning.yassrobotics.com/) is a web page that tunes
 It writes the same `NT:/Tuning` keys you would edit in AdvantageScope or Elastic, so everything on the [Live tuning](README.md) page still applies.
 
 {% hint style="warning" %}
-The Live Tuner drives the motor at a voltage while it checks the inversion and the range of motion. That needs a YAMS release newer than 2026.10.19, which adds `voltage/enabled` and `voltage/setpoint` to live tuning, and registers the `Live Tuning` command for mechanisms such as `Elevator` and `Arm`.
+The Live Tuner drives the motor at a voltage while it checks the inversion and the range of motion. That needs YAMS v2026.10.22 or newer, which adds `voltage/enabled` and `voltage/setpoint` to live tuning, and registers the `Live Tuning` command for mechanisms such as `Elevator` and `Arm`.
 {% endhint %}
 
-The screenshots below come from the YAMS Commands v3 examples running in simulation, with each mechanism's simulation in its own `Notifier`: the BroncBotz 2025 elevator and coral arm, the BroncBotz 2026 turret and kicker, and the `double_flywheel` example. Each motor is set up with `withTelemetry(name, TelemetryVerbosity.HIGH)` and its mechanism with `withTelemetry(...)` too, which is all live tuning needs.
+The screenshots below come from the YAMS Commands v3 examples running in simulation: the BroncBotz 2025 elevator and coral arm, the BroncBotz 2026 turret and kicker, and the `double_flywheel` example. Each motor is set up with `withTelemetry(name, TelemetryVerbosity.HIGH)` and its mechanism with `withTelemetry(...)` too, which is all live tuning needs.
 
 {% hint style="danger" %}
-Like all tuning, this can be **dangerous** on a real robot. Practice in simulation first. Press **Space** anywhere on the page to stop straight away, and keep a hand on the Driver Station's disable.
+Like all tuning, this can be **dangerous** on a real robot. Practice in simulation first. Press **Space** anywhere on the page, or the red **STOP** button at the top, to stop straight away, and keep a hand on the Driver Station's disable.
 {% endhint %}
 
 ## Connect
@@ -44,35 +44,53 @@ The strip at the top of the page shows the five steps: **Mechanism**, **Checklis
 
 The telemetry card shows the position, velocity, stator current and output voltage, with a graph of the measured value against the setpoint. Select the motor temperature under the graph to switch between °C and °F.
 
-Pick the tab for your kind of mechanism.
+The steps are the same for every mechanism. Where an elevator, an arm or pivot, and a flywheel differ, the step says so, with a picture of each.
 
-{% tabs %}
-{% tab title="Elevators" %}
 {% stepper %}
 {% step %}
-#### Pick the mechanism
+### Pick the mechanism
 
-Choose the motor controller under **Telemetry name**, and the subsystem (Commands v2) or mechanism (Commands v3) under **Live Tuning command**. The lists are filled in from what the robot publishes under `NT:/Tuning`, so a motor controller only shows up once live tuning is [turned on](README.md#turn-it-on) for it.
+Choose the motor controller under **Telemetry name**, and the subsystem (Commands v2) or mechanism (Commands v3) under **Live Tuning command**. The lists are filled in from what the robot publishes under `NT:/Tuning`, so a motor controller only shows up once live tuning is [turned on](README.md#turn-it-on) for it. Then set **Type** and press **Continue**:
 
-Set **Type** to **Elevator**. Setpoints are in meters. Then press **Continue**.
-
-<figure><img src="../../.gitbook/assets/live-tuner-elevator-mechanism.png" alt="The Mechanism step with Elevator/ElevatorMotor as the telemetry name, Elevator as the Live Tuning command and Elevator as the type, so setpoints are in meters, and a Continue button"><figcaption><p>The BroncBotz 2025 elevator: its motor, its mechanism's <code>Live Tuning</code> command, and the Elevator type.</p></figcaption></figure>
+* **Elevator:** setpoints are in meters.
+* **Arm** for an arm that gravity pulls on, or **Pivot** for anything else that turns, such as a turret: setpoints are in degrees. For a pivot, tick **Continuous (no range of motion)** only if it can spin freely forever without wrapping wires.
+* **Flywheel:** setpoints are in RPM. Leave **Second flywheel** at **None**, unless it is a [double flywheel](#double-flywheels).
 
 Changing anything in this step resets every confirmation after it.
+
+{% tabs %}
+{% tab title="Elevator" %}
+<figure><img src="../../.gitbook/assets/live-tuner-elevator-mechanism.png" alt="The Mechanism step with Elevator/ElevatorMotor as the telemetry name, Elevator as the Live Tuning command and Elevator as the type, so setpoints are in meters, and a Continue button"><figcaption><p>The BroncBotz 2025 elevator: its motor, its mechanism's <code>Live Tuning</code> command, and the Elevator type.</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Arm and pivot" %}
+<figure><img src="../../.gitbook/assets/live-tuner-arm-mechanism.png" alt="The Mechanism step with CoralArm/CoralArmMotor as the telemetry name, CoralArm as the Live Tuning command and Arm as the type"><figcaption><p>The BroncBotz 2025 coral arm, as an Arm.</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/live-tuner-pivot-mechanism.png" alt="The Mechanism step with Turret/TurretMotor as the telemetry name, Turret as the Live Tuning command, Pivot as the type, and the Continuous (no range of motion) checkbox unticked"><figcaption><p>The BroncBotz 2026 turret, as a Pivot.</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Flywheel" %}
+<figure><img src="../../.gitbook/assets/live-tuner-flywheel-mechanism.png" alt="The Mechanism step with Kicker/KickerMotor as the telemetry name, Kicker as the Live Tuning command, Flywheel as the type and None as the second flywheel"><figcaption><p>The BroncBotz 2026 kicker, as a Flywheel.</p></figcaption></figure>
+{% endtab %}
+{% endtabs %}
+
+**Check it:** the Checklist step opens.
 {% endstep %}
 
 {% step %}
-#### Go through the pre-motion checklist
+### Go through the pre-motion checklist
 
-Tick every item, then press **Continue**. **Current trip (A)** stops Live Tuning if the stator current stays above it for 250 ms, which catches a stalled or jammed mechanism. You can change it later on the Settings card's **Tuner** tab.
+Tick every item, then press **Continue**. **Current trip (A)** stops Live Tuning if the stator current stays above it for 250 ms, which catches a stalled or jammed mechanism. You can change it later on the Settings card's **Tuner** tab. A flywheel's checklist has three items, the others four.
 
 <figure><img src="../../.gitbook/assets/live-tuner-elevator-checklist.png" alt="The pre-motion checklist with all four items ticked, the current trip at 40 A, and Continue"><figcaption><p>Every item confirmed, with a 40 A current trip.</p></figcaption></figure>
+
+**Check it:** the Inversions step opens.
 {% endstep %}
 
 {% step %}
-#### Check the inversions
+### Check the inversions
 
-This step drives the motor at a small voltage, with no closed loop, to check that a positive voltage moves the mechanism in its positive direction and that the position reading goes the same way.
+This step drives the motor at a small voltage, with no closed loop, to check that a positive voltage moves the mechanism in its positive direction, or spins a flywheel forward, and that the reading goes the same way.
 
 Read the warning, tick the confirmation, and press **Start voltage control**. If the inversions were already checked on this robot, **Skip (already checked)** goes straight to the next step.
 
@@ -80,210 +98,117 @@ Read the warning, tick the confirmation, and press **Start voltage control**. If
 
 Drag the slider, or type a voltage under **Type a voltage** and press **Enter** or **Apply**. With **Back to 0 V on release** on, the slider goes back to 0 V when you let go; a typed voltage holds until you change it. Type 0, or press Space, to stop. The slider's ends start at −1 V and +1 V; select either end to change it.
 
-Start with a fraction of a volt and raise it until the mechanism moves, at least 0.25 V. Gravity pulls an elevator down, so it can need more voltage to move up than down.
+Start with a fraction of a volt, at least 0.25 V, and raise it until the mechanism moves:
 
+* **Elevator:** gravity pulls it down, so it can need more voltage to move up than down.
+* **Arm:** near horizontal, gravity can be stronger than a small voltage, so try a little more voltage before changing an inversion.
+* **Flywheel:** it keeps spinning after you let go, so set 0 V and let it stop before you drive it the other way.
+
+{% tabs %}
+{% tab title="Elevator" %}
 <figure><img src="../../.gitbook/assets/live-tuner-elevator-inversions-up.png" alt="Holding a typed 1 V: the applied voltage reads 1.00 V, Positive voltage moves up is ticked, and Finish check is enabled"><figcaption><p>At +1 V the position rises, so <strong>Positive voltage moves up</strong> is ticked.</p></figcaption></figure>
+{% endtab %}
 
-One direction is enough. Once it is ticked, set the voltage back to 0 and press **Finish check**.
+{% tab title="Arm and pivot" %}
+<figure><img src="../../.gitbook/assets/live-tuner-arm-inversions-up.png" alt="Holding a typed 1 V on the coral arm: the applied voltage reads 1.00 V, Positive voltage moves forward is ticked, and Finish check is enabled"><figcaption><p>At +1 V the angle rises, so <strong>Positive voltage moves forward</strong> is ticked.</p></figcaption></figure>
+{% endtab %}
 
-If the position goes the wrong way, the Live Tuner warns you. Stop and fix `withMotorInverted(...)`, or the encoder inversion, in the robot code before going on.
+{% tab title="Flywheel" %}
+<figure><img src="../../.gitbook/assets/live-tuner-flywheel-inversions-up.png" alt="Holding a typed 0.5 V on the kicker: the speed reads 80 RPM, Positive voltage moves forward is ticked, and Finish check is enabled"><figcaption><p>At +0.5 V the kicker spins forward.</p></figcaption></figure>
+{% endtab %}
+{% endtabs %}
+
+One direction is enough. Once it is ticked, set the voltage back to 0 and press **Finish check**. If the reading goes the wrong way, the Live Tuner warns you. Stop and fix `withMotorInverted(...)`, or the encoder inversion, in the robot code before going on.
+
+**Check it:** the direction is ticked, and the Range step opens.
 {% endstep %}
 
 {% step %}
-#### Verify the range of motion
+### Range of motion
 
-The Live Tuner only sends setpoints inside a range of motion you have set. There are two ways to set it:
+The Live Tuner only sends setpoints inside a range of motion you have set. A flywheel and a continuous pivot spin forever, so they have no range: Live tune opens next, and for a flywheel the speed slider's range caps it instead. For the others, there are two ways to set it:
 
 * **Find ends by driving**: drive to each physical end of travel, and mark each end.
-* **Enter range manually**: type each end, or move the mechanism by hand with the robot disabled and press **Use current position** under each end. Then press **Use this range**. Nothing is driven.
+* **Enter range manually**: type each end, or move the mechanism by hand with the robot disabled and press **Use current position** under each end. Then press **Use this range**. Nothing is driven. The ends start at the robot's soft limits, if it publishes any.
 
-To find the ends by driving, choose how to hold the mechanism between drives first. **Voltage, no closed loop** is safe before tuning: on an elevator, press **Use robot kG** so the **Gravity hold voltage** holds the carriage up. **Closed loop (tuned gains)** holds it with the gains it has.
+To find the ends by driving, choose how to hold the mechanism between drives first. **Voltage, no closed loop** is safe before tuning: press **Use robot kG** so the **Gravity hold voltage** holds it up. On an arm, the gravity hold voltage is scaled by the cosine of the angle, like kG. **Closed loop (tuned gains)** holds it with the gains it has.
 
 Press **Start verification**, then hold **Hold: drive up** or **Hold: drive down**. They drive at the ends of the **Voltage** slider, ±1 V to start with, and the slider drives at any voltage in between. Voltage is only applied while you hold a button or the slider. **When the voltage is let go** sets whether it cuts to 0 V, the default, or ramps down.
 
-Press **Mark upper end here** and **Mark lower end here** at each end. A hard stop, the current trip, or a soft limit on the way marks that end for you. While it drives, the bar at the top of the window reads **VERIFYING RANGE**, and Space stops it.
+Press **Mark upper end here** and **Mark lower end here** at each end. A hard stop, the current trip, or a soft limit on the way marks that end for you. While it drives, the bar at the top of the window reads **VERIFYING RANGE**, and Space stops it. Once both ends are marked, press **Finish verification**. **Skip verification** goes on without a range, so only the robot's soft limits, if it has any, bound the travel.
 
+{% tabs %}
+{% tab title="Elevator" %}
 <figure><img src="../../.gitbook/assets/live-tuner-elevator-range-verified.png" alt="The range step after driving: the upper end marked at 0.165 m, the lower end at 0.000 m marked by a hard stop, the Voltage slider from -1.00 V to 1.00 V, Cut to 0 V, and the gravity hold voltage set to the robot's kG of 0.239 V"><figcaption><p>Driven up to 0.165 m and marked, then driven down until the hard stop marked 0 m.</p></figcaption></figure>
+{% endtab %}
 
-Once both ends are marked, press **Finish verification**. **Skip verification** goes on without a range, so only the robot's soft limits, if it has any, bound the travel.
+{% tab title="Arm and pivot" %}
+<figure><img src="../../.gitbook/assets/live-tuner-arm-range-manual.png" alt="The range step with Enter range manually chosen: the lower end set to -42.9° with Use current position, the upper end typed as 45, and Use this range enabled"><figcaption><p>The coral arm: the lower end from where it rests, the upper end typed.</p></figcaption></figure>
+{% endtab %}
+{% endtabs %}
+
+**Check it:** both ends are marked, or the step was skipped, and the Live tune step opens.
 {% endstep %}
 
 {% step %}
-#### Live tune
+### Live tune
 
 Press **Start Live Tuning**. This starts the mechanism's `Live Tuning` command, so the setpoints and gains you send are applied every loop.
 
-On the **Setpoints** tab, send a setpoint by typing it and pressing **Send**, with the slider, or with **Lower**, **25%**, **Mid**, **75%** and **Upper**. The slider's ends start at the range of motion; select either end to change it. With **Follow slider** off, the setpoint is sent when you let go. The graph shows the measured position against the setpoint, with the stator current, the current trip and the range.
+On the **Setpoints** tab, send a setpoint by typing it and pressing **Send**, or with the slider. With **Follow slider** off, the setpoint is sent when you let go. The graph shows the measured value against the setpoint, with the stator current, the current trip and the range.
 
-Change a gain on the **Settings** card, described in [The Settings card](#the-settings-card), and send the setpoints again. On an elevator, start with kG: the output while it holds still is the voltage it takes to hold the carriage up against gravity. Then raise kP until it reaches each setpoint without overshooting.
+* **Elevator, arm and pivot:** the buttons are **Lower**, **25%**, **Mid**, **75%** and **Upper**, and the slider's ends start at the range of motion. On an arm or pivot, the motion profile is typed in degrees per second, with the RPM that YAMS reads shown under each value.
+* **Flywheel:** the buttons are **Idle (0)** and a quarter, half, three quarters and all of the slider's range. Speeds are limited to the slider's range, which starts at the ±4000 RPM safety default; select either end to change it.
 
+Change a gain on the **Settings** card, described in [The Settings card](#the-settings-card), and send the setpoints again. Tune in the order of your mechanism's tutorial: the [Arm](../../tutorials/arm/tune.md), [Elevator](../../tutorials/elevator/tune.md), [Shooter/FlyWheels](../../tutorials/shooter-flywheels/tune.md) and [Double FlyWheel](../../tutorials/double-flywheel/tune.md) Tune it steps use the Live Tuner too. A pivot has no kG.
+
+Turn on **Alternate setpoints** to switch between **Setpoint A** and **Setpoint B** every 5 seconds. Each step is the same, so you can change a gain and compare the next step with the last one.
+
+{% tabs %}
+{% tab title="Elevator" %}
 <figure><img src="../../.gitbook/assets/live-tuner-elevator.gif" alt="The elevator stepping between its Mid and 25% setpoints, first with Max velocity cut from 1 m/s to 0.03 m/s, where it ramps slowly to each one, then with Max velocity put back to 1 m/s with its was button, where it gets there quickly"><figcaption><p>Max velocity cut to 0.03 m/s, then put back with <strong>was 1</strong>: the elevator crawls to each setpoint, then gets there quickly again.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/live-tuner-elevator-gains.png" alt="The Settings card's Gains tab for the elevator: kP 33.966, kI 0, kD 0; kS 0.21471 V, kV 10.39, kA 0, kG 0.23861 V with a ± button; max velocity 1 m/s and max acceleration 0.5 m/s²"><figcaption><p>The elevator's gains and motion profile.</p></figcaption></figure>
 
-**Alternate between two setpoints**
-
-Turn on **Alternate setpoints** to switch between **Setpoint A** and **Setpoint B** every 5 seconds. Each step is the same, so you can change a gain and compare the next step with the last one.
-
 <figure><img src="../../.gitbook/assets/live-tuner-elevator-alternate.png" alt="Alternate setpoints on, switching between 0.045 m and 0.126 m: the graph shows the elevator stepping up and back down"><figcaption><p>Stepping between 0.045 m and 0.126 m.</p></figcaption></figure>
-{% endstep %}
-
-{% endstepper %}
 {% endtab %}
 
-{% tab title="Arms and pivots" %}
-{% stepper %}
-{% step %}
-#### Pick the mechanism
-
-Choose the motor controller under **Telemetry name**, and the subsystem (Commands v2) or mechanism (Commands v3) under **Live Tuning command**. The lists are filled in from what the robot publishes under `NT:/Tuning`, so a motor controller only shows up once live tuning is [turned on](README.md#turn-it-on) for it.
-
-Set **Type** to **Arm** for an arm that gravity pulls on, or **Pivot** for anything else that turns, such as a turret. Setpoints are in degrees. Then press **Continue**.
-
-<figure><img src="../../.gitbook/assets/live-tuner-arm-mechanism.png" alt="The Mechanism step with CoralArm/CoralArmMotor as the telemetry name, CoralArm as the Live Tuning command and Arm as the type"><figcaption><p>The BroncBotz 2025 coral arm, as an Arm.</p></figcaption></figure>
-
-<figure><img src="../../.gitbook/assets/live-tuner-pivot-mechanism.png" alt="The Mechanism step with Turret/TurretMotor as the telemetry name, Turret as the Live Tuning command, Pivot as the type, and the Continuous (no range of motion) checkbox unticked"><figcaption><p>The BroncBotz 2026 turret, as a Pivot.</p></figcaption></figure>
-
-For a pivot, tick **Continuous (no range of motion)** only if it can spin freely forever without wrapping wires.
-
-Changing anything in this step resets every confirmation after it.
-{% endstep %}
-
-{% step %}
-#### Go through the pre-motion checklist
-
-Tick every item, then press **Continue**. **Current trip (A)** stops Live Tuning if the stator current stays above it for 250 ms, which catches a stalled or jammed mechanism. You can change it later on the Settings card's **Tuner** tab.
-
-<figure><img src="../../.gitbook/assets/live-tuner-arm-checklist.png" alt="The pre-motion checklist with every item ticked, the current trip at 40 A, and Continue"><figcaption><p>Every item confirmed.</p></figcaption></figure>
-{% endstep %}
-
-{% step %}
-#### Check the inversions
-
-This step drives the motor at a small voltage, with no closed loop, to check that a positive voltage moves the mechanism in its positive direction and that the position reading goes the same way.
-
-Read the warning, tick the confirmation, and press **Start voltage control**. If the inversions were already checked on this robot, **Skip (already checked)** goes straight to the next step.
-
-Drag the slider, or type a voltage under **Type a voltage** and press **Enter** or **Apply**. With **Back to 0 V on release** on, the slider goes back to 0 V when you let go; a typed voltage holds until you change it. Type 0, or press Space, to stop.
-
-Start with a fraction of a volt and raise it until the mechanism moves, at least 0.25 V. Near horizontal, gravity can be stronger than a small voltage on an arm, so try a little more voltage before changing an inversion.
-
-<figure><img src="../../.gitbook/assets/live-tuner-arm-inversions-up.png" alt="Holding a typed 1 V on the coral arm: the applied voltage reads 1.00 V, Positive voltage moves forward is ticked, and Finish check is enabled"><figcaption><p>At +1 V the angle rises, so <strong>Positive voltage moves forward</strong> is ticked.</p></figcaption></figure>
-
-One direction is enough. Once it is ticked, set the voltage back to 0 and press **Finish check**.
-
-If the position goes the wrong way, the Live Tuner warns you. Stop and fix `withMotorInverted(...)`, or the encoder inversion, in the robot code before going on.
-{% endstep %}
-
-{% step %}
-#### Set the range of motion
-
-The Live Tuner only sends setpoints inside a range of motion you have set. There are two ways to set it:
-
-* **Find ends by driving**: hold the drive buttons, or the **Voltage** slider, to drive to each physical end of travel, and mark each end. It works as on an elevator, see the **Elevators** tab. On an arm, the **Gravity hold voltage** is scaled by the cosine of the angle, like kG.
-* **Enter range manually**: type each end, or move the mechanism by hand with the robot disabled and press **Use current position** under each end. Then press **Use this range**. Nothing is driven.
-
-The manual ends start at the robot's soft limits, if it publishes any.
-
-<figure><img src="../../.gitbook/assets/live-tuner-arm-range-manual.png" alt="The range step with Enter range manually chosen: the lower end set to -42.9° with Use current position, the upper end typed as 45, and Use this range enabled"><figcaption><p>The coral arm: the lower end from where it rests, the upper end typed.</p></figcaption></figure>
-
-A continuous pivot has no end of travel, so it has no range to set.
-{% endstep %}
-
-{% step %}
-#### Live tune
-
-Press **Start Live Tuning**. This starts the mechanism's `Live Tuning` command, so the setpoints and gains you send are applied every loop.
-
-On the **Setpoints** tab, send a setpoint by typing it and pressing **Send**, with the slider, or with **Lower**, **25%**, **Mid**, **75%** and **Upper**. The graph shows the measured angle against the setpoint, with the stator current, the current trip and the range.
-
+{% tab title="Arm and pivot" %}
 <figure><img src="../../.gitbook/assets/live-tuner-arm.gif" alt="The coral arm stepping between about -21° and 1°, first with Max velocity cut from 600 to 20 deg/s, where it moves slowly, then with Max velocity put back with its was button, where it moves quickly. Both times it settles a few degrees below each setpoint"><figcaption><p>The coral arm with Max velocity cut to 20 deg/s, then put back. Both times it settles a few degrees under each setpoint.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/live-tuner-pivot.gif" alt="The turret stepping between -100° and 0°, first with Max velocity cut from 720 to 45 deg/s, where it turns slowly, then with Max velocity put back with its was button, where it turns quickly"><figcaption><p>The turret, a pivot, with Max velocity cut to 45 deg/s, then put back.</p></figcaption></figure>
 
-Change a gain on the **Settings** card, described in [The Settings card](#the-settings-card), and send the setpoints again. On an arm, start with kG: raise it until the arm holds still when it is horizontal. A pivot has no kG. Then raise kP until the mechanism reaches each setpoint without overshooting.
-
-On an arm or pivot, the motion profile is typed in degrees per second. The RPM that YAMS reads is shown under each value.
-
 <figure><img src="../../.gitbook/assets/live-tuner-arm-gains.png" alt="The coral arm's Gains tab: kP 71.8502, kI 0, kD 0; kS 0.19214 V, kV 2.01765, kA 0, kG 0.023981 V; max velocity 600 deg/s, shown as 100 RPM, and max acceleration 300 deg/s², shown as 50 RPM/s"><figcaption><p>The coral arm's gains, with its motion profile in degrees.</p></figcaption></figure>
 
-**Alternate between two setpoints**
-
-Turn on **Alternate setpoints** to switch between **Setpoint A** and **Setpoint B** every 5 seconds. Each step is the same, so you can change a gain and compare the next step with the last one.
-
 <figure><img src="../../.gitbook/assets/live-tuner-arm-alternate.png" alt="Alternate setpoints on, switching between -20.9° and 23°: the graph shows the coral arm stepping up and back down"><figcaption><p>The coral arm stepping between −20.9° and 23°.</p></figcaption></figure>
-{% endstep %}
-
-{% endstepper %}
 {% endtab %}
 
-{% tab title="Flywheels" %}
-{% stepper %}
-{% step %}
-#### Pick the mechanism
-
-Choose the motor controller under **Telemetry name**, and the subsystem (Commands v2) or mechanism (Commands v3) under **Live Tuning command**. The lists are filled in from what the robot publishes under `NT:/Tuning`, so a motor controller only shows up once live tuning is [turned on](README.md#turn-it-on) for it.
-
-Set **Type** to **Flywheel**. Setpoints are in RPM. Leave **Second flywheel** at **None**, unless it is a [double flywheel](#double-flywheels). Then press **Continue**.
-
-<figure><img src="../../.gitbook/assets/live-tuner-flywheel-mechanism.png" alt="The Mechanism step with Kicker/KickerMotor as the telemetry name, Kicker as the Live Tuning command, Flywheel as the type and None as the second flywheel"><figcaption><p>The BroncBotz 2026 kicker, as a Flywheel.</p></figcaption></figure>
-
-Changing anything in this step resets every confirmation after it.
-{% endstep %}
-
-{% step %}
-#### Go through the pre-motion checklist
-
-Tick every item, then press **Continue**. **Current trip (A)** stops Live Tuning if the stator current stays above it for 250 ms, which catches a stalled or jammed mechanism. You can change it later on the Settings card's **Tuner** tab.
-
-<figure><img src="../../.gitbook/assets/live-tuner-flywheel-checklist.png" alt="The flywheel checklist with its three items ticked, the current trip at 40 A, and Continue"><figcaption><p>Every item confirmed, with a 40 A current trip.</p></figcaption></figure>
-{% endstep %}
-
-{% step %}
-#### Check the inversions
-
-This step drives the motor at a small voltage, with no closed loop, to check that a positive voltage spins the flywheel forward and that the speed reading goes the same way.
-
-Read the warning, tick the confirmation, and press **Start voltage control**. If the inversions were already checked on this robot, **Skip (already checked)** goes straight to the next step.
-
-Drag the slider, or type a voltage under **Type a voltage** and press **Enter** or **Apply**. Start with a fraction of a volt, at least 0.25 V. A flywheel keeps spinning after you let go, so set 0 V and let it stop before you drive it the other way.
-
-<figure><img src="../../.gitbook/assets/live-tuner-flywheel-inversions-up.png" alt="Holding a typed 0.5 V on the kicker: the speed reads 80 RPM, Positive voltage moves forward is ticked, and Finish check is enabled"><figcaption><p>At +0.5 V the kicker spins forward.</p></figcaption></figure>
-
-One direction is enough. Once it is ticked, set the voltage back to 0 and press **Finish check**.
-
-If the speed goes the wrong way, the Live Tuner warns you. Stop and fix `withMotorInverted(...)`, or the encoder inversion, in the robot code before going on.
-{% endstep %}
-
-{% step %}
-#### No range of motion
-
-A flywheel spins continuously, so it has no range to set, and Live tune opens next. The speed slider's range caps it instead.
-{% endstep %}
-
-{% step %}
-#### Live tune
-
-Press **Start Live Tuning**. This starts the mechanism's `Live Tuning` command, so the speeds and gains you send are applied every loop.
-
-On the **Setpoints** tab, send a speed by typing it and pressing **Send**, with the slider, or with **Idle (0)** and the buttons at a quarter, half, three quarters and all of the slider's range. Speeds are limited to the slider's range, which starts at the ±4000 RPM safety default; select either end to change it. The graph shows the measured speed against the setpoint, with the stator current.
-
-Change a gain on the **Settings** card, described in [The Settings card](#the-settings-card), and send the speeds again. On a flywheel, start with kV: raise or lower it until the measured speed settles on the setpoint. Then add kP to recover speed quickly after each shot.
-
+{% tab title="Flywheel" %}
 <figure><img src="../../.gitbook/assets/live-tuner-flywheel.gif" alt="The kicker stepping between 1000 and 2000 RPM: with kP raised from 0 to 0.5 it runs at about 1150 RPM at the 1000 RPM setpoint, and with kP put back to 0 with its was button it runs at about 1340 RPM. At 2000 RPM it runs at about 1920 RPM both times"><figcaption><p>The kicker with kP raised to 0.5, then put back to 0. With kP, the speed at the 1000 RPM setpoint comes closer to it.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/live-tuner-flywheel-gains.png" alt="The kicker's Gains tab: kP 0, kI 0, kD 0; kS 0, kV 0.5, kA 0"><figcaption><p>The kicker's gains.</p></figcaption></figure>
 
-**Alternate between two setpoints**
-
-Turn on **Alternate setpoints** to switch between **Setpoint A** and **Setpoint B** every 5 seconds. Each step is the same, so you can change a gain and compare the next step with the last one.
-
 <figure><img src="../../.gitbook/assets/live-tuner-flywheel-alternate.png" alt="Alternate setpoints on, switching between 1000 and 3000 RPM: the kicker runs at about 1340 and 1920 RPM"><figcaption><p>The kicker stepping between 1000 and 3000 RPM, with neither speed on its setpoint yet.</p></figcaption></figure>
-{% endstep %}
+{% endtab %}
+{% endtabs %}
 
+**Check it:** the measured value settles on each setpoint without overshooting.
+{% endstep %}
 {% endstepper %}
 
-### Double flywheels
+## Copy the gains into your code
+
+Values sent from the Live Tuner are lost when the robot code restarts, so copy them from the **Gains** tab into the motor's `SmartMotorControllerConfig`:
+
+| On the Gains tab | Goes in |
+| --- | --- |
+| kP, kI, kD | `withClosedLoopController(kP, kI, kD)` |
+| kS, kV, kA, and kG on an arm or elevator | `withFeedforward(new SimpleMotorFeedforward(kS, kV, kA))` for a flywheel or pivot, `new ArmFeedforward(kS, kG, kV, kA)` for an arm, `new ElevatorFeedforward(kS, kG, kV, kA)` for an elevator |
+| Max velocity, max acceleration | `withTrapezoidalProfile(maxVelocity, maxAcceleration)` |
+
+In simulation you tuned the simulation's gains: when the config has `withSimClosedLoopController(...)` and `withSimFeedforward(...)`, the simulation uses those, so copy the values into those lines instead, and tune again on the real robot for the others. Each tutorial shows the lines before and after: Copy the numbers into your code for the [Arm](../../tutorials/arm/tune.md#copy-the-numbers-into-your-code), the [Elevator](../../tutorials/elevator/tune.md#copy-the-numbers-into-your-code), the [Shooter](../../tutorials/shooter-flywheels/tune.md#copy-the-numbers-into-your-code) and the [Double FlyWheel](../../tutorials/double-flywheel/tune.md#copy-the-numbers-into-your-code).
+
+## Double flywheels
 
 A double flywheel is two YAMS flywheels in one subsystem, sharing its `Live Tuning` command, such as the [`double_flywheel` example](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/double_flywheel). Pick one wheel under **Telemetry name** and the other under **Second flywheel**, and both are tuned together.
 
@@ -298,9 +223,6 @@ A double flywheel is two YAMS flywheels in one subsystem, sharing its `Live Tuni
 <figure><img src="../../.gitbook/assets/live-tuner-double-flywheel.png" alt="Live tune for the double flywheel: the upper wheel at 2416 RPM of a 3000 RPM setpoint and the lower wheel at 1611 RPM of 2000 RPM, sent together with Send both; the graph shows the upper wheel solid and the lower wheel dashed"><figcaption><p>3000 and 2000 RPM sent together. With the example's starting gains, both wheels settle short.</p></figcaption></figure>
 
 <figure><img src="../../.gitbook/assets/live-tuner-double-flywheel-settings.png" alt="The Settings card with the Wheel picker on UpperFlyWheel: kP 0.002, kV 0.1, and a Copy these gains to LowerFlyWheel button"><figcaption><p>The upper wheel's gains, ready to copy to the lower wheel.</p></figcaption></figure>
-{% endtab %}
-{% endtabs %}
-
 ## The Settings card
 
 The **Settings** card sits under the Live tune card. A line under its tabs says whether that tab's values live on the robot or only in this tuner.
@@ -316,11 +238,13 @@ Type a new value: it is applied when you press **Enter** or click away. **Esc** 
 
 * **was …:** under a setting you changed, **was** shows its value before the change. Press it to put that value back, and press it again to go one change further back. When more than one value is saved, the count is shown, as in **was 160 (2)**.
 * **Number fields:** a field only takes what fits it. Gains take up to 4 significant digits, and only kG can be negative. Current limits and the current trip are whole amps. A comma is read as a decimal point.
-* **±:** a field that takes negative numbers, such as kG or a soft limit, has a **±** button next to it, since a phone's number keypad has no minus key.
+* **Values read from the robot** are shown as the robot sends them, so they can have more than 4 significant digits, such as kP 33.966.
+* **±:** on a touch screen, a field that takes negative numbers, such as kG or a soft limit, shows a **±** button to its left while the field is focused, since a phone's number keypad has no minus key.
+* **LQR mechanisms:** a mechanism with an [LQR](../editor/lqr-controllers.md) shows the LQR's values on the **Gains** tab in place of kP, kI and kD: its tolerances, voltage effort, how far to trust the model and the encoder, and its maximum voltage. Each change rebuilds the LQR on the robot.
 
 <figure><img src="../../.gitbook/assets/live-tuner-settings-limits.png" alt="The Limits tab: On the robot. A stator limit of 40 A, soft limits of 0 m and 0 m, and a closed-loop ramp of 0 s"><figcaption><p>The <strong>Limits</strong> tab, for the elevator.</p></figcaption></figure>
 
-On the **Tuner** tab, **Range of motion** changes the range the range step set. Live Tuning stops if the mechanism leaves it, and setpoints are limited to it. It can go past what you verified, with a warning under the field, but that can drive the mechanism into a hard stop.
+On the **Tuner** tab, **Range of motion** changes the range set in the [Range of motion](#range-of-motion) step. Live Tuning stops if the mechanism leaves it, and setpoints are limited to it. It can go past what you verified, with a warning under the field, but that can drive the mechanism into a hard stop.
 
 <figure><img src="../../.gitbook/assets/live-tuner-settings-tuner.png" alt="The Tuner tab: Only in this tuner. A current trip of 40 A, and a range of motion from 0.004 m to 0.167 m"><figcaption><p>The <strong>Tuner</strong> tab, with the current trip and the range of motion.</p></figcaption></figure>
 
@@ -351,4 +275,3 @@ While anything runs, the bar at the top of the window says what is running and s
 
 Press **Space**, or **STOP**, at any time and from anywhere on the page. The Live Tuner sets the setpoint to where the mechanism is, or slows a flywheel down first, and then ends the `Live Tuning` command. The subsystem's default command, if it has one, takes over from there. Closing the page stops Live Tuning too, and so does disabling the robot from the Driver Station.
 
-When you are happy with the gains, copy them into the robot code.

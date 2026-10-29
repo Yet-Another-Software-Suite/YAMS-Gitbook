@@ -60,14 +60,14 @@
 * [How do I zero a mechanism without limit switches?](how-to/how-do-i-zero-a-mechanism-without-limit-switches.md)
 * [How do I control a mechanism that carries a game piece?](how-to/how-do-i-control-a-mechanism-that-carries-a-game-piece.md)
 * [How do I set up an intake roller?](how-to/how-do-i-set-up-an-intake-roller.md)
-* [How do I write my own mechanism command?](details/setpoint-methods.md)
+* [How do I write my own mechanism command?](how-to/how-do-i-write-my-own-mechanism-command.md)
 * [How do I control a mechanism without a mechanism class?](how-to/how-do-i-control-a-mechanism-without-a-mechanism-class.md)
 
 ## How-to: Motor controllers and sensors
 
 * [How do I use a vendor hardware config?](how-to/how-do-i-use-a-vendor-hardware-config.md)
 * [How do I use a DCMotor that isn't in WPILib?](how-to/how-do-i-use-a-dcmotor-that-isnt-in-wpilib.md)
-* [How do I command my elevator in meters?](how-to/how-to-find-your-mechanism-circumference.md)
+* [How do I tell YAMS my drum or sprocket size?](how-to/how-to-find-your-mechanism-circumference.md)
 * [How do I use exponential profiles?](how-to/how-do-i-use-exponential-profiles.md)
 * [How do I tune my elevator in rotations instead of meters?](how-to/how-to-disable-linear-closed-loop-control.md)
 * [How do I detect a game piece from motor current?](how-to/how-do-i-sense-activity-based-off-of-the-current.md)
@@ -85,6 +85,7 @@
 ## How-to: Tuning
 
 * [Live tuning](details/live-tuning/README.md)
+  * [Tune a swerve drive](details/live-tuning/swerve-drive.md)
   * [YAMS Live Tuner](details/live-tuning/live-tuner.md)
   * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
 

@@ -91,12 +91,15 @@ yams::motorcontrollers::simulation::BatterySim::ResetDischarge();
 
 ## Read the state of charge for telemetry (optional)
 
-`getStateOfCharge()` returns the charge from `0` (empty) to `1` (full). Publish it every loop to watch the battery run down over a simulated match.
+`getStateOfCharge()` returns the charge from `0` (empty) to `1` (full). Publish it every loop to watch the battery run down over a simulated match. YAMS sets the simulated battery voltage but does not publish it, so publish that too: it is what `RobotController` reports, in simulation as on the robot.
 
 {% tabs %}
 {% tab title="Java" %}
 {% code title="Robot.java (fragment)" %}
 ```java
+import static org.wpilib.units.Units.Volts;
+
+import org.wpilib.system.RobotController;
 import org.wpilib.telemetry.Telemetry;
 import yams.core.motorcontrollers.simulation.BatterySim;
 
@@ -104,6 +107,7 @@ import yams.core.motorcontrollers.simulation.BatterySim;
 public void robotPeriodic() {
   // ...
   Telemetry.log("Battery/StateOfCharge", BatterySim.getStateOfCharge());
+  Telemetry.log("Battery/Voltage", RobotController.getMeasureBatteryVoltage().in(Volts));
 }
 ```
 {% endcode %}
@@ -112,6 +116,7 @@ public void robotPeriodic() {
 {% tab title="C++" %}
 {% code title="cpp/Robot.cpp (fragment)" %}
 ```cpp
+#include <wpi/system/RobotController.hpp>
 #include <wpi/telemetry/Telemetry.hpp>
 #include <yams/motorcontrollers/simulation/BatterySim.hpp>
 
@@ -119,6 +124,7 @@ void Robot::RobotPeriodic() {
   // ...
   wpi::telemetry::Log("Battery/StateOfCharge",
                       yams::motorcontrollers::simulation::BatterySim::GetStateOfCharge());
+  wpi::telemetry::Log("Battery/Voltage", wpi::RobotController::GetBatteryVoltage().value());
 }
 ```
 {% endcode %}
@@ -152,7 +158,7 @@ wornBatteryCurve.put(0.90, 12.4);
 wornBatteryCurve.put(1.00, 12.6);
 
 BatterySim.replaceSOCInterpolation(wornBatteryCurve);
-// Call enableDischarge(...) after replaceSOCInterpolation(...), or it uses the default curve.
+// replaceSOCInterpolation swaps the curve as soon as it is called. Calling it first means discharge uses your curve from the start.
 BatterySim.enableDischarge(15.0, Volts.of(12.6), MilliOhms.of(28));
 ```
 {% endcode %}
@@ -174,7 +180,7 @@ std::map<double, double> wornBatteryCurve{
 };
 
 BatterySim::ReplaceSOCInterpolation(wornBatteryCurve);
-// Call EnableDischarge(...) after ReplaceSOCInterpolation(...), or it uses the default curve.
+// ReplaceSOCInterpolation swaps the curve as soon as it is called. Calling it first means discharge uses your curve from the start.
 BatterySim::EnableDischarge(15.0, wpi::units::volt_t{12.6}, wpi::units::ohm_t{0.028});
 ```
 {% endcode %}
@@ -207,7 +213,7 @@ measuredDerating.put(40.0, 0.65);
 measuredDerating.put(60.0, 0.55);
 
 BatterySim.replaceCapacityDerating(measuredDerating);
-// Call enableDischarge(...) after replaceCapacityDerating(...), or it uses the default curve.
+// replaceCapacityDerating swaps the curve as soon as it is called. Calling it first means discharge uses your curve from the start.
 BatterySim.enableDischarge(18.0, Volts.of(12.9), MilliOhms.of(20));
 ```
 {% endcode %}
@@ -226,7 +232,7 @@ using yams::motorcontrollers::simulation::BatterySim;
 std::map<double, double> measuredDerating{{0.9, 1.000}, {20.0, 0.80}, {40.0, 0.65}, {60.0, 0.55}};
 
 BatterySim::ReplaceCapacityDerating(measuredDerating);
-// Call EnableDischarge(...) after ReplaceCapacityDerating(...), or it uses the default curve.
+// ReplaceCapacityDerating swaps the curve as soon as it is called. Calling it first means discharge uses your curve from the start.
 BatterySim::EnableDischarge(18.0, wpi::units::volt_t{12.9}, wpi::units::ohm_t{0.020});
 ```
 {% endcode %}
@@ -237,9 +243,9 @@ See [Capacity derating](../understanding/battery-simulation.md#capacity-derating
 
 ## Check it
 
-1. Publish the state of charge as in [Read the state of charge for telemetry](#read-the-state-of-charge-for-telemetry-optional), and start the simulation.
+1. Publish the state of charge and the battery voltage as in [Read the state of charge for telemetry](#read-the-state-of-charge-for-telemetry-optional), start the simulation, and graph `Battery/StateOfCharge` and `Battery/Voltage` in AdvantageScope.
 2. Run your mechanisms hard for a minute or two: spin up a shooter, drive the swerve back and forth.
-3. `Battery/StateOfCharge` should start at 1 and fall steadily while mechanisms run, and stay put while they are idle. The robot's battery voltage should sag more under the same load late in the run than at the start.
+3. `Battery/StateOfCharge` should start at 1 and fall steadily while mechanisms run, and stay put while they are idle. `Battery/Voltage` should sag more under the same load late in the run than at the start, and its resting value should creep down.
 
 If the state of charge never moves, `enableDischarge(...)` was not called. If it barely moves, check the moments of inertia: see [Make sure your mechanisms report accurate current draw](#make-sure-your-mechanisms-report-accurate-current-draw).
 
