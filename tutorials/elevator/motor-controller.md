@@ -53,7 +53,9 @@ YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are mem
 {% endtab %}
 {% endtabs %}
 
-## 1. Start the config
+{% stepper %}
+{% step %}
+### Start the config
 
 Everything the motor controller should do goes into one `SmartMotorControllerConfig`. Start it, and put it in closed loop mode so that it can hold a position.
 
@@ -98,8 +100,10 @@ m_smcConfig
 {% endtabs %}
 
 Want the details? [Motor basics](../../details/editor/config/motor-basics.md)
+{% endstep %}
 
-## 2. The sprocket or drum
+{% step %}
+### The sprocket or drum
 
 An elevator has to know how far the carriage moves for each turn of the output shaft. Without it YAMS cannot turn rotations into a height.
 
@@ -171,8 +175,10 @@ An elevator has to know how far the carriage moves for each turn of the output s
 {% endtabs %}
 
 Want the details? [How do I find my mechanism's circumference?](../../how-to/how-to-find-your-mechanism-circumference.md)
+{% endstep %}
 
-## 3. PID and feedforward
+{% step %}
+### PID and feedforward
 
 The PID gains correct the difference between where the elevator is and where you asked it to be. The feedforward supplies the voltage you already know it needs. The `Sim` options are used only in simulation, so the simulation can be tuned without touching the real robot's gains.
 
@@ -231,8 +237,10 @@ These gains are **placeholders**. `kP` of 4 is 4 volts for each meter of error, 
 **For your robot:** Leave these numbers for now, and tune them in step 5.
 
 Want the details? [Closed loop control](../../details/editor/config/closed-loop-control.md) and [Feedforward](../../details/editor/config/feedforward.md)
+{% endstep %}
 
-## 4. Motion profile
+{% step %}
+### Motion profile
 
 The profile caps how fast the elevator may move and accelerate on its way to a setpoint, so that it glides there instead of lunging.
 
@@ -268,8 +276,10 @@ The profile caps how fast the elevator may move and accelerate on its way to a s
 **For your robot:** Start slow. Raise the two numbers once the mechanism moves safely.
 
 Want the details? [Motion profiles](../../details/editor/config/motion-profiles.md)
+{% endstep %}
 
-## 5. Gearing
+{% step %}
+### Gearing
 
 The gearing tells YAMS how many turns of the motor make one turn of the sprocket.
 
@@ -329,8 +339,10 @@ The gearing tells YAMS how many turns of the motor make one turn of the sprocket
 Skip this for a continuous elevator, like the one in this tutorial.
 
 Want the details? [Gearing and units](../../details/editor/config/gearing-and-units.md)
+{% endstep %}
 
-## 6. Direction, idle mode and current limit
+{% step %}
+### Direction, idle mode and current limit
 
 Which way is positive, what the motor does when it is given no power, and the most current it may draw.
 
@@ -369,8 +381,10 @@ Which way is positive, what the motor does when it is given no power, and the mo
 **For your robot:** Flip the inversion if a positive output moves your elevator the wrong way. Keep the current limit within what your wiring and breaker allow.
 
 Want the details? [Motor basics](../../details/editor/config/motor-basics.md) and [Limits and protection](../../details/editor/config/limits-and-protection.md)
+{% endstep %}
 
-## 7. Starting position and soft limits
+{% step %}
+### Starting position and soft limits
 
 The starting position is where the elevator is when the robot turns on. The soft limits are as far as the closed loop is allowed to take it.
 
@@ -418,8 +432,10 @@ The lower soft limit here is 0 m, the same as the bottom hard stop and the start
 **For your robot:** Set the starting position to where your carriage really rests when the robot turns on, and the upper soft limit a little below the top hard stop. If your carriage pushes into the bottom stop when it parks, raise the lower soft limit and the parking height a little, such as 0.02 m.
 
 Want the details? [Limits and protection](../../details/editor/config/limits-and-protection.md)
+{% endstep %}
 
-## 8. Telemetry
+{% step %}
+### Telemetry
 
 The name the motor gets on your dashboard, and how much it publishes. `HIGH` publishes everything, which is what you want while tuning.
 
@@ -453,8 +469,10 @@ The name the motor gets on your dashboard, and how much it publishes. `HIGH` pub
 {% endtabs %}
 
 Want the details? [Telemetry](../../understanding/telemetry.md)
+{% endstep %}
 
-## 9. The motor controller object
+{% step %}
+### The motor controller object
 
 This is the vendor's own object, exactly as you would create it without YAMS.
 
@@ -488,8 +506,10 @@ rev::spark::SparkMax m_spark{wpi::CANPort::CAN_S0, 4, rev::spark::SparkMax::Moto
 {% endtabs %}
 
 **For your robot:** Change the CAN ID to yours. Using a different motor controller? See the [feature matrix](../../details/editor/feature-matrix.md) for the wrapper that goes with it.
+{% endstep %}
 
-## 10. The SmartMotorController
+{% step %}
+### The SmartMotorController
 
 The wrapper brings the three together: the motor controller object, the motor plugged into it, and the config.
 
@@ -532,6 +552,8 @@ m_motor.emplace(&m_spark, wpi::math::DCMotor::NEO(1), &m_smcConfig);
 **For your robot:** Change the motor to the kind and the number of motors you have.
 
 Want the details? [Smart motor controllers](../../details/editor/README.md)
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

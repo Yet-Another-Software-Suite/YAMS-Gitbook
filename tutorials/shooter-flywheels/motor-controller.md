@@ -42,7 +42,9 @@ YAMS keeps a pointer to the config and to the `SparkMax`, so in C++ both are mem
 {% endtab %}
 {% endtabs %}
 
-## 1. Start the config
+{% stepper %}
+{% step %}
+### Start the config
 
 Everything the motor controller should do goes into one `SmartMotorControllerConfig`. Start it, and put it in closed loop mode so that it can hold a speed. A flywheel holds a speed and has no position to protect, so this config has no motion profile, no starting position and no soft limits. It coasts at zero power, so that the wheel is not braked to a stop every time a command ends.
 
@@ -87,8 +89,10 @@ m_smcConfig
 {% endtabs %}
 
 Want the details? [Motor basics](../../details/editor/config/motor-basics.md)
+{% endstep %}
 
-## 2. PID and feedforward
+{% step %}
+### PID and feedforward
 
 An arm or an elevator uses **position control**: you ask for an angle or a height, and the motor stops once it gets there. A flywheel uses **velocity control**: you ask for a speed, and the motor has to keep pushing the whole time to hold it. Most of that push is predictable, because a motor's speed is close to proportional to its voltage. So the feedforward gain `kV` (volts for each rotation per second) does most of the work, and the PID gain `kP` only fixes the small error left over, such as the drop when a game piece goes through. There is no motion profile: the wheel can spin up as fast as the motor allows.
 
@@ -145,8 +149,10 @@ These gains are **placeholders**, worked out from the motor rather than tuned. A
 **For your robot:** Work out your own starting `kV` the same way: 12 divided by your wheel's top speed in rotations per second. Then tune both gains in step 5.
 
 Want the details? [Closed loop control](../../details/editor/config/closed-loop-control.md) and [Feedforward](../../details/editor/config/feedforward.md)
+{% endstep %}
 
-## 3. Gearing and the wheel's weight
+{% step %}
+### Gearing and the wheel's weight
 
 The gearing tells YAMS how many turns of the motor make one turn of the flywheel. A shooter usually has little or no reduction, because it needs speed more than force: here one turn of the wheel is 1.5 turns of the motor.
 
@@ -195,8 +201,10 @@ The moment of inertia says how hard the wheel is to spin up, and only the simula
 **For your robot:** List your gearbox stages in order, from the motor outward, such as `3, 4` for a 3:1 stage followed by a 4:1 stage. Use `1` if the wheel is on the motor's shaft. Work out your wheel's moment of inertia from its mass and radius, adding the shaft and any pulleys if they are heavy.
 
 Want the details? [Gearing and units](../../details/editor/config/gearing-and-units.md)
+{% endstep %}
 
-## 4. Direction, idle mode and current limit
+{% step %}
+### Direction, idle mode and current limit
 
 Which way is positive, what the motor does when it is given no power, and the most current it may draw.
 
@@ -238,8 +246,10 @@ Which way is positive, what the motor does when it is given no power, and the mo
 **For your robot:** Flip the inversion if a positive output moves your flywheel the wrong way. Keep the current limit within what your wiring and breaker allow.
 
 Want the details? [Motor basics](../../details/editor/config/motor-basics.md) and [Limits and protection](../../details/editor/config/limits-and-protection.md)
+{% endstep %}
 
-## 5. Telemetry
+{% step %}
+### Telemetry
 
 The name the motor gets on your dashboard, and how much it publishes. `HIGH` publishes everything, which is what you want while tuning.
 
@@ -273,8 +283,10 @@ The name the motor gets on your dashboard, and how much it publishes. `HIGH` pub
 {% endtabs %}
 
 Want the details? [Telemetry](../../understanding/telemetry.md)
+{% endstep %}
 
-## 6. The motor controller object
+{% step %}
+### The motor controller object
 
 This is the vendor's own object, exactly as you would create it without YAMS.
 
@@ -308,8 +320,10 @@ rev::spark::SparkMax m_spark{wpi::CANPort::CAN_S0, 4, rev::spark::SparkMax::Moto
 {% endtabs %}
 
 **For your robot:** Change the CAN ID to yours. Using a different motor controller? See the [feature matrix](../../details/editor/feature-matrix.md) for the wrapper that goes with it.
+{% endstep %}
 
-## 7. The SmartMotorController
+{% step %}
+### The SmartMotorController
 
 The wrapper brings the three together: the motor controller object, the motor plugged into it, and the config.
 
@@ -352,6 +366,8 @@ m_motor.emplace(&m_spark, wpi::math::DCMotor::NEO(1), &m_smcConfig);
 **For your robot:** Change the motor to the kind and the number of motors you have.
 
 Want the details? [Smart motor controllers](../../details/editor/README.md)
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

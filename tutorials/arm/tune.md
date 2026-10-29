@@ -18,7 +18,9 @@ You change one number at a time on a dashboard and watch a graph. Nothing is sav
 * Open [AdvantageScope](https://docs.advantagescope.org/) and connect it to the simulation (**File > Connect to Simulator**).
 * Do not press any of the arm's buttons while you tune. A button runs another arm command, which stops live tuning. If that happens, start it again as in part 1.
 
-## 1. Start live tuning
+{% stepper %}
+{% step %}
+### Start live tuning
 
 YAMS gives the arm a `Live Tuning` command. While it runs, numbers you type on the dashboard are applied to the arm straight away.
 
@@ -43,8 +45,10 @@ In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ArmSubsystem/Live
 {% endtabs %}
 
 **Check it:** the command shows as running. The arm keeps holding 0 degrees.
+{% endstep %}
 
-## 2. Find the numbers and graph the arm
+{% step %}
+### Find the numbers and graph the arm
 
 The arm's values are under two tables. Both use the names from `withTelemetry`: `Arm` for the arm and `ArmMotor` for its motor.
 
@@ -64,8 +68,10 @@ The arm's values are under two tables. Both use the names from `withTelemetry`: 
 {% endhint %}
 
 **Check it:** the two position lines are close together near 0, with the measured position a little below the setpoint. That gap is the sag you fix next.
+{% endstep %}
 
-## 3. kG: hold the arm up
+{% step %}
+### kG: hold the arm up
 
 `kG` is the voltage it takes to hold the arm level against gravity. YAMS scales it by the cosine of the angle, so the arm gets all of it when level and none when it points straight up or down. That only works if 0 degrees is level, as it is in this tutorial.
 
@@ -77,8 +83,10 @@ With `kG` at 0, only `kP` holds the arm up. `kP` only pushes when there is an er
 **Check it:** the measured position moves up onto the setpoint and stays there. The output voltage stays about the same, because `kG` now supplies it instead of `kP`.
 
 If the arm drifts, adjust `kG` a little: up if it sits low, down if it sits high.
+{% endstep %}
 
-## 4. kP and kD: reach a setpoint
+{% step %}
+### kP and kD: reach a setpoint
 
 `kP` is how hard the motor pushes for each rotation of error. A `kP` of 50 is 50 volts per rotation, about 0.14 volts per degree.
 
@@ -94,8 +102,10 @@ If the arm drifts, adjust `kG` a little: up if it sits low, down if it sits high
 **Check it:** after each setpoint change the arm gets there within a second or so and stops without swinging.
 
 The arm cannot go past the soft limits from step 1, -20 and 30 degrees. A setpoint beyond them is held at the limit.
+{% endstep %}
 
-## 5. The motion profile and kV
+{% step %}
+### The motion profile and kV
 
 The motion profile limits how fast the arm moves and speeds up: 90 degrees per second and 45 degrees per second squared from step 1. On the dashboard they are in RPM: 15 RPM and 7.5 RPM per second.
 
@@ -106,8 +116,10 @@ The motion profile limits how fast the arm moves and speeds up: 90 degrees per s
 **Check it:** the measured velocity sits on top of the setpoint velocity, and the arm arrives without lagging behind.
 
 For more on each value, see [Tuning order](../../details/live-tuning/README.md#tuning-order).
+{% endstep %}
 
-## 6. Copy the numbers into your code
+{% step %}
+### Copy the numbers into your code
 
 Dashboard changes are lost when the code restarts. Write the numbers you ended up with into the config from step 1. In simulation they go into the `Sim` versions.
 
@@ -163,6 +175,8 @@ Copy the motion profile limits into `WithTrapezoidProfile` too, converted back t
 The numbers above are an example. Use the ones you found.
 
 **Check it:** restart the simulation and enable it. The arm holds 0 degrees without sagging, and the A and B buttons move it smoothly.
+{% endstep %}
+{% endstepper %}
 
 ## If it did not work
 

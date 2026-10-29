@@ -17,7 +17,9 @@ Four things are added in this step:
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
 {% endhint %}
 
-## 1. Read the sticks, and drive with them
+{% stepper %}
+{% step %}
+### Read the sticks, and drive with them
 
 A `SwerveInputStream` turns the raw stick values into field relative chassis speeds, with the deadband and the cubing already applied. A drive command gives those speeds to the drive every loop.
 
@@ -132,7 +134,7 @@ wpi::cmd::CommandPtr SwerveSubsystem::DriveWithSticks(std::function<double()> tr
 
 Want the details? [Swerve Input Stream](../../details/swerve-input-stream.md)
 
-### What forward means
+#### What forward means
 
 Field relative means pushing the stick forward drives the robot **away from the driver station**, whichever way the robot itself faces. To know which way that is, the drive uses the gyro: a heading of 0 degrees is "facing away from the driver station".
 
@@ -144,8 +146,10 @@ The gyro starts at 0 when the code starts, and step 2 set the starting pose to 0
 {% hint style="info" %}
 This tutorial leaves out `withAllianceRelativeControl()`. It flips the sticks 180 degrees on the red alliance, which is only right when the robot's pose is a real field pose: on red, a robot facing away from its driver station has a heading of 180 degrees, not 0. Add it once your autonomous routine or vision sets the real pose. See [Alliance-relative control](../../details/swerve-input-stream.md#alliance-relative-control).
 {% endhint %}
+{% endstep %}
 
-## 2. Drive to a pose, lock the wheels and zero the gyro
+{% step %}
+### Drive to a pose, lock the wheels and zero the gyro
 
 `driveToPose(pose)` uses the two PID controllers from step 2 to drive to a pose on the field. `lock()` turns every module toward the robot center, the X pattern, and holds it there. `zeroGyro()` makes the way the robot faces now the new 0 degrees, so forward on the stick drives the way the robot faced when you pressed it.
 
@@ -232,8 +236,10 @@ wpi::cmd::CommandPtr SwerveSubsystem::ZeroGyro() {
 {% endtabs %}
 
 Want the details? [Auto-align](../../details/swerve-drive.md#auto-align)
+{% endstep %}
 
-## 3. Create it, set the default command and bind a button
+{% step %}
+### Create it, set the default command and bind a button
 
 Pushing a stick forward or to the left reads **negative** on a controller, so each axis is negated to match WPILib's convention: +X forward, +Y left, and counterclockwise positive.
 
@@ -327,6 +333,8 @@ driverController.FaceUp().OnTrue(drive.ZeroGyro());
 {% endtabs %}
 
 **For your robot:** Change the pose to somewhere useful on your field, and bind `lock()` to a button if you want it. The zero gyro button can be any button the driver will not press by accident.
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

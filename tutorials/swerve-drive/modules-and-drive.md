@@ -10,12 +10,14 @@ Four `SwerveModule`s, a gyro and a `SwerveDriveConfig` make a `SwerveDrive`.
 **In a hurry?** Jump to [the complete file](#the-complete-file), copy it, and change the values called out under **For your robot**. The numbered parts explain each piece in a sentence or two. You do not need to understand all of it to get moving: the pages under **Understanding** go deeper when you want them.
 {% endhint %}
 
-## 1. Build one module
+{% stepper %}
+{% step %}
+### Build one module
 
 One helper builds a module from its two `SparkMax`, its `CANcoder`, a name and a location. It wraps each `SparkMax` in a `SmartMotorController` using the configs from step 1, and describes the module with a `SwerveModuleConfig`:
 
 * **`withAbsoluteEncoder`** gives the module the `CANcoder`'s angle, so that it knows which way it points as soon as the robot turns on.
-* **`withAbsoluteEncoderOffset`** is the `CANcoder`'s reading when the wheel points straight forward with its bevel gear to the left. Every `CANcoder` is mounted at a different angle, so every module has its own offset. It is a parameter of the helper, and it is 0 until you measure it on the real robot in [Step 4](real-robot.md#3-set-the-absolute-encoder-offsets). Simulation does not need it.
+* **`withAbsoluteEncoderOffset`** is the `CANcoder`'s reading when the wheel points straight forward with its bevel gear to the left. Every `CANcoder` is mounted at a different angle, so every module has its own offset. It is a parameter of the helper, and it is 0 until you measure it on the real robot in [Step 4](real-robot.md#set-the-absolute-encoder-offsets). Simulation does not need it.
 * **`withLocation`** says where the module is on the robot.
 * **`withOptimization(true)`** lets the module reverse its wheel instead of turning more than 90 degrees.
 
@@ -130,11 +132,13 @@ void SwerveSubsystem::SetupModule(Module& module, const std::string& name,
 {% endtab %}
 {% endtabs %}
 
-**For your robot:** Change `DCMotor.getNEO(1)` if your motors are not NEOs. Leave every offset at 0 for now: [Step 4](real-robot.md#3-set-the-absolute-encoder-offsets) shows how to read each module's offset from the dashboard and put it in. A robot with offsets of 0 drives in simulation, but on the real robot every wheel points a different way.
+**For your robot:** Change `DCMotor.getNEO(1)` if your motors are not NEOs. Leave every offset at 0 for now: [Step 4](real-robot.md#set-the-absolute-encoder-offsets) shows how to read each module's offset from the dashboard and put it in. A robot with offsets of 0 drives in simulation, but on the real robot every wheel points a different way.
 
 Want the details? [SwerveModuleConfig](../../details/mechanism-configs/swerve-module-config.md)
+{% endstep %}
 
-## 2. The gyro, and a place for the drive
+{% step %}
+### The gyro, and a place for the drive
 
 The drive needs a gyro for its heading.
 
@@ -181,8 +185,10 @@ std::optional<yams::mechanisms::swerve::SwerveDrive<4>> m_drive;
 {% endtabs %}
 
 **For your robot:** Change the CAN ID to your gyro's. In C++ this is also where the four modules get their CAN IDs.
+{% endstep %}
 
-## 3. Create the four modules
+{% step %}
+### Create the four modules
 
 Locations use WPILib's convention: **+X is toward the front of the robot and +Y is toward its left side**.
 
@@ -258,8 +264,10 @@ SetupModule(m_backRight, "backright", wpi::math::Translation2d{-24_in, -24_in}, 
 {% endtabs %}
 
 **For your robot:** Change the CAN IDs, and change the 24 inches to how far your modules really are from the center of your robot.
+{% endstep %}
 
-## 4. Configure and create the drive
+{% step %}
+### Configure and create the drive
 
 `SwerveDriveConfig` takes the four modules, the gyro's attitude, where on the field the robot starts, and the two PID controllers that `driveToPose()` uses in step 3. `withTelemetry("swerve", TelemetryVerbosity.HIGH)` names the drive: everything it publishes is under `NT:/Mechanisms/swerve`, and `HIGH` also publishes the keys that [live tuning](../../details/live-tuning/README.md#swerve-drive) uses in Step 4. `swerve` is also the default name, but setting it here makes it easy to find.
 
@@ -331,8 +339,10 @@ m_drive.emplace(&m_driveConfig);
 **For your robot:** The two controllers are only a place to start. Tune them once the robot drives well by hand.
 
 Want the details? [SwerveDriveConfig](../../details/mechanism-configs/swerve-drive-config.md)
+{% endstep %}
 
-## 5. Update it every loop
+{% step %}
+### Update it every loop
 
 `updateTelemetry()` must run every loop: it updates the pose estimate as well as the telemetry. `simIterate()` runs the physics simulation. In simulation the drive takes its heading from the simulated robot, not from the `Pigeon2`, so the line after it is optional: it copies the simulated heading into the `Pigeon2`, for any other code that reads the `Pigeon2` directly.
 
@@ -464,6 +474,8 @@ void SwerveSubsystem::SimulationPeriodic() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

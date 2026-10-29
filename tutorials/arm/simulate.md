@@ -6,7 +6,9 @@ description: Run the arm in simulation and drive it with a controller.
 
 The code from the first three steps runs on your computer exactly as it will on the robot. YAMS simulates the motor, the gearing and the arm, so the closed loop, the limits and the commands all behave the way they will on the real mechanism.
 
-## Start the simulation
+{% stepper %}
+{% step %}
+### Start the simulation
 
 {% tabs %}
 {% tab title="Java, Commands v2" %}
@@ -29,8 +31,10 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 {% endtabs %}
 
 <figure><img src="../../.gitbook/assets/image (16).png" alt="The Sim GUI, the window that opens with the simulation, with the Robot State, System Joysticks, Joysticks and NetworkTables panels"><figcaption><p>The Sim GUI.</p></figcaption></figure>
+{% endstep %}
 
-## Drive it
+{% step %}
+### Drive it
 
 1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**.
 2. Open the simulated mechanism with **NetworkTables -> Mechanisms -> Arm -> mechanism**. It is named after the `withTelemetry("Arm", ...)` on the `ArmConfig`.
@@ -43,6 +47,8 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0** to **Joystick\[0]**.
 
 <figure><img src="../../.gitbook/assets/armTest2.gif" alt="The simulated arm in its Mechanism2d window, moving between angles as buttons are pressed"><figcaption></figcaption></figure>
+{% endstep %}
+{% endstepper %}
 
 ## What you should see
 

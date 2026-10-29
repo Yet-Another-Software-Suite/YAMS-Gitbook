@@ -26,7 +26,9 @@ The two wheels here are separate motors on separate shafts, each given its own s
 
 Create `DoubleFlywheelSubsystem` in your `subsystems` folder, or `DoubleFlywheelMechanism` in your `mechanisms` folder for Commands v3. In C++ that is a header in `src/main/include/subsystems` and a source file in `src/main/cpp/subsystems`.
 
-## 1. The upper flywheel's config
+{% stepper %}
+{% step %}
+### The upper flywheel's config
 
 One `SmartMotorControllerConfig` says what the upper flywheel's motor controller should do: closed loop control, its gains, its gearing, and the size and weight of the wheel for the simulation.
 
@@ -127,8 +129,10 @@ The gains are **placeholders** worked out from the motor. A Kraken X60 turns at 
 **For your robot:** Set your own gearing (top speed = motor free speed / reduction, and keep your fastest shot below it), and your wheel's moment of inertia from its mass and radius. Work out a starting `kV` as 12 divided by the wheel's top speed in rotations per second.
 
 Want the details? [SmartMotorControllerConfig](../../details/editor/config/README.md)
+{% endstep %}
 
-## 2. The lower flywheel's config
+{% step %}
+### The lower flywheel's config
 
 The same again for the lower flywheel, with its own telemetry name and the motor inverted.
 
@@ -196,8 +200,10 @@ m_lowerConfig
 {% endtabs %}
 
 **For your robot:** Flip the inversion of whichever wheel spins the wrong way. Both wheels should throw the game piece out when given a positive speed.
+{% endstep %}
 
-## 3. The motor controller objects
+{% step %}
+### The motor controller objects
 
 These are the vendor's own objects, exactly as you would create them without YAMS.
 
@@ -234,8 +240,10 @@ ctre::phoenix6::hardware::TalonFX m_lowerTalon{2, ctre::phoenix6::CANBus{}};
 {% endtabs %}
 
 **For your robot:** Change the CAN IDs to yours.
+{% endstep %}
 
-## 4. The SmartMotorControllers
+{% step %}
+### The SmartMotorControllers
 
 One wrapper for each flywheel brings together its motor controller object, its motor and its config.
 
@@ -282,8 +290,10 @@ m_lowerMotor.emplace(&m_lowerTalon, wpi::math::DCMotor::KrakenX60(1), &m_lowerCo
 **For your robot:** Change the motor to the kind and the number of motors on each wheel.
 
 Want the details? [Smart motor controllers](../../details/editor/README.md)
+{% endstep %}
 
-## 5. Set up the telemetry
+{% step %}
+### Set up the telemetry
 
 A mechanism class would do this for you. Without one, call `setupTelemetry()` on each `SmartMotorController` once. This is also what makes live tuning work.
 
@@ -327,14 +337,16 @@ m_lowerMotor->SetupTelemetry();
 {% endtabs %}
 
 Want the details? [Telemetry](../../understanding/telemetry.md)
+{% endstep %}
 
-## 6. Update both every loop
+{% step %}
+### Update both every loop
 
 `updateTelemetry()` on each wheel publishes its telemetry, and `simIterate()` on each runs its simulation.
 
 In Commands v2 and C++ the scheduler calls a subsystem's periodic methods for you, so there is nothing more to do.
 
-In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it, the same way as in [the arm tutorial's step 2](../arm/mechanism.md#3-update-it-every-loop), which explains each part. Every mechanism gets one line in `robotPeriodic()`, before `scheduler.run()`, and one in `simulationInit()`.
+In Commands v3 nothing calls a `Mechanism` every loop, so `Robot.java` does it, the same way as in [the arm tutorial's step 2](../arm/mechanism.md#update-it-every-loop), which explains each part. Every mechanism gets one line in `robotPeriodic()`, before `scheduler.run()`, and one in `simulationInit()`.
 
 If your `Robot.java` already has `simulationInit()` and `startSimulation(...)` from the arm tutorial, add the lines below. If not, copy the whole `Robot.java` from the Commands v3 tab of [the complete file](#the-complete-file).
 
@@ -419,6 +431,8 @@ void DoubleFlywheelSubsystem::SimulationPeriodic() {
 {% endcode %}
 {% endtab %}
 {% endtabs %}
+{% endstep %}
+{% endstepper %}
 
 ## The complete file
 

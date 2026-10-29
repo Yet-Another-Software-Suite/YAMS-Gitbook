@@ -18,7 +18,9 @@ A flywheel is tuned differently from [an arm](../arm/tune.md) or an elevator. Th
 * Open [AdvantageScope](https://docs.advantagescope.org/) and connect it to the simulation (**File > Connect to Simulator**).
 * Do not press any of the shooter's buttons while you tune. A button runs another shooter command, which stops live tuning. If that happens, start it again as in part 1.
 
-## 1. Start live tuning
+{% stepper %}
+{% step %}
+### Start live tuning
 
 YAMS gives the flywheel a `Live Tuning` command. While it runs, numbers you type on the dashboard are applied to the flywheel straight away.
 
@@ -43,8 +45,10 @@ In [Elastic](https://frc-elastic.gitbook.io/docs), add `Tuning/ShooterSubsystem/
 {% endtabs %}
 
 **Check it:** the command shows as running. The wheel is still.
+{% endstep %}
 
-## 2. Find the numbers and graph the flywheel
+{% step %}
+### Find the numbers and graph the flywheel
 
 The flywheel's values are under two tables. Both use the names from `withTelemetry`: `Shooter` for the flywheel and `ShooterMotor` for its motor.
 
@@ -64,8 +68,10 @@ The flywheel's values are under two tables. Both use the names from `withTelemet
 {% endhint %}
 
 **Check it:** the velocity lines are at 0.
+{% endstep %}
 
-## 3. kV: the voltage for each speed
+{% step %}
+### kV: the voltage for each speed
 
 `kV` is how many volts the motor needs for each rotation per second of wheel speed. Get it right and the wheel reaches the setpoint on feedforward alone.
 
@@ -78,8 +84,10 @@ The flywheel's values are under two tables. Both use the names from `withTelemet
 **Check it:** at both 2000 and 3000 RPM the measured speed settles on the setpoint, with `kP` still at 0.
 
 `kS` is the voltage that just overcomes friction. The simulation has no friction, so leave it at 0 here. On the real robot, raise `closedloop/feedforward/kS` until the wheel only just starts to turn, then back it off a little, before you tune `kV`.
+{% endstep %}
 
-## 4. kP: recover faster
+{% step %}
+### kP: recover faster
 
 `kV` gets the wheel to speed. `kP` adds a push when the wheel is slower or faster than the setpoint, such as when a game piece goes through and drags it down. It is volts for each rotation per second of error.
 
@@ -95,8 +103,10 @@ The flywheel's values are under two tables. Both use the names from `withTelemet
 A flywheel needs no `kD` and no motion profile: the wheel may speed up as fast as the motor allows.
 
 For more on each value, see [Tuning order](../../details/live-tuning/README.md#tuning-order).
+{% endstep %}
 
-## 5. Copy the numbers into your code
+{% step %}
+### Copy the numbers into your code
 
 Dashboard changes are lost when the code restarts. Write the numbers you ended up with into the config from step 1. In simulation they go into the `Sim` versions.
 
@@ -147,6 +157,8 @@ Dashboard changes are lost when the code restarts. Write the numbers you ended u
 The numbers above are an example. Use the ones you found.
 
 **Check it:** restart the simulation and enable it. Hold **A** and **B**: the wheel reaches 2000 and 3000 RPM quickly and holds each one.
+{% endstep %}
+{% endstepper %}
 
 ## If it did not work
 
