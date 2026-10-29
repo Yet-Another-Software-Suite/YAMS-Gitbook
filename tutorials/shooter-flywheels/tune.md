@@ -30,6 +30,8 @@ The [YAMS Live Tuner](../../details/live-tuning/live-tuner.md) is a web page tha
 
 Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, and press **Connect**. If your browser asks whether the page may connect to devices on your local network, allow it.
 
+<figure><img src="../../.gitbook/assets/live-tuner-connect.png" alt="The Live Tuner header connected to a simulation on localhost, with the robot in Teleop and enabled"><figcaption><p>Connected to the simulation, with the robot enabled in Teleop.</p></figcaption></figure>
+
 **Check it:** the badge in the header shows `localhost`, with the robot enabled in Teleop.
 {% endstep %}
 
@@ -40,6 +42,8 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 2. Under **Live Tuning command**, choose `ShooterSubsystem` (Commands v2 and C++) or `ShooterMechanism` (Commands v3).
 3. Set **Type** to **Flywheel**, and leave **Second flywheel** at **None**. Speeds are in RPM, both where you type and on the graph.
 4. Press **Continue**.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-mechanism.png" alt="The Mechanism step with Shooter/ShooterMotor as the telemetry name, ShooterSubsystem as the Live Tuning command, Flywheel as the type and None as the second flywheel"><figcaption><p>The tutorial shooter: its motor, its subsystem's <code>Live Tuning</code> command, and the Flywheel type.</p></figcaption></figure>
 
 **Check it:** the telemetry card shows the wheel at 0 RPM.
 {% endstep %}
@@ -53,6 +57,8 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 4. Type `0`, then press **Finish check**.
 
 A flywheel has no range of motion, so the Live tune card opens next.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-inversions.png" alt="Holding a typed 0.5 V: the speed reads 160 RPM, Positive voltage moves forward is ticked, and Finish check is enabled"><figcaption><p>At 0.5 V the wheel spins forward.</p></figcaption></figure>
 
 **Check it:** **Positive voltage moves forward** was ticked when the wheel spun up. If the Live Tuner warns that the speed went the wrong way, the motor or encoder inversion in step 1 is wrong.
 {% endstep %}
@@ -70,6 +76,8 @@ Press **Start Live Tuning**. The speeds and gains you send are now applied to th
 4. Raise **kV** a little at a time until the measured speed settles on the setpoint. For this NEO and 1.5:1 gearing it ends up near `0.19`. If the wheel settles above the setpoint, `kV` is too high: lower it.
 5. Send `2000`. The wheel should settle on it too, with the same `kV`.
 
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-kv.png" alt="Live tuning the flywheel at a 3000 RPM setpoint with kP at 0: after kV is raised from 0.1 to 0.19 the speed jumps from about 1600 RPM to 3048 RPM, just above the setpoint"><figcaption><p>kV raised from 0.1 to 0.19: the speed climbs from about 1600 RPM to just above 3000 RPM. A little lower and it settles on it.</p></figcaption></figure>
+
 **Check it:** at both 2000 and 3000 RPM the measured speed settles on the setpoint, with `kP` still at 0.
 
 `kS` is the voltage that just overcomes friction. The simulation has no friction, so leave it at 0 here.
@@ -84,6 +92,8 @@ Press **Start Live Tuning**. The speeds and gains you send are now applied to th
 2. Turn on **Alternate setpoints**, with **Setpoint A** at `2000` and **Setpoint B** at `3000`. The wheel now changes speed every 5 seconds.
 3. Raise **kP** a step at a time (0.2, 0.3, ...). Each step should make the wheel reach the new speed a little faster.
 4. Stop, and press **was** to go back one step, when the speed overshoots the setpoint or the line gets jittery.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-flywheel-alternate.png" alt="Alternate setpoints on, switching between 2000 and 3000 RPM with kP at 0.3: the measured speed follows each step"><figcaption><p>kP 0.3, alternating between 2000 and 3000 RPM: the speed reaches each setpoint straight away.</p></figcaption></figure>
 
 **Check it:** the speed reaches each new setpoint quickly and settles on it without bouncing around it. Press **Space** to stop when you are done.
 

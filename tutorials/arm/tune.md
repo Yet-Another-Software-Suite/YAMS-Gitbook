@@ -30,6 +30,8 @@ The [YAMS Live Tuner](../../details/live-tuning/live-tuner.md) is a web page tha
 
 Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulation**, and press **Connect**. If your browser asks whether the page may connect to devices on your local network, allow it.
 
+<figure><img src="../../.gitbook/assets/live-tuner-connect.png" alt="The Live Tuner header connected to a simulation on localhost, with the robot in Teleop and enabled"><figcaption><p>Connected to the simulation, with the robot enabled in Teleop.</p></figcaption></figure>
+
 **Check it:** the badge in the header shows `localhost`, with the robot enabled in Teleop.
 {% endstep %}
 
@@ -41,6 +43,8 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 3. Set **Type** to **Arm**. Setpoints are in degrees.
 4. Press **Continue**.
 
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-mechanism.png" alt="The Mechanism step with Arm/ArmMotor as the telemetry name, ArmSubsystem as the Live Tuning command and Arm as the type, so setpoints are in degrees"><figcaption><p>The tutorial arm: its motor, its subsystem's <code>Live Tuning</code> command, and the Arm type.</p></figcaption></figure>
+
 **Check it:** the telemetry card shows the arm's angle, near 0 degrees.
 {% endstep %}
 
@@ -49,8 +53,10 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 
 1. Tick every item on the pre-motion checklist, leave **Current trip (A)** at 40, and press **Continue**.
 2. Tick the confirmation and press **Start voltage control**.
-3. Type `1` under **Type a voltage** and press **Enter**. The arm swings up. Gravity pulls on it most when it is level, so if it does not move, try `2`.
+3. Type `1` under **Type a voltage** and press **Enter**. The arm swings up, and keeps going until it reaches its hard stop, so type `0` once the box is ticked.
 4. Type `0`, then press **Finish check**.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-inversions.png" alt="Holding a typed 1 V: Positive voltage moves forward is ticked, the position reads 41.7 degrees, and Finish check is enabled"><figcaption><p>At 1 V the arm swings up, so <strong>Positive voltage moves forward</strong> is ticked.</p></figcaption></figure>
 
 **Check it:** **Positive voltage moves forward** was ticked when the arm swung up. If the Live Tuner warns that the angle went the wrong way, the motor or encoder inversion in step 1 is wrong.
 {% endstep %}
@@ -59,6 +65,8 @@ Open [tuning.yassrobotics.com](https://tuning.yassrobotics.com/), pick **Simulat
 ### Set the range of motion
 
 Choose **Enter range manually**. The ends start at the soft limits from step 1, -20 and 30 degrees, so press **Use this range**.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-range.png" alt="Enter range manually chosen, with the lower end at -20.0 and the upper end at 30.0 degrees, the soft limits, and Use this range"><figcaption><p>The ends start at the arm's soft limits.</p></figcaption></figure>
 
 **Check it:** the Live tune card opens.
 {% endstep %}
@@ -71,8 +79,10 @@ Press **Start Live Tuning**. The setpoints and gains you send are now applied to
 `kG` is the voltage it takes to hold the arm level against gravity. YAMS scales it by the cosine of the angle, so the arm gets all of it when level and none when it points straight up or down. With `kG` at 0, only `kP` holds the arm up, so the arm sags a little below its setpoint.
 
 1. On the **Setpoints** tab, type `0` and press **Send**.
-2. Once the arm has stopped, read its output voltage on the telemetry card. Say it reads `0.9`.
+2. Once the arm has stopped, read its output voltage on the telemetry card. For this arm it reads about `0.12`.
 3. Type that voltage into **kG** on the Settings card's **Gains** tab, and press **Enter**.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-kg.png" alt="Live tuning the arm at a 0 degree setpoint: the position reads 0.0 degrees and the output 0.12 V, and the measured line sits on the setpoint line"><figcaption><p>With kG at 0.12 V, the arm holds 0 degrees with no sag.</p></figcaption></figure>
 
 **Check it:** the measured angle moves up onto the setpoint on the graph and stays there.
 {% endstep %}
@@ -90,6 +100,8 @@ A change that made it worse? Press **was** under the value to put the last one b
 
 <figure><img src="../../.gitbook/assets/live-tuning-response.png" alt="Three step responses: kP too low rises slowly and stops short, about right settles quickly on the setpoint, kP too high overshoots and rings"><figcaption><p>What the angle looks like on the graph after each setpoint change.</p></figcaption></figure>
 
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-alternate.png" alt="Alternate setpoints on, switching between -5 and 15 degrees: the measured angle follows each step up and back down"><figcaption><p>Alternating between -5 and 15 degrees, so each change of gain can be compared with the last move.</p></figcaption></figure>
+
 **Check it:** after each change of setpoint the arm gets there within a second or so and stops without swinging.
 {% endstep %}
 
@@ -101,6 +113,8 @@ The motion profile limits how fast the arm moves and speeds up. On the **Gains**
 1. With **Alternate setpoints** still on, raise **Max velocity** and **Max acceleration** a step at a time.
 2. Stop raising them when the measured angle falls behind the setpoint while it moves, or the stator current on the graph jumps.
 3. Raise **kV** until the measured angle follows the setpoint during a move, instead of falling behind and catching up at the end. `kV` only acts while the arm moves.
+
+<figure><img src="../../.gitbook/assets/live-tuner-tutorial-arm-gains.png" alt="The Settings card's Gains tab: kP 50, kG 0.12 V with was 0 under it, and Max velocity and Max accel raised to 180, with was 90 and was 45 under them and 30 RPM shown under each"><figcaption><p>Max velocity and max acceleration raised from 90 and 45 to 180. <strong>was</strong> shows the value before each change.</p></figcaption></figure>
 
 **Check it:** the arm follows the setpoint through each move and arrives without lagging. Press **Space** to stop when you are done.
 {% endstep %}
@@ -154,7 +168,7 @@ The arm's values are under two tables. Both use the names from `withTelemetry`: 
 
 With `kG` at 0, only `kP` holds the arm up. `kP` only pushes when there is an error, so the arm has to sag a little before the motor pushes hard enough. The voltage it settles at is the voltage gravity needs.
 
-1. Let the arm settle at 0 degrees and read `motor/outputVoltage`. Say it reads `0.9`.
+1. Let the arm settle at 0 degrees and read `motor/outputVoltage`. For this arm it reads about `0.12`.
 2. Type that voltage into `NT:/Tuning/Arm/ArmMotor/closedloop/feedforward/kG`.
 
 **Check it:** the measured position moves up onto the setpoint and stays there. The output voltage stays about the same, because `kG` now supplies it instead of `kP`.
@@ -212,7 +226,7 @@ Dashboard changes are lost when the code restarts. Write the numbers you ended u
 
 // After: your numbers. ArmFeedforward takes kS, kG, kV.
 .withSimClosedLoopController(80, 0, 2)
-.withSimFeedforward(new ArmFeedforward(0, 0.9, 0.3))
+.withSimFeedforward(new ArmFeedforward(0, 0.12, 0.3))
 ```
 {% endcode %}
 
@@ -228,7 +242,7 @@ Copy the motion profile limits into `withTrapezoidalProfile` too, converted back
 
 // After: your numbers. ArmFeedforward takes kS, kG, kV.
 .withSimClosedLoopController(80, 0, 2)
-.withSimFeedforward(new ArmFeedforward(0, 0.9, 0.3))
+.withSimFeedforward(new ArmFeedforward(0, 0.12, 0.3))
 ```
 {% endcode %}
 
@@ -243,7 +257,7 @@ The C++ config in step 1 has a simulation PID with `WithSimClosedLoopController`
 // Your numbers: kP, kI, kD, then kS, kG and kV.
 .WithSimClosedLoopController(80, 0, 2)
 .WithFeedforward(wpi::math::ArmFeedforward{
-    0_V, 0.9_V, wpi::units::unit_t<wpi::math::ArmFeedforward::kv_unit>{0.3}})
+    0_V, 0.12_V, wpi::units::unit_t<wpi::math::ArmFeedforward::kv_unit>{0.3}})
 ```
 {% endcode %}
 
