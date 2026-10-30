@@ -4,35 +4,37 @@ icon: rocket
 
 # Why YAMS?
 
-## The problem with rolling your own subsystem
+## The problem with creating a subsystem from scratch
+
+Teams routinely spend days getting a single mechanism working in simulation, only to discover the real robot behaves differently because the sim wasn't accurate enough to tune against. YAMS eliminates that cycle.
 
 Writing a motor subsystem from scratch is repetitive and error-prone. A production-quality subsystem requires:
 
 * Motor controller configuration (PID, feedforward, gearing, current limits, zero power mode, ramp rates…)
 * A physics simulation that actually matches your hardware
 * Periodic telemetry publishing so you can see what's happening
-* `Mechanism2d` visualizations for AdvantageScope
+* A `Mechanism2d` drawing of the mechanism, to watch it move in AdvantageScope
 * Command factories that respect WPILib's requirement system
-* Soft limits, hard limits
+* Soft limits and hard limits
 * Separate sim-only tuning paths
-* Invisible simulation from standard classes.
-
-Teams routinely spend days getting a single mechanism working in simulation, only to discover the real robot behaves differently because the sim wasn't accurate enough to tune against. YAMS eliminates that cycle.
+* Simulation of the motor controllers and sensors, so the same code runs in simulation and on the robot
 
 ## What YAMS replaces
 
-A typical hand-rolled Arm subsystem is 150-300 lines of code: config, sim state, periodic updates, command factories, limit enforcement, and telemetry. The YAMS equivalent is roughly 15 lines, one `SmartMotorControllerConfig`, one `ArmConfig`, one `Arm`, and a couple of command wrappers.
+A typical Arm subsystem created from scratch is 150-300 lines of code: config, sim state, periodic updates, command factories, limit enforcement, and telemetry. The YAMS equivalent is about 20 lines: one `SmartMotorControllerConfig`, one `SmartMotorController`, one `ArmConfig`, and one `Arm`, whose commands you use directly.
 
+{% code title="Inside an arm subsystem's constructor (Java, Commands v2)" %}
 ```java
-// Everything below replaces ~200 lines of boilerplate
+// `this` is the arm subsystem.
 SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
     .withControlMode(ControlMode.CLOSED_LOOP)
-    .withClosedLoopController(4, 0, 0)
+    .withClosedLoopController(4, 0, 0) // Example gain, tune it for your arm.
     .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
-    .withFeedforward(new ArmFeedforward(0, 0, 0, 0))
+    .withFeedforward(new ArmFeedforward(0, 0, 0, 0)) // Placeholder gains, until you tune them.
     .withGearing(new MechanismGearing(GearBox.fromReductionStages(3, 4)))
     .withZeroPower(MotorMode.BRAKE)
     .withStatorCurrentLimit(Amps.of(40))
+    .withStartingPosition(Degrees.of(0))
     .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
 
 SmartMotorController smc = new SparkWrapper(new SparkMax(CANPort.CAN_S0, 1, MotorType.kBrushless), DCMotor.getNEO(1), motorConfig);
@@ -42,41 +44,40 @@ ArmConfig armConfig = new ArmConfig()
     .withHardLimits(Degrees.of(-10), Degrees.of(120));
 
 Arm arm = new Arm(armConfig, smc);
+Command raise = arm.setAngle(Degrees.of(90));
 ```
+{% endcode %}
 
-That's it. Simulation, telemetry, hard limits, and a physics-backed `Mechanism2d` all come for free.
+Add two calls to the subsystem, `arm.updateTelemetry()` in `periodic()` and `arm.simIterate()` in `simulationPeriodic()`, and that's it. Simulation, telemetry, hard limits, and a physics-backed `Mechanism2d`, all in one library. The [Arm tutorial](tutorials/arm.md) builds this subsystem step by step, with the complete file.
 
-## Physics simulation out of the box
+## Built-in physics simulation
 
 Every YAMS mechanism type ships with a physics model:
 
-* **Arm / Pivot**, `SingleJointedArmSim`, gravity compensation included
-* **Elevator**, `ElevatorSim` with configurable carriage weight and angle
-* **FlyWheel**, `FlywheelSim` with configurable moment of inertia
+* **Arm:** WPILib's `SingleJointedArmSim`, with gravity included.
+* **Pivot:** a `DCMotorSim` built from the pivot's moment of inertia.
+* **Elevator:** `ElevatorSim`, with the carriage weight (`withCarriageWeight`) and the elevator's angle (`withAngle`).
+* **FlyWheel:** a `DCMotorSim` built from the flywheel's moment of inertia.
 
-YAMS runs the simulation automatically when `RobotBase.isSimulation()` is true. Call `arm.simIterate()` in `simulationPeriodic()` and you're done, no additional sim wiring needed.
+YAMS creates the model for you when the code runs in simulation. Your code only calls `simIterate()` every loop in simulation. In Commands v2 that is the subsystem's `simulationPeriodic()`. In Commands v3, `Robot.java` starts it, as [Update it every loop](tutorials/arm/mechanism.md#update-it-every-loop) shows.
 
 Because the simulation uses accurate physics, the PID and feedforward gains you tune in sim are a reliable starting point for real hardware. You may still need minor adjustments, but you won't be starting from zero on the field.
 
 ## TunerX in simulation (CTRE hardware)
 
-For CTRE TalonFX and TalonFXS motors, YAMS feeds its physics results directly back through Phoenix's vendorsim layer via `getSimState()`. This means:
+For CTRE TalonFX and TalonFXS motors, YAMS feeds its physics results back into Phoenix's simulation, so Phoenix Tuner X can connect to your simulated robot. Every TalonFX signal (position, velocity, voltage and current) reads exactly as it would from real hardware.
 
-1. Run your robot code in simulation as normal
-2. Open Phoenix Tuner X and connect to the simulation
-3. Every TalonFX signal, position, velocity, voltage, current, reads exactly as it would from real hardware
+You can watch closed-loop error, plot signal graphs, and verify your gains in TunerX's familiar interface without touching a physical robot. The same workflow you use to diagnose real hardware works identically in simulation. [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md) shows how to connect.
 
-You can watch closed-loop error, plot signal graphs, and verify your gains in TunerX's familiar interface without touching a physical robot. The same workflow you use to diagnose real hardware works identically in simulation. See [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md) for the steps.
+## Live tuning without redeploying
 
-## Live tuning without reflashing
+`TelemetryVerbosity.HIGH` publishes all PID gains, feedforward constants, motion profile constraints, soft limits, and current limits as values you can change from a dashboard. At `HIGH` verbosity YAMS also registers a `Live Tuning` command for each motor (call `setupLiveTuning()` on the config to register it in other cases). While that command runs, from Elastic or any other NetworkTables dashboard, YAMS applies the values you change to the running motor controller.
 
-`TelemetryVerbosity.HIGH` publishes all PID gains, feedforward constants, motion profile constraints, soft limits, and current limits as writable NetworkTable entries. At `HIGH` verbosity YAMS also registers a `Live Tuning` command for each motor (call `setupLiveTuning()` on the config to register it in other cases). The command (visible in Elastic or any NT-aware dashboard) applies those values to the running motor controller in real time.
-
-Changing `kP` from 4 to 6 and seeing the mechanism respond takes seconds, not the minutes a redeploy would cost. See the [Live Tuning](details/live-tuning/README.md) page for a full field-by-field reference.
+Changing `kP` from 4 to 6 and seeing the mechanism respond takes seconds, not the minutes a redeploy would cost. [Live tuning](details/live-tuning/README.md) shows how to tune a mechanism this way, and [Live tuning keys and units](details/live-tuning/keys-and-units.md) lists every value you can change.
 
 ## Loop overruns
 
-Heavy subsystems with hand-rolled telemetry, simulation, and visualization code can push the 20 ms robot loop toward or past its budget, especially when multiple mechanisms run simultaneously. YAMS's telemetry and simulation paths are tightly optimized and only run the work that the verbosity level requires; `LOW` publishes only the fields you actually need for competition, keeping loop time predictable.
+Heavy subsystems whose telemetry, simulation, and visualization code is created from scratch can push the 20 ms robot loop toward or past its budget, especially when multiple mechanisms run simultaneously. YAMS's telemetry and simulation paths are tightly optimized and only run the work that the verbosity level requires; `LOW` publishes only the fields you actually need for competition, keeping loop time predictable.
 
 The SystemCore, which YAMS 2027 runs on, has plenty of processing headroom, so running `TelemetryVerbosity.HIGH` with multiple mechanisms active is not a practical loop time concern.
 
@@ -84,11 +85,12 @@ The SystemCore, which YAMS 2027 runs on, has plenty of processing headroom, so r
 
 YAMS enforces mechanism safety automatically:
 
-* **Hard limits** are enforced in simulation as physical stops, the mechanism cannot travel past them
-* **Soft limits** are pushed to the motor controller so the closed-loop controller respects them independent of your command logic
-* **Temperature cutoff** stops the motor if the controller overheats
-* Custom exceptions are thrown at construction time if limits are misconfigured (e.g., lower limit greater than upper limit), so misconfigurations surface immediately in testing rather than during a match
+* **Hard limits** are enforced in simulation as physical stops: the mechanism cannot travel past them.
+* **Soft limits** are pushed to the motor controller, so the closed-loop controller respects them independent of your command logic.
+* **Misconfigured limits** throw an exception when the code starts (for example, a lower limit greater than the upper limit), so the mistake shows up in testing rather than during a match.
+
+You can also set a **temperature cutoff** with `withTemperatureCutoff`, which stops the motor if it overheats.
 
 ## AdvantageKit integration
 
-YAMS publishes telemetry in a layout that works naturally with AdvantageKit's IO layer. See the [AdvantageKit Integration](details/advantagekit-integration.md) page for patterns that combine YAMS's simulation fidelity with AdvantageKit's logging replay.
+YAMS mechanisms fit behind AdvantageKit's IO layer, so you keep YAMS's simulation and live tuning and get AdvantageKit's log replay. The [AdvantageKit](details/advantagekit-integration.md) tutorial walks you through it.
