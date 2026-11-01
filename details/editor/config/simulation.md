@@ -77,4 +77,4 @@ In Commands v3, call them from the methods `Robot.java` runs, as in [Where the t
 
 ## Code reference
 
-* [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/motorcontrollers/SmartMotorControllerConfig.html)
+* [`SmartMotorControllerConfig`](https://javadocs.yassrobotics.com/yams/yams/core/motorcontrollers/SmartMotorControllerConfig.html)

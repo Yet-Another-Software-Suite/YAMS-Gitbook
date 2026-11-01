@@ -93,7 +93,7 @@ SmartMotorControllerTelemetryConfig motorTelemetryConfig = new SmartMotorControl
 
 In C++ the methods are `WithCustom(field, enabled)` and `WithCustom(std::vector, enabled)`. The Java classes are in `yams.core.telemetry`, and `TelemetryVerbosity` is in `yams.core.telemetry.enums`.
 
-The [`SmartMotorControllerTelemetryConfig` javadoc](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/telemetry/SmartMotorControllerTelemetryConfig.html) lists every method.
+The [`SmartMotorControllerTelemetryConfig` javadoc](https://javadocs.yassrobotics.com/yams/yams/core/telemetry/SmartMotorControllerTelemetryConfig.html) lists every method.
 
 ## Recording a match to a DataLog
 

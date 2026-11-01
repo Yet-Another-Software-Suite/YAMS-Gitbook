@@ -4,7 +4,7 @@ icon: car-battery
 
 # Battery Simulation
 
-YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`), reports its current draw into [`BatterySim`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and sets the simulated battery voltage that every motor then runs from.
+YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`), reports its current draw into [`BatterySim`](https://javadocs.yassrobotics.com/yams/yams/core/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and sets the simulated battery voltage that every motor then runs from.
 
 {% hint style="info" %}
 This is automatic. You do not need to call anything for basic voltage sag under combined load, it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](../details/editor/#simulation-without-a-mechanism).

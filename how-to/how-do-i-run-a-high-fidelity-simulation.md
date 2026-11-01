@@ -212,4 +212,4 @@ Start the simulation and hold the arm at a setpoint. With stiff gains that oscil
 
 ## Code Reference
 
-* [`SmartMotorControllerConfig`](https://yet-another-software-suite.github.io/YAMS/javadocs/yams/core/motorcontrollers/SmartMotorControllerConfig.html)
+* [`SmartMotorControllerConfig`](https://javadocs.yassrobotics.com/yams/yams/core/motorcontrollers/SmartMotorControllerConfig.html)
