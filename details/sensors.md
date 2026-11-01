@@ -9,7 +9,7 @@ YAMS simulates your mechanisms well, but most sensors have no simulation of thei
 
 ## What is a `Sensor`?
 
-A `Sensor` wraps a real sensor on your robot, such as a beam break, a limit switch, a `CANrange`, a `LaserCAN` or a `CanandColor`. It has one or more named **fields**, and each field reads a value from the real sensor. In simulation you can also say what each field should read, and when: between two match times, or while a condition is true, such as the arm being at the angle where it breaks the beam.
+A `Sensor` wraps a real sensor on your robot, such as a beam break, a limit switch, a `CANrange`, a `LaserCAN` or a `CanandColor`. It has one or more named **fields**, and each field reads a value from the real sensor. In simulation you can also say what each field should read, and when: while the match time (the time left in the period, counting down) is in a window, or while a condition is true, such as the arm being at the angle where it breaks the beam.
 
 Fields hold `boolean`, `int`, `long` or `double` values.
 
@@ -35,7 +35,7 @@ import yams.core.motorcontrollers.simulation.Sensor;
 private final DigitalInput dio = new DigitalInput(0);
 private final Sensor coralSensor = new SensorConfig("CoralDetectorBeamBreak") // the sensor's name
     .withField("Beam", dio::get, false)                              // field "Beam" reads dio.get(), default false
-    .withSimulatedValue("Beam", Seconds.of(3), Seconds.of(4), true)  // in simulation, true while the match time is 3 to 4 s
+    .withSimulatedValue("Beam", Seconds.of(3), Seconds.of(4), true)  // in simulation, true from 4 s left until 3 s left in the period
     .withSimulatedValue("Beam", () -> arm.isNear(Degrees.of(40), Degrees.of(2)), true) // and while the arm is near 40 degrees
     .getSensor();
 ```
