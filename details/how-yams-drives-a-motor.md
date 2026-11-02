@@ -4,7 +4,17 @@ icon: diagram-project
 
 # How YAMS drives a motor
 
-This page explains the ideas every other page assumes: the three layers of YAMS code, the words rotor, mechanism and measurement, open and closed loop, and the units your gains are in. Read it once before the tutorials, and come back when a word on another page is new.
+This page explains the ideas every other page assumes that you already know. Read it once before the tutorials, and come back when a word on another page is new.
+
+
+
+* Three layers of YAMS code
+* Definitions for:
+  * A rotor according to YAMS
+  * Mechanism
+  * Measurement
+* Open and closed loops
+* Units for gains
 
 ## Three layers
 
@@ -30,6 +40,22 @@ YAMS measures a motor's movement in three places. These words mean the same thin
 
 [`withGearing`](editor/config/gearing-and-units.md#withgearing) tells YAMS how many rotor rotations make one mechanism rotation, so you only ever think in mechanism units.
 
+{% hint style="info" %}
+#### Engineering Note
+
+A rotor is the rotating part of an electric motor. It sits inside the stator, and turns when it inteacts with the magnetic field produced by the stator. \
+\
+The rotor is connected to the **motor shaft**.  A motor shaft is a solid steel rod running through the center of the rotor. The shaft then transfers the mechanical motion to the load. \
+\
+in the above documentation, the shaft is incorrectly called a rotor...
+
+
+{% endhint %}
+
+> <sub>"I'm not changing the entire API because I called a shaft, a rotor and you don't like it!" \~nstrike</sub>
+
+
+
 ## Open loop and closed loop
 
 <figure><img src="../.gitbook/assets/smc-control-mode.png" alt="Two panels. In OPEN_LOOP your code sends volts or duty cycle straight to the motor and no PID, feedforward or profile runs. In CLOSED_LOOP, the default, your code sends a setpoint to the PID, feedforward and profile, which drive the motor using the encoder position and velocity."><figcaption><p>Open loop sends an output straight to the motor. Closed loop drives to a setpoint.</p></figcaption></figure>
@@ -41,7 +67,7 @@ YAMS measures a motor's movement in three places. These words mean the same thin
 
 ## Where the loop runs
 
-The closed loop runs either on the motor controller itself, every millisecond, or on the SystemCore, every 20 ms by default. Which one depends on the motor controller and the options you pick: a TalonFX runs PID and profiles itself, a Thrifty Nova always runs them on the SystemCore. You do not call anything either way. It matters for a few options, and for tuning: gains found with the loop in one place do not carry over to the other. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) has the full table.
+The closed loop runs either on the motor controller itself, every millisecond, or on the SystemCore, every 20 ms by default. Which one depends on the motor controller and the options you pick: a TalonFX runs PID and profiles itself, a Thrifty Nova always runs them on the SystemCore. You do not call anything either way. It matters for a few options, and for tuning: gains found with the loop in one place do not carry over to the other. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) has the full table of options.
 
 ## Units of your gains
 
@@ -51,4 +77,4 @@ YAMS converts your gains to whatever each motor controller wants, so the same nu
 
 ## Next
 
-Build one: start with the [Arm tutorial](../tutorials/arm.md). Look up an option: [SmartMotorControllerConfig](editor/config/README.md).
+Build one: start with the [Arm tutorial](../tutorials/arm.md). Look up an option: [SmartMotorControllerConfig](editor/config/).
