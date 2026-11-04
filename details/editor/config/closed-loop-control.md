@@ -29,9 +29,9 @@ Passing an `LQRController` instead replaces the PID with an LQR: see [LQR contro
 
 **Supported on every motor controller.** Every controller accepts PID gains. An [LQR controller](../lqr-controllers.md) always runs on the SystemCore, on every controller.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova                 |
-| ------- | -------- | ---------------- | ---------------------------- |
-| ✅       | ✅        | ✅                | ✅ PID runs on the SystemCore |
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova            |
+| ------- | -------- | ---------------- | ----------------------- |
+| ✅       | ✅        | ✅                | ✅ PID runs on the Nova |
 
 ### Starting values
 
@@ -64,11 +64,11 @@ Each call can name a slot, so one motor can hold several sets of gains and switc
 motor.setClosedLoopSlot(ClosedLoopControllerSlot.SLOT_1);
 ```
 
-**Not supported everywhere.** Selecting `SLOT_3` on a TalonFX or TalonFXS throws an `IllegalArgumentException`, and a feedforward configured for `SLOT_3` on a TalonFX throws a `SmartMotorControllerConfigurationException`.
+**Not supported everywhere.** Selecting `SLOT_3` on a TalonFX or TalonFXS throws an `IllegalArgumentException`, and a feedforward configured for `SLOT_3` on a TalonFX throws a `SmartMotorControllerConfigurationException`. A Thrifty Nova running the closed loop itself has two slots: gains or a feedforward in `SLOT_2` or `SLOT_3` throw a `SmartMotorControllerConfigurationException`.
 
-| TalonFX                 | TalonFXS                | SPARK MAX / Flex | Thrifty Nova |
-| ----------------------- | ----------------------- | ---------------- | ------------ |
-| ⚠️ `SLOT_0` to `SLOT_2` | ⚠️ `SLOT_0` to `SLOT_2` | ✅                | ✅            |
+| TalonFX                 | TalonFXS                | SPARK MAX / Flex | Thrifty Nova                                                        |
+| ----------------------- | ----------------------- | ---------------- | ------------------------------------------------------------------- |
+| ⚠️ `SLOT_0` to `SLOT_2` | ⚠️ `SLOT_0` to `SLOT_2` | ✅                | ⚠️ `SLOT_0` and `SLOT_1`, unless the loop [runs on the SystemCore](#where-the-loop-runs) |
 
 ## `withClosedLoopTolerance`
 
@@ -100,9 +100,15 @@ Tells the controller that the two ends of the range are the same place, so it ta
 .withContinuousWrapping(Degrees.of(-180), Degrees.of(180))
 ```
 
-It needs a closed loop controller first, and cannot be combined with [soft limits](limits-and-protection.md#withsoftlimits) or a distance based controller, because a mechanism with ends cannot wrap.
+It needs a closed loop controller first, and cannot be combined with [soft limits](limits-and-protection.md#withsoftlimits) or a distance based controller, because a mechanism with ends cannot wrap. Setting both throws a `SmartMotorControllerConfigurationException`, in either order.
 
-**Supported on:** every supported motor controller.
+It also sets the range an absolute external encoder reads, as [`withWrapping`](encoders.md#withwrapping) does. A mechanism with ends whose absolute encoder must read across zero, such as an arm, uses `withWrapping` instead: the encoder reads the same range, but the closed loop never takes the mechanism the other way round, and soft limits still work.
+
+**Not the same everywhere.** On a Thrifty Nova running the closed loop itself, the Nova wraps only an absolute encoder closing its loop, mounted 1:1 on the mechanism, over 0° to 360° (`Rotations.of(0)` to `Rotations.of(1)`). Anything else throws a `SmartMotorControllerConfigurationException`. An encoder's own range has its own limits: see [`withWrapping`](encoders.md#withwrapping).
+
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova                                                                                            |
+| ------- | -------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
+| ✅       | ✅        | ✅                | ⚠️ on the Nova, 0° to 360° of a 1:1 absolute encoder; any range when the loop [runs on the SystemCore](#where-the-loop-runs) |
 
 ## `withClosedLoopControllerMaximumVoltage`
 
@@ -114,17 +120,17 @@ Caps the voltage the closed loop controller may ask for.
 .withClosedLoopControllerMaximumVoltage(Volts.of(6))
 ```
 
-**Not supported everywhere.** On a TalonFX or TalonFXS it is applied as the peak forward and reverse voltage. On a SPARK it throws a `SmartMotorControllerConfigurationException` unless the loop runs on the SystemCore.
+**Not supported everywhere.** On a TalonFX or TalonFXS it is applied as the peak forward and reverse voltage. On a SPARK or Thrifty Nova it throws a `SmartMotorControllerConfigurationException` unless the loop runs on the SystemCore.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova |
-| ------- | -------- | --------------------------------------------------------------------------------- | ------------ |
-| ✅       | ✅        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ✅            |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                                                                                                   |
+| ------- | -------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| ✅       | ✅        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) |
 
 ## Where the loop runs
 
 Some combinations run on the motor controller, at 1 kHz, and some on the SystemCore, every 20 ms by default. It matters for a few options, and YAMS raises an alert when the loop is on the SystemCore.
 
-<figure><img src="../../../.gitbook/assets/smc-where-it-runs.png" alt="A table of where the closed loop runs. TalonFX and TalonFXS run PID and profiles on the controller and LQR on the SystemCore. SPARK MAX and SPARK Flex run PID and trapezoidal profiles on the controller, and exponential profiles and LQR on the SystemCore. The Thrifty Nova runs everything on the SystemCore. Below it, three timelines over 240 milliseconds show how often each loop runs: on the controller every 1 millisecond, which is 1 kilohertz and 240 runs; on the SystemCore every 20 milliseconds by default, which is 12 runs; and on the SystemCore at 10 milliseconds, which is 24 runs. withClosedLoopControlPeriod only changes the SystemCore loop. The period of the loop on the controller cannot be changed."><figcaption><p>Where the closed loop runs, and how often.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-where-it-runs.png" alt="A table of where the closed loop runs. TalonFX and TalonFXS run PID and profiles on the controller and LQR on the SystemCore. SPARK MAX and SPARK Flex run PID and trapezoidal profiles on the controller, and exponential profiles and LQR on the SystemCore. The Thrifty Nova runs PID and trapezoidal position profiles on the controller, and exponential profiles, velocity profiles and LQR on the SystemCore. Below it, three timelines over 240 milliseconds show how often each loop runs: on the controller every 1 millisecond, which is 1 kilohertz and 240 runs; on the SystemCore every 20 milliseconds by default, which is 12 runs; and on the SystemCore at 10 milliseconds, which is 24 runs. withClosedLoopControlPeriod only changes the SystemCore loop. The period of the loop on the controller cannot be changed."><figcaption><p>Where the closed loop runs, and how often.</p></figcaption></figure>
 
 ### PID gains do not carry over between the two
 
@@ -137,7 +143,7 @@ A slower loop reacts later to every error, so it cannot use gains as high as a f
 
 What this means in practice:
 
-* **Tune again whenever the loop moves.** On a SPARK that happens when you switch between a trapezoidal profile, which runs on the controller, and an exponential profile or an [LQR controller](../lqr-controllers.md), which run on the SystemCore. Moving a mechanism to a different brand of motor controller can move the loop too.
+* **Tune again whenever the loop moves.** On a SPARK or Thrifty Nova that happens when you switch between a trapezoidal profile, which runs on the controller, and an exponential profile or an [LQR controller](../lqr-controllers.md), which run on the SystemCore. Moving a mechanism to a different brand of motor controller can move the loop too.
 * **Tune again after changing** [**`withClosedLoopControlPeriod`**](closed-loop-control.md#withclosedloopcontrolperiod)**.** A different period is a different loop.
 * **Do not copy gains from another team or another robot** without checking where their loop ran and how fast.
 
@@ -149,11 +155,11 @@ Changes how often the SystemCore loop runs. The default is 20 ms. It does not ch
 .withClosedLoopControlPeriod(Milliseconds.of(10))
 ```
 
-**Not supported everywhere.** Where it is not supported it throws an `IllegalArgumentException` on a TalonFX, TalonFXS or Thrifty Nova, and a `SmartMotorControllerConfigurationException` on a SPARK.
+**Not supported everywhere.** Where it is not supported it throws an `IllegalArgumentException` on a TalonFX or TalonFXS, and a `SmartMotorControllerConfigurationException` on a SPARK or Thrifty Nova. Outside closed loop mode it throws an `IllegalArgumentException` on a Nova.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                |
-| ------- | -------- | --------------------------------------------------------------------------------- | --------------------------- |
-| ❌       | ❌        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                                                                                                   |
+| ------- | -------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| ❌       | ❌        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) |
 
 ## `withLinearClosedLoopController`
 
@@ -178,7 +184,7 @@ You do not need this section to use YAMS. It explains what YAMS does with your g
 
 You write every gain once, in mechanism units: volts per mechanism rotation, or per meter for a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller). Every [feedforward](feedforward.md) uses the same units, including an `ArmFeedforward`. Each motor controller wants its gains in its own units, so YAMS converts them when it applies the config, and again every time you change a gain while [live tuning](../../live-tuning/).
 
-<figure><img src="../../../.gitbook/assets/smc-gain-overview.png" alt="Your gains, in YAMS units of volts per mechanism rotation or meter, go to three motor controllers. TalonFX and TalonFXS: the sensor to mechanism ratio is the gear ratio, so the Talon already works in mechanism rotations; a linear mechanism&#x27;s gains are divided by the rotations per meter; kS and kG are volts and do not change; Motion Magic limits go from meters to rotations; gravity is Arm_Cosine or Elevator_Static. SPARK MAX and Flex: gains are per rotation of its encoder and output a duty cycle, so they are divided by 12 V and the gear ratio, velocity gains by 60 more for RPM, kI is multiplied by 1 ms and kD divided by 1 ms, kV and kA are volts per RPM of its encoder, and an arm&#x27;s kG becomes kCos with a kCosRatio of 1 over the ratio. Thrifty Nova: the PID runs on the SystemCore in YAMS units, so nothing is converted."><figcaption><p>Where your gains go.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/smc-gain-overview.png" alt="Your gains, in YAMS units of volts per mechanism rotation or meter, go to three motor controllers. TalonFX and TalonFXS: the sensor to mechanism ratio is the gear ratio, so the Talon already works in mechanism rotations; a linear mechanism&#x27;s gains are divided by the rotations per meter; kS and kG are volts and do not change; Motion Magic limits go from meters to rotations; gravity is Arm_Cosine or Elevator_Static. SPARK MAX and Flex: gains are per rotation of its encoder and output a duty cycle, so they are divided by 12 V and the gear ratio, velocity gains by 60 more for RPM, kI is multiplied by 1 ms and kD divided by 1 ms, kV and kA are volts per RPM of its encoder, and an arm&#x27;s kG becomes kCos with a kCosRatio of 1 over the ratio. Thrifty Nova: the sensor to mechanism ratio is the gear ratio, so it already works in mechanism rotations; a linear mechanism&#x27;s gains are divided by the rotations per meter; the feedforward goes in its motion profile, with cosine gravity for an arm; exponential profiles and LQR run on the SystemCore."><figcaption><p>Where your gains go.</p></figcaption></figure>
 
 #### Dimensional analysis
 
@@ -228,7 +234,16 @@ With an [external encoder](encoders.md#withexternalencoder), the `SensorToMechan
 {% endtab %}
 
 {% tab title="Thrifty Nova" %}
-The Nova's closed loop [runs on the SystemCore](closed-loop-control.md#where-the-loop-runs) in YAMS units, so nothing is converted. Your gains are used exactly as you wrote them, and the Nova only receives the voltage the loop asks for.
+The Nova's `sensorToMechanismRatio` is set to the gear ratio, or to the external encoder's gearing when that encoder closes the loop, so it already works in mechanism rotations, like a Talon. Each closed loop slot goes to one of the Nova's two slots:
+
+| YAMS                                 | On the Nova                                                       | Conversion                                                 |
+| ------------------------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------- |
+| `kP`, `kI`, `kD`                     | the slot's PID (`Pid0` or `Pid1`), outputting volts               | ÷ mechanism rotations per meter when distance based        |
+| `withClosedLoopTolerance`            | the slot's allowable error                                        | in mechanism rotations                                     |
+| Trapezoidal profile                  | the slot's motion profile (`Mp0` or `Mp1`) maximum velocity and acceleration | ÷ mechanism rotations per meter when distance based |
+| Feedforward `kS`, `kV`, `kA`, `kG`   | the slot's motion profile, with cosine gravity for an arm         | elevator `kV`, `kA` ÷ mechanism rotations per meter        |
+
+The Nova applies a feedforward only in its motion profile, which is for position, so a feedforward without a trapezoidal profile throws a `SmartMotorControllerConfigurationException`. For velocity control with a feedforward, use a velocity trapezoidal profile, which runs on the SystemCore. An exponential profile or an [LQR controller](../lqr-controllers.md) also runs on the SystemCore, in YAMS units, and the Nova then only receives the voltage the loop asks for.
 {% endtab %}
 {% endtabs %}
 

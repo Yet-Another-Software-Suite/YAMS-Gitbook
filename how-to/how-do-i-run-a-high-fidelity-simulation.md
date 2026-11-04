@@ -33,7 +33,7 @@ This only changes simulation. Nothing on this page has any effect on the real ro
 
 * **TalonFX and TalonFXS.** PID and motion profiles run on the motor controller. Phoenix simulates the motor controller's own loop, and YAMS gives it the rotor position and velocity on every `simIterate()`. YAMS also raises the update rate of the motor's status signals to match the simulation period, in simulation only, so the values you read keep up with the physics.
 * **SPARK MAX and SPARK Flex.** PID and trapezoidal profiles run on the motor controller. YAMS already runs the SPARK's simulated loop once per millisecond inside every step, but the mechanism's velocity is frozen for the whole step. At 1 ms every run of the loop gets a fresh one.
-* **Thrifty Nova, and exponential profiles or [LQR](../details/editor/lqr-controllers.md) on any motor controller.** The loop runs on the SystemCore, every closed loop control period. Those loops gain nothing from a faster simulation period apart from smoother physics.
+* **Exponential profiles or [LQR](../details/editor/lqr-controllers.md) on any motor controller, and velocity trapezoidal profiles on a Thrifty Nova.** The loop runs on the SystemCore, every closed loop control period. Those loops gain nothing from a faster simulation period apart from smoother physics.
 
 ## Set it up
 

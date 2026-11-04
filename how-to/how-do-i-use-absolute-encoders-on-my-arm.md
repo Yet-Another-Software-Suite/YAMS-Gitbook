@@ -6,7 +6,7 @@ icon: compass-drafting
 
 **Goal:** have the arm know its angle the moment the robot turns on, with no homing, by closing its loop on an absolute encoder.
 
-An absolute encoder keeps its reading through a power cycle, and YAMS maps that reading to your arm's angles with a zero offset and a discontinuity point.
+An absolute encoder keeps its reading through a power cycle, and YAMS maps that reading to your arm's angles with a zero offset and a wrapping range.
 
 ## Supported encoder types
 
@@ -43,40 +43,42 @@ If it decreases, invert the encoder reading:
 
 The absolute encoder must complete **at most one full rotation** across the entire range of motion of the arm. Confirm this in the hardware client by moving the arm through its full travel and watching the encoder position, it must never wrap from 1 rotation back to 0 more than once.
 
-If the encoder is mounted directly on the arm's shaft (1:1), leave `withExternalEncoderGearing` unset. Only if the encoder is driven through a reduction, pass the encoder-to-mechanism ratio with `.withExternalEncoderGearing(...)`, and read the alert note in [Set the discontinuity point](#set-the-discontinuity-point).
+If the encoder is mounted directly on the arm's shaft (1:1), leave `withExternalEncoderGearing` unset. Only if the encoder is driven through a reduction, pass the encoder-to-mechanism ratio with `.withExternalEncoderGearing(...)`, and read the note on gearing in [Choose the wrapping range](#choose-the-wrapping-range).
 
 {% hint style="warning" %}
 If the gear ratio causes the encoder to exceed 1 rotation during the arm's range of motion, the encoder position will wrap unpredictably and **cannot** be used as the primary PID feedback device. Either remount the encoder closer to the mechanism output shaft or change the reduction so the encoder never exceeds 1 rotation.
 {% endhint %}
 
-<figure><img src="../.gitbook/assets/smc-encoder-gearing-wrap.gif" alt="Animation of the same arm moving between hard stops 120 degrees apart, read through two encoder gearings. Each absolute encoder is drawn with a white line on its casing and a white line on its bearing, which line up at the discontinuity point. With a gearing of 2 the encoder turns 240 degrees, the lines never meet, and YAMS always reports the right angle. With a gearing of 4 the encoder needs 480 degrees, the lines meet partway through the travel, and YAMS then reports an angle 90 degrees too low."><figcaption><p>The same arm and hard stops. Both use a discontinuity point of 1 rotation, at the line on the casing. With a gearing of 2 the white lines never meet. With a gearing of 4 they do, and the reported angle is wrong.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/smc-encoder-gearing-wrap.gif" alt="Animation of the same arm moving between hard stops 120 degrees apart, read through two encoder gearings. Each absolute encoder is drawn with a white line on its casing and a white line on its bearing, which line up at the wrap point. With a gearing of 2 the encoder turns 240 degrees, the lines never meet, and YAMS always reports the right angle. With a gearing of 4 the encoder needs 480 degrees, the lines meet partway through the travel, and YAMS then reports an angle 90 degrees too low."><figcaption><p>The same arm and hard stops. Both read [0, 1), so they wrap at the line on the casing. With a gearing of 2 the white lines never meet. With a gearing of 4 they do, and the reported angle is wrong.</p></figcaption></figure>
 
 **Check it:** across the arm's whole travel, the encoder turns less than one rotation.
 {% endstep %}
 
 {% step %}
-### Set the discontinuity point
+### Choose the wrapping range
 
-An absolute encoder wraps at its **discontinuity point**, the angle at which the reading jumps from its maximum value back to zero (or vice versa). There are two supported ranges:
+An absolute encoder reads one rotation, and wraps at the ends of its range: its **wrap point**, where the reading jumps from its maximum back to its minimum. [`withWrapping`](../details/editor/config/encoders.md#withwrapping) chooses the range. The two usual ones:
 
-* `Rotations.of(1.0)`, range is **\[0, 1]**; the encoder wraps at 1 rotation back to 0
-* `Rotations.of(0.5)`, range is **\[-0.5, 0.5]**; the encoder wraps at ±0.5 rotations
+* `withWrapping(Rotations.of(0), Rotations.of(1))`: the encoder reads **\[0, 1)** rotations, and wraps from 1 rotation back to 0
+* `withWrapping(Rotations.of(-0.5), Rotations.of(0.5))`: the encoder reads **\[-0.5, 0.5)** rotations, and wraps at ±0.5 rotations
 
 ```java
-.withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
+.withWrapping(Rotations.of(-0.5), Rotations.of(0.5))  // [-0.5, 0.5) range, for an arm either side of zero
 // or
-.withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))  // [-0.5, 0.5] range
+.withWrapping(Rotations.of(0), Rotations.of(1))       // [0, 1) range
 ```
 
+`withWrapping` only sets what the encoder reads: the arm's closed loop never goes the other way round to a setpoint, so it works with soft limits. Do not use [`withContinuousWrapping`](../details/editor/config/closed-loop-control.md#withcontinuouswrapping) on an arm: it makes the closed loop take the shortest path, which could be through the arm's hard stops.
+
 {% hint style="info" %}
-If you don't set a discontinuity point, `SparkWrapper` and `NovaWrapper` use `Rotations.of(1.0)` (the **\[0, 1]** range). Setting it explicitly is recommended for clarity on every wrapper. On a `SparkWrapper`, setting both `.withExternalEncoderGearing(...)` and a discontinuity point raises an alert, because the discontinuity point is not scaled by the gearing.
+Without `withWrapping`, a SPARK or Thrifty Nova absolute encoder reads **\[0, 1)**, and a `CANcoder` or `CANdi` keeps the range it has. Each motor controller accepts only the ranges its encoder can read: see [`withWrapping`](../details/editor/config/encoders.md#withwrapping). A Thrifty Nova closing its loop on the encoder reads **\[0, 1)** only. The range is one rotation of the **encoder**, so with `.withExternalEncoderGearing(...)` it is not one rotation of the arm.
 {% endhint %}
 
 {% hint style="warning" %}
-If the arm's physical range of motion crosses the discontinuity point, the position will jump mid-travel and break closed-loop control. If this happens, remove the encoder, rotate the bearing so the discontinuity point falls outside the arm's travel range, and remount.
+If the arm's physical range of motion crosses the wrap point, the position will jump mid-travel and break closed-loop control. If this happens, remove the encoder, rotate the bearing so the wrap point falls outside the arm's travel range, and remount.
 {% endhint %}
 
-<figure><img src="../.gitbook/assets/smc-encoder-discontinuity-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two discontinuity point settings. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm&#x27;s zero in both panels. With 1 rotation the discontinuity point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. With 0.5 rotations the discontinuity point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>With 1 rotation the discontinuity point is at the line on the casing. With 0.5 rotations it is 180° from it, and the line has not moved.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/smc-encoder-wrapping-range.gif" alt="Animation of a 1:1 arm moving between hard stops at minus 40 and 110 degrees, with the two wrapping ranges. The absolute encoder is drawn with a white line on its casing and one on its bearing, which line up at the arm&#x27;s zero in both panels. Wrapping over 0 to 1 rotation, the wrap point is at the line on the casing, inside the travel, so the reading jumps by 360 degrees when the arm goes below zero. Wrapping over minus 0.5 to 0.5 rotations, the wrap point is 180 degrees from the line, where the arm never goes, and the reading follows the arm the whole way."><figcaption><p>Wrapping over [0, 1), the wrap point is at the line on the casing. Over [-0.5, 0.5) it is 180° from it, and the line has not moved.</p></figcaption></figure>
 
 **Check it:** move the arm through its whole travel in the hardware client. The reading never jumps.
 {% endstep %}
@@ -97,7 +99,7 @@ Use one of the two, with your own reading. The offset is in **arm (mechanism) ro
 
 Negative offsets are automatically converted to their positive equivalent (1 rotation is added internally). The offset is applied to the absolute encoder itself, such as the CANcoder's magnet offset or the SPARK's absolute encoder zero offset.
 
-<figure><img src="../.gitbook/assets/smc-encoder-zero-offset-discontinuity.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its discontinuity point is opposite that, inside the arm&#x27;s travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the discontinuity point have both moved a quarter turn, the discontinuity point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the discontinuity point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/smc-encoder-zero-offset-wrapping.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its wrap point is opposite that, inside the arm&#x27;s travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the wrap point have both moved a quarter turn, the wrap point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the wrap point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
 
 **Check it:** deploy and hold the arm horizontal. `getExternalEncoderMechanismPosition()` on the `SmartMotorController`, the absolute encoder's angle, reads about 0°, as does the arm's angle under **NetworkTables > Mechanisms**.
 {% endstep %}
@@ -139,7 +141,7 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withExternalEncoder(armMotor.getAbsoluteEncoder())
     .withExternalEncoderInverted(false)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
-    .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
+    .withWrapping(Rotations.of(-0.5), Rotations.of(0.5))  // [-0.5, 0.5) range
     .withUseExternalFeedbackEncoder(true)
     .withSimStartingPosition(Degrees.of(0));
 
@@ -165,7 +167,7 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withExternalEncoder(cancoder)
     .withExternalEncoderInverted(false)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
-    .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))  // [-0.5, 0.5] range
+    .withWrapping(Rotations.of(-0.5), Rotations.of(0.5))  // [-0.5, 0.5) range
     .withUseExternalFeedbackEncoder(true)
     .withSimStartingPosition(Degrees.of(0));
 
@@ -199,6 +201,7 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withExternalEncoder(candi)
     .withExternalEncoderInverted(false)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
+    .withWrapping(Rotations.of(-0.5), Rotations.of(0.5))  // [-0.5, 0.5) range
     .withUseExternalFeedbackEncoder(true)
     .withSimStartingPosition(Degrees.of(0));
 
@@ -217,7 +220,7 @@ The CTRE types come from Phoenix 6: `com.ctre.phoenix6.configs.TalonFXSConfigura
 
 ### Thrifty Nova + absolute encoder on the data port
 
-Pass `FeedbackSensorType.ABS` as the external encoder and tell the Nova which encoder is wired to its data port through the vendor config. A Thrifty `CanEncoder` on the same CAN bus works too: pass the `CanEncoder` object to `.withExternalEncoder(...)` instead.
+Pass `FeedbackSensorType.ABS` as the external encoder and tell the Nova which encoder is wired to its data port through the vendor config. The Nova runs this arm's PID, profile and feedforward itself, closing its loop on the encoder, which it reads over \[0, 1) only: set the zero offset so the wrap point, at the arm's zero, is outside the travel, or use a `CANcoder` on a Talon (see [Complete examples](#complete-examples)) for an arm that crosses it. A Thrifty `CanEncoder` on the same CAN bus works too: pass the `CanEncoder` object to `.withExternalEncoder(...)` instead.
 
 ```java
 private final Nova armMotor = new Nova(0, 1, MotorType.NEO);
@@ -236,7 +239,7 @@ private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerC
     .withExternalEncoder(FeedbackSensorType.ABS)
     .withExternalEncoderInverted(false)
     .withExternalEncoderZeroOffset(Degrees.of(33.25))
-    .withExternalEncoderDiscontinuityPoint(Rotations.of(1.0))  // [0, 1] range
+    // The Nova closes its loop on the encoder, which it reads over [0, 1): the default.
     .withUseExternalFeedbackEncoder(true)
     .withSimStartingPosition(Degrees.of(0));
 
@@ -270,7 +273,7 @@ The arm example demonstrates configuring an arm with a CANcoder as its external 
 ## If it did not work
 
 * **The angle reads about twice your offset, or the offset is the wrong way.** Check the units above, and that the client had no offset of its own set when you read the value.
-* **The angle jumps by 360° partway through the travel.** The discontinuity point is inside the travel; see [Set the discontinuity point](#set-the-discontinuity-point).
+* **The angle jumps by 360° partway through the travel.** The wrap point is inside the travel; see [Choose the wrapping range](#choose-the-wrapping-range).
 * **The angle goes the wrong way.** See [Check your inversion](#check-your-inversion), or [Troubleshooting](../tutorials/troubleshooting.md).
 
 ## Read more

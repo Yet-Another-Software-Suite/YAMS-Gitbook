@@ -67,7 +67,7 @@ in the above documentation, the shaft is incorrectly called a rotor...
 
 ## Where the loop runs
 
-The closed loop runs either on the motor controller itself, every millisecond, or on the SystemCore, every 20 ms by default. Which one depends on the motor controller and the options you pick: a TalonFX runs PID and profiles itself, a Thrifty Nova always runs them on the SystemCore. You do not call anything either way. It matters for a few options, and for tuning: gains found with the loop in one place do not carry over to the other. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) has the full table of options.
+The closed loop runs either on the motor controller itself, every millisecond, or on the SystemCore, every 20 ms by default. Which one depends on the motor controller and the options you pick: a TalonFX or Thrifty Nova runs PID and trapezoidal profiles itself, while an LQR runs on the SystemCore on every motor controller. You do not call anything either way. It matters for a few options, and for tuning: gains found with the loop in one place do not carry over to the other. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) has the full table of options.
 
 ## Units of your gains
 

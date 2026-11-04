@@ -227,7 +227,7 @@ A turret's zero is usually pointing at the robot's front. A wrist's zero is usua
 {% step %}
 #### Wrap it or limit it
 
-A turret that can spin forever gets [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping) and no soft limits. Everything else gets [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), inside [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits).
+A turret that can spin forever gets [`withContinuousWrapping`](editor/config/closed-loop-control.md#withcontinuouswrapping) and no soft limits. Everything else gets [`withSoftLimits`](editor/config/limits-and-protection.md#withsoftlimits), inside [`withHardLimits`](mechanism-configs/shared-options.md#withhardlimits). If its absolute encoder must read across zero, add [`withWrapping`](editor/config/encoders.md#withwrapping): it sets the encoder's range without the closed loop wrapping, so it works with soft limits.
 {% endstep %}
 
 {% step %}

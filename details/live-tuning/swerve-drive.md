@@ -220,7 +220,7 @@ Instead of tuning by hand, the modules can be driven at a voltage and the gains 
 * **Drive:** every drive motor runs at the voltage, without its closed loop. The wheels point forward, or around the robot with `modules/drive/inplace`, and are not optimized, so they always drive the same way.
 * **Azimuth:** every azimuth motor turns at the voltage, without its closed loop, and the drive motors are held still.
 
-A closed loop that runs on the SystemCore (on a Thrifty Nova motor controller, whose YAMS closed loop runs on the SystemCore, or with an [LQR](../editor/lqr-controllers.md) or [exponential profile](../editor/exponential-profiles.md)), would replace the voltage on its next loop, so YAMS stops it while the voltage is on and starts it again when the voltage turns off. The setpoint you typed is sent again then, or the wheels are held where they are if no mode is on.
+A closed loop that runs on the SystemCore (with an [LQR](../editor/lqr-controllers.md) or an [exponential profile](../editor/exponential-profiles.md), or a velocity trapezoidal profile on a Thrifty Nova), would replace the voltage on its next loop, so YAMS stops it while the voltage is on and starts it again when the voltage turns off. The setpoint you typed is sent again then, or the wheels are held where they are if no mode is on.
 
 {% hint style="info" %}
 The YAGSL config generator's [Quick Start Guide](https://config.yagsl.com/guide) uses these keys in its Live mode: **Auto**, next to the gain fields, runs a slow ramp and a quick step each way, fits the feedforward, works out the feedback with an LQR, and fills in all six gains. The feedback depends on how often the closed loop runs, which each motor controller publishes as `closedloop/period` at `TelemetryVerbosity.HIGH`.

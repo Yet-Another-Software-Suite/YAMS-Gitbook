@@ -127,7 +127,8 @@ SmartMotorControllerConfig azimuthCfg = new SmartMotorControllerConfig(this)
       .withExternalEncoder(canCoder)
       .withExternalEncoderZeroOffset(Rotations.of(0.25))
       .withExternalEncoderInverted(true)
-      .withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))
+      .withClosedLoopController(50, 0, 0.5)
+      .withContinuousWrapping(Rotations.of(-0.5), Rotations.of(0.5))
       .withUseExternalFeedbackEncoder(true);
 
 SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2, canBus), DCMotor.getKrakenX60(1), azimuthCfg);
@@ -135,7 +136,7 @@ SmartMotorController azimuthSMC = new TalonFXWrapper(new TalonFX(2, canBus), DCM
 SwerveModuleConfig moduleConfig = new SwerveModuleConfig(driveSMC, azimuthSMC);
 ```
 
-`withExternalEncoderDiscontinuityPoint(Angle)` must be `Rotations.of(0.5)` or `Rotations.of(1)`. `withUseExternalFeedbackEncoder(true)` makes the azimuth's closed-loop controller run on the absolute encoder all the time. Whenever the azimuth config has an external encoder, `SwerveModule` requires it, and throws if it is missing. To read an absolute encoder only once at startup and run the closed loop on the motor's own encoder, use the `Supplier<Angle>` form below instead: the module seeds the motor's encoder from it with `seedAzimuthEncoder()`.
+`withContinuousWrapping` makes the CANcoder read -180° to 180° and lets the azimuth take the shortest way round. `withUseExternalFeedbackEncoder(true)` makes the azimuth's closed-loop controller run on the absolute encoder all the time. Whenever the azimuth config has an external encoder, `SwerveModule` requires it, and throws if it is missing. To read an absolute encoder only once at startup and run the closed loop on the motor's own encoder, use the `Supplier<Angle>` form below instead: the module seeds the motor's encoder from it with `seedAzimuthEncoder()`.
 
 A CANcoder feeding a REV azimuth motor is a different vendor, so it goes through the `Supplier<Angle>` form instead:
 

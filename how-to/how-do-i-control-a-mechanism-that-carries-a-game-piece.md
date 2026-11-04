@@ -152,7 +152,7 @@ The gains in this code are **placeholders** to show the shape of the change; use
 A telescoping arm, an arm with a wrist, or an elevator picking up its stages needs a different `kG` as it moves, not only with a game piece. Two ways to handle it:
 
 * **Slots for ranges.** Up to four sets of gains, such as retracted, extended, and each with a game piece. Switch with triggers on the position, as above. This is the simplest, and the gains in each slot can be tuned on their own.
-* **Change `kG` as it moves**, with `motor.setKg(kG)`, worked out from the extension or angle. Only do this when `kG` has changed enough to matter, not every loop: on a Talon or a SPARK, `setKg` writes the motor controller's configuration, which takes time. On a Nova, or any mechanism whose [closed loop runs on the SystemCore](../details/editor/config/closed-loop-control.md#where-the-loop-runs), it only changes a number.
+* **Change `kG` as it moves**, with `motor.setKg(kG)`, worked out from the extension or angle. Only do this when `kG` has changed enough to matter, not every loop: on a Talon, SPARK or Thrifty Nova, `setKg` writes the motor controller's configuration, which takes time. On a mechanism whose [closed loop runs on the SystemCore](../details/editor/config/closed-loop-control.md#where-the-loop-runs), it only changes a number.
 
 ## Common pitfalls
 

@@ -242,6 +242,24 @@ The external encoder getters were renamed, and new getters read only the motor's
 
 `getMechanismPosition()` and `getMechanismVelocity()` are unchanged: they read the external encoder when `withUseExternalFeedbackEncoder(true)` is set, otherwise the relative encoder. The external encoder getters return an empty `Optional` when no external encoder is attached.
 
+### External encoder discontinuity point replaced by wrapping
+
+`withExternalEncoderDiscontinuityPoint(...)` is removed. The range an absolute encoder reads now comes from [`withWrapping(min, max)`](details/editor/config/encoders.md#withwrapping), or from [`withContinuousWrapping(min, max)`](details/editor/config/closed-loop-control.md#withcontinuouswrapping), which also makes the closed loop take the shortest path:
+
+```java
+// Before
+.withExternalEncoderDiscontinuityPoint(Rotations.of(0.5))
+
+// After: the encoder reads [-0.5, 0.5) rotations
+.withWrapping(Rotations.of(-0.5), Rotations.of(0.5))
+```
+
+`getContinuousWrapping()` and `getContinuousWrappingMin()` are now `getWrappingMax()` and `getWrappingMin()`, with `isWrappingContinuous()` (`GetWrappingMax`, `GetWrappingMin`, `IsWrappingContinuous` in C++). Continuous wrapping and soft limits cannot be used together, but `withWrapping` and soft limits can.
+
+### Thrifty Nova closed loop
+
+A PID, and a trapezoidal position profile with its feedforward, now run on the Nova itself. An LQR, an exponential profile and a velocity trapezoidal profile still run on the SystemCore. When the Nova runs the loop, a feedforward needs a trapezoidal profile, only `SLOT_0` and `SLOT_1` exist, soft limits need both limits, and the temperature cutoff, closed loop maximum voltage, feedback synchronization threshold and control period are rejected. See [Where the loop runs](details/editor/config/closed-loop-control.md#where-the-loop-runs).
+
 ### EasyCRT
 
 `EasyCRTConfig` is gone. `EasyCRT` now takes the three tooth counts and the two readings, and works out its own tolerance:
@@ -290,6 +308,8 @@ The C++ swerve API still uses `GetGyroAngle()` and has no `GyroAxis` yet.
 * [ ] Rename `withIdleMode(...)` to `withZeroPower(...)`.
 * [ ] Rename `getZeroOffset()` to `getExternalEncoderZeroOffset()`, and `getExternalEncoderPosition()`/`getExternalEncoderVelocity()` to `getExternalEncoderMechanismPosition()`/`getExternalEncoderMechanismVelocity()`.
 * [ ] If you set up motor controller telemetry yourself, call `config.setupLiveTuning()` after `setupTelemetry(...)` to get the "Live Tuning" command.
+* [ ] Replace `withExternalEncoderDiscontinuityPoint(...)` with `withWrapping(...)`, or `withContinuousWrapping(...)` where the closed loop should take the shortest path.
+* [ ] Thrifty Nova: give a mechanism with a feedforward a trapezoidal profile, and use only `SLOT_0` and `SLOT_1`.
 * [ ] Replace `EasyCRTConfig` with `new EasyCRT(sharedGearTeeth, encoderATeeth, encoderBTeeth)` and `solve(encoderA, encoderB)`, and move offsets and inversion onto the encoders.
 * [ ] Swerve (Java): pass a `Supplier<Rotation3d>` to `withGyro(...)`, replace `getGyroAngle()` with `getGyroRotation3d()`, and add `withGyroHeadingAxis(...)` if your gyro is not mounted flat.
 * [ ] Double-check any hard-limit setter names: `withHardLimits(...)` (plural) is correct on `ArmConfig`/`ElevatorConfig`/`PivotConfig`; there has never been a singular `withHardLimit(...)`.

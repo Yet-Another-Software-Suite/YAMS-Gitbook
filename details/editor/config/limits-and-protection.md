@@ -21,15 +21,15 @@ The range the mechanism is allowed to move through.
 .withSoftLimits(Meters.of(0), Meters.of(1.2))     // needs a circumference
 ```
 
-The lower limit must be below the upper limit. Soft limits cannot be combined with [continuous wrapping](closed-loop-control.md#withcontinuouswrapping).
+The lower limit must be below the upper limit. Soft limits cannot be combined with [continuous wrapping](closed-loop-control.md#withcontinuouswrapping): setting both throws a `SmartMotorControllerConfigurationException`, in either order. They can be combined with [`withWrapping`](encoders.md#withwrapping), which only sets the range an absolute encoder reads.
 
 Soft limits rely on the encoder being right. If the mechanism does not start where the encoder thinks it does, the limits are in the wrong place: see [starting position](encoders.md#withstartingposition).
 
-**Only in closed loop mode.** Soft limits are only enforced with [`withControlMode(ControlMode.CLOSED_LOOP)`](motor-basics.md#withcontrolmode), the default. On a TalonFX, TalonFXS or SPARK they are set on the motor controller and stop any output that would go past them, including a voltage or duty cycle. On a Thrifty Nova, whose loop runs on the SystemCore, a position setpoint past a limit is moved to the limit, but a voltage or duty cycle is not stopped.
+**Only in closed loop mode.** Soft limits are only enforced with [`withControlMode(ControlMode.CLOSED_LOOP)`](motor-basics.md#withcontrolmode), the default. They are set on the motor controller and stop any output that would go past them, including a voltage or duty cycle. A Thrifty Nova has one enable for both limits, so it needs both an upper and a lower limit: setting only one throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX                     | TalonFXS                    | SPARK MAX / Flex            | Thrifty Nova                                             |
-| --------------------------- | --------------------------- | --------------------------- | -------------------------------------------------------- |
-| ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ closed loop setpoints only, not voltage or duty cycle |
+| TalonFX                     | TalonFXS                    | SPARK MAX / Flex            | Thrifty Nova                                         |
+| --------------------------- | --------------------------- | --------------------------- | ---------------------------------------------------- |
+| ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode, with both limits set |
 
 ## `withStatorCurrentLimit` and `withSupplyCurrentLimit`
 
@@ -100,14 +100,14 @@ Stops the closed loop controller driving the motor once it reaches a temperature
 While the motor is at or above the cutoff, the closed loop output is zero, so a mechanism that was being held up will drop. Treat it as a last resort and fix the cause with [current limits](../limiting-power-consumption.md) or gearing.
 
 {% hint style="danger" %}
-On a SPARK MAX or SPARK Flex with a **trapezoidal** profile, the cutoff does not work: the profile runs on the SPARK, and the cutoff is only checked by the loop on the SystemCore. Use an exponential profile if you rely on the cutoff.
+On a SPARK MAX, SPARK Flex or Thrifty Nova with a **trapezoidal** position profile, or a PID alone, the cutoff is rejected: the loop runs on the motor controller, and the cutoff is only checked by the loop on the SystemCore. Use an exponential profile if you rely on the cutoff.
 {% endhint %}
 
 **Not supported everywhere.** The cutoff is enforced by the closed loop running on the SystemCore, so it only works where the loop runs there. An [LQR controller](../lqr-controllers.md) always runs there, so the cutoff works with LQR on every motor controller.
 
-| TalonFX                                                 | TalonFXS                                                | SPARK MAX / Flex                                                                  | Thrifty Nova                |
-| ------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------- |
-| ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
+| TalonFX                                                 | TalonFXS                                                | SPARK MAX / Flex                                                                  | Thrifty Nova                                                                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) |
 
 ## Code reference
 
