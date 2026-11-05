@@ -14,6 +14,7 @@ Every `SmartMotorControllerConfig` option against every motor controller wrapper
 | `TalonFXSWrapper` | CTRE            | TalonFXS (controls NEO, NEO 550, Vortex, Minion) | `yams.core.motorcontrollers.remote` | `yams/motorcontrollers/remote/TalonFXSWrapper.hpp` |
 | `SparkWrapper`    | REV             | SparkMax, SparkFlex                              | `yams.core.motorcontrollers.local`  | `yams/motorcontrollers/local/SparkWrapper.hpp`     |
 | `NovaWrapper`     | The Thrifty Bot | Thrifty Nova (NEO, Minion, Pulsar, brushed)      | `yams.core.motorcontrollers.local`  | `yams/motorcontrollers/local/NovaWrapper.hpp`      |
+| `A301Wrapper`     | FIRST (REVLib)  | FIRST A301 smart motor                           | `yams.core.motorcontrollers.local`  | `yams/motorcontrollers/local/A301Wrapper.hpp`      |
 
 {% hint style="info" %}
 The wrappers live in `yams.core`, but you build them with the `SmartMotorControllerConfig` from your command framework's package: `yams.commands2.config.SmartMotorControllerConfig` (Commands v2) or `yams.commands3.config.SmartMotorControllerConfig` (Commands v3).
@@ -30,6 +31,7 @@ Each wrapper accepts a specific vendor configuration class via `SmartMotorContro
 | `SparkWrapper` (SparkMax)  | `SparkMaxConfig`             | `com.revrobotics.spark.config` |
 | `SparkWrapper` (SparkFlex) | `SparkFlexConfig`            | `com.revrobotics.spark.config` |
 | `NovaWrapper`              | `NovaConfig.Config`, such as `NovaConfigBatch` | `com.thrifty.nova`  |
+| `A301Wrapper`              | None: the A301 has no vendor config | |
 
 {% hint style="warning" %}
 **SparkWrapper Note**: The vendor config class must match the actual hardware. Use `SparkMaxConfig` for `SparkMax` controllers and `SparkFlexConfig` for `SparkFlex` controllers. Using the wrong config type will throw a `SmartMotorControllerConfigurationException`.
@@ -37,6 +39,10 @@ Each wrapper accepts a specific vendor configuration class via `SmartMotorContro
 
 {% hint style="warning" %}
 **NovaWrapper Note**: The vendor config must be a `NovaConfig.Config`, usually a `NovaConfigBatch` (in C++ it must be a `thrifty::NovaConfigBatch`). Anything else throws a `SmartMotorControllerConfigurationException`. The vendor config is sent to the Nova before the YAMS config, which overrides it.
+{% endhint %}
+
+{% hint style="warning" %}
+**A301Wrapper Note**: The A301 has no vendor config, so `withVendorConfig` throws a `SmartMotorControllerConfigurationException`.
 {% endhint %}
 
 [How do I use a vendor hardware config?](../../how-to/how-do-i-use-a-vendor-hardware-config.md) has an example for each vendor.
@@ -61,32 +67,40 @@ This is every option against every motor controller. What each option does, with
 
 ### Basic configuration
 
-| Feature                   | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ------------------------- | ------- | -------- | ------------- | ---- |
-| Motor Inversion           | ✅       | ✅        | ✅             | ✅ |
-| Encoder Inversion         | ❌       | ✅        | ❌             | ❌ |
-| Zero Power Mode (Brake/Coast)   | ✅       | ✅        | ✅             | ✅ |
-| Reset Previous Config     | ✅       | ✅        | ✅             | ✅ |
-| Vendor Config Passthrough | ✅       | ✅        | ✅             | ✅ |
-| Vendor Control Request    | ✅       | ✅        | ❌             | ❌ |
-| Starting Position         | ✅       | ✅        | ✅             | ✅ |
+| Feature                   | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| ------------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Motor Inversion           | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Encoder Inversion         | ❌       | ✅        | ❌             | ❌ | ❌ |
+| Zero Power Mode (Brake/Coast)   | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Reset Previous Config     | ✅       | ✅        | ✅             | ✅ | ⚠️ (ignored) |
+| Vendor Config Passthrough | ✅       | ✅        | ✅             | ✅ | ❌ |
+| Vendor Control Request    | ✅       | ✅        | ❌             | ❌ | ❌ |
+| Starting Position         | ✅       | ✅        | ✅             | ✅ | ✅ |
+
+{% hint style="warning" %}
+**A301 Encoder Inversion**: `A301Wrapper` throws an `IllegalArgumentException` if `withEncoderInverted` is set. Invert the motor with `withMotorInverted` instead.
+{% endhint %}
 
 ### Current limits
 
-| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| -------------------- | ------- | -------- | ------------- | ---- |
-| Stator Current Limit | ✅       | ✅        | ✅             | ✅ |
-| Supply Current Limit | ✅       | ✅        | ❌             | ✅ |
+| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| -------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Stator Current Limit | ✅       | ✅        | ✅             | ✅ | ❌ |
+| Supply Current Limit | ✅       | ✅        | ❌             | ✅ | ❌ |
+
+{% hint style="warning" %}
+**A301 Current Limits**: the A301 has no current limits, so `A301Wrapper` throws a `SmartMotorControllerConfigurationException` if either is configured, and `setStatorCurrentLimit` and `setSupplyCurrentLimit` throw an `UnsupportedOperationException`. See [Limiting power consumption](limiting-power-consumption.md).
+{% endhint %}
 
 ### Voltage configuration
 
-| Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ----------------------- | ------- | -------- | ------------- | ---- |
-| Voltage Compensation    | ❌       | ❌        | ✅             | ✅ |
-| Closed Loop Max Voltage | ✅       | ✅        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) |
+| Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| ----------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Voltage Compensation    | ❌       | ❌        | ✅             | ✅ | ❌ |
+| Closed Loop Max Voltage | ✅       | ✅        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) | ✅ |
 
 {% hint style="warning" %}
-**Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an `IllegalArgumentException` if voltage compensation is configured; it's supported on `SparkWrapper` and `NovaWrapper`.
+**Voltage Compensation**: `TalonFXWrapper` and `TalonFXSWrapper` throw an `IllegalArgumentException` if voltage compensation is configured; it's supported on `SparkWrapper` and `NovaWrapper`. `A301Wrapper` throws a `SmartMotorControllerConfigurationException`, since the A301 has no voltage compensation.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -95,32 +109,40 @@ This is every option against every motor controller. What each option does, with
 
 ### Ramp rates
 
-| Feature               | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| --------------------- | ------- | -------- | ------------- | ---- |
-| Open Loop Ramp Rate   | ✅       | ✅        | ✅             | ⚠️ (one ramp rate) |
-| Closed Loop Ramp Rate | ✅       | ✅        | ✅             | ⚠️ (one ramp rate) |
+| Feature               | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| --------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Open Loop Ramp Rate   | ✅       | ✅        | ✅             | ⚠️ (one ramp rate) | ❌ |
+| Closed Loop Ramp Rate | ✅       | ✅        | ✅             | ⚠️ (one ramp rate) | ❌ |
 
 {% hint style="warning" %}
 **Nova Ramp Rate**: The Thrifty Nova has one ramp rate for both open and closed loop control. `NovaWrapper` throws a `SmartMotorControllerConfigurationException` if `withOpenLoopRampRate` and `withClosedLoopRampRate` are given different values; set one of them, or both to the same value.
 {% endhint %}
 
+{% hint style="warning" %}
+**A301 Ramp Rates**: the A301 has no ramp rates. `A301Wrapper` throws a `SmartMotorControllerConfigurationException` if either is configured, and the live setters throw an `UnsupportedOperationException`.
+{% endhint %}
+
 ### Gearing
 
-| Feature                          | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| -------------------------------- | ------- | -------- | ------------- | ---- |
-| Mechanism Gearing                | ✅       | ✅        | ✅             | ✅ |
-| External Encoder Gearing         | ✅       | ✅        | ✅             | ✅ |
-| Mechanism Circumference (Linear) | ✅       | ✅        | ✅             | ✅ |
+| Feature                          | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| -------------------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Mechanism Gearing                | ✅       | ✅        | ✅             | ✅ | ✅ (includes the A301's gearbox) |
+| External Encoder Gearing         | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Mechanism Circumference (Linear) | ✅       | ✅        | ✅             | ✅ | ✅ |
+
+{% hint style="info" %}
+**A301 Gearing**: `withGearing` is from the A301's rotor to the mechanism, so it includes the gearbox on the A301 (135:1, 64:1, 36:1, 27:1, 13.5:1 or 3:1) and anything after it. YAMS does not detect the gearbox. The external encoder gearing is from the A301's output shaft, where its absolute encoder is, to the mechanism.
+{% endhint %}
 
 ### Closed-loop control
 
-| Feature                 | TalonFX      | TalonFXS     | SparkMax/Flex                        | Nova |
-| ----------------------- | ------------ | ------------ | ------------------------------------ | ---- |
-| PID Controller          | ✅               | ✅               | ✅                                                      | ✅                              |
-| [LQR Controller](lqr-controllers.md)          | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore)                                        | ⚠️ (SystemCore)                 |
-| Closed Loop Tolerance   | ❌               | ❌               | ⚠️ (not with [LQR](lqr-controllers.md))                                       | ⚠️ (not with [LQR](lqr-controllers.md))                |
-| Control Period Override | ❌               | ❌               | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) |
-| Closed Loop Slots       | ⚠️ (`SLOT_0` to `SLOT_2`) | ⚠️ (`SLOT_0` to `SLOT_2`) | ✅ | ⚠️ (`SLOT_0` and `SLOT_1` when the Nova runs the loop) |
+| Feature                 | TalonFX      | TalonFXS     | SparkMax/Flex                        | Nova | A301 |
+| ----------------------- | ------------ | ------------ | ------------------------------------ | ---- | ---- |
+| PID Controller          | ✅               | ✅               | ✅                                                      | ✅                              | ✅ (runs on the SystemCore) |
+| [LQR Controller](lqr-controllers.md)          | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore)                                        | ⚠️ (SystemCore)                 | ⚠️ (SystemCore) |
+| Closed Loop Tolerance   | ❌               | ❌               | ⚠️ (not with [LQR](lqr-controllers.md))                                       | ⚠️ (not with [LQR](lqr-controllers.md))                | ⚠️ (not with [LQR](lqr-controllers.md)) |
+| Control Period Override | ❌               | ❌               | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) | ⚠️ (requires closed loop mode) |
+| Closed Loop Slots       | ⚠️ (`SLOT_0` to `SLOT_2`) | ⚠️ (`SLOT_0` to `SLOT_2`) | ✅ | ⚠️ (`SLOT_0` and `SLOT_1` when the Nova runs the loop) | ✅ |
 
 {% hint style="warning" %}
 **LQR Controller Execution**: LQR is **not natively supported** by any motor controller hardware. When configured, the closed loop control runs on the **SystemCore**: the wrapper starts a `Notifier` that calls `SmartMotorController.iterateClosedLoopController()` every closed loop control period (20 ms unless you set `withClosedLoopControlPeriod`), so there is nothing to call yourself. See [LQR Controllers](lqr-controllers.md) for details.
@@ -130,12 +152,16 @@ This is every option against every motor controller. What each option does, with
 **Nova Closed Loop Execution**: `NovaWrapper` runs a PID, and a trapezoidal position profile with its feedforward, on the Nova, in its two slots. An [LQR](lqr-controllers.md), an exponential profile or a velocity trapezoidal profile runs on the SystemCore, which commands the Nova with voltage, and a YAMS alert reports it. The Nova applies a feedforward only in its motion profile, so a feedforward without a trapezoidal profile throws a `SmartMotorControllerConfigurationException`. ThriftyLib's simulation ignores the Nova's onboard PID gains, so in simulation YAMS runs the Nova's closed loop itself, with the gains, profile and limits the Nova was sent.
 {% endhint %}
 
+{% hint style="info" %}
+**A301 Closed Loop Execution**: the A301 has no closed loop gains, so `A301Wrapper` always runs its closed loop controller (PID or [LQR](lqr-controllers.md), motion profiles and feedforwards) on the SystemCore and commands the A301 with voltage. A YAMS alert reports that the closed loop controller is running on the SystemCore.
+{% endhint %}
+
 ### Motion profiles
 
-| Feature             | TalonFX               | TalonFXS              | SparkMax/Flex | Nova |
-| ------------------- | --------------------- | --------------------- | ------------- | ---- |
-| Trapezoidal Profile | ✅ (Motion Magic)      | ✅ (Motion Magic)      | ✅ (MAXMotion) | ✅ (on the Nova; velocity profiles on the SystemCore) |
-| Exponential Profile | ✅ (Motion Magic Expo) | ✅ (Motion Magic Expo) | ⚠️ (SystemCore) | ⚠️ (SystemCore) |
+| Feature             | TalonFX               | TalonFXS              | SparkMax/Flex | Nova | A301 |
+| ------------------- | --------------------- | --------------------- | ------------- | ---- | ---- |
+| Trapezoidal Profile | ✅ (Motion Magic)      | ✅ (Motion Magic)      | ✅ (MAXMotion) | ✅ (on the Nova; velocity profiles on the SystemCore) | ⚠️ (SystemCore) |
+| Exponential Profile | ✅ (Motion Magic Expo) | ✅ (Motion Magic Expo) | ⚠️ (SystemCore) | ⚠️ (SystemCore) | ⚠️ (SystemCore) |
 
 {% hint style="info" %}
 **Profile Execution Location**:
@@ -143,39 +169,40 @@ This is every option against every motor controller. What each option does, with
 * **TalonFX/TalonFXS**: Profiles run on the motor controller (Motion Magic)
 * **SparkMax/SparkFlex**: Trapezoidal profiles run on motor controller (MAXMotion), exponential profiles run on the SystemCore
 * **Thrifty Nova**: Trapezoidal position profiles run on the Nova, exponential and velocity trapezoidal profiles run on the SystemCore
+* **A301**: Both profiles run on the SystemCore
 {% endhint %}
 
 ### Feedforward
 
-| Feature                | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ---------------------- | ------- | -------- | ------------- | ---- |
-| SimpleMotorFeedforward | ✅       | ✅        | ✅             | ✅ |
-| ArmFeedforward         | ✅       | ✅        | ✅             | ✅ |
-| ElevatorFeedforward    | ✅       | ✅        | ✅             | ✅ |
-| Simulation Feedforward | ✅       | ✅        | ✅             | ✅ |
+| Feature                | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| ---------------------- | ------- | -------- | ------------- | ---- | ---- |
+| SimpleMotorFeedforward | ✅       | ✅        | ✅             | ✅ | ✅ |
+| ArmFeedforward         | ✅       | ✅        | ✅             | ✅ | ✅ |
+| ElevatorFeedforward    | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Simulation Feedforward | ✅       | ✅        | ✅             | ✅ | ✅ |
 
 ### Soft limits
 
-| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| -------------------- | ------- | -------- | ------------- | ---- |
-| Angle Soft Limits    | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only, both limits) |
-| Distance Soft Limits | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only, both limits) |
-| Continuous Wrapping  | ✅       | ✅        | ✅             | ⚠️ (on the Nova, 0° to 360° of a 1:1 absolute encoder) |
+| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| -------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Angle Soft Limits    | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only, both limits) | ⚠️ (closed loop setpoints only) |
+| Distance Soft Limits | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only, both limits) | ⚠️ (closed loop setpoints only) |
+| Continuous Wrapping  | ✅       | ✅        | ✅             | ⚠️ (on the Nova, 0° to 360° of a 1:1 absolute encoder) | ✅ |
 
 {% hint style="warning" %}
-**Soft limits** are only enforced in `ControlMode.CLOSED_LOOP`. They are set on the motor controller and stop any output past them, voltage and duty cycle included. A Thrifty Nova needs both an upper and a lower limit. Soft limits cannot be combined with continuous wrapping. See [`withSoftLimits`](config/limits-and-protection.md#withsoftlimits).
+**Soft limits** are only enforced in `ControlMode.CLOSED_LOOP`. They are set on the motor controller and stop any output past them, voltage and duty cycle included. A Thrifty Nova needs both an upper and a lower limit. On an A301, whose loop runs on the SystemCore, a position setpoint past a limit is moved to the limit, but a voltage or duty cycle is not stopped. Soft limits cannot be combined with continuous wrapping. See [`withSoftLimits`](config/limits-and-protection.md#withsoftlimits).
 {% endhint %}
 
 ### External encoders
 
-| Feature                      | TalonFX | TalonFXS | SparkMax/Flex                                          | Nova |
-| ---------------------------- | ------- | -------- | ------------------------------------------------------ | ---- |
-| External Encoder Support     | ✅       | ✅        | ✅                                                      | ✅ |
-| External Encoder Inversion   | ✅       | ✅        | ✅                                                      | ✅ |
-| External Encoder Zero Offset | ✅       | ✅        | ⚠️ (absolute encoders only)                            | ⚠️ (absolute and CAN encoders only) |
-| Wrapping Range               | ✅ (from [-1, 0) to [0, 1)) | ✅ (from [-1, 0) to [0, 1)) | ⚠️ (absolute encoder from [-1, 0) to [0, 1); `DetachedEncoder` [-0.5, 0.5) or [0, 1)) | ⚠️ ([0, 1) when the Nova closes its loop on the encoder) |
-| Use External for Feedback    | ⚠️ (`false` ignores the external encoder) | ⚠️ (`false` ignores the external encoder) | ✅ | ✅ |
-| Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) |
+| Feature                      | TalonFX | TalonFXS | SparkMax/Flex                                          | Nova | A301 |
+| ---------------------------- | ------- | -------- | ------------------------------------------------------ | ---- | ---- |
+| External Encoder Support     | ✅       | ✅        | ✅                                                      | ✅ | ⚠️ (its own absolute encoder only) |
+| External Encoder Inversion   | ✅       | ✅        | ✅                                                      | ✅ | ✅ |
+| External Encoder Zero Offset | ✅       | ✅        | ⚠️ (absolute encoders only)                            | ⚠️ (absolute and CAN encoders only) | ✅ |
+| Wrapping Range               | ✅ (from [-1, 0) to [0, 1)) | ✅ (from [-1, 0) to [0, 1)) | ⚠️ (absolute encoder from [-1, 0) to [0, 1); `DetachedEncoder` [-0.5, 0.5) or [0, 1)) | ⚠️ ([0, 1) when the Nova closes its loop on the encoder) | ✅ (from [-1, 0) to [0, 1)) |
+| Use External for Feedback    | ⚠️ (`false` ignores the external encoder) | ⚠️ (`false` ignores the external encoder) | ✅ | ✅ | ✅ |
+| Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) | ⚠️ (requires closed loop mode) |
 
 **Supported External Encoder Types:**
 
@@ -185,48 +212,59 @@ This is every option against every motor controller. What each option does, with
 | TalonFXS      | `CANcoder`, `CANdi` (PWM1/PWM2)                |
 | SparkMax/Flex | `SparkAbsoluteEncoder` (an absolute encoder on the SPARK, such as a Through Bore), `SparkMaxAlternateEncoder` or `SparkFlexExternalEncoder` (a quadrature encoder on the SPARK), `DetachedEncoder` (a REV absolute encoder read over CAN) |
 | Nova          | `FeedbackSensorType.ABS` (absolute encoder on the data port), `FeedbackSensorType.QUAD` (quadrature encoder on the data port), `CanEncoder` (Thrifty CAN Encoder) |
+| A301          | The `A301` itself (its own absolute encoder, on its output shaft) |
 
 {% hint style="info" %}
 **Nova external encoders**: pass `FeedbackSensorType.ABS` or `FeedbackSensorType.QUAD` (from `com.thrifty.core.Motor`) to `withExternalEncoder`. The encoder's type comes from the vendor config, for example `NovaConfig.absoluteEncoderType(Motor.AbsoluteEncoderType.REV_ENCODER)` or `NovaConfig.quadratureEncoderType(Motor.QuadratureEncoderType.custom(2048))`. Zero offset and the [wrapping range](config/encoders.md#withwrapping) only apply to absolute and CAN encoders.
 {% endhint %}
 
+{% hint style="info" %}
+**A301 external encoder**: pass the `A301` itself to `withExternalEncoder` to use its absolute encoder, which is on its output shaft, after the gearbox. Anything else throws an `IllegalArgumentException`. YAMS applies the zero offset, inversion and wrapping range itself; without `withWrapping` the encoder reads [0, 1). The A301 does not report the absolute encoder's velocity, so the external encoder velocity comes from the relative encoder.
+{% endhint %}
+
 ### Follower motors
 
-| Feature                   | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ------------------------- | ------- | -------- | ------------- | ---- |
-| Hardware Followers        | ✅       | ✅        | ✅             | ✅ |
-| Follower Inversion        | ✅       | ✅        | ✅             | ✅ |
-| Loosely Coupled Followers | ✅       | ✅        | ✅             | ✅ |
+| Feature                   | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| ------------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Hardware Followers        | ✅       | ✅        | ✅             | ✅ | ❌ |
+| Follower Inversion        | ✅       | ✅        | ✅             | ✅ | ❌ |
+| Loosely Coupled Followers | ✅       | ✅        | ✅             | ✅ | ✅ |
 
 {% hint style="warning" %}
-**Follower Compatibility**: Followers must be the same brand as the leader motor controller. You cannot mix vendors for hardware followers. Within a vendor the models can be mixed: a TalonFX can follow a TalonFXS and a TalonFXS can follow a TalonFX, and a SPARK MAX and a SPARK Flex can follow each other. Loosely coupled followers are different: each one runs its own closed loop, so you can mix brands freely, such as a SPARK leading a TalonFX.
+**Follower Compatibility**: Followers must be the same brand as the leader motor controller. You cannot mix vendors for hardware followers. Within a vendor the models can be mixed: a TalonFX can follow a TalonFXS and a TalonFXS can follow a TalonFX, and a SPARK MAX and a SPARK Flex can follow each other. Loosely coupled followers are different: each one runs its own closed loop, so you can mix brands freely, such as a SPARK leading a TalonFX. An A301 cannot have hardware followers: `withFollowers` throws a `SmartMotorControllerConfigurationException`, so use loosely coupled followers.
 {% endhint %}
 
 ### Telemetry
 
-| Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| ----------------------- | ------- | -------- | ------------- | ---- |
-| Telemetry Name          | ✅       | ✅        | ✅             | ✅ |
-| Telemetry Verbosity     | ✅       | ✅        | ✅             | ✅ |
-| Custom Telemetry Config | ✅       | ✅        | ✅             | ✅ |
+| Feature                 | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| ----------------------- | ------- | -------- | ------------- | ---- | ---- |
+| Telemetry Name          | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Telemetry Verbosity     | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Custom Telemetry Config | ✅       | ✅        | ✅             | ✅ | ✅ |
+
+`A301Wrapper` does not report supply current, current limits or ramp rates.
 
 ### Simulation
 
-| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova |
-| -------------------- | ------- | -------- | ------------- | ---- |
-| DCMotorSim           | ✅       | ✅        | ✅             | ✅ |
-| Moment of Inertia    | ✅       | ✅        | ✅             | ✅ |
-| Custom Sim Supplier  | ✅       | ✅        | ✅             | ✅ |
-| External Encoder Sim | ✅       | ✅        | ✅             | ✅ |
+| Feature              | TalonFX | TalonFXS | SparkMax/Flex | Nova | A301 |
+| -------------------- | ------- | -------- | ------------- | ---- | ---- |
+| DCMotorSim           | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Moment of Inertia    | ✅       | ✅        | ✅             | ✅ | ✅ |
+| Custom Sim Supplier  | ✅       | ✅        | ✅             | ✅ | ✅ |
+| External Encoder Sim | ✅       | ✅        | ✅             | ✅ | ✅ |
+
+{% hint style="info" %}
+**A301 Simulation**: REVLib does not simulate the A301, so `A301Wrapper` drives a WPILib `DCMotorSim` of the A301's motor, `YMotors.getA301(1)`. A mechanism's own sim, such as an Arm's, replaces it, as on any other motor controller.
+{% endhint %}
 
 ### Safety features
 
-| Feature            | TalonFX | TalonFXS | SparkMax/Flex                              | Nova |
-| ------------------ | ------- | -------- | ------------------------------------------ | ---- |
-| Temperature Cutoff | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) |
+| Feature            | TalonFX | TalonFXS | SparkMax/Flex                              | Nova | A301 |
+| ------------------ | ------- | -------- | ------------------------------------------ | ---- | ---- |
+| Temperature Cutoff | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) | ⚠️ (requires closed loop mode) |
 
 {% hint style="warning" %}
-**Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an [LQR controller](lqr-controllers.md) on any motor controller, an Exponential Profile on a `SparkWrapper` or `NovaWrapper`, and a velocity trapezoidal profile on a `NovaWrapper`. With PID or a profile that runs on the motor controller, it does not work.
+**Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an [LQR controller](lqr-controllers.md) on any motor controller, an Exponential Profile on a `SparkWrapper` or `NovaWrapper`, a velocity trapezoidal profile on a `NovaWrapper`, and always on an `A301Wrapper`. With PID or a profile that runs on the motor controller, it does not work.
 {% endhint %}
 
 ***
@@ -260,6 +298,10 @@ Set with the `MotorType` given to the `Nova` constructor (`com.thrifty.core.Moto
 * Minion (`MotorType.MINION`)
 * Pulsar (`MotorType.PULSAR`)
 * Brushed DC motors (`MotorType.BRUSHED`)
+
+### A301Wrapper
+
+Every A301 has the same motor, so `A301Wrapper` takes no `DCMotor`: it uses `YMotors.getA301(1)` (C++ `YMotors::A301()`).
 
 ***
 
@@ -344,6 +386,28 @@ SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
 SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 ```
 
+### A301 arm with its absolute encoder
+
+```java
+A301 a301 = new A301(CANPorts.fromBusId(1), 20);   // CAN bus 1, CAN ID 20
+
+SmartMotorControllerConfig config = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(30, 0, 0)
+    .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(360))
+    .withFeedforward(new ArmFeedforward(0, 1.6, 10.2, 0))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(64, 3)))   // 64:1 gearbox, then a 3:1 chain
+    .withExternalEncoder(a301)
+    .withExternalEncoderGearing(new MechanismGearing(GearBox.fromReductionStages(3)))   // output shaft to arm
+    .withUseExternalFeedbackEncoder(true)
+    .withZeroPower(MotorMode.BRAKE)
+    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH);
+
+SmartMotorController smc = new A301Wrapper(a301, config);
+```
+
+The [`a301_arm` example](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/a301_arm) (Commands v2) is a complete arm on one A301, through its 64:1 gearbox and a 3:1 chain, that runs in simulation.
+
 ***
 
 ## Known limitations
@@ -369,4 +433,17 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), config);
 * The internal encoder cannot be inverted (`withEncoderInverted` throws an `IllegalArgumentException`)
 * Vendor control requests (`withVendorControlRequest`) are not supported
 * Hardware followers must be `Nova` controllers
+* Setting the encoder velocity is only supported in simulation
+
+### FIRST A301 (A301Wrapper)
+
+* Requires REVLib 2027 (`com.revrobotics.spark.A301`)
+* Takes no `DCMotor`: every A301 has the same motor, `YMotors.getA301(1)`
+* All closed loop control, motion profiles and feedforwards run on the SystemCore
+* No current limits, ramp rates, voltage compensation, vendor config or vendor control requests: configuring them throws a `SmartMotorControllerConfigurationException`
+* No hardware followers; use loosely coupled followers
+* The internal encoder cannot be inverted (`withEncoderInverted` throws an `IllegalArgumentException`)
+* The only external encoder is the A301's own absolute encoder, on its output shaft
+* Soft limits move a position setpoint to the limit, but do not stop a voltage or duty cycle
+* About 28 W peak, much less than a NEO, so an arm needs a big reduction
 * Setting the encoder velocity is only supported in simulation

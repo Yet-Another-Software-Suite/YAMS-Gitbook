@@ -72,9 +72,9 @@ You give it a maximum voltage and either the mechanism (its motor and its moment
 
 **Supported on every motor controller.** Every controller accepts both profiles, but they do not run in the same place.
 
-| TalonFX                                               | TalonFXS                                              | SPARK MAX / Flex                                                           | Thrifty Nova                                                                                  |
-| ----------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| ✅ on the controller (Motion Magic, Motion Magic Expo) | ✅ on the controller (Motion Magic, Motion Magic Expo) | ✅ trapezoidal on the controller (MAXMotion), exponential on the SystemCore | ✅ trapezoidal position on the controller, exponential and velocity trapezoidal on the SystemCore |
+| TalonFX                                               | TalonFXS                                              | SPARK MAX / Flex                                                           | Thrifty Nova                                                                                  | A301                     |
+| ----------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------ |
+| ✅ on the controller (Motion Magic, Motion Magic Expo) | ✅ on the controller (Motion Magic, Motion Magic Expo) | ✅ trapezoidal on the controller (MAXMotion), exponential on the SystemCore | ✅ trapezoidal position on the controller, exponential and velocity trapezoidal on the SystemCore | ✅ both on the SystemCore |
 
 Where the profile runs decides which other options are available: see [where the loop runs](closed-loop-control.md#where-the-loop-runs).
 

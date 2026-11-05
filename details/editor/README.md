@@ -22,7 +22,7 @@ layout:
 
 # Smart motor controllers
 
-A `SmartMotorController` is how YAMS drives one motor. You describe the motor once in a `SmartMotorControllerConfig` (its gearing, gains, limits and encoders), and a wrapper such as `TalonFXWrapper`, `SparkWrapper` or `NovaWrapper` applies it to the vendor's motor controller. The same config works on every supported motor controller.
+A `SmartMotorController` is how YAMS drives one motor. You describe the motor once in a `SmartMotorControllerConfig` (its gearing, gains, limits and encoders), and a wrapper such as `TalonFXWrapper`, `SparkWrapper`, `NovaWrapper` or `A301Wrapper` applies it to the vendor's motor controller. The same config works on every supported motor controller.
 
 New to YAMS? Read [How YAMS drives a motor](../how-yams-drives-a-motor.md) first. It explains the three layers (motor controller, mechanism, subsystem), the words rotor, mechanism and measurement, open and closed loop, and the units your gains are in.
 

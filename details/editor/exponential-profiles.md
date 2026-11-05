@@ -391,6 +391,7 @@ With a good feedforward and a profile the mechanism can follow, the PID only fix
 | TalonFXS                 | On-device (Motion Magic) | On-device (Motion Magic Expo) | Best performance            |
 | SparkMax/SparkFlex       | On-device (MAXMotion)    | SystemCore                    | Exponential runs on the SystemCore |
 | Thrifty Nova             | On-device (position), SystemCore (velocity) | SystemCore                    | Exponential runs on the SystemCore |
+| FIRST A301               | SystemCore               | SystemCore                    | Every loop runs on the SystemCore |
 
 {% hint style="info" %}
 When exponential profiles run on the SystemCore, there's slightly more latency compared to on-device execution. However, the profile calculation is still very fast and suitable for most mechanisms.

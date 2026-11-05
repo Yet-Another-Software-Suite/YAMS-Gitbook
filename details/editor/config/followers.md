@@ -29,11 +29,11 @@ Tightly coupled followers, for motors on the same shaft or gearbox. Each followe
 
 Pass the vendor's motor object, not a `SmartMotorController`. The boolean is whether that follower is inverted relative to the leader: motors facing each other across a gearbox usually are.
 
-**Supported on every motor controller.** Followers must be the same vendor as the leader. A TalonFX and a TalonFXS are both CTRE, so either can follow the other. To mix brands, use [`withLooselyCoupledFollowers`](followers.md#withlooselycoupledfollowers).
+**Not supported everywhere.** Followers must be the same vendor as the leader. A TalonFX and a TalonFXS are both CTRE, so either can follow the other. To mix brands, use [`withLooselyCoupledFollowers`](followers.md#withlooselycoupledfollowers). An A301 has no follower mode, so `withFollowers` on an A301 throws a `SmartMotorControllerConfigurationException`: use loosely coupled followers for it too.
 
-| TalonFX                          | TalonFXS                         | SPARK MAX / Flex       | Thrifty Nova          |
-| -------------------------------- | -------------------------------- | ---------------------- | --------------------- |
-| ✅ TalonFX and TalonFXS followers | ✅ TalonFXS and TalonFX followers | ✅ SPARK followers only | ✅ Nova followers only |
+| TalonFX                          | TalonFXS                         | SPARK MAX / Flex       | Thrifty Nova          | A301 |
+| -------------------------------- | -------------------------------- | ---------------------- | --------------------- | ---- |
+| ✅ TalonFX and TalonFXS followers | ✅ TalonFXS and TalonFX followers | ✅ SPARK followers only | ✅ Nova followers only | ❌    |
 
 ## `withLooselyCoupledFollowers`
 

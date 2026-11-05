@@ -53,7 +53,7 @@ No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0
 
 ## What you should see
 
-* Before you enable, the arm is drawn at -5 degrees, its starting position.
+* Before you enable, the arm starts at -5 degrees, its starting position, and drops toward its lower hard limit at -30 degrees: a disabled robot's motors get no power, in simulation too.
 * When you enable, the default command takes it up to 0 degrees, level.
 * Holding **A** takes it to -5 degrees, and holding **B** to 15 degrees. Let go, and it goes back to 0 degrees.
 * Holding **X** drives it up, and **Y** drives it down, until the soft limits stop it.

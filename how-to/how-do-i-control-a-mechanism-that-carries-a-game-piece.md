@@ -145,7 +145,7 @@ The gains in this code are **placeholders** to show the shape of the change; use
 
 `hasGamePiece()` is whatever tells you the mechanism has a game piece: a beam break, a distance sensor, or the intake's current, as in [How do I detect a game piece from motor current?](how-do-i-sense-activity-based-off-of-the-current.md). The slot takes effect with the next setpoint, and a mechanism's commands send a setpoint every loop.
 
-[Loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers) are switched to the same slot, on every motor controller (SPARK MAX, SPARK Flex, TalonFX, TalonFXS and Thrifty Nova). Give each follower the same slots in its own config.
+[Loosely coupled followers](../details/editor/config/followers.md#withlooselycoupledfollowers) are switched to the same slot, on every motor controller (SPARK MAX, SPARK Flex, TalonFX, TalonFXS, Thrifty Nova and A301). Give each follower the same slots in its own config.
 
 ## A mechanism whose gains change as it moves
 

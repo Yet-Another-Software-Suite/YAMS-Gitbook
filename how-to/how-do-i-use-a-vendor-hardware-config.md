@@ -111,9 +111,13 @@ SmartMotorController smc = new NovaWrapper(nova, DCMotor.getNEO(1), motorConfig)
 
 Any other vendor config type throws a `SmartMotorControllerConfigurationException`.
 
+## FIRST A301
+
+The A301 has no vendor config. `A301Wrapper` throws a `SmartMotorControllerConfigurationException` for any `withVendorConfig`, so everything it supports is set through `SmartMotorControllerConfig`.
+
 ## Factory reset: `withResetPreviousConfig`
 
-Motor controllers keep their settings in flash, across power cycles and code deploys. With `withResetPreviousConfig(true)`, the default, YAMS clears them before applying your config, so settings left over from last season, or from someone clicking around in the vendor's tool, cannot sneak in: a TalonFX or TalonFXS gets a complete config (your vendor config, or the defaults) with the YAMS options on top, a SPARK resets its parameters first (`ResetMode.kResetSafeParameters`), and a Nova is sent a factory reset first.
+Motor controllers keep their settings in flash, across power cycles and code deploys. With `withResetPreviousConfig(true)`, the default, YAMS clears them before applying your config, so settings left over from last season, or from someone clicking around in the vendor's tool, cannot sneak in: a TalonFX or TalonFXS gets a complete config (your vendor config, or the defaults) with the YAMS options on top, a SPARK resets its parameters first (`ResetMode.kResetSafeParameters`), and a Nova is sent a factory reset first. `A301Wrapper` ignores the option.
 
 ```java
 // Keep what is already saved on the controller, and only change what this config sets.
@@ -136,7 +140,7 @@ Open the controller in Phoenix Tuner X or REV Hardware Client after the robot co
 
 ## If it did not work
 
-* **`SmartMotorControllerConfigurationException` about the vendor config.** The object is the wrong type for the wrapper: a TalonFX needs a `TalonFXConfiguration`, a TalonFXS a `TalonFXSConfiguration`, a SPARK MAX a `SparkMaxConfig`, a SPARK Flex a `SparkFlexConfig`, and a Nova a `NovaConfig.Config` such as a `NovaConfigBatch`.
+* **`SmartMotorControllerConfigurationException` about the vendor config.** The object is the wrong type for the wrapper: a TalonFX needs a `TalonFXConfiguration`, a TalonFXS a `TalonFXSConfiguration`, a SPARK MAX a `SparkMaxConfig`, a SPARK Flex a `SparkFlexConfig`, and a Nova a `NovaConfig.Config` such as a `NovaConfigBatch`. An A301 takes none: remove the vendor config.
 * **Your vendor setting is gone.** `SmartMotorControllerConfig` sets the same option, and it wins. Set it there instead.
 * **Something else.** See [Troubleshooting](../tutorials/troubleshooting.md).
 

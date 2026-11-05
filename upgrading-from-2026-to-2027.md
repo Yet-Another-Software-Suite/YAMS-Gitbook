@@ -260,6 +260,10 @@ The external encoder getters were renamed, and new getters read only the motor's
 
 A PID, and a trapezoidal position profile with its feedforward, now run on the Nova itself. An LQR, an exponential profile and a velocity trapezoidal profile still run on the SystemCore. When the Nova runs the loop, a feedforward needs a trapezoidal profile, only `SLOT_0` and `SLOT_1` exist, soft limits need both limits, and the temperature cutoff, closed loop maximum voltage, feedback synchronization threshold and control period are rejected. See [Where the loop runs](details/editor/config/closed-loop-control.md#where-the-loop-runs).
 
+### FIRST A301 (new)
+
+`A301Wrapper` (`yams.core.motorcontrollers.local`, C++ `yams/motorcontrollers/local/A301Wrapper.hpp`) drives the FIRST A301 smart motor through REVLib 2027's `com.revrobotics.spark.A301`. It takes no `DCMotor`: `new A301Wrapper(new A301(CANPorts.fromBusId(1), 20), config)`. Its closed loop always runs on the SystemCore, `withGearing` includes the A301's own gearbox, and it has no current limits, ramp rates, voltage compensation, vendor config or hardware followers. The [feature matrix](details/editor/feature-matrix.md#first-a301-a301wrapper) lists everything it supports.
+
 ### EasyCRT
 
 `EasyCRTConfig` is gone. `EasyCRT` now takes the three tooth counts and the two readings, and works out its own tolerance:

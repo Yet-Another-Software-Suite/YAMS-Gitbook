@@ -75,6 +75,12 @@ public void simulationPeriodic() {
 
 In Commands v3, call them from the methods `Robot.java` runs, as in [Where the tutorials put things](../../../tutorials/project-setup.md#where-the-tutorials-put-things). Every simulated motor also draws from the shared [battery simulation](../../../understanding/battery-simulation.md).
 
+### While the robot is disabled
+
+A disabled robot's motors get no power, and the simulation does the same: every simulated motor gets 0 V while the robot is disabled, whatever it was last sent. An arm or an elevator falls onto its lower hard limit, and a flywheel coasts to a stop.
+
+A closed loop that runs on the SystemCore sends nothing while the robot is disabled. It follows the mechanism instead, so when you enable, its PID, motion profile and LQR start from where the mechanism is, not from where it was when the robot was disabled, and the mechanism does not jump.
+
 ## Code reference
 
 * [`SmartMotorControllerConfig`](https://javadocs.yassrobotics.com/yams/yams/core/motorcontrollers/SmartMotorControllerConfig.html)

@@ -47,6 +47,10 @@ Read the first error in the Driver Station or the simulation console. YAMS names
 
 ## It moves, but not as it should
 
+**It falls, or a flywheel coasts down, while the robot is disabled**
+
+* That is expected. A disabled robot's motors get no power, so the simulation gives them 0 V. When you enable, the closed loop starts from wherever the mechanism ended up.
+
 **It sags below its setpoint, or an elevator drifts down**
 
 * `kG` is 0. Tune it as in [Step 5: Tune it](arm/tune.md#kg-hold-the-arm-up).

@@ -53,11 +53,11 @@ Inverts the motor's built in encoder.
 
 Most built in encoders are fixed to the rotor and follow [`withMotorInverted`](motor-basics.md#withmotorinverted), so they rarely need this. Flip the motor first.
 
-**Not supported everywhere.** It only works on a TalonFXS, and throws on every other controller: a `SmartMotorControllerConfigurationException` on a TalonFX, and an `IllegalArgumentException` on a SPARK or Thrifty Nova.
+**Not supported everywhere.** It only works on a TalonFXS, and throws on every other controller: a `SmartMotorControllerConfigurationException` on a TalonFX, and an `IllegalArgumentException` on a SPARK, Thrifty Nova or A301.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| ------- | -------- | ---------------- | ------------ |
-| ❌       | ✅        | ❌                | ❌            |
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova | A301 |
+| ------- | -------- | ---------------- | ------------ | ---- |
+| ❌       | ✅        | ❌                | ❌            | ❌    |
 
 ## `withExternalEncoderInverted`
 
@@ -87,11 +87,11 @@ The encoders each wrapper accepts are listed in the [feature matrix](../feature-
 **The rule for every absolute encoder:** it must never reach its wrap point, where its reading wraps, anywhere in the mechanism's travel. Use real hard stops, keep the travel under one turn of the encoder, and on a 1:1 encoder set the [zero offset](#withexternalencoderzerooffset) at the mechanism's zero with [`withWrapping(Rotations.of(-0.5), Rotations.of(0.5))`](#withwrapping). [Why: absolute encoders and where they wrap](#why-absolute-encoders-and-where-they-wrap) explains it.
 {% endhint %}
 
-**Supported on every motor controller.** Every controller accepts an external encoder, but only ones it can read itself. An encoder from another vendor cannot be used.
+**Supported on every motor controller.** Every controller accepts an external encoder, but only ones it can read itself. An encoder from another vendor cannot be used. An A301 only accepts its own absolute encoder, which is on its output shaft, after its gearbox: pass the `A301` itself, as in `.withExternalEncoder(a301)`. The A301 does not report that encoder's velocity, so YAMS takes it from the built in encoder.
 
-| TalonFX               | TalonFXS              | SPARK MAX / Flex                                  | Thrifty Nova                                                    |
-| --------------------- | --------------------- | ------------------------------------------------- | --------------------------------------------------------------- |
-| ✅ `CANcoder`, `CANdi` | ✅ `CANcoder`, `CANdi` | ✅ its absolute encoder, its alternate (MAX) or external (Flex) quadrature encoder, or a REV `DetachedEncoder` | ✅ data port absolute or quadrature encoder, Thrifty CAN encoder |
+| TalonFX               | TalonFXS              | SPARK MAX / Flex                                  | Thrifty Nova                                                    | A301 |
+| --------------------- | --------------------- | ------------------------------------------------- | --------------------------------------------------------------- | ---- |
+| ✅ `CANcoder`, `CANdi` | ✅ `CANcoder`, `CANdi` | ✅ its absolute encoder, its alternate (MAX) or external (Flex) quadrature encoder, or a REV `DetachedEncoder` | ✅ data port absolute or quadrature encoder, Thrifty CAN encoder | ⚠️ its own absolute encoder only |
 
 ## `withExternalEncoderGearing`
 
@@ -114,6 +114,8 @@ The number is how many times the encoder turns for one turn of the mechanism. It
 
 Leave it out when the encoder is mounted 1:1 on the mechanism's output, which is the safest place for an absolute encoder. It throws a `SmartMotorControllerConfigurationException` if no external encoder is configured.
 
+On an A301 it is the gearing from the A301's output shaft, where its absolute encoder is, to the mechanism: for example, 3 for a 3:1 chain after the A301's gearbox.
+
 {% hint style="warning" %}
 A number above 1 makes the encoder turn further than the mechanism, so it reaches its wrap point sooner. YAMS prints a warning for it, which is safe to ignore **only** if the travel between the hard stops, multiplied by the gearing, is less than one turn: see [Only gear an absolute encoder if it cannot wrap](#only-gear-an-absolute-encoder-if-it-cannot-wrap).
 {% endhint %}
@@ -134,9 +136,9 @@ To find it, move the mechanism to where you want zero and read the external enco
 
 **Not supported everywhere.** On a quadrature encoder it throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex          | Thrifty Nova                      |
-| ------- | -------- | ------------------------- | --------------------------------- |
-| ✅       | ✅        | ⚠️ absolute encoders only (its absolute encoder or a `DetachedEncoder`) | ⚠️ absolute and CAN encoders only |
+| TalonFX | TalonFXS | SPARK MAX / Flex          | Thrifty Nova                      | A301 |
+| ------- | -------- | ------------------------- | --------------------------------- | ---- |
+| ✅       | ✅        | ⚠️ absolute encoders only (its absolute encoder or a `DetachedEncoder`) | ⚠️ absolute and CAN encoders only | ✅    |
 
 ## `withWrapping`
 
@@ -149,13 +151,13 @@ Chooses the range an absolute encoder reads, and so where its reading wraps. The
 .withWrapping(Rotations.of(0), Rotations.of(1))      // reads 0° to 360°
 ```
 
-The range is one rotation. A mechanism that can turn all the way round, such as a turret or a swerve module, uses [`withContinuousWrapping`](closed-loop-control.md#withcontinuouswrapping) instead: it sets the same range, and the closed loop also takes the shortest way to a setpoint. Without either, a SPARK or Thrifty Nova absolute encoder reads 0° to 360°, and a `CANcoder` or `CANdi` keeps the range it has.
+The range is one rotation. A mechanism that can turn all the way round, such as a turret or a swerve module, uses [`withContinuousWrapping`](closed-loop-control.md#withcontinuouswrapping) instead: it sets the same range, and the closed loop also takes the shortest way to a setpoint. Without either, a SPARK, Thrifty Nova or A301 absolute encoder reads 0° to 360°, and a `CANcoder` or `CANdi` keeps the range it has.
 
 **Not the same everywhere.** Each motor controller accepts only the ranges its encoder can read, and throws a `SmartMotorControllerConfigurationException` for any other. Without an absolute encoder, the range has no effect.
 
-| TalonFX                                             | TalonFXS                                            | SPARK MAX / Flex                                                                                        | Thrifty Nova                                                               |
-| --------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ⚠️ its absolute encoder: any range from [-1, 0) to [0, 1). A `DetachedEncoder`: [-0.5, 0.5) or [0, 1) | ⚠️ [0, 1) when the Nova closes its loop on the encoder, any range otherwise |
+| TalonFX                                             | TalonFXS                                            | SPARK MAX / Flex                                                                                        | Thrifty Nova                                                               | A301                                     |
+| --------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
+| ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ⚠️ its absolute encoder: any range from [-1, 0) to [0, 1). A `DetachedEncoder`: [-0.5, 0.5) or [0, 1) | ⚠️ [0, 1) when the Nova closes its loop on the encoder, any range otherwise | ✅ any range from [-1, 0) to [0, 1) |
 
 ## `withUseExternalFeedbackEncoder`
 
@@ -167,11 +169,11 @@ Chooses which encoder the closed loop controller follows. The default is `true`:
 .withUseExternalFeedbackEncoder(false)
 ```
 
-**Not the same everywhere.** On a SPARK or Thrifty Nova, `false` still uses an absolute external encoder for the starting position, as in the picture. On a TalonFX or TalonFXS, `false` stops YAMS using the external encoder at all: the built in encoder starts from [`withStartingPosition`](#withstartingposition), and setting the external encoder's inversion or gearing then throws a `SmartMotorControllerConfigurationException`.
+**Not the same everywhere.** On a SPARK, Thrifty Nova or A301, `false` still uses an absolute external encoder for the starting position, as in the picture. On a TalonFX or TalonFXS, `false` stops YAMS using the external encoder at all: the built in encoder starts from [`withStartingPosition`](#withstartingposition), and setting the external encoder's inversion or gearing then throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX                                   | TalonFXS                                  | SPARK MAX / Flex | Thrifty Nova |
-| ----------------------------------------- | ----------------------------------------- | ---------------- | ------------ |
-| ⚠️ `false` ignores the external encoder | ⚠️ `false` ignores the external encoder | ✅                | ✅            |
+| TalonFX                                   | TalonFXS                                  | SPARK MAX / Flex | Thrifty Nova | A301 |
+| ----------------------------------------- | ----------------------------------------- | ---------------- | ------------ | ---- |
+| ⚠️ `false` ignores the external encoder | ⚠️ `false` ignores the external encoder | ✅                | ✅            | ✅    |
 
 ## `withFeedbackSynchronizationThreshold`
 
@@ -188,9 +190,9 @@ It is not available for distance mechanisms: it throws a `SmartMotorControllerCo
 
 **Not supported everywhere.** Where it is not supported it throws an `IllegalArgumentException` on a TalonFX or TalonFXS, and a `SmartMotorControllerConfigurationException` on a SPARK.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                |
-| ------- | -------- | --------------------------------------------------------------------------------- | --------------------------- |
-| ❌       | ❌        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                | A301                        |
+| ------- | -------- | --------------------------------------------------------------------------------- | --------------------------- | --------------------------- |
+| ❌       | ❌        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode |
 
 ## Why: absolute encoders and where they wrap
 
@@ -254,6 +256,7 @@ The wrap point only moves with the zero offset because the offset is applied fir
 | `CANcoder`, `CANdi` (TalonFX, TalonFXS)              | On the encoder              | On the encoder, after the offset                       |
 | SPARK absolute encoder, REV CAN encoder              | On the SPARK or the encoder | On the SPARK or the encoder, after the offset          |
 | Nova data port absolute encoder, Thrifty CAN encoder | On the Nova or the encoder  | By YAMS, on the reading the device has already offset  |
+| A301 absolute encoder                                | By YAMS                     | By YAMS, after the offset                              |
 
 {% hint style="warning" %}
 **Gearing does not move the wrap point.** The zero offset is given in mechanism angle and converted for you, but the wrapping range is always one rotation of the **encoder's own shaft**. On a geared encoder, wrapping over [-0.5, 0.5) wraps `180° / gearing` of the mechanism from zero, not 180°. See [Only gear an absolute encoder if it cannot wrap](encoders.md#only-gear-an-absolute-encoder-if-it-cannot-wrap).

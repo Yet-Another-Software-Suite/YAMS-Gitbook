@@ -10,7 +10,7 @@ An absolute encoder keeps its reading through a power cycle, and YAMS maps that 
 
 ## Supported encoder types
 
-Each `SmartMotorController` wrapper only accepts the encoders from its own vendor ecosystem. `SparkWrapper` and `NovaWrapper` throw an `IllegalArgumentException` when given an encoder type they do not support.
+Each `SmartMotorController` wrapper only accepts the encoders from its own vendor ecosystem. `SparkWrapper`, `NovaWrapper` and `A301Wrapper` throw an `IllegalArgumentException` when given an encoder type they do not support.
 
 | Wrapper                               | Supported absolute encoders                                                               |
 | ------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -18,6 +18,7 @@ Each `SmartMotorController` wrapper only accepts the encoders from its own vendo
 | `TalonFXWrapper` (TalonFX / Kraken)   | `CANcoder`, `CANdi`                                                                       |
 | `TalonFXSWrapper` (TalonFXS / Minion) | `CANcoder`, `CANdi`                                                                       |
 | `NovaWrapper` (Thrifty Nova)          | `FeedbackSensorType.ABS` (absolute encoder on the Nova's data port), Thrifty `CanEncoder` |
+| `A301Wrapper` (FIRST A301)            | The `A301` itself: its own absolute encoder, on its output shaft                          |
 
 Set the encoder up in this order, in your `SmartMotorControllerConfig`. The [complete examples](#complete-examples) below put every step together for each motor controller.
 
@@ -71,7 +72,7 @@ An absolute encoder reads one rotation, and wraps at the ends of its range: its 
 `withWrapping` only sets what the encoder reads: the arm's closed loop never goes the other way round to a setpoint, so it works with soft limits. Do not use [`withContinuousWrapping`](../details/editor/config/closed-loop-control.md#withcontinuouswrapping) on an arm: it makes the closed loop take the shortest path, which could be through the arm's hard stops.
 
 {% hint style="info" %}
-Without `withWrapping`, a SPARK or Thrifty Nova absolute encoder reads **\[0, 1)**, and a `CANcoder` or `CANdi` keeps the range it has. Each motor controller accepts only the ranges its encoder can read: see [`withWrapping`](../details/editor/config/encoders.md#withwrapping). A Thrifty Nova closing its loop on the encoder reads **\[0, 1)** only. The range is one rotation of the **encoder**, so with `.withExternalEncoderGearing(...)` it is not one rotation of the arm.
+Without `withWrapping`, a SPARK, Thrifty Nova or A301 absolute encoder reads **\[0, 1)**, and a `CANcoder` or `CANdi` keeps the range it has. Each motor controller accepts only the ranges its encoder can read: see [`withWrapping`](../details/editor/config/encoders.md#withwrapping). A Thrifty Nova closing its loop on the encoder reads **\[0, 1)** only. The range is one rotation of the **encoder**, so with `.withExternalEncoderGearing(...)` it is not one rotation of the arm.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -97,7 +98,7 @@ Move the arm to exactly horizontal (0° from horizontal, parallel to the ground)
 
 Use one of the two, with your own reading. The offset is in **arm (mechanism) rotations**. With the encoder on the arm's shaft (1:1) and no `withExternalEncoderGearing`, an encoder rotation and an arm rotation are the same, so the client's reading goes in as it is. If you set `withExternalEncoderGearing`, measure the offset as an arm angle instead.
 
-Negative offsets are automatically converted to their positive equivalent (1 rotation is added internally). The offset is applied to the absolute encoder itself, such as the CANcoder's magnet offset or the SPARK's absolute encoder zero offset.
+Negative offsets are automatically converted to their positive equivalent (1 rotation is added internally). The offset is applied to the absolute encoder itself, such as the CANcoder's magnet offset or the SPARK's absolute encoder zero offset. On an A301, YAMS applies it to the reading itself.
 
 <figure><img src="../.gitbook/assets/smc-encoder-zero-offset-wrapping.gif" alt="Animation of the same arm and 1:1 absolute encoder, reading minus 180 to 180 degrees, with the encoder installed a quarter turn round. With no zero offset the encoder reads zero where the white lines line up and its wrap point is opposite that, inside the arm&#x27;s travel, so YAMS reports an angle 90 degrees off and then jumps by 360 degrees. With a zero offset of 90 degrees, the place where the encoder reads zero and the wrap point have both moved a quarter turn, the wrap point is outside the travel, and YAMS reports the right angle. The white line on the casing has not moved."><figcaption><p>The zero offset moves the zero, and the wrap point moves with it. The line on the casing stays where it is.</p></figcaption></figure>
 
@@ -248,8 +249,38 @@ private final SmartMotorController smc = new NovaWrapper(armMotor, DCMotor.getNE
 
 The Nova types come from ThriftyLib: `com.thrifty.nova.Nova`, `com.thrifty.nova.NovaConfig`, `com.thrifty.core.Motor.MotorType`, `com.thrifty.core.Motor.FeedbackSensorType` and `com.thrifty.core.Motor.AbsoluteEncoderType`. The [motor controller feature matrix](../details/editor/feature-matrix.md) lists what the Nova supports.
 
+### FIRST A301 + its own absolute encoder
+
+The A301 has an absolute encoder on its output shaft, after its gearbox. Pass the `A301` itself as the external encoder. YAMS applies the zero offset, inversion and wrapping range to its reading, and runs the arm's PID, profile and feedforward on the SystemCore. The A301 has no current limits, so leave out `withStatorCurrentLimit`.
+
+Here the A301's 135:1 gearbox drives the arm's shaft directly, so the encoder turns once per arm turn and needs no `withExternalEncoderGearing`. With a chain or gears after the A301, the encoder gearing is that ratio, such as `.withExternalEncoderGearing(3)` for a 3:1 chain, and the arm's travel times that ratio must stay under one rotation: see [Check your gear ratio and mount](#check-your-gear-ratio-and-mount).
+
+```java
+private final A301 armMotor = new A301(CANPorts.fromBusId(1), 1);
+
+private final SmartMotorControllerConfig motorConfig = new SmartMotorControllerConfig(this)
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(4, 0, 0)
+    .withTrapezoidalProfile(DegreesPerSecond.of(180), DegreesPerSecondPerSecond.of(90))
+    .withFeedforward(new ArmFeedforward(0, 0, 0, 0))
+    .withSoftLimits(Degrees.of(-30), Degrees.of(100))
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(135)))  // the A301's gearbox, rotor to arm
+    .withZeroPower(MotorMode.BRAKE)
+    .withTelemetry("ArmMotor", TelemetryVerbosity.HIGH)
+    .withExternalEncoder(armMotor)
+    .withExternalEncoderInverted(false)
+    .withExternalEncoderZeroOffset(Degrees.of(33.25))
+    .withWrapping(Rotations.of(-0.5), Rotations.of(0.5))  // [-0.5, 0.5) range
+    .withUseExternalFeedbackEncoder(true)
+    .withSimStartingPosition(Degrees.of(0));
+
+private final SmartMotorController smc = new A301Wrapper(armMotor, motorConfig);
+```
+
+The A301 comes from REVLib: `com.revrobotics.spark.A301`, with `com.revrobotics.util.CANPorts`. `A301Wrapper` takes no `DCMotor`.
+
 {% hint style="info" %}
-Imports for these examples: `SmartMotorControllerConfig` comes from `yams.commands2.config` (or `yams.commands3.config` for Commands v3). `SmartMotorController`, the wrappers (`yams.core.motorcontrollers.local.SparkWrapper`, `yams.core.motorcontrollers.local.NovaWrapper`, `yams.core.motorcontrollers.remote.TalonFXWrapper`, `yams.core.motorcontrollers.remote.TalonFXSWrapper`), `yams.core.motorcontrollers.enums.ControlMode`/`MotorMode`, `yams.core.gearing.*` and `yams.core.telemetry.enums.TelemetryVerbosity` all come from `yams.core`. CTRE devices take a `com.ctre.phoenix6.CANBus`, built here from WPILib's `org.wpilib.hardware.bus.CANPort`.
+Imports for these examples: `SmartMotorControllerConfig` comes from `yams.commands2.config` (or `yams.commands3.config` for Commands v3). `SmartMotorController`, the wrappers (`yams.core.motorcontrollers.local.SparkWrapper`, `yams.core.motorcontrollers.local.NovaWrapper`, `yams.core.motorcontrollers.local.A301Wrapper`, `yams.core.motorcontrollers.remote.TalonFXWrapper`, `yams.core.motorcontrollers.remote.TalonFXSWrapper`), `yams.core.motorcontrollers.enums.ControlMode`/`MotorMode`, `yams.core.gearing.*` and `yams.core.telemetry.enums.TelemetryVerbosity` all come from `yams.core`. CTRE devices take a `com.ctre.phoenix6.CANBus`, built here from WPILib's `org.wpilib.hardware.bus.CANPort`.
 {% endhint %}
 
 ***

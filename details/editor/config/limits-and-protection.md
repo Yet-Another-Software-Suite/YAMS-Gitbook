@@ -25,11 +25,11 @@ The lower limit must be below the upper limit. Soft limits cannot be combined wi
 
 Soft limits rely on the encoder being right. If the mechanism does not start where the encoder thinks it does, the limits are in the wrong place: see [starting position](encoders.md#withstartingposition).
 
-**Only in closed loop mode.** Soft limits are only enforced with [`withControlMode(ControlMode.CLOSED_LOOP)`](motor-basics.md#withcontrolmode), the default. They are set on the motor controller and stop any output that would go past them, including a voltage or duty cycle. A Thrifty Nova has one enable for both limits, so it needs both an upper and a lower limit: setting only one throws a `SmartMotorControllerConfigurationException`.
+**Only in closed loop mode.** Soft limits are only enforced with [`withControlMode(ControlMode.CLOSED_LOOP)`](motor-basics.md#withcontrolmode), the default. They are set on the motor controller and stop any output that would go past them, including a voltage or duty cycle. A Thrifty Nova has one enable for both limits, so it needs both an upper and a lower limit: setting only one throws a `SmartMotorControllerConfigurationException`. An A301 has no soft limits of its own, so its loop on the SystemCore enforces them: a position setpoint past a limit is moved to the limit, but a voltage or duty cycle is not stopped.
 
-| TalonFX                     | TalonFXS                    | SPARK MAX / Flex            | Thrifty Nova                                         |
-| --------------------------- | --------------------------- | --------------------------- | ---------------------------------------------------- |
-| ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode, with both limits set |
+| TalonFX                     | TalonFXS                    | SPARK MAX / Flex            | Thrifty Nova                                         | A301                                                     |
+| --------------------------- | --------------------------- | --------------------------- | ---------------------------------------------------- | -------------------------------------------------------- |
+| ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode | ⚠️ only in closed loop mode, with both limits set | ⚠️ closed loop setpoints only, not voltage or duty cycle |
 
 ## `withStatorCurrentLimit` and `withSupplyCurrentLimit`
 
@@ -46,11 +46,11 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 
 [How do I limit power consumption?](../limiting-power-consumption.md#set-a-starting-limit-on-each-motor) explains how to choose them, with starting limits for common motors, and how to test them against the [battery simulation](../../../understanding/battery-simulation.md).
 
-**Not supported everywhere.** `withSupplyCurrentLimit` is not available on SPARKs.
+**Not supported everywhere.** `withSupplyCurrentLimit` is not available on SPARKs. The A301 has no current limits at all: either one throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex                                                                           | Thrifty Nova |
-| ------- | -------- | ------------------------------------------------------------------------------------------ | ------------ |
-| ✅       | ✅        | ⚠️ stator limit only: a supply limit throws a `SmartMotorControllerConfigurationException` | ✅            |
+| TalonFX | TalonFXS | SPARK MAX / Flex                                                                           | Thrifty Nova | A301 |
+| ------- | -------- | ------------------------------------------------------------------------------------------ | ------------ | ---- |
+| ✅       | ✅        | ⚠️ stator limit only: a supply limit throws a `SmartMotorControllerConfigurationException` | ✅            | ❌    |
 
 ## `withOpenLoopRampRate` and `withClosedLoopRampRate`
 
@@ -65,11 +65,11 @@ Soft limits rely on the encoder being right. If the mechanism does not start whe
 
 A ramp rate is the last thing to reach for. It slows everything the motor does, including the closed loop controller's reactions. [Lower the biggest load first](../limiting-power-consumption.md#lower-the-biggest-load-first) lists what to try first.
 
-**Not supported everywhere.**
+**Not supported everywhere.** The A301 has no ramp rates: either one throws a `SmartMotorControllerConfigurationException`.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova                                                                                         |
-| ------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
-| ✅       | ✅        | ✅                | ⚠️ one ramp rate for both: two different values throw a `SmartMotorControllerConfigurationException` |
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova                                                                                         | A301 |
+| ------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------- | ---- |
+| ✅       | ✅        | ✅                | ⚠️ one ramp rate for both: two different values throw a `SmartMotorControllerConfigurationException` | ❌    |
 
 ## `withVoltageCompensation`
 
@@ -81,11 +81,11 @@ Scales the output so a duty cycle means the same voltage whatever the battery vo
 .withVoltageCompensation(Volts.of(12))
 ```
 
-**Not supported everywhere.** It throws an `IllegalArgumentException` on a TalonFX or TalonFXS. Use a voltage request instead of a duty cycle there.
+**Not supported everywhere.** It throws an `IllegalArgumentException` on a TalonFX or TalonFXS, and a `SmartMotorControllerConfigurationException` on an A301. Use a voltage request instead of a duty cycle on those.
 
-| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova |
-| ------- | -------- | ---------------- | ------------ |
-| ❌       | ❌        | ✅                | ✅            |
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova | A301 |
+| ------- | -------- | ---------------- | ------------ | ---- |
+| ❌       | ❌        | ✅                | ✅            | ❌    |
 
 ## `withTemperatureCutoff`
 
@@ -103,11 +103,11 @@ While the motor is at or above the cutoff, the closed loop output is zero, so a 
 On a SPARK MAX, SPARK Flex or Thrifty Nova with a **trapezoidal** position profile, or a PID alone, the cutoff is rejected: the loop runs on the motor controller, and the cutoff is only checked by the loop on the SystemCore. Use an exponential profile if you rely on the cutoff.
 {% endhint %}
 
-**Not supported everywhere.** The cutoff is enforced by the closed loop running on the SystemCore, so it only works where the loop runs there. An [LQR controller](../lqr-controllers.md) always runs there, so the cutoff works with LQR on every motor controller.
+**Not supported everywhere.** The cutoff is enforced by the closed loop running on the SystemCore, so it only works where the loop runs there. An [LQR controller](../lqr-controllers.md) always runs there, so the cutoff works with LQR on every motor controller. An A301's loop always runs there, so on an A301 it works in closed loop mode.
 
-| TalonFX                                                 | TalonFXS                                                | SPARK MAX / Flex                                                                  | Thrifty Nova                                                                                                   |
-| ------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) |
+| TalonFX                                                 | TalonFXS                                                | SPARK MAX / Flex                                                                  | Thrifty Nova                                                                                                   | A301                        |
+| ------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
 
 ## Code reference
 

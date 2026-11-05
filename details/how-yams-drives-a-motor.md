@@ -20,7 +20,7 @@ This page explains the ideas every other page assumes that you already know. Rea
 
 Every YAMS mechanism is built from the same three layers, from the motor up.
 
-1. **The motor controller.** The vendor's object, such as a `SparkMax` or a `TalonFX`, talks to the hardware. YAMS wraps it in a `SmartMotorController` (a `SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper` or `NovaWrapper`), and you describe how the motor should behave in a `SmartMotorControllerConfig`: gearing, gains, limits and encoders. The config is written the same way for every vendor.
+1. **The motor controller.** The vendor's object, such as a `SparkMax` or a `TalonFX`, talks to the hardware. YAMS wraps it in a `SmartMotorController` (a `SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper` or `A301Wrapper`), and you describe how the motor should behave in a `SmartMotorControllerConfig`: gearing, gains, limits and encoders. The config is written the same way for every vendor.
 2. **The mechanism.** An `Arm`, `Elevator`, `Pivot` or `FlyWheel` takes the `SmartMotorController` and a mechanism config (`ArmConfig`, `ElevatorConfig` and so on) that says what the mechanism is: its length, mass and hard stops. It gives you commands such as `arm.run(Degrees.of(45))`, simulates the physics and draws the mechanism on the dashboard.
 3. **The subsystem.** In Commands v2 a `SubsystemBase` holds the mechanism and hands its commands to the rest of the robot. In Commands v3 a class that `implements Mechanism` does the same job. Keep at most one YAMS mechanism in each, so live tuning can find it.
 
@@ -67,13 +67,13 @@ in the above documentation, the shaft is incorrectly called a rotor...
 
 ## Where the loop runs
 
-The closed loop runs either on the motor controller itself, every millisecond, or on the SystemCore, every 20 ms by default. Which one depends on the motor controller and the options you pick: a TalonFX or Thrifty Nova runs PID and trapezoidal profiles itself, while an LQR runs on the SystemCore on every motor controller. You do not call anything either way. It matters for a few options, and for tuning: gains found with the loop in one place do not carry over to the other. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) has the full table of options.
+The closed loop runs either on the motor controller itself, every millisecond, or on the SystemCore, every 20 ms by default. Which one depends on the motor controller and the options you pick: a TalonFX or Thrifty Nova runs PID and trapezoidal profiles itself, while an LQR runs on the SystemCore on every motor controller, and an A301, which has no closed loop of its own, runs everything on the SystemCore. You do not call anything either way. It matters for a few options, and for tuning: gains found with the loop in one place do not carry over to the other. [Where the loop runs](editor/config/closed-loop-control.md#where-the-loop-runs) has the full table of options.
 
 ## Units of your gains
 
 Write every gain in mechanism units: **volts per mechanism rotation**, or **volts per meter** for an elevator or another mechanism that moves in a line. A `kP` of 4 on an arm means 4 V of output for each full rotation of error, which is about 0.1 V for each 10° off. A feedforward `kV` of 2 means 2 V for each rotation per second.
 
-YAMS converts your gains to whatever each motor controller wants, so the same numbers behave the same on a SPARK, a Talon or a Nova. You never multiply by the gear ratio yourself.
+YAMS converts your gains to whatever each motor controller wants, so the same numbers behave the same on a SPARK, a Talon, a Nova or an A301. You never multiply by the gear ratio yourself.
 
 ## Next
 

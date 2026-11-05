@@ -88,7 +88,7 @@ By default YAMS resets the motor controller to factory defaults before applying 
 .withResetPreviousConfig(false) // keep what is already saved on the controller
 ```
 
-**Supported on:** every supported motor controller.
+**Supported on:** every supported motor controller. An A301 ignores it.
 
 ## `withVendorConfig`
 
@@ -101,11 +101,11 @@ Gives YAMS a vendor config to start from, for settings YAMS has no option for. Y
 
 Each wrapper accepts only its own vendor's root config class. The classes and an example for each vendor are in [vendor configuration classes](../feature-matrix.md#vendor-configuration-classes), and [How do I use a vendor hardware config?](../../../how-to/how-do-i-use-a-vendor-hardware-config.md) walks through it.
 
-**Supported on every motor controller.** Every controller accepts a vendor config, but only its own class. Any other class throws a `SmartMotorControllerConfigurationException`.
+**Not supported everywhere.** Every controller but the A301 accepts a vendor config, but only its own class. Any other class throws a `SmartMotorControllerConfigurationException`. The A301 has no vendor config, so any vendor config throws one.
 
-| TalonFX                  | TalonFXS                  | SPARK MAX / Flex                        | Thrifty Nova          |
-| ------------------------ | ------------------------- | --------------------------------------- | --------------------- |
-| ✅ `TalonFXConfiguration` | ✅ `TalonFXSConfiguration` | ✅ `SparkMaxConfig` or `SparkFlexConfig` | ✅ `NovaConfig.Config` |
+| TalonFX                  | TalonFXS                  | SPARK MAX / Flex                        | Thrifty Nova          | A301 |
+| ------------------------ | ------------------------- | --------------------------------------- | --------------------- | ---- |
+| ✅ `TalonFXConfiguration` | ✅ `TalonFXSConfiguration` | ✅ `SparkMaxConfig` or `SparkFlexConfig` | ✅ `NovaConfig.Config` | ❌    |
 
 ## `withVendorControlRequest`
 
@@ -155,6 +155,7 @@ Nothing else changes. `arm.run(Degrees.of(45))`, `arm.runTo(Degrees.of(45), Degr
 | TalonFX, TalonFXS | `PositionVoltage`, `PositionDutyCycle`, `PositionTorqueCurrentFOC`, `MotionMagicVoltage`, `MotionMagicDutyCycle`, `MotionMagicTorqueCurrentFOC`, `MotionMagicExpoVoltage`, `MotionMagicExpoDutyCycle` | `VelocityVoltage`, `VelocityDutyCycle`, `VelocityTorqueCurrentFOC`, `MotionMagicVelocityVoltage`, `MotionMagicVelocityDutyCycle`, `MotionMagicVelocityTorqueCurrentFOC` |
 | SPARK MAX / Flex  | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                                               | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                 |
 | Thrifty Nova      | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                                               | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                 |
+| A301              | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                                               | ❌ Throws a `SmartMotorControllerConfigurationException`                                                                                                                 |
 
 On a SPARK, YAMS chooses the REV `ControlType` itself: MAXMotion when the config has a trapezoidal profile, plain position or velocity otherwise.
 

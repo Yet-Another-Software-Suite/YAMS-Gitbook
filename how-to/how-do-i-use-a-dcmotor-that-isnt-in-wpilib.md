@@ -6,12 +6,16 @@ icon: plug
 
 **Goal:** simulate a motor that WPILib has no `DCMotor` for, by building one from its datasheet and giving it to your `SmartMotorController`.
 
-Every YAMS wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`) takes a `DCMotor` (`org.wpilib.math.system.DCMotor`). YAMS uses it to simulate the motor, so a wrong `DCMotor` makes the simulation faster or slower and stronger or weaker than the real robot.
+Every YAMS wrapper but one (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`) takes a `DCMotor` (`org.wpilib.math.system.DCMotor`). YAMS uses it to simulate the motor, so a wrong `DCMotor` makes the simulation faster or slower and stronger or weaker than the real robot.
 
 First look for a ready-made one:
 
 * **WPILib's factories** cover the motors it knows: `getNEO`, `getNeo550`, `getNeoVortex`, `getFalcon500`, `getKrakenX60`, `getKrakenX44`, `getMinion` and more.
-* **`YMotors`** (`yams.core.motorcontrollers.YMotors`, Java) adds the motors WPILib does not have yet: `YMotors.getThriftyPulsar(1)` for a Thrifty Pulsar 775.
+* **`YMotors`** (`yams.core.motorcontrollers.YMotors`, Java) adds the motors WPILib does not have yet: `YMotors.getThriftyPulsar(1)` for a Thrifty Pulsar 775, and `YMotors.getA301(1)` for the motor inside a FIRST A301 (in C++, `YMotors::A301()` from `yams/motorcontrollers/YMotors.hpp`).
+
+{% hint style="info" %}
+`A301Wrapper` takes no `DCMotor`. Every A301 has the same motor, so the wrapper always uses `YMotors.getA301(1)`: 13,500 RPM free and 0.078 N·m stalled at 12 V, before the A301's gearbox. FIRST does not publish its currents, so it uses the NEO 550's for now (100 A stalled, 1.4 A free).
+{% endhint %}
 
 Use one of those if your motor is listed, and skip the rest of this page. Each is just a call to the `DCMotor` constructor, which you can make yourself for any other motor.
 

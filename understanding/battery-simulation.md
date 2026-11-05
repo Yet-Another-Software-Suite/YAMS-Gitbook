@@ -4,10 +4,14 @@ icon: car-battery
 
 # Battery Simulation
 
-YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`), reports its current draw into [`BatterySim`](https://javadocs.yassrobotics.com/yams/yams/core/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and sets the simulated battery voltage that every motor then runs from.
+YAMS models a single, shared robot battery in simulation instead of letting each mechanism compute its own voltage sag in isolation. Every simulated `SmartMotorController`, whether driven by an `ArmSimSupplier`, `ElevatorSimSupplier`, `DCMotorSimSupplier`, or a hardware wrapper (`SparkWrapper`, `TalonFXWrapper`, `TalonFXSWrapper`, `NovaWrapper`, `A301Wrapper`), reports its current draw into [`BatterySim`](https://javadocs.yassrobotics.com/yams/yams/core/motorcontrollers/simulation/BatterySim.html), which combines every mechanism's draw into one realistic loaded-voltage calculation and sets the simulated battery voltage that every motor then runs from.
 
 {% hint style="info" %}
 This is automatic. You do not need to call anything for basic voltage sag under combined load, it happens as soon as a mechanism has a sim supplier attached and `simIterate()`/`SimIterate()` is called each loop, same as [Simulation without a mechanism](../details/editor/#simulation-without-a-mechanism).
+{% endhint %}
+
+{% hint style="info" %}
+FIRST does not publish the A301's currents, so its motor model, `YMotors.getA301(1)`, uses the NEO 550's for now (100 A stalled, 1.4 A free). An A301's simulated current draw is an estimate until FIRST publishes them.
 {% endhint %}
 
 <figure><img src="../.gitbook/assets/battery-sim-shared.png" alt="An arm, an elevator, a shooter flywheel, an intake roller and a swerve drive with eight motors each send their current draw to BatterySim, which adds them to 150 amps and computes 12.0 volts minus 150 amps times 0.020 ohms equals 9.0 volts, the voltage every motor then runs from"><figcaption><p>Every simulated motor reports into one battery, and every motor runs from the result.</p></figcaption></figure>

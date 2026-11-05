@@ -262,7 +262,7 @@ As in [Use it](#use-it), for example from `NT:/Tuning/ArmSubsystem/Live Tuning`.
 {% step %}
 ### Turn it on, then type a voltage
 
-Set `voltage/enabled` to `true`. YAMS stops the closed loop and starts the motor at 0 V, with `voltage/setpoint` set back to `0`, so nothing moves until you type a voltage. A closed loop that runs on the SystemCore (with an [LQR](../editor/lqr-controllers.md) or an [exponential profile](../editor/exponential-profiles.md), or a velocity trapezoidal profile on a Thrifty Nova), would replace the voltage on its next loop, which is why it is stopped.
+Set `voltage/enabled` to `true`. YAMS stops the closed loop and starts the motor at 0 V, with `voltage/setpoint` set back to `0`, so nothing moves until you type a voltage. A closed loop that runs on the SystemCore (with an [LQR](../editor/lqr-controllers.md) or an [exponential profile](../editor/exponential-profiles.md), or a velocity trapezoidal profile on a Thrifty Nova, and every closed loop on an A301), would replace the voltage on its next loop, which is why it is stopped.
 
 Now type a small voltage, such as `1`, into `voltage/setpoint`, for example `NT:/Tuning/Arm/ArmMotor/voltage/setpoint`. It is sent every loop, so the motor keeps outputting it until you change it.
 

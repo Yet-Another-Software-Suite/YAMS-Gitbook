@@ -68,6 +68,7 @@ In simulation, do the things that happen together in a match: accelerate the dri
 
 * TalonFX, TalonFXS and Thrifty Nova: `current/supply`, the current drawn from the battery, and `current/limit/supply`.
 * SPARK MAX and SPARK Flex: `current/stator` and `current/limit/stator`, since their supply current is not published.
+* FIRST A301: `current/stator`. It publishes no supply current and has no limits.
 
 **Check it:** you can see the moment the voltage is lowest, and which motors draw the most current then.
 {% endstep %}
@@ -94,6 +95,10 @@ In C++, `WithStatorCurrentLimit(40_A)` and `WithSupplyCurrentLimit(30_A)`. These
 | NEO        | SPARK MAX, TalonFXS, Nova     | 40 A                  | 30 A, where the controller has one |
 | NEO 550    | SPARK MAX, TalonFXS           | 20 A                  | 20 A, where the controller has one |
 | NEO Vortex | SPARK Flex, TalonFXS          | 60 A                  | 40 A, where the controller has one |
+
+{% hint style="warning" %}
+The FIRST A301 has no current limits: `A301Wrapper` throws a `SmartMotorControllerConfigurationException` if either one is set, so leave them out on an A301. Its motor peaks at about 28 W, so it draws little from the battery; lower its load with gearing or a [maximum closed loop voltage](config/closed-loop-control.md#withclosedloopcontrollermaximumvoltage) instead.
+{% endhint %}
 
 **Check it:** `current/limit/stator` (and `current/limit/supply`, where published) shows the value you set.
 {% endstep %}
@@ -154,4 +159,8 @@ import static org.wpilib.units.Units.Seconds;
 
 {% hint style="warning" %}
 The Thrifty Nova has a single ramp rate for open and closed loop control. `NovaWrapper` throws a `SmartMotorControllerConfigurationException` if the two ramp rates differ, so set only one of them, or both to the same value.
+{% endhint %}
+
+{% hint style="warning" %}
+The FIRST A301 has no ramp rates. `A301Wrapper` throws a `SmartMotorControllerConfigurationException` if either one is set.
 {% endhint %}

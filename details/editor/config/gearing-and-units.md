@@ -21,6 +21,8 @@ The reduction between the rotor and the mechanism.
 
 A reduction is a number greater than 1: a "3:1" gearbox is `3`, and a "1:2" overdrive is `0.5`. `GearBox.fromReductionStages` and `Sprocket.fromStages` let you write the stages as they are on the robot.
 
+On an A301 the rotor is inside the A301, so the gearing includes the gearbox on it (135:1, 64:1, 36:1, 27:1, 13.5:1 or 3:1) as well as anything after it: a 64:1 gearbox and a 3:1 chain is `GearBox.fromReductionStages(64, 3)`. YAMS does not detect which gearbox is fitted.
+
 **Supported on:** every supported motor controller.
 
 ## `withMechanismCircumference`

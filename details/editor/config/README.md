@@ -4,7 +4,7 @@ icon: sliders
 
 # SmartMotorControllerConfig
 
-A `SmartMotorControllerConfig` describes one motor: how it is geared, how it is controlled, what it must not do and what it reports. You write it once, in the same way for every vendor, and hand it to a wrapper such as `TalonFXWrapper`, `SparkWrapper` or `NovaWrapper`.
+A `SmartMotorControllerConfig` describes one motor: how it is geared, how it is controlled, what it must not do and what it reports. You write it once, in the same way for every vendor, and hand it to a wrapper such as `TalonFXWrapper`, `SparkWrapper`, `NovaWrapper` or `A301Wrapper`.
 
 <figure><img src="../../../.gitbook/assets/smc-config-map.png" alt="A grid of nine groups of SmartMotorControllerConfig options: motor basics, gearing and units, closed loop control, feedforward, motion profiles, limits and protection, encoders, followers and simulation, each listing its main methods."><figcaption><p>The option groups. Each has its own page.</p></figcaption></figure>
 
@@ -61,6 +61,7 @@ Every option on the following pages has a table showing where it works. The [mot
 * **TalonFX and TalonFXS:** no [`withClosedLoopTolerance`](closed-loop-control.md#withclosedlooptolerance), no [`withVoltageCompensation`](limits-and-protection.md#withvoltagecompensation), no `SLOT_3`, and [`withEncoderInverted`](encoders.md#withencoderinverted) only on a TalonFXS.
 * **SPARK MAX and SPARK Flex:** no [supply current limit](limits-and-protection.md#withstatorcurrentlimit-and-withsupplycurrentlimit) and no [`withVendorControlRequest`](motor-basics.md#withvendorcontrolrequest). Several options only work when the loop runs on the SystemCore, with an exponential profile or an [LQR](../lqr-controllers.md).
 * **Thrifty Nova:** two closed loop slots, a feedforward only with a [trapezoidal profile](motion-profiles.md), both soft limits or neither, and [one ramp rate](limits-and-protection.md#withopenloopramprate-and-withclosedloopramprate) for open and closed loop control. Like a SPARK, several options only work when the loop runs on the SystemCore.
+* **FIRST A301:** no current limits, ramp rates, voltage compensation, vendor config or [`withFollowers`](followers.md#withfollowers) (use loosely coupled followers), and its only external encoder is its own. Every closed loop runs on the SystemCore, and [soft limits](limits-and-protection.md#withsoftlimits) only move position setpoints.
 * **Everywhere:** [soft limits](limits-and-protection.md#withsoftlimits) only work in closed loop mode, and [`withVendorConfig`](motor-basics.md#withvendorconfig), [`withExternalEncoder`](encoders.md#withexternalencoder) and [`withFollowers`](followers.md#withfollowers) only take that vendor's own parts.
 
 Many of these depend on where the closed loop runs, which is explained in [where the loop runs](closed-loop-control.md#where-the-loop-runs).
