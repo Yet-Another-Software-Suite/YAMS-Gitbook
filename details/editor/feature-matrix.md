@@ -149,7 +149,7 @@ This is every option against every motor controller. What each option does, with
 {% endhint %}
 
 {% hint style="info" %}
-**Nova Closed Loop Execution**: `NovaWrapper` runs a PID, and a trapezoidal position profile with its feedforward, on the Nova, in its two slots. An [LQR](lqr-controllers.md), an exponential profile or a velocity trapezoidal profile runs on the SystemCore, which commands the Nova with voltage, and a YAMS alert reports it. The Nova applies a feedforward only in its motion profile, so a feedforward with a nonzero gain and no trapezoidal profile, such as a velocity loop's kV, also runs on the SystemCore. So does an absolute encoder closing the loop over a range other than [0, 1) without continuous wrapping, and continuous wrapping of an absolute encoder geared to the mechanism. Continuous wrapping over any range of a 1:1 absolute encoder, the motor's encoder or a quadrature encoder runs on the Nova. ThriftyLib's simulation ignores the Nova's onboard PID gains, so in simulation YAMS runs the Nova's closed loop itself, with the gains, profile and limits the Nova was sent.
+**Nova Closed Loop Execution**: `NovaWrapper` runs a PID, and a trapezoidal position profile with its feedforward, on the Nova, in its two slots. An [LQR](lqr-controllers.md), an exponential profile or a velocity trapezoidal profile runs on the SystemCore, which commands the Nova with voltage, and a YAMS alert reports it. Without a motion profile, the Nova takes a feedforward's kV, sent as kV times the velocity target with each velocity request, so a swerve drive motor or flywheel keeps its kV on the Nova. The Nova applies kS, kG and kA only in its motion profile, so without a trapezoidal profile a nonzero kS, kG or kA throws a `SmartMotorControllerConfigurationException`. An absolute encoder closing the loop over a range other than [0, 1) without continuous wrapping, and continuous wrapping of an absolute encoder geared to the mechanism, run on the SystemCore. Continuous wrapping over any range of a 1:1 absolute encoder, the motor's encoder or a quadrature encoder runs on the Nova. ThriftyLib's simulation ignores the Nova's onboard PID gains, so in simulation YAMS runs the Nova's closed loop itself, with the gains, profile and limits the Nova was sent.
 {% endhint %}
 
 {% hint style="info" %}
@@ -427,8 +427,8 @@ The [`a301_arm` example](https://github.com/Yet-Another-Software-Suite/YAMS/tree
 ### Thrifty Nova (NovaWrapper)
 
 * Requires ThriftyLib 2027
-* PID and trapezoidal position profiles run on the Nova, in two slots; exponential and velocity profiles, LQR, a feedforward with no trapezoidal profile and wrapping the Nova can't do run on the SystemCore
-* Soft limits need both an upper and a lower limit
+* PID and trapezoidal position profiles run on the Nova, in two slots; exponential and velocity profiles, LQR and wrapping the Nova can't do run on the SystemCore
+* Without a trapezoidal profile a feedforward can only have kV, and soft limits need both an upper and a lower limit
 * One ramp rate for open and closed loop control
 * The internal encoder cannot be inverted (`withEncoderInverted` throws an `IllegalArgumentException`)
 * Vendor control requests (`withVendorControlRequest`) are not supported
