@@ -258,7 +258,7 @@ The external encoder getters were renamed, and new getters read only the motor's
 
 ### Thrifty Nova closed loop
 
-A PID, and a trapezoidal position profile with its feedforward, now run on the Nova itself. An LQR, an exponential profile and a velocity trapezoidal profile still run on the SystemCore. When the Nova runs the loop, a feedforward needs a trapezoidal profile, only `SLOT_0` and `SLOT_1` exist, soft limits need both limits, and the temperature cutoff, closed loop maximum voltage, feedback synchronization threshold and control period are rejected. See [Where the loop runs](details/editor/config/closed-loop-control.md#where-the-loop-runs).
+A PID, and a trapezoidal position profile with its feedforward, now run on the Nova itself. An LQR, an exponential profile, a velocity trapezoidal profile, a feedforward without a trapezoidal profile, and wrapping other than [0, 1) of a 1:1 absolute encoder closing the loop still run on the SystemCore. When the Nova runs the loop, only `SLOT_0` and `SLOT_1` exist, soft limits need both limits, and the temperature cutoff, closed loop maximum voltage, feedback synchronization threshold and control period are rejected. See [Where the loop runs](details/editor/config/closed-loop-control.md#where-the-loop-runs).
 
 ### FIRST A301 (new)
 
@@ -313,7 +313,7 @@ The C++ swerve API still uses `GetGyroAngle()` and has no `GyroAxis` yet.
 * [ ] Rename `getZeroOffset()` to `getExternalEncoderZeroOffset()`, and `getExternalEncoderPosition()`/`getExternalEncoderVelocity()` to `getExternalEncoderMechanismPosition()`/`getExternalEncoderMechanismVelocity()`.
 * [ ] If you set up motor controller telemetry yourself, call `config.setupLiveTuning()` after `setupTelemetry(...)` to get the "Live Tuning" command.
 * [ ] Replace `withExternalEncoderDiscontinuityPoint(...)` with `withWrapping(...)`, or `withContinuousWrapping(...)` where the closed loop should take the shortest path.
-* [ ] Thrifty Nova: give a mechanism with a feedforward a trapezoidal profile, and use only `SLOT_0` and `SLOT_1`.
+* [ ] Thrifty Nova: use only `SLOT_0` and `SLOT_1` when the Nova runs the loop.
 * [ ] Replace `EasyCRTConfig` with `new EasyCRT(sharedGearTeeth, encoderATeeth, encoderBTeeth)` and `solve(encoderA, encoderB)`, and move offsets and inversion onto the encoders.
 * [ ] Swerve (Java): pass a `Supplier<Rotation3d>` to `withGyro(...)`, replace `getGyroAngle()` with `getGyroRotation3d()`, and add `withGyroHeadingAxis(...)` if your gyro is not mounted flat.
 * [ ] Double-check any hard-limit setter names: `withHardLimits(...)` (plural) is correct on `ArmConfig`/`ElevatorConfig`/`PivotConfig`; there has never been a singular `withHardLimit(...)`.

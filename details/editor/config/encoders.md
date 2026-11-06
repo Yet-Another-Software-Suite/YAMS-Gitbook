@@ -157,7 +157,7 @@ The range is one rotation. A mechanism that can turn all the way round, such as 
 
 | TalonFX                                             | TalonFXS                                            | SPARK MAX / Flex                                                                                        | Thrifty Nova                                                               | A301                                     |
 | --------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
-| ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ⚠️ its absolute encoder: any range from [-1, 0) to [0, 1). A `DetachedEncoder`: [-0.5, 0.5) or [0, 1) | ⚠️ [0, 1) when the Nova closes its loop on the encoder, any range otherwise | ✅ any range from [-1, 0) to [0, 1) |
+| ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ✅ `CANcoder`, `CANdi`: any range from [-1, 0) to [0, 1) | ⚠️ its absolute encoder: any range from [-1, 0) to [0, 1). A `DetachedEncoder`: [-0.5, 0.5) or [0, 1) | ✅ any range. [0, 1) of the encoder closing the loop runs on the Nova, any other range on the SystemCore | ✅ any range from [-1, 0) to [0, 1) |
 
 ## `withUseExternalFeedbackEncoder`
 

@@ -72,7 +72,7 @@ An absolute encoder reads one rotation, and wraps at the ends of its range: its 
 `withWrapping` only sets what the encoder reads: the arm's closed loop never goes the other way round to a setpoint, so it works with soft limits. Do not use [`withContinuousWrapping`](../details/editor/config/closed-loop-control.md#withcontinuouswrapping) on an arm: it makes the closed loop take the shortest path, which could be through the arm's hard stops.
 
 {% hint style="info" %}
-Without `withWrapping`, a SPARK, Thrifty Nova or A301 absolute encoder reads **\[0, 1)**, and a `CANcoder` or `CANdi` keeps the range it has. Each motor controller accepts only the ranges its encoder can read: see [`withWrapping`](../details/editor/config/encoders.md#withwrapping). A Thrifty Nova closing its loop on the encoder reads **\[0, 1)** only. The range is one rotation of the **encoder**, so with `.withExternalEncoderGearing(...)` it is not one rotation of the arm.
+Without `withWrapping`, a SPARK, Thrifty Nova or A301 absolute encoder reads **\[0, 1)**, and a `CANcoder` or `CANdi` keeps the range it has. Each motor controller accepts only the ranges its encoder can read: see [`withWrapping`](../details/editor/config/encoders.md#withwrapping). A Thrifty Nova closing its loop on the encoder runs the loop itself only over **\[0, 1)**; with any other range the loop runs on the SystemCore. The range is one rotation of the **encoder**, so with `.withExternalEncoderGearing(...)` it is not one rotation of the arm.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -221,7 +221,7 @@ The CTRE types come from Phoenix 6: `com.ctre.phoenix6.configs.TalonFXSConfigura
 
 ### Thrifty Nova + absolute encoder on the data port
 
-Pass `FeedbackSensorType.ABS` as the external encoder and tell the Nova which encoder is wired to its data port through the vendor config. The Nova runs this arm's PID, profile and feedforward itself, closing its loop on the encoder, which it reads over \[0, 1) only: set the zero offset so the wrap point, at the arm's zero, is outside the travel, or use a `CANcoder` on a Talon (see [Complete examples](#complete-examples)) for an arm that crosses it. A Thrifty `CanEncoder` on the same CAN bus works too: pass the `CanEncoder` object to `.withExternalEncoder(...)` instead.
+Pass `FeedbackSensorType.ABS` as the external encoder and tell the Nova which encoder is wired to its data port through the vendor config. The Nova runs this arm's PID, profile and feedforward itself, closing its loop on the encoder, which it reads over \[0, 1): set the zero offset so the wrap point, at the arm's zero, is outside the travel. For an arm that crosses it, set another range with `withWrapping`, and the loop runs on the SystemCore instead. A Thrifty `CanEncoder` on the same CAN bus works too: pass the `CanEncoder` object to `.withExternalEncoder(...)` instead.
 
 ```java
 private final Nova armMotor = new Nova(0, 1, MotorType.NEO);

@@ -107,7 +107,7 @@ On a SPARK MAX, SPARK Flex or Thrifty Nova with a **trapezoidal** position profi
 
 | TalonFX                                                 | TalonFXS                                                | SPARK MAX / Flex                                                                  | Thrifty Nova                                                                                                   | A301                        |
 | ------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
+| ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an [LQR controller](../lqr-controllers.md) | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only when the loop runs on the SystemCore, such as with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only in closed loop mode |
 
 ## Code reference
 

@@ -104,7 +104,7 @@ This is every option against every motor controller. What each option does, with
 {% endhint %}
 
 {% hint style="warning" %}
-**Closed Loop Max Voltage on Sparks and Novas**: `SparkWrapper` and `NovaWrapper` only support `withClosedLoopControllerMaximumVoltage` when the closed loop controller runs on the SystemCore (an Exponential Profile or [LQR controller](lqr-controllers.md), or a velocity trapezoidal profile on a Nova); otherwise they throw a `SmartMotorControllerConfigurationException`.
+**Closed Loop Max Voltage on Sparks and Novas**: `SparkWrapper` and `NovaWrapper` only support `withClosedLoopControllerMaximumVoltage` when the closed loop controller runs on the SystemCore (an Exponential Profile or [LQR controller](lqr-controllers.md), or on a Nova a velocity trapezoidal profile or another loop the Nova can't run); otherwise they throw a `SmartMotorControllerConfigurationException`.
 {% endhint %}
 
 ### Ramp rates
@@ -149,7 +149,7 @@ This is every option against every motor controller. What each option does, with
 {% endhint %}
 
 {% hint style="info" %}
-**Nova Closed Loop Execution**: `NovaWrapper` runs a PID, and a trapezoidal position profile with its feedforward, on the Nova, in its two slots. An [LQR](lqr-controllers.md), an exponential profile or a velocity trapezoidal profile runs on the SystemCore, which commands the Nova with voltage, and a YAMS alert reports it. The Nova applies a feedforward only in its motion profile, so a feedforward without a trapezoidal profile throws a `SmartMotorControllerConfigurationException`. ThriftyLib's simulation ignores the Nova's onboard PID gains, so in simulation YAMS runs the Nova's closed loop itself, with the gains, profile and limits the Nova was sent.
+**Nova Closed Loop Execution**: `NovaWrapper` runs a PID, and a trapezoidal position profile with its feedforward, on the Nova, in its two slots. An [LQR](lqr-controllers.md), an exponential profile or a velocity trapezoidal profile runs on the SystemCore, which commands the Nova with voltage, and a YAMS alert reports it. The Nova applies a feedforward only in its motion profile, so a feedforward without a trapezoidal profile, such as a velocity loop's kV, also runs on the SystemCore. So does wrapping the Nova can't do: anything but [0, 1) of a 1:1 absolute encoder closing the loop. ThriftyLib's simulation ignores the Nova's onboard PID gains, so in simulation YAMS runs the Nova's closed loop itself, with the gains, profile and limits the Nova was sent.
 {% endhint %}
 
 {% hint style="info" %}
@@ -187,7 +187,7 @@ This is every option against every motor controller. What each option does, with
 | -------------------- | ------- | -------- | ------------- | ---- | ---- |
 | Angle Soft Limits    | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only, both limits) | ⚠️ (closed loop setpoints only) |
 | Distance Soft Limits | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only) | ⚠️ (closed loop mode only, both limits) | ⚠️ (closed loop setpoints only) |
-| Continuous Wrapping  | ✅       | ✅        | ✅             | ⚠️ (on the Nova, 0° to 360° of a 1:1 absolute encoder) | ✅ |
+| Continuous Wrapping  | ✅       | ✅        | ✅             | ✅ (on the Nova, 0° to 360° of a 1:1 absolute encoder; any other range on the SystemCore) | ✅ |
 
 {% hint style="warning" %}
 **Soft limits** are only enforced in `ControlMode.CLOSED_LOOP`. They are set on the motor controller and stop any output past them, voltage and duty cycle included. A Thrifty Nova needs both an upper and a lower limit. On an A301, whose loop runs on the SystemCore, a position setpoint past a limit is moved to the limit, but a voltage or duty cycle is not stopped. Soft limits cannot be combined with continuous wrapping. See [`withSoftLimits`](config/limits-and-protection.md#withsoftlimits).
@@ -200,7 +200,7 @@ This is every option against every motor controller. What each option does, with
 | External Encoder Support     | ✅       | ✅        | ✅                                                      | ✅ | ⚠️ (its own absolute encoder only) |
 | External Encoder Inversion   | ✅       | ✅        | ✅                                                      | ✅ | ✅ |
 | External Encoder Zero Offset | ✅       | ✅        | ⚠️ (absolute encoders only)                            | ⚠️ (absolute and CAN encoders only) | ✅ |
-| Wrapping Range               | ✅ (from [-1, 0) to [0, 1)) | ✅ (from [-1, 0) to [0, 1)) | ⚠️ (absolute encoder from [-1, 0) to [0, 1); `DetachedEncoder` [-0.5, 0.5) or [0, 1)) | ⚠️ ([0, 1) when the Nova closes its loop on the encoder) | ✅ (from [-1, 0) to [0, 1)) |
+| Wrapping Range               | ✅ (from [-1, 0) to [0, 1)) | ✅ (from [-1, 0) to [0, 1)) | ⚠️ (absolute encoder from [-1, 0) to [0, 1); `DetachedEncoder` [-0.5, 0.5) or [0, 1)) | ✅ (any range; [0, 1) of the encoder closing the loop on the Nova, any other range on the SystemCore) | ✅ (from [-1, 0) to [0, 1)) |
 | Use External for Feedback    | ⚠️ (`false` ignores the external encoder) | ⚠️ (`false` ignores the external encoder) | ✅ | ✅ | ✅ |
 | Feedback Synchronization     | ❌       | ❌        | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) | ⚠️ (requires closed loop mode) |
 
@@ -264,7 +264,7 @@ This is every option against every motor controller. What each option does, with
 | Temperature Cutoff | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an [LQR controller](lqr-controllers.md)) | ⚠️ (requires an exponential profile or [LQR controller](lqr-controllers.md)) | ⚠️ (exponential, velocity profile or [LQR](lqr-controllers.md) only) | ⚠️ (requires closed loop mode) |
 
 {% hint style="warning" %}
-**Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an [LQR controller](lqr-controllers.md) on any motor controller, an Exponential Profile on a `SparkWrapper` or `NovaWrapper`, a velocity trapezoidal profile on a `NovaWrapper`, and always on an `A301Wrapper`. With PID or a profile that runs on the motor controller, it does not work.
+**Temperature Cutoff**: the cutoff is checked by the closed loop running on the SystemCore, so it only works where the loop runs there. That is an [LQR controller](lqr-controllers.md) on any motor controller, an Exponential Profile on a `SparkWrapper` or `NovaWrapper`, a velocity trapezoidal profile or another loop the Nova can't run on a `NovaWrapper`, and always on an `A301Wrapper`. With PID or a profile that runs on the motor controller, it does not work.
 {% endhint %}
 
 ***
@@ -427,8 +427,8 @@ The [`a301_arm` example](https://github.com/Yet-Another-Software-Suite/YAMS/tree
 ### Thrifty Nova (NovaWrapper)
 
 * Requires ThriftyLib 2027
-* PID and trapezoidal position profiles run on the Nova, in two slots; exponential and velocity profiles and LQR run on the SystemCore
-* A feedforward needs a trapezoidal profile, and soft limits need both an upper and a lower limit
+* PID and trapezoidal position profiles run on the Nova, in two slots; exponential and velocity profiles, LQR, a feedforward without a trapezoidal profile and wrapping the Nova can't do run on the SystemCore
+* Soft limits need both an upper and a lower limit
 * One ramp rate for open and closed loop control
 * The internal encoder cannot be inverted (`withEncoderInverted` throws an `IllegalArgumentException`)
 * Vendor control requests (`withVendorControlRequest`) are not supported
