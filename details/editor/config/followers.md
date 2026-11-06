@@ -29,11 +29,11 @@ Tightly coupled followers, for motors on the same shaft or gearbox. Each followe
 
 Pass the vendor's motor object, not a `SmartMotorController`. The boolean is whether that follower is inverted relative to the leader: motors facing each other across a gearbox usually are.
 
-**Not supported everywhere.** Followers must be the same vendor as the leader. A TalonFX and a TalonFXS are both CTRE, so either can follow the other. To mix brands, use [`withLooselyCoupledFollowers`](followers.md#withlooselycoupledfollowers). An A301 has no follower mode, so `withFollowers` on an A301 throws a `SmartMotorControllerConfigurationException`: use loosely coupled followers for it too.
+**Not supported everywhere.** Followers must be the same vendor as the leader. A TalonFX and a TalonFXS are both CTRE, so either can follow the other. To mix brands, use [`withLooselyCoupledFollowers`](followers.md#withlooselycoupledfollowers). An A301 has no follower mode, so its followers are other `A301Wrapper`s, which it sends its voltage in software: `.withFollowers(Pair.of(rightA301Motor, true))`. Anything else throws a `SmartMotorControllerConfigurationException`. See [Several A301s on one mechanism](https://yams.yassrobotics.com/api-reference/java-reference/motor-controllers/a301-wrapper#several-a301s-on-one-mechanism).
 
 | TalonFX                          | TalonFXS                         | SPARK MAX / Flex       | Thrifty Nova          | A301 |
 | -------------------------------- | -------------------------------- | ---------------------- | --------------------- | ---- |
-| ✅ TalonFX and TalonFXS followers | ✅ TalonFXS and TalonFX followers | ✅ SPARK followers only | ✅ Nova followers only | ❌    |
+| ✅ TalonFX and TalonFXS followers | ✅ TalonFXS and TalonFX followers | ✅ SPARK followers only | ✅ Nova followers only | ✅ `A301Wrapper` followers only |
 
 ## `withLooselyCoupledFollowers`
 
@@ -42,6 +42,14 @@ Loosely coupled followers are for motors that are not on the same shaft or gearb
 **You can mix brands.** Because each motor closes its own loop, a loosely coupled follower can be any supported motor controller, whatever the leader is, such as a SPARK leading a TalonFX.
 
 **Supported on:** every supported motor controller.
+
+**In simulation.** A mechanism class simulates the leader and its loosely coupled followers together, since they move one mechanism:
+
+* Its simulation has every motor (the leader's `getMechanismDCMotor()`). Give each motor its own `DCMotor`, such as `DCMotor.getNEO(1)`, and the mechanism adds them up.
+* Each motor applies its own output, as its motor controller's simulation (`SparkSim`, Phoenix, the Nova or the A301) gives it, with its own current limit. So a follower that isn't driven, such as during manual control, holds the mechanism back, as it does on the robot.
+* The mechanism iterates each follower's simulation right after its own, and each follower's encoder reads it. The battery simulation counts their current once.
+
+Without a mechanism class, such as two flywheels on their own shafts, each motor simulates its own load, and you call `simIterate()` on each follower.
 
 ### Use them with a mechanism class
 
@@ -112,8 +120,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
+    // Simulates both motors: the Arm iterates its followers.
     arm.simIterate();
-    rightMotor.simIterate();
   }
 }
 ```
@@ -186,8 +194,8 @@ public class IntakeArmMechanism implements Mechanism {
 
   /** Robot.simulationInit() runs this in its own Notifier, every robot loop. */
   public void simulationPeriodic() {
+    // Simulates both motors: the Arm iterates its followers.
     arm.simIterate();
-    rightMotor.simIterate();
   }
 }
 ```
@@ -209,7 +217,7 @@ m_leftConfig
 m_leftMotor.emplace(&m_leftSpark, wpi::math::DCMotor::NEO(1), &m_leftConfig);
 ```
 
-Call `UpdateTelemetry()` and `SimIterate()` on each follower, as on the arm.
+Call `UpdateTelemetry()` on each follower, as on the arm. The arm's `SimIterate()` simulates every motor.
 {% endtab %}
 {% endtabs %}
 
@@ -222,7 +230,9 @@ Call `UpdateTelemetry()` and `SimIterate()` on each follower, as on the arm.
 | A duty cycle of 0, which stops it                                                                                                    | Stop too\*                                                                                        |
 | Any other duty cycle or voltage, such as from `arm.set(...)`, `arm.setVoltage(...)` or SysId                                         | **Are not sent it.** The leader moves alone, and the followers are stopped\*                      |
 | `setEncoderPosition(...)`, such as when zeroing or homing                                                                            | **Are not sent it.** Set each follower's encoder yourself                                         |
-| `updateTelemetry()` and `simIterate()`                                                                                               | **Are not updated.** Call them on each follower yourself                                          |
+| `updateTelemetry()`                                                                                                                  | **Are not updated.** Call it on each follower yourself                                            |
+| `simIterate()`, in a mechanism class                                                                                                 | Are iterated by the mechanism, right after it steps. Their own `simIterate()` does nothing         |
+| `simIterate()`, without a mechanism class                                                                                            | **Are not iterated.** Call it on each follower yourself                                           |
 | Its starting config                                                                                                                  | **Are not given it.** Each follower only has its own config                                       |
 
 \* A follower whose closed loop runs on the SystemCore only stops in YAMS releases after v2026.10.15. See the first pitfall below.
@@ -239,11 +249,11 @@ Call `UpdateTelemetry()` and `SimIterate()` on each follower, as on the arm.
       })
       .finallyDo(rightMotor::startClosedLoopController);
   ```
-* **The follower does nothing in simulation, and logs nothing.** Call `updateTelemetry()` and `simIterate()` on each follower, every loop.
+* **The follower logs nothing.** Call `updateTelemetry()` on each follower, every loop. Without a mechanism class, also call `simIterate()` on it, or it does nothing in simulation.
 * **The follower doesn't follow the profile.** The leader sends the follower the final setpoint, so a follower needs the same motion profile as the leader, and the same gearing, gains and feedforward, or it gets there at a different speed.
 * **The follower drives the wrong way.** Each motor is inverted in its own config, with `withMotorInverted`. Motors on opposite sides of a mechanism usually face each other, so one of them is inverted.
 * **The two sides fight.** Nothing keeps the motors together except the mechanism: each one only follows its own encoder. If they start at different positions, or one side slips, they pull against each other through the mechanism. Give every motor the same starting position, and when you zero or home the mechanism, set every motor's encoder.
-* **Manual control moves only one side.** A voltage or duty cycle, such as manual control with a joystick or a SysId routine, only drives the leader, and the followers are stopped. Command each motor yourself, or characterize one side with the other side unpowered.
+* **Manual control moves only one side.** A voltage or duty cycle, such as manual control with a joystick or a SysId routine, only drives the leader, and the followers are stopped. Command each motor yourself, or characterize one side with the other side unpowered. A mechanism class simulates this too: the stopped followers hold the mechanism back.
 
 ### Motors that need different setpoints
 
