@@ -258,7 +258,7 @@ The external encoder getters were renamed, and new getters read only the motor's
 
 ### Thrifty Nova closed loop
 
-A PID, and a trapezoidal position profile with its feedforward, now run on the Nova itself. An LQR, an exponential profile, a velocity trapezoidal profile, a feedforward without a trapezoidal profile, and wrapping other than [0, 1) of a 1:1 absolute encoder closing the loop still run on the SystemCore. When the Nova runs the loop, only `SLOT_0` and `SLOT_1` exist, soft limits need both limits, and the temperature cutoff, closed loop maximum voltage, feedback synchronization threshold and control period are rejected. See [Where the loop runs](details/editor/config/closed-loop-control.md#where-the-loop-runs).
+A PID, and a trapezoidal position profile with its feedforward, now run on the Nova itself. An LQR, an exponential profile, a velocity trapezoidal profile, a feedforward with no trapezoidal profile, an absolute encoder closing the loop over a range other than [0, 1) without continuous wrapping, and continuous wrapping of an absolute encoder geared to the mechanism still run on the SystemCore. When the Nova runs the loop, only `SLOT_0` and `SLOT_1` exist, soft limits need both limits, and the temperature cutoff, closed loop maximum voltage, feedback synchronization threshold and control period are rejected. See [Where the loop runs](details/editor/config/closed-loop-control.md#where-the-loop-runs).
 
 ### FIRST A301 (new)
 
