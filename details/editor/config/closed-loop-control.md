@@ -243,9 +243,9 @@ The Nova's `sensorToMechanismRatio` is set to the gear ratio, or to the external
 | `kP`, `kI`, `kD`                     | the slot's PID (`Pid0` or `Pid1`), outputting volts               | ÷ mechanism rotations per meter when distance based        |
 | `withClosedLoopTolerance`            | the slot's allowable error                                        | in mechanism rotations                                     |
 | Trapezoidal profile                  | the slot's motion profile (`Mp0` or `Mp1`) maximum velocity and acceleration | ÷ mechanism rotations per meter when distance based |
-| Feedforward `kS`, `kV`, `kA`, `kG`   | the slot's motion profile, with cosine gravity for an arm; `kS`, `kV` and `kG` apply without a profile too | elevator `kV`, `kA` ÷ mechanism rotations per meter        |
+| Feedforward `kS`, `kV`, `kA`, `kG`   | the slot's motion profile, with cosine gravity for an arm; they apply without a profile too | elevator `kV`, `kA` ÷ mechanism rotations per meter        |
 
-The Nova runs a feedforward without a motion profile too. The Nova applies its motion profile slot's `kS`, `kV` (times the velocity target) and `kG` with or without a motion profile, in plain position and velocity control too. So a swerve drive motor or flywheel keeps its `kS` and `kV` on the Nova, and an arm without a profile keeps its `kG`. The Nova applies `kA` only in its motion profile, so without a trapezoidal profile a nonzero `kA` throws a `SmartMotorControllerConfigurationException`. Add `withTrapezoidalProfile`, or use a feedforward without `kA`. A velocity trapezoidal profile, an exponential profile or an [LQR controller](../lqr-controllers.md) runs on the SystemCore, in YAMS units, and the Nova then only receives the voltage the loop asks for.
+The Nova runs a feedforward without a motion profile too. YAMS sends `kS`, `kV`, `kA` and `kG` to the slot's motion profile either way, and the Nova applies them with or without a motion profile, in plain position and velocity control too. So a swerve drive motor or flywheel keeps its `kS` and `kV` on the Nova, and an arm without a profile keeps its `kG`. A velocity trapezoidal profile, an exponential profile or an [LQR controller](../lqr-controllers.md) runs on the SystemCore, in YAMS units, and the Nova then only receives the voltage the loop asks for.
 {% endtab %}
 
 {% tab title="A301" %}
