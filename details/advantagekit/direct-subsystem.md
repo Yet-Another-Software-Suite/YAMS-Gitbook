@@ -56,7 +56,7 @@ public class ArmSubsystem extends SubsystemBase {
         .withControlMode(ControlMode.CLOSED_LOOP)
         .withClosedLoopController(18, 0, 0.2)
         .withTrapezoidalProfile(DegreesPerSecond.of(458), DegreesPerSecondPerSecond.of(688))
-        .withFeedforward(new ArmFeedforward(-0.1, 1.2, 0, 0))
+        .withFeedforward(new ArmFeedforward(0, 0.89, 0, 0))
         .withGearing(new MechanismGearing(GearBox.fromReductionStages(12.5, 1)))
         .withZeroPower(MotorMode.BRAKE)
         .withStatorCurrentLimit(Amps.of(120))
