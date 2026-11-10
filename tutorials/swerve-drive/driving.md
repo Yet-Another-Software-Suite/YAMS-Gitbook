@@ -1200,7 +1200,7 @@ In simulation, `drive.getSimPose()` returns a ground truth `Pose2d`, separate fr
 ## Simulate it
 
 1. Run **WPILib: Simulate Robot Code** from the command palette (<kbd>Ctrl+Shift+P</kbd>). If you are asked which extensions to run, tick **Sim GUI**.
-2. Connect a controller, then in the Sim GUI drag it from **System Joysticks** to **Joystick\[0]**. The code reads port 0.
+2. Connect a controller, then in the Sim GUI drag it from **System Joysticks** to **Joystick\[0]**. The code reads port 0. Commands v3: drag it to **Joystick\[1]**, because the Command v3 template's controller is on port 1 (`DriverConstants.DRIVER_CONTROLLER_PORT`).
 3. Show the field. In AdvantageScope (**File > Connect to Simulator**), drag `NT:/Mechanisms/swerve/pose` onto a **2D Field** tab. On an Elastic dashboard, add `NT:/Mechanisms/swerve/field` instead: it is the `Field2d` from `drive.getField2d()`.
 4. Press **Teleoperated** in the Sim GUI's **Robot State**. In Commands v3, pick the `ExampleTeleop` op mode first.
 
@@ -1208,7 +1208,7 @@ In simulation, `drive.getSimPose()` returns a ground truth `Pose2d`, separate fr
 
 **If not:**
 
-* **The robot does not move.** The controller is not on **Joystick\[0]**, the robot is not in Teleoperated, or (Commands v3) `ExampleTeleop` is not the selected op mode.
+* **The robot does not move.** The controller is not on **Joystick\[0]** (**Joystick\[1]** for Commands v3), the robot is not in Teleoperated, or (Commands v3) `ExampleTeleop` is not the selected op mode.
 * **Forward on the stick drives the wrong way, or the sticks are swapped.** An axis is missing its minus sign in the default command. Each axis must be negated.
 
 More fixes are on [Troubleshooting](../troubleshooting.md).

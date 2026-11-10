@@ -37,7 +37,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 {% step %}
 ### Drive it
 
-1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**.
+1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**. Commands v3: drag it to **Joystick\[1]** instead, because the Command v3 template's controller is on port 1 (`DriverConstants.DRIVER_CONTROLLER_PORT`).
 2. Open the simulated mechanism with **NetworkTables -> Mechanisms -> Elevator -> mechanism**. It is named after the `withTelemetry("Elevator", ...)` on the `ElevatorConfig`. It shows the carriage as a bar that grows upward as the carriage rises, with short marks beside it for the soft limits and the hard stops.
 
 <figure><img src="../../.gitbook/assets/Robot Simulation 8_30_2025 7_06_08 PM.png" alt="The Sim GUI with the elevator's Mechanism2d window open: a vertical bar for the carriage height, next to marks for the limits"><figcaption></figcaption></figure>
@@ -45,7 +45,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 3. Resize **Elevator/mechanism** to your liking.
 4. Commands v3: pick the `ExampleTeleop` op mode first. Then press **Teleoperated** in **Robot State**. The controller now drives the simulated elevator just as it would the real one.
 
-No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0** to **Joystick\[0]**.
+No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0** to **Joystick\[0]** (**Joystick\[1]** for Commands v3).
 
 <figure><img src="../../.gitbook/assets/Robot Simulation 2025-08-30 18-37-59.gif" alt="The simulated elevator in its Mechanism2d window, the carriage bar rising and falling between heights as buttons are pressed"><figcaption></figcaption></figure>
 {% endstep %}
@@ -62,7 +62,7 @@ No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0
 ## If it did not work
 
 * **The elevator is not in the NetworkTables menu.** Look under **Mechanisms**, not **SmartDashboard**.
-* **The elevator does not move.** Check the robot is enabled in **Teleoperated** and the controller is on **Joystick\[0]**. Commands v3: check you picked `ExampleTeleop`, and that `Robot.simulationInit()` starts the elevator's simulation with `startSimulation(...)`.
+* **The elevator does not move.** Check the robot is enabled in **Teleoperated** and the controller is on **Joystick\[0]** (**Joystick\[1]** for Commands v3). Commands v3: check you picked `ExampleTeleop`, and that `Robot.simulationInit()` starts the elevator's simulation with `startSimulation(...)`.
 * **The code stops with an error when the simulation starts.** Read the first error. YAMS names the setting that is missing, such as soft limits in meters set before `withDrumRadius`.
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).

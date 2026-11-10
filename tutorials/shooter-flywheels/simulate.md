@@ -37,7 +37,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 {% step %}
 ### Drive it
 
-1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**.
+1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**. Commands v3: drag it to **Joystick\[1]** instead, because the Command v3 template's controller is on port 1 (`DriverConstants.DRIVER_CONTROLLER_PORT`).
 2. Open the simulated mechanism with **NetworkTables -> Mechanisms -> Shooter -> mechanism**. It is named after the `withTelemetry("Shooter", ...)` on the `FlyWheelConfig`. It shows the wheel as a line from its center that turns as the wheel turns.
 
 <figure><img src="../../.gitbook/assets/Robot Simulation 9_9_2025 9_12_17 AM.png" alt="The Sim GUI with the shooter's Mechanism2d window open: a single line from the center of the window, which turns with the flywheel"><figcaption></figcaption></figure>
@@ -45,7 +45,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 3. Resize **Shooter/mechanism** to your liking.
 4. Commands v3: pick the `ExampleTeleop` op mode first. Then press **Teleoperated** in **Robot State**. The controller now drives the simulated flywheel just as it would the real one.
 
-No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0** to **Joystick\[0]**.
+No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0** to **Joystick\[0]** (**Joystick\[1]** for Commands v3).
 
 <figure><img src="../../.gitbook/assets/Robot Simulation 2025-09-09 09-05-32.gif" alt="The simulated flywheel in its Mechanism2d window, the line spinning while a button is held and slowing to a stop after it is released"><figcaption></figcaption></figure>
 
@@ -68,7 +68,7 @@ The drawing is only updated 50 times a second. At shooter speeds the line turns 
 ## If it did not work
 
 * **The shooter is not in the NetworkTables menu.** Look under **Mechanisms**, not **SmartDashboard**.
-* **The wheel does not spin.** Check the robot is enabled in **Teleoperated** and the controller is on **Joystick\[0]**. Commands v3: check you picked `ExampleTeleop`, and that `Robot.simulationInit()` starts the shooter's simulation with `startSimulation(...)`.
+* **The wheel does not spin.** Check the robot is enabled in **Teleoperated** and the controller is on **Joystick\[0]** (**Joystick\[1]** for Commands v3). Commands v3: check you picked `ExampleTeleop`, and that `Robot.simulationInit()` starts the shooter's simulation with `startSimulation(...)`.
 * **The wheel takes many seconds to reach speed.** The motor controller config is missing `withMomentOfInertia`, so the simulation uses a much heavier wheel. See step 1, part 3.
 * **The speed settles well below the setpoint.** `kV` is too low, or 0. See step 1, part 2.
 

@@ -39,7 +39,7 @@ Read the first error in the Driver Station or the simulation console. YAMS names
 ## It does not move in simulation
 
 * The robot is disabled. Press **Teleoperated** in the Sim GUI.
-* The controller is not on port 0. Drag it from **System Joysticks** to **Joystick\[0]**.
+* The controller is not on the port the code reads. Drag it from **System Joysticks** to **Joystick\[0]**, or **Joystick\[1]** for Commands v3: the Command v3 template's controller is on port 1 (`DriverConstants.DRIVER_CONTROLLER_PORT`).
 * Commands v3: the wrong op mode is selected. Pick `ExampleTeleop`, where the buttons are bound.
 * Commands v3: the mechanism's simulation never runs. Check that `Robot.simulationInit()` starts it with `startSimulation(...)`.
 * Commands v2: check that `simulationPeriodic()` in the subsystem calls the mechanism's `simIterate()`.

@@ -917,7 +917,7 @@ wpi::cmd::CommandPtr RobotContainer::GetAutonomousCommand() {
 
 There is no `FlyWheel` mechanism here, so there is no drawing of the wheels. Watch their speeds on a graph instead.
 
-1. Start the simulation as in [the shooter's step 4](../shooter-flywheels/simulate.md), with the controller on **Joystick\[0]**. Commands v3: pick the `ExampleTeleop` op mode, and check that `Robot.simulationInit()` starts the double flywheel's simulation.
+1. Start the simulation as in [the shooter's step 4](../shooter-flywheels/simulate.md), with the controller on **Joystick\[0]** (**Joystick\[1]** for Commands v3). Commands v3: pick the `ExampleTeleop` op mode, and check that `Robot.simulationInit()` starts the double flywheel's simulation.
 2. Open [AdvantageScope](https://docs.advantagescope.org/), connect it to the simulation (**File > Connect to Simulator**), and make a **Line Graph** of:
    * `NT:/Mechanisms/UpperFlyWheel/mechanism/velocity`
    * `NT:/Mechanisms/LowerFlyWheel/mechanism/velocity`

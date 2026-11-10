@@ -37,7 +37,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 {% step %}
 ### Drive it
 
-1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**.
+1. Connect a controller to your computer, then drag it from **System Joysticks** to **Joystick\[0]**. Commands v3: drag it to **Joystick\[1]** instead, because the Command v3 template's controller is on port 1 (`DriverConstants.DRIVER_CONTROLLER_PORT`).
 2. Open the simulated mechanism with **NetworkTables -> Mechanisms -> Arm -> mechanism**. It is named after the `withTelemetry("Arm", ...)` on the `ArmConfig`.
 
 <figure><img src="../../.gitbook/assets/image (15).png" alt="The NetworkTables menu of the Sim GUI, opened to the arm's mechanism"><figcaption></figcaption></figure>
@@ -45,7 +45,7 @@ The first C++ build compiles the whole project, so it takes a few minutes. Later
 3. Resize **Arm/mechanism** to your liking.
 4. Commands v3: pick the `ExampleTeleop` op mode first. Then press **Teleoperated** in **Robot State**. The controller now drives the simulated arm just as it would the real one.
 
-No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0** to **Joystick\[0]**.
+No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0** to **Joystick\[0]** (**Joystick\[1]** for Commands v3).
 
 <figure><img src="../../.gitbook/assets/armTest2.gif" alt="The simulated arm in its Mechanism2d window, moving between angles as buttons are pressed"><figcaption></figcaption></figure>
 {% endstep %}
@@ -62,7 +62,7 @@ No controller? The Sim GUI can use the keyboard as a joystick: drag **Keyboard 0
 ## If it did not work
 
 * **The arm is not in the NetworkTables menu.** Look under **Mechanisms**, not **SmartDashboard**.
-* **The arm does not move.** Check the robot is enabled in **Teleoperated** and the controller is on **Joystick\[0]**. Commands v3: check `Robot.simulationInit()` starts the arm's simulation.
+* **The arm does not move.** Check the robot is enabled in **Teleoperated** and the controller is on **Joystick\[0]** (**Joystick\[1]** for Commands v3). Commands v3: check `Robot.simulationInit()` starts the arm's simulation.
 * **The code stops with an error when the simulation starts.** Read the first error. YAMS names the setting that is missing, such as a starting position outside the hard limits.
 
 More problems and fixes: [Troubleshooting](../troubleshooting.md).
