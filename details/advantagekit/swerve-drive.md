@@ -231,7 +231,7 @@ drive.setDefaultCommand(drive.setFieldRelativeChassisSpeeds(
 `SwerveDrive.lockPose()` turns every module to its corner (the X pattern) with zero drive speed, but it is marked as not compatible with AdvantageKit. The YAMS AdvantageKit example builds the same X pattern itself in `lock()`, turning each module with `SwerveModule.setAzimuthAngle(...)` so the [velocity deadband](../swerve-module.md#velocity-deadband) doesn't hold the wheels where they are, and the desired states are recorded with `Logger.recordOutput()` like every other drive command.
 {% endhint %}
 
-**Check:** run the code in simulation and drive with the left stick. In AdvantageScope, `AdvantageKit/Swerve/estimatedPose` on a 2D field moves with the robot, and `AdvantageKit/RealOutputs/Swerve/DesiredStates` changes as you drive.
+**Check:** run the code in simulation and drive with the left stick. In AdvantageScope, `AdvantageKit/Swerve/EstimatedPose` on a 2D field moves with the robot, and `AdvantageKit/RealOutputs/Swerve/DesiredStates` changes as you drive.
 
 ## Commands v3
 
@@ -298,10 +298,9 @@ During AdvantageKit log replay, **only data inside the `@AutoLog` inputs classes
 
 This means:
 
-* **Inputs you define** (in `SwerveInputs`, `ArmInputs`, etc.): replayed correctly
+* **Inputs you define** (in `SwerveInputs`, `ArmIOInputs`, etc.): replayed correctly
 * **YAMS telemetry** (from `.withTelemetry("Arm")`): shows live sim values during replay
 
 To ensure accurate replay debugging, always pull the data you need into your `@AutoLog` inputs class rather than relying on YAMS telemetry during replay.
 {% endhint %}
 
-Next: [Without an IO layer](direct-subsystem.md)

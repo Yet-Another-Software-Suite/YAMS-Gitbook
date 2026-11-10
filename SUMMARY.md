@@ -44,6 +44,7 @@
   * [Step 2: Implement the IO class](details/advantagekit/io-implementation.md)
   * [Steps 3 and 4: The subsystem and RobotContainer](details/advantagekit/subsystem-and-robotcontainer.md)
   * [Log replay](details/advantagekit/log-replay.md)
+  * [Elevator and shooter](details/advantagekit/elevator-and-shooter.md)
   * [Swerve drive with AdvantageKit](details/advantagekit/swerve-drive.md)
   * [Without an IO layer](details/advantagekit/direct-subsystem.md)
 * [Troubleshooting](tutorials/troubleshooting.md)

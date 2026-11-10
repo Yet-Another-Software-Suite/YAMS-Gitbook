@@ -167,6 +167,6 @@ This pattern is simpler and **does support log replay**, but with a key differen
 
 Choose the IO layer pattern if you need lightweight replay; choose this direct pattern if you prefer simplicity and don't mind the extra processing during replay.
 
-**Check:** run the code in simulation and command the arm. In AdvantageScope, `AdvantageKit/Arm/pivotPosition` follows the arm.
+**Check:** run the code in simulation and command the arm. In AdvantageScope, `AdvantageKit/Arm/PivotPosition` follows the arm.
 
 Back to [AdvantageKit integration](../advantagekit-integration.md).

@@ -4,7 +4,13 @@ icon: download
 
 # Step 0: Install AdvantageKit and set up Robot
 
-Before the IO classes can log anything, the project needs the AdvantageKit library, its code generator in `build.gradle`, and a `Robot` class that starts the AdvantageKit logger. This page sets up a Commands v2 project that already builds with YAMS, the same way the [YAMS AdvantageKit example](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands2/advantage_kit) does.
+Before the IO classes can log anything, the project needs the AdvantageKit library, its code generator in `build.gradle`, and a `Robot` class that starts the AdvantageKit logger.
+
+**Before you start:** you need a Java project that already builds with YAMS, from a **Command v2 Robot** or **Command v3 Robot** template. If you do not have one yet, follow [Create a project and install YAMS](../../tutorials/project-setup.md) first.
+
+{% hint style="info" %}
+AdvantageKit is Java only. In a C++ project, use YAMS's own telemetry (`withTelemetry(...)`) and WPILib's data logs instead.
+{% endhint %}
 
 {% hint style="info" %}
 AdvantageKit is a separate library from Team 6328, and its 2027 releases are still alphas. If anything here does not match what you see, the [AdvantageKit installation docs for existing projects](https://docs.advantagekit.org/getting-started/installation/existing-projects) are the source of truth.
@@ -14,21 +20,25 @@ AdvantageKit is a separate library from Team 6328, and its 2027 releases are sti
 {% step %}
 ### Install the vendor library
 
-In VS Code, open the WPILib command palette, choose **WPILib: Manage Vendor Libraries**, then **Install new library (online)**, and paste:
+Open the command palette with <kbd>Ctrl+Shift+P</kbd>, run **WPILib: Manage Vendor Libraries**, choose **Install new libraries (online)** and paste:
 
 ```
-https://github.com/Mechanical-Advantage/AdvantageKit/releases/latest/download/AdvantageKit.json
+https://github.com/Mechanical-Advantage/AdvantageKit/releases/download/v27.0.0-alpha-7/AdvantageKit.json
 ```
 
-This adds `vendordeps/AdvantageKit.json` to your project. The YAMS 2027 examples were built against AdvantageKit `27.0.0-alpha-5`.
+This is the AdvantageKit release for WPILib 2027 alpha 7. If your WPILib is a different 2027 release, pick the matching `v27.0.0-alpha-...` release from [AdvantageKit's releases](https://github.com/Mechanical-Advantage/AdvantageKit/releases) and use its `AdvantageKit.json` link instead.
 
-**Check:** `vendordeps/AdvantageKit.json` exists in your project.
+{% hint style="warning" %}
+Do not use the `releases/latest/download/AdvantageKit.json` link from AdvantageKit's docs. GitHub's "latest" skips alphas, so it installs AdvantageKit 26, which is for the 2026 season and does not work with WPILib 2027. For the same reason, if WPILib offers to update AdvantageKit to a `26.x` version, say no.
+{% endhint %}
+
+**Check:** `vendordeps/AdvantageKit.json` exists in your project, and its `"version"` starts with `27.0.0`.
 {% endstep %}
 
 {% step %}
-### Add the AutoLog code generator to `build.gradle`
+### Add the AutoLog code generator
 
-The `@AutoLog` annotation used in [Step 1](io-interface.md) generates a class for each inputs class when the code builds. That needs an annotation processor line in the `dependencies` block of `build.gradle`:
+The `@AutoLog` annotation used in [Step 1](io-interface.md) generates a class for each inputs class when the code builds. That needs an annotation processor line in the `dependencies` block of `build.gradle`. Add the three lines under the comment, and leave the rest of the block as it is:
 
 ```groovy
 dependencies {
@@ -48,9 +58,13 @@ This is the setup used by the YAMS AdvantageKit examples. AdvantageKit's own doc
 {% endstep %}
 
 {% step %}
-### Make `Robot` a `LoggedRobot`
+### Make `Robot` a logged robot
 
-`Robot` extends AdvantageKit's `LoggedRobot` instead of WPILib's `TimedRobot`, and starts the logger in its constructor before anything else is created. It also defines `currentMode`, which [Log replay](log-replay.md) uses to choose the IO class.
+`Robot` extends AdvantageKit's version of its base class, and starts the logger in its constructor. Anything created before `Logger.start()` is not logged from the first loop, so subsystems and mechanisms are created after it. `Robot` also defines `currentMode`, which [Log replay](log-replay.md) uses to choose the IO class.
+
+{% tabs %}
+{% tab title="Java, Commands v2" %}
+`Robot` extends AdvantageKit's `LoggedRobot` instead of WPILib's `TimedRobot`. This is the whole file. It keeps the template's autonomous methods, so `RobotContainer.getAutonomousCommand()` is still used.
 
 ```java
 package first.robot;
@@ -61,6 +75,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.framework.RobotBase;
 
@@ -77,6 +92,8 @@ public class Robot extends LoggedRobot {
   /** Change to Mode.REPLAY to replay a log in simulation. */
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+
+  private Command autonomousCommand;
 
   private final RobotContainer robotContainer;
 
@@ -112,22 +129,116 @@ public class Robot extends LoggedRobot {
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
   }
+
+  @Override
+  public void autonomousInit() {
+    autonomousCommand = robotContainer.getAutonomousCommand();
+
+    if (autonomousCommand != null) {
+      CommandScheduler.getInstance().schedule(autonomousCommand);
+    }
+  }
+
+  @Override
+  public void autonomousExit() {
+    if (autonomousCommand != null) {
+      autonomousCommand.cancel();
+    }
+  }
+
+  @Override
+  public void utilityInit() {
+    CommandScheduler.getInstance().cancelAll();
+  }
 }
 ```
+{% endtab %}
 
-Keep the rest of your `Robot` methods (autonomous, teleop and so on) as they are. `first/Main.java` does not change: it still starts `first.robot.Robot`.
+{% tab title="Java, Commands v3" %}
+`Robot` extends AdvantageKit's `LoggedOpModeRobot` instead of WPILib's `OpModeRobot`. It finds your `@Teleop` and `@Autonomous` op modes the same way, so `ExampleTeleop` and `ExampleAuto` keep working.
 
-{% hint style="info" %}
-**Commands v3:** `Robot` extends `LoggedRobot` in the same way, with the same `Mode` and logger setup, and `robotPeriodic()` runs `Scheduler.getDefault().run()`. See the [Commands v3 AdvantageKit example](https://github.com/Yet-Another-Software-Suite/YAMS/tree/master/examples/commands3/advantage_kit).
-{% endhint %}
+The template creates `exampleMechanism` where the field is declared, which runs before the constructor. Here it is created in the constructor instead, after `Logger.start()`. This is the whole file.
 
-**Check:** run the code in simulation and open AdvantageScope. An `AdvantageKit` table appears in NetworkTables next to the YAMS `Mechanisms` table.
+```java
+package first.robot;
+
+import first.robot.constants.DriverConstants;
+import first.robot.mechanisms.ExampleMechanism;
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedOpModeRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.wpilib.command3.Scheduler;
+import org.wpilib.command3.button.CommandGamepad;
+import org.wpilib.framework.RobotBase;
+
+public class Robot extends LoggedOpModeRobot {
+  public static enum Mode {
+    /** Running on a real robot. */
+    REAL,
+    /** Running a physics simulator. */
+    SIM,
+    /** Replaying from a log file. */
+    REPLAY
+  }
+
+  /** Change to Mode.REPLAY to replay a log in simulation. */
+  public static final Mode simMode = Mode.SIM;
+  public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+
+  // Created in the constructor, after the logger starts.
+  final ExampleMechanism exampleMechanism;
+  final CommandGamepad exampleController =
+      new CommandGamepad(DriverConstants.DRIVER_CONTROLLER_PORT);
+
+  public Robot() {
+    switch (currentMode) {
+      case REAL:
+        // On the SystemCore: write a log file and publish to NetworkTables.
+        Logger.addDataReceiver(new WPILOGWriter());
+        Logger.addDataReceiver(new NT4Publisher());
+        break;
+
+      case SIM:
+        // In simulation: publish to NetworkTables.
+        Logger.addDataReceiver(new NT4Publisher());
+        break;
+
+      case REPLAY:
+        // Replaying a log: read it, and write the replayed values to a new log next to it.
+        setUseTiming(false); // Run as fast as possible
+        String logPath = LogFileUtil.findReplayLog();
+        Logger.setReplaySource(new WPILOGReader(logPath));
+        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+        break;
+    }
+
+    // Start the AdvantageKit logger before creating the mechanisms.
+    Logger.start();
+
+    exampleMechanism = new ExampleMechanism();
+  }
+
+  @Override
+  public void robotPeriodic() {
+    Scheduler.getDefault().run();
+  }
+}
+```
+{% endtab %}
+{% endtabs %}
+
+`first/Main.java` does not change: it still starts `first.robot.Robot`.
+
+**Check:** run the code in simulation, open AdvantageScope and connect it to the simulator (**File > Connect to Simulator**). An `AdvantageKit` table appears next to the YAMS `Mechanisms` table.
 {% endstep %}
 {% endstepper %}
 
 ## If it did not work
 
-* **`org.littletonrobotics.junction` cannot be found:** the vendor library is not installed. Repeat [1. Install the vendor library](#install-the-vendor-library), then build again.
-* **`ArmIOInputsAutoLogged` cannot be found later:** the annotation processor line is missing or wrong. Check step 2 above, clean the project with `gradlew clean` (Windows) or `./gradlew clean` (Linux/macOS) and build again.
-
-Next: [Step 1: Define the IO interface](io-interface.md)
+* **`org.littletonrobotics.junction` cannot be found:** the vendor library is not installed. Repeat [Install the vendor library](#install-the-vendor-library), then build again.
+* **The build fails inside AdvantageKit, or the robot code crashes as it starts:** `vendordeps/AdvantageKit.json` is a `26.x` version. Delete it, and install the 2027 link from [Install the vendor library](#install-the-vendor-library).
+* **`ArmIOInputsAutoLogged` cannot be found later:** the annotation processor line is missing or wrong. Check [Add the AutoLog code generator](#add-the-autolog-code-generator), clean the project with `gradlew clean` (Windows) or `./gradlew clean` (Linux/macOS) and build again.
+* **`getAutonomousCommand()` or `exampleMechanism` cannot be found:** your `Robot` is missing something the rest of the template uses. Use the whole file from the tab for your template.
