@@ -20,17 +20,9 @@ AdvantageKit is a separate library from Team 6328, and its 2027 releases are sti
 {% step %}
 ### Install the vendor library
 
-Open the command palette with <kbd>Ctrl+Shift+P</kbd>, run **WPILib: Manage Vendor Libraries**, choose **Install new libraries (online)** and paste:
+Click the **WPILib logo** in the left bar to open the vendor library list, the same way you installed YAMS in [Install YAMS](../../tutorials/project-setup.md#install-yams). Scroll down to **AdvantageKit** and click **Install**.
 
-```
-https://github.com/Mechanical-Advantage/AdvantageKit/releases/download/v27.0.0-alpha-7/AdvantageKit.json
-```
-
-This is the AdvantageKit release for WPILib 2027 alpha 7. If your WPILib is a different 2027 release, pick the matching `v27.0.0-alpha-...` release from [AdvantageKit's releases](https://github.com/Mechanical-Advantage/AdvantageKit/releases) and use its `AdvantageKit.json` link instead.
-
-{% hint style="warning" %}
-Do not use the `releases/latest/download/AdvantageKit.json` link from AdvantageKit's docs. GitHub's "latest" skips alphas, so it installs AdvantageKit 26, which is for the 2026 season and does not work with WPILib 2027. For the same reason, if WPILib offers to update AdvantageKit to a `26.x` version, say no.
-{% endhint %}
+The list only shows the libraries for your WPILib version, so it installs the 2027 AdvantageKit.
 
 **Check:** `vendordeps/AdvantageKit.json` exists in your project, and its `"version"` starts with `27.0.0`.
 {% endstep %}
@@ -239,6 +231,6 @@ public class Robot extends LoggedOpModeRobot {
 ## If it did not work
 
 * **`org.littletonrobotics.junction` cannot be found:** the vendor library is not installed. Repeat [Install the vendor library](#install-the-vendor-library), then build again.
-* **The build fails inside AdvantageKit, or the robot code crashes as it starts:** `vendordeps/AdvantageKit.json` is a `26.x` version. Delete it, and install the 2027 link from [Install the vendor library](#install-the-vendor-library).
+* **The build fails inside AdvantageKit, or the robot code crashes as it starts:** `vendordeps/AdvantageKit.json` is not a `27.0.0` version, often because it was installed from a link in AdvantageKit's own docs, which gives the 2026 release. Delete it, and install AdvantageKit from the vendor library list as in [Install the vendor library](#install-the-vendor-library).
 * **`ArmIOInputsAutoLogged` cannot be found later:** the annotation processor line is missing or wrong. Check [Add the AutoLog code generator](#add-the-autolog-code-generator), clean the project with `gradlew clean` (Windows) or `./gradlew clean` (Linux/macOS) and build again.
 * **`getAutonomousCommand()` or `exampleMechanism` cannot be found:** your `Robot` is missing something the rest of the template uses. Use the whole file from the tab for your template.
