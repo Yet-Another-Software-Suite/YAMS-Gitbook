@@ -75,6 +75,52 @@ The observer absorbs a `b0` that is off by up to a factor of two: whatever the m
 
 <figure><img src="../../.gitbook/assets/adrc-shooter-graph.png" alt="An AdvantageScope graph of the ADRC shooter stepping from 0 to 50, down to 25 and up to 75 rotations per second. The yellow measured speed reaches each blue setpoint step within about half a second. The red motor voltage spikes on each step, then holds at about 6.5 volts at 50 rotations per second, 3 volts at 25 and 9.3 volts at 75, the voltage each speed needs, with no kV."><figcaption><p>The shooter finds the voltage each speed needs without a kV.</p></figcaption></figure>
 
+## Smoothing the setpoint: the tracking differentiator
+
+A step setpoint asks the mechanism to be somewhere else at once, and the ADRC pushes as hard as its settling time allows to get there. A **tracking differentiator** (TD) is a filter in front of the ADRC that turns the step into a glide. Each loop it gives the ADRC a smooth setpoint, `y`, and how fast that setpoint is moving, `yd`, which the ADRC uses as the setpoint's speed (or, on a flywheel, its acceleration). It is off by default.
+
+```java
+new ADRCConfig()
+    .withSystemOrder(SystemOrder.ARM)
+    .withSettlingTime(Seconds.of(0.3))
+    // A 0.08 s time constant: a 90° step is followed in about 0.46 s.
+    .withTrackingDifferentiator(TrackingDifferentiator.Method.LD, 0.08)
+```
+
+A [motion profile](exponential-profiles.md) on the motor config does the same job with real speed and acceleration limits. Use one or the other: a TD on top of a profile only adds lag. The TD is set when the robot starts, and is not live tunable.
+
+### The methods
+
+The TD works in the loop's units: mechanism rotations for an arm or pivot, meters for an elevator, rotations per second for a flywheel. Parameters are passed in order; any left off take a default, and the defaults are slow, so set them.
+
+| Method | Parameters (default) | How it moves to a new setpoint |
+| --- | --- | --- |
+| `LD`, linear | `lambda` (1): a time constant, seconds | Glides there with no overshoot, reaching 98% in about 5.8 × `lambda`, at a peak speed of about step ÷ (2.7 × `lambda`). |
+| `INTD`, saturating | `alpha` (0.5), `beta` (1), `gamma` (1), `r` (1) | Cruises at `r × beta ÷ (1 - alpha)` when far away, then lands smoothly. `gamma` = 4 × `beta` lands without overshoot. |
+| `EULER`, exponential | `alpha` (0.9), 0 to 1 | A first order lag. Its `yd` still jumps on a step. |
+| `TOD`, time optimal | `r` (1): an acceleration | Full acceleration toward the setpoint, then full braking. |
+| `RED`, nonlinear | `lambda1` (1), `lambda2` (1) | A super-twisting filter. Overshoots. |
+
+### Choosing and tuning one
+
+Measured on the TD alone at the 20 ms default period, stepping an arm 90°:
+
+| Method and parameters | Within 2% after | Overshoot |
+| --- | --- | --- |
+| `LD` 1 (default) | 5.8 s | 0% |
+| `LD` 0.1 | 0.52 s | 0% |
+| `LD` 0.05 | 0.22 s | 0% |
+| `INTD` 0.5, 1, 1, 1 (default) | 8.1 s | 17% |
+| `INTD` 0.5, 1, 4, 20 | 0.52 s | 0% |
+| `TOD` 4 | Never holds it | 8% |
+| `RED` 3, 4 | 0.40 s | 13% |
+
+* **Start with `LD`.** Its one parameter is in seconds, means the same on every mechanism, and never overshoots. Pick `lambda` so 5.8 × `lambda` is how long a move should take, then check the mechanism can reach the peak speed, step ÷ (2.7 × `lambda`). Lengthen it if the voltage saturates during a move.
+* **Use `INTD` when step sizes vary a lot.** Leave `alpha` at 0.5, choose `beta` and `r` so the cruise speed `r × beta ÷ (1 - alpha)` is a little under the mechanism's top speed, and set `gamma` to 4 × `beta`. Raise `r` to land faster.
+* **Avoid `EULER`, `TOD` and `RED`.** `EULER`'s `yd` kicks on every step, which is what a TD is meant to prevent. `TOD` and `RED` switch sign every loop, so at a 20 ms period their `yd` chatters at rest, and the ADRC passes the chatter to the motor.
+
+The [ADRC guide](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/ADRCGuide.md#smoothing-the-setpoint-the-tracking-differentiator) has every parameter's units and the elevator and flywheel measurements.
+
 ## ADRC, PID or LQR?
 
 | | PID + feedforward | LQR | ADRC |
