@@ -206,7 +206,7 @@ The example arm, pivot, elevator and shooter in simulation, each stepping throug
 * **"cannot choose the form of its position loop without a moment of inertia".** Add `withMomentOfInertia(...)` to the motor config, as in [Give it the moment of inertia](#give-it-the-moment-of-inertia).
 * **"is an elevator's ADRC, but the closed loop is not linear".** Add `withLinearClosedLoopController(true)` and the mechanism circumference to the motor config.
 * **It overshoots or rings whatever the settling time.** Check the moment of inertia: a wrong value can make YAMS choose the wrong kind of position control. If it is right, lower `b0` live: half the derived value often calms it.
-* **A step setpoint slams the mechanism.** Add a motion profile to the motor config, or a [tracking differentiator](../details/editor/adrc-controllers.md#smoothing-the-setpoint-the-tracking-differentiator) to the `ADRCConfig`, not both.
+* **A step setpoint slams the mechanism.** Add a motion profile to the motor config, or a [tracking differentiator](../details/editor/adrc-tracking-differentiators.md) to the `ADRCConfig`, not both.
 * **"has a tracking differentiator and a motion profile".** Both shape the setpoint. Remove one: the motion profile from the motor config, or `withTrackingDifferentiator(...)` from the `ADRCConfig`.
 * **A shooter crawls up to speed.** Shorten the settling time: the ADRC has to keep up with the motor's back-EMF.
 

@@ -58,6 +58,8 @@ where J is the moment of inertia, R the motor's resistance, G the gear ratio, an
 
 <figure><img src="../../.gitbook/assets/adrc-pivot-forms.png" alt="Two AdvantageScope graphs of a NEO pivot on a 60:1 reduction stepping to 90, -45, 135 and 0 degrees. On the left, run as a second order system with a 0.6 second settling time, the measured angle in yellow swings far past every setpoint, up to about 215 degrees on the step to 135, and keeps oscillating. On the right, with PIVOT choosing first order and a 0.3 second settling time, the measured angle meets each blue setpoint step quickly and stays on it, and the red motor voltage spikes to 12 volts and settles back to zero after each move."><figcaption><p>The same 60:1 pivot. Left: forced to second order at 0.6 s, it rings. Right: <code>PIVOT</code> chooses first order, at 0.3 s.</p></figcaption></figure>
 
+A second order loop's observer also models the back-EMF, from the same time constant, so the disturbance it estimates only holds what the model misses, such as gravity. A first order loop's `b0` already includes the back-EMF.
+
 The wrong form works badly, so choosing it needs the moment of inertia. An `ELEVATOR` without one stays first order; `ARM`, `PIVOT` and `POSITION` refuse to start without one. `FIRST` to `FOURTH` fix the order yourself, with your own `b0`.
 
 ### Units
@@ -75,9 +77,13 @@ The observer absorbs a `b0` that is off by up to a factor of two: whatever the m
 
 <figure><img src="../../.gitbook/assets/adrc-shooter-graph.png" alt="An AdvantageScope graph of the ADRC shooter stepping from 0 to 50, down to 25 and up to 75 rotations per second. The yellow measured speed reaches each blue setpoint step within about half a second. The red motor voltage spikes on each step, then holds at about 6.5 volts at 50 rotations per second, 3 volts at 25 and 9.3 volts at 75, the voltage each speed needs, with no kV."><figcaption><p>The shooter finds the voltage each speed needs without a kV.</p></figcaption></figure>
 
-## Smoothing the setpoint: the tracking differentiator
+## Following a motion profile
 
-A step setpoint asks the mechanism to be somewhere else at once, and the ADRC pushes as hard as its settling time allows to get there. A **tracking differentiator** (TD) is a filter in front of the ADRC that turns the step into a glide. Each loop it gives the ADRC a smooth setpoint, `y`, and how fast that setpoint is moving, `yd`, which the ADRC uses as the setpoint's speed (or, on a flywheel, its acceleration). It is off by default.
+With a [motion profile](exponential-profiles.md) on the motor config, YAMS gives the ADRC the profile's state now and its state one loop ahead, and a second order position loop's observer models the motor's back-EMF. Together they let a mechanism follow the profile closely and stop on its goal: a 12:1 pivot stayed within 1.5° of its profile and overshot by at most 1.1°, where fed only the profile's position it trailed by up to 32°. [ADRC and motion profiles](adrc-motion-profiles.md) explains why both are needed.
+
+## Smoothing the setpoint without a profile
+
+A **tracking differentiator** is a filter in front of the ADRC that turns a step setpoint into a glide, for a mechanism with no motion profile. Start with the `LD` method and one parameter, a time constant in seconds:
 
 ```java
 new ADRCConfig()
@@ -87,39 +93,7 @@ new ADRCConfig()
     .withTrackingDifferentiator(TrackingDifferentiator.Method.LD, 0.08)
 ```
 
-A [motion profile](exponential-profiles.md) on the motor config does the same job with real speed and acceleration limits. Use one or the other: a TD would reshape a setpoint the profile already shaped, so YAMS throws a `SmartMotorControllerConfigurationException` when the robot starts with both. The TD is set when the robot starts, and is not live tunable.
-
-### The methods
-
-The TD works in the loop's units: mechanism rotations for an arm or pivot, meters for an elevator, rotations per second for a flywheel. Parameters are passed in order; any left off take a default, and the defaults are slow, so set them.
-
-| Method | Parameters (default) | How it moves to a new setpoint |
-| --- | --- | --- |
-| `LD`, linear | `lambda` (1): a time constant, seconds | Glides there with no overshoot, reaching 98% in about 5.8 × `lambda`, at a peak speed of about step ÷ (2.7 × `lambda`). |
-| `INTD`, saturating | `alpha` (0.5), `beta` (1), `gamma` (1), `r` (1) | Cruises at `r × beta ÷ (1 - alpha)` when far away, then lands smoothly. `gamma` = 4 × `beta` lands without overshoot. |
-| `EULER`, exponential | `alpha` (0.9), 0 to 1 | A first order lag. Its `yd` still jumps on a step. |
-| `TOD`, time optimal | `r` (1): an acceleration | Full acceleration toward the setpoint, then full braking. |
-| `RED`, nonlinear | `lambda1` (1), `lambda2` (1) | A super-twisting filter. Overshoots. |
-
-### Choosing and tuning one
-
-Measured on the TD alone at the 20 ms default period, stepping an arm 90°:
-
-| Method and parameters | Within 2% after | Overshoot |
-| --- | --- | --- |
-| `LD` 1 (default) | 5.8 s | 0% |
-| `LD` 0.1 | 0.52 s | 0% |
-| `LD` 0.05 | 0.22 s | 0% |
-| `INTD` 0.5, 1, 1, 1 (default) | 8.1 s | 17% |
-| `INTD` 0.5, 1, 4, 20 | 0.52 s | 0% |
-| `TOD` 4 | Never holds it | 8% |
-| `RED` 3, 4 | 0.40 s | 13% |
-
-* **Start with `LD`.** Its one parameter is in seconds, means the same on every mechanism, and never overshoots. Pick `lambda` so 5.8 × `lambda` is how long a move should take, then check the mechanism can reach the peak speed, step ÷ (2.7 × `lambda`). Lengthen it if the voltage saturates during a move.
-* **Use `INTD` when step sizes vary a lot.** Leave `alpha` at 0.5, choose `beta` and `r` so the cruise speed `r × beta ÷ (1 - alpha)` is a little under the mechanism's top speed, and set `gamma` to 4 × `beta`. Raise `r` to land faster.
-* **Avoid `EULER`, `TOD` and `RED`.** `EULER`'s `yd` kicks on every step, which is what a TD is meant to prevent. `TOD` and `RED` switch sign every loop, so at a 20 ms period their `yd` chatters at rest, and the ADRC passes the chatter to the motor.
-
-The [ADRC guide](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/ADRCGuide.md#smoothing-the-setpoint-the-tracking-differentiator) has every parameter's units and the elevator and flywheel measurements.
+YAMS refuses a tracking differentiator and a motion profile together, since both shape the setpoint. [Tracking differentiators](adrc-tracking-differentiators.md) covers every method, its parameters, how they compare and how to tune one.
 
 ## ADRC, PID or LQR?
 
@@ -139,4 +113,4 @@ At `HIGH` verbosity, the ADRC publishes under the motor's `closedloop/adrc/` ent
 
 ## Using it without a mechanism
 
-`ADRCController` also runs on its own, like a WPILib `PIDController`: call `calculate(measurement, setpoint)` each loop and apply its voltage. It does not limit its output, so clamp it, and wrap it in a WPILib `SlewRateLimiter` if it needs a ramp. Then tell it what it really applied with `calculate(measurement, setpoint, appliedVoltage)`, so it does not mistake the clamp for a disturbance. The [ADRC guide](https://github.com/Yet-Another-Software-Suite/YAMS/blob/master/ADRCGuide.md) covers its full API, the tracking differentiator, input delay and the cascaded observer.
+`ADRCController` also runs on its own, like a WPILib `PIDController`: call `calculate(measurement, setpoint)` each loop and apply its voltage. It does not limit its output, so clamp it, and wrap it in a WPILib `SlewRateLimiter` if it needs a ramp. Then tell it what it really applied with `calculate(measurement, setpoint, appliedVoltage)`, so it does not mistake the clamp for a disturbance. [ADRCConfig](adrc-config.md) lists every setting and method, including the input delay and the cascaded observer.

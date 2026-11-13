@@ -35,7 +35,7 @@ Passing an `LQRController` instead replaces the PID with an LQR: see [LQR contro
 
 ## `withADRCController`
 
-Replaces the slot's PID, LQR and feedforward with an ADRC, written by FRC Team 8331. You give it the kind of mechanism and a settling time; it works out the rest from the motor, the gearing and the moment of inertia. See [ADRC controllers](../adrc-controllers.md) for how it works, and [How do I use ADRC instead of PID?](../../../how-to/how-do-i-use-adrc.md) to set one up.
+Replaces the slot's PID, LQR and feedforward with an ADRC, written by FRC Team 8331. You give it the kind of mechanism and a settling time; it works out the rest from the motor, the gearing and the moment of inertia. See [ADRC controllers](../adrc-controllers.md) for how it works, [ADRCConfig](../adrc-config.md) for every setting, and [How do I use ADRC instead of PID?](../../../how-to/how-do-i-use-adrc.md) to set one up.
 
 ```java
 .withADRCController(new ADRCConfig()
