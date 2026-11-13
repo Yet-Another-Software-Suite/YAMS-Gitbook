@@ -90,6 +90,7 @@
   * [YAMS Live Tuner](details/live-tuning/live-tuner.md)
   * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
 * [How do I use LQR instead of PID?](how-to/how-do-i-use-lqr.md)
+  * [How do I measure my encoder's noise?](how-to/how-do-i-measure-my-encoders-noise.md)
 
 ## Understanding
 
