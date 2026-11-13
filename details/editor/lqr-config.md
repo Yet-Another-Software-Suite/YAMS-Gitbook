@@ -133,6 +133,8 @@ Every value is a starting point. Change one at a time, as in [Tune it live](../.
 
 The qelms and trusts have no defaults: `withFlyWheel`, `withArm` or `withElevator` sets them.
 
+**The trust values** are standard deviations, and only their ratio matters. Measure the encoder trust as the encoder's noise, and set the model trust against it: [Find the encoder and model trust](../../how-to/how-do-i-use-lqr.md#find-the-encoder-and-model-trust) shows how.
+
 ## Simulation only
 
 `withSimClosedLoopController(lqrController)` on the motor config uses the LQR only in simulation, with the real robot keeping its PID. Use it to try LQR, or to compare it with the PID, before deploying.

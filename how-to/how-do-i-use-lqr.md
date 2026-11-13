@@ -172,6 +172,46 @@ Run the simulation, command a setpoint far from where the mechanism is, then com
 {% endstep %}
 
 {% step %}
+### Find the encoder and model trust
+
+The trust values tell the [Kalman filter](../details/editor/lqr-controllers.md#the-kalman-filter-an-estimate-better-than-the-encoder) how far to believe each source, as standard deviations: the **encoder trust** is how noisy the encoder is, and the **model trust** is how far the real mechanism strays from what the model predicts. A larger value trusts that source less.
+
+#### Only the ratio matters
+
+The filter weighs the two against each other, so multiplying both by the same number changes nothing. Measured on the LQR arm from [LQR controllers](../details/editor/lqr-controllers.md), multiplying both by 10 gave the same estimate and the same output to three decimal places, and raising the model trust 10 times did exactly what lowering the encoder trust 10 times did. So measure the encoder trust, then set the model trust relative to it.
+
+#### Measure the encoder trust
+
+The encoder trust is the encoder's noise, in the mechanism's units:
+
+1. **Hold the mechanism still,** with the robot disabled and the mechanism resting on a hard stop. For a flywheel, spin it at a steady voltage instead, with `voltage/enabled` in [live tuning](../details/live-tuning/README.md).
+2. **Log a few seconds** of `mechanism/position` (on a flywheel, `mechanism/velocity`; on an elevator, `measurement/position`).
+3. **Read its standard deviation** in AdvantageScope's Statistics view. That is the encoder trust, in degrees (or RPM, or meters).
+
+If the reading does not change at all, the noise is smaller than one count of the encoder: use one count divided by 3.5 (√12). A NEO's built-in encoder on a 60:1 arm counts 2,520 times a turn, so one count is 0.14° and its trust about 0.04°. Use the measured value rather than this when you can: on a robot, vibration and backlash add noise that a still mechanism on the bench does not show.
+
+#### Set the model trust against it
+
+Start the model trust at the [starting values](../details/editor/lqr-config.md#starting-values): about the encoder trust for position, and ten times that for velocity. Then change it only for one of these reasons:
+
+* **Raise it** when the mechanism meets forces the model does not know: gravity, friction, a game piece, or a model that is badly off. The filter then follows the encoder more and the model less. Measured on the arm with no kG, holding at 45°:
+
+  | Model trust | Ended at | The filter believed | Voltage chatter while holding |
+  | --- | --- | --- | --- |
+  | Starting values | 35.7° | 44.1° | 0.003 V |
+  | 3 times | 41.0° | 44.0° | 0.009 V |
+  | 10 times | 43.1° | 44.1° | 0.029 V |
+  | 30 times | 43.6° | 44.0° | 0.081 V |
+
+  It helps, but a kG fixes the cause, and even at 100 times the arm still ended 1.2° short. So add the feedforward first, and raise the model trust only for what is left.
+* **Lower it** when the output is noisy and the model is good: the filter then smooths the encoder's noise out more.
+
+Stop when `motor/outputVoltage` starts to chatter while the mechanism holds still: the filter is passing the encoder's noise straight to the motor. A model that is only a little off barely needs any of this: with the arm's real inertia 1.5 times the model's, the estimate stayed within about 0.3° of the truth at every setting.
+
+**Check it:** holding still, `motor/outputVoltage` is steady, and the mechanism holds its setpoint.
+{% endstep %}
+
+{% step %}
 ### Tune it live
 
 With `HIGH` telemetry, the LQR's values are tunable under `NT:/Tuning/<Mechanism>/<Motor>/closedloop/lqr/`, in place of kP, kI and kD. Start the [Live Tuning command](../details/live-tuning/), type a value, and the LQR is rebuilt with it on the next loop, starting from its current estimate so the output does not jump. Change one value at a time, in this order:
@@ -181,7 +221,7 @@ With `HIGH` telemetry, the LQR's values are tunable under `NT:/Tuning/<Mechanism
    * Too slow: lower `qelms/position` (on a flywheel, `qelms/velocity`), or raise `relms` up to 12 V.
    * Overshoots or rings: lower `qelms/velocity` on an arm or elevator, or lower `relms`.
    * `motor/outputVoltage` pinned at the limit: the LQR asks for more than the motor has, so raise the qelms or lower `relms`.
-3. **The trust values last, if at all.** If the output is noisy, raise `encoder/position` (on a flywheel, `encoder/velocity`). If the estimate lags the mechanism, raise `model/position` and `model/velocity`.
+3. **The trust values last, if at all,** as in [Find the encoder and model trust](#find-the-encoder-and-model-trust). If the output is noisy, raise `encoder/position` (on a flywheel, `encoder/velocity`) or lower the model trust; if the mechanism is pushed by something the model does not know, raise `model/position` and `model/velocity`.
 
 Every value must be above 0; one the LQR cannot use leaves it as it was, with a warning on the Driver Station. [LQRConfig](../details/editor/lqr-config.md#live-tuning-keys) lists the keys and their units.
 
