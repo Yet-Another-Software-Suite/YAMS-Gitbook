@@ -87,7 +87,7 @@ new ADRCConfig()
     .withTrackingDifferentiator(TrackingDifferentiator.Method.LD, 0.08)
 ```
 
-A [motion profile](exponential-profiles.md) on the motor config does the same job with real speed and acceleration limits. Use one or the other: a TD on top of a profile only adds lag. The TD is set when the robot starts, and is not live tunable.
+A [motion profile](exponential-profiles.md) on the motor config does the same job with real speed and acceleration limits. Use one or the other: a TD would reshape a setpoint the profile already shaped, so YAMS throws a `SmartMotorControllerConfigurationException` when the robot starts with both. The TD is set when the robot starts, and is not live tunable.
 
 ### The methods
 
