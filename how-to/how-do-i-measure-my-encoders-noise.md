@@ -49,18 +49,21 @@ Click **Tabs**, then **New Tab**, then **Statistics**. The shortcut is Alt+S.
 {% endstep %}
 
 {% step %}
-### Drag the encoder's field into Measurements
+### Drag the encoder's fields into Measurements
 
-In the sidebar, open **Mechanisms**, then your mechanism, then your motor. Drag the field to the **Measurements** list:
+In the sidebar, open **Mechanisms**, then your mechanism, then your motor. Drag these to the **Measurements** list:
 
-* **An arm, pivot or elevator:** `rotor/position`, the motor's own encoder.
+* **An arm or pivot:** `rotor/position`, the motor's own encoder, and `rotor/gearRatio`, the gear ratio YAMS uses.
+* **An elevator:** the same two, and `measurement/circumference`.
 * **A flywheel:** `mechanism/velocity`.
 
-<figure><img src="../.gitbook/assets/lqr-stats-3-drag-field.png" alt="A Statistics tab in AdvantageScope 2027, with the sidebar opened to Mechanisms, LQRArm, ArmMotor, rotor, position. Box 1 is around rotor's position field, and an arrow leads from it to box 2, the empty Measurements list at the bottom of the tab."><figcaption><p>Drag the field into the Measurements list.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/lqr-stats-3-drag-field.png" alt="A Statistics tab in AdvantageScope 2027, with the sidebar opened to Mechanisms, LQRArm, ArmMotor, rotor, which holds gearRatio and position. Box 1 is around rotor's position field and box 2 around gearRatio, and an arrow leads from each to box 3, the empty Measurements list at the bottom of the tab."><figcaption><p>Drag rotor/position and rotor/gearRatio into the Measurements list.</p></figcaption></figure>
 
-**Why the rotor, and not `mechanism/position`?** The Statistics view shows three decimal places, and YAMS logs a mechanism's position in rotations. An arm's noise is a few thousandths of a rotation, which rounds to 0.000. The motor turns gear ratio times further than the arm, so its noise shows. An elevator's `measurement/position` in meters rounds away the same way.
+**Why the rotor, and not `mechanism/position`?** The Statistics view shows three decimal places, and YAMS logs a mechanism's position in rotations. An arm's noise is a few ten-thousandths of a rotation, which rounds to 0.000. The motor turns gear-ratio times further than the arm, so its noise shows, and `rotor/gearRatio` turns it back into the arm's. An elevator's `measurement/position` in meters rounds away the same way.
 
-**Check it:** the field appears in the Measurements list, and a histogram appears above it.
+<figure><img src="../.gitbook/assets/lqr-stats-5-read-arm.png" alt="AdvantageScope 2027's Statistics tab with two fields: the arm's mechanism/position in yellow and its motor's rotor/position in blue. Box 1 is around the Standard Deviation row, which reads 0.000 for mechanism/position and 0.020 for rotor/position; a second box marks the 0.020."><figcaption><p>The same noise: 0.000 at the arm, which rounds away, and 0.020 at the motor.</p></figcaption></figure>
+
+**Check it:** the fields appear in the Measurements list, and a histogram appears above them.
 {% endstep %}
 
 {% step %}
@@ -78,17 +81,17 @@ If the log also has the mechanism moving, use **Visible Range** instead, and zoo
 {% step %}
 ### Read the standard deviation
 
-Read **Standard Deviation**, under Spread in the table.
+Read the encoder's **Standard Deviation**, under Spread, and the gear ratio: `rotor/gearRatio`'s **Mean**, under Center. An elevator's circumference is `measurement/circumference`'s Mean, in meters.
 
-<figure><img src="../.gitbook/assets/lqr-stats-5-read-arm.png" alt="AdvantageScope 2027's Statistics tab with two fields: the arm's mechanism/position in yellow and its motor's rotor/position in blue. Box 1 is around the Standard Deviation row, which reads 0.000 for mechanism/position and 0.020 for rotor/position; a second box marks the 0.020."><figcaption><p>The same noise: 0.000 at the arm, which rounds away, and 0.020 at the motor.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/lqr-stats-5-read-ratio.png" alt="AdvantageScope 2027's Statistics tab with rotor/position in blue and rotor/gearRatio in green. Box 1 is around rotor/position's Standard Deviation, 0.020. Box 2 is around rotor/gearRatio's Mean, 60.000."><figcaption><p>The rotor's noise, 0.020 rotations, and the gear ratio, 60.</p></figcaption></figure>
 
 Then convert it to the units the LQR's encoder trust takes:
 
-| Mechanism | Field | Encoder trust |
-| --- | --- | --- |
-| Arm, pivot | `rotor/position` | Standard deviation ÷ gear ratio × 360 = degrees |
-| Elevator | `rotor/position` | Standard deviation ÷ gear ratio × mechanism circumference = meters |
-| Flywheel | `mechanism/velocity` | Standard deviation × 60 = RPM |
+| Mechanism | Encoder trust |
+| --- | --- |
+| Arm, pivot | `rotor/position`'s standard deviation ÷ `rotor/gearRatio` × 360 = degrees |
+| Elevator | `rotor/position`'s standard deviation ÷ `rotor/gearRatio` × `measurement/circumference` = meters |
+| Flywheel | `mechanism/velocity`'s standard deviation × 60 = RPM |
 
 For the example arm: 0.020 ÷ 60 × 360 = **0.12°**. For the example flywheel, 0.100 rotations per second × 60 = **6 RPM**:
 
@@ -99,6 +102,17 @@ For the example arm: 0.020 ÷ 60 × 360 = **0.12°**. For the example flywheel, 
 {% endstepper %}
 
 ## If it did not work
+
+* **There is no `rotor/gearRatio` or `measurement/circumference`.** Your YAMS is older than the release that logs them. Work the gear ratio out from your motor config's `withGearing(...)`, or print it with `System.out.println(config.getGearing().getMechanismToRotorRatio())` (C++ `config.GetMotorGearing()->GetMechanismToRotorRatio()`):
+
+  | Your config | Gear ratio |
+  | --- | --- |
+  | `new MechanismGearing(60)` | 60 |
+  | `new MechanismGearing(GearBox.fromReductionStages(3, 4))`, or `fromStages("3:1", "4:1")` | 3 × 4 = 12 |
+  | `new MechanismGearing(GearBox.fromTeeth(12, 60))` | 60 ÷ 12 = 5 |
+  | `new MechanismGearing(GearBox.fromReductionStages(3, 4), Sprocket.fromStages("12:24"))` | 3 × 4 × 2 = 24 |
+
+  A sprocket written as a number, such as `new Sprocket(2)`, is a 1:2 step-up, which divides the ratio instead: print it to be sure. An elevator's circumference is what you gave `withMechanismCircumference(...)`, or 2 × π × the drum radius.
 
 * **Count is 1, or the table shows dashes.** The time range does not cover the log: set Time Range to Full Log, or zoom the timeline to the part you want with Visible Range.
 * **Standard Deviation is 0.000 for `rotor/position` too.** The noise is smaller than one count of the encoder. Use one count divided by 3.5 (√12) instead: a NEO's built-in encoder counts 42 times a motor turn, so on a 60:1 arm one count is 360° ÷ (42 × 60) = 0.14°, and its trust about 0.04°.

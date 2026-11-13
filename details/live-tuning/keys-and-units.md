@@ -267,6 +267,7 @@ Read-only keys are under `NT:/Mechanisms`. Keys marked **tunable** also have an 
 | `mechanism/velocity` | Rotations per second (rot/s) | Velocity of the mechanism output shaft | No |
 | `rotor/position` | Rotations (rot) | Position of the motor rotor, before gearing | No |
 | `rotor/velocity` | Rotations per second (rot/s) | Velocity of the motor rotor | No |
+| `rotor/gearRatio` | None | Rotor rotations per mechanism rotation, the gear ratio YAMS converts with: 60 for a 60:1 arm. Divide a `rotor/` value by it to get the mechanism's | No |
 | `closedloop/setpoint/position` | Rotations, or meters for linear mechanisms | Closed loop position target | **Tunable**, typed in degrees (or meters) |
 | `closedloop/setpoint/velocity` | rot/s, or m/s | Closed loop velocity target | **Tunable**, typed in RPM (or m/s) |
 | `mechanism/limit/lower`, `mechanism/limit/upper` | Not published | Soft limits | **Tunable only**, typed in degrees |
@@ -298,6 +299,7 @@ When a mechanism has a circumference (from `.withMechanismCircumference()`, or o
 | NetworkTables key                                    | Unit                    | Description                      |
 | ---------------------------------------------------- | ----------------------- | -------------------------------- |
 | `measurement/position`                               | Meters (m)              | Linear position of the mechanism |
+| `measurement/circumference`                          | Meters (m)              | Meters the mechanism moves per mechanism rotation |
 | `measurement/velocity`                               | Meters per second (m/s) | Linear velocity of the mechanism |
 | `measurement/limit/lower`, `measurement/limit/upper` | Meters (m)              | Soft limits in linear units. **Tunable only**, under `NT:/Tuning` |
 
