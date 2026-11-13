@@ -89,6 +89,7 @@
   * [Tune a swerve drive](details/live-tuning/swerve-drive.md)
   * [YAMS Live Tuner](details/live-tuning/live-tuner.md)
   * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
+* [How do I use ADRC instead of PID?](how-to/how-do-i-use-adrc.md)
 
 ## Understanding
 
@@ -104,6 +105,7 @@
 * [Simulation-only PID + feedforward](details/editor/simulation-only-pid-+-feedforward.md)
 * [Exponential profiles](details/editor/exponential-profiles.md)
 * [LQR controllers](details/editor/lqr-controllers.md)
+* [ADRC controllers](details/editor/adrc-controllers.md)
 * [EasyCRT](details/easycrt.md)
 * [Battery simulation](understanding/battery-simulation.md)
 * [Telemetry](understanding/telemetry.md)
