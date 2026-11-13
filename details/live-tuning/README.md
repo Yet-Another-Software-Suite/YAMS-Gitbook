@@ -236,7 +236,7 @@ Use the same order on the robot, and start again from the tutorial's placeholder
 * **The robot gains go in different lines.** Copy what you find on the robot into `withClosedLoopController(...)` and `withFeedforward(...)`, not the `withSim...` lines.
 
 {% hint style="info" %}
-**With an LQR**, tune the feedforward the same way, then the `closedloop/lqr/` fields where the steps say kP and kD. See [Tune it live](../editor/lqr-controllers.md#tune-it-live).
+**With an LQR**, tune the feedforward the same way, then the `closedloop/lqr/` fields where the steps say kP and kD. See [Tune it live](../../how-to/how-do-i-use-lqr.md#tune-it-live).
 {% endhint %}
 
 ## Drive a motor at a voltage

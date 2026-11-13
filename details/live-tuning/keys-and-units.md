@@ -113,7 +113,7 @@ An [LQR](../editor/lqr-controllers.md) (linear quadratic regulator) is a control
 * **Bad values:** every value must be above 0. One the LQR can't use leaves it as it was, with a warning on the Driver Station naming the motor.
 * **The feedforward is still tuned as usual.** The LQR only replaces kP, kI and kD. kS, kV, kG and kA are added on top of its output.
 
-See [Tune it live](../editor/lqr-controllers.md#tune-it-live) for the order to change them in.
+See [Tune it live](../../how-to/how-do-i-use-lqr.md#tune-it-live) for the order to change them in.
 {% endtab %}
 
 {% tab title="Feedforward" %}

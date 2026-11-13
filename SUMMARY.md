@@ -89,6 +89,7 @@
   * [Tune a swerve drive](details/live-tuning/swerve-drive.md)
   * [YAMS Live Tuner](details/live-tuning/live-tuner.md)
   * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
+* [How do I use LQR instead of PID?](how-to/how-do-i-use-lqr.md)
 
 ## Understanding
 
@@ -122,6 +123,7 @@
     * [Encoders](details/editor/config/encoders.md)
     * [Followers](details/editor/config/followers.md)
     * [Simulation](details/editor/config/simulation.md)
+  * [LQRConfig](details/editor/lqr-config.md)
   * [Motor controller feature matrix](details/editor/feature-matrix.md)
 * [Controlling a mechanism](details/controlling-a-mechanism.md)
 * [Mechanism configs](details/mechanism-configs/README.md)
