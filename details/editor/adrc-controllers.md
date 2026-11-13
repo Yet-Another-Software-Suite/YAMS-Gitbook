@@ -20,6 +20,8 @@ It has three parts:
 * **A feedback law** drives the estimated position or speed to the setpoint, like a PD controller tuned from the settling time.
 * **Disturbance cancellation** subtracts the estimated disturbance, divided by `b0`, from the voltage. This is what holds an arm up without a kG.
 
+<figure><img src="../../.gitbook/assets/adrc-observer.gif" alt="Animation of an ADRC arm under gravity. On the left, a drawing of the arm holding at -30 degrees, swinging up to 45 degrees at one second, and an orange game piece appearing on its end at 2.6 seconds. Top right, the arm's angle follows the dashed setpoint, with a small sag at the start and a half degree dip when the game piece is added. Bottom right, a dashed line shows the volts gravity takes to hold the arm up, about 1.6 volts, then 1.3 at 45 degrees, then 2.7 with the game piece; the red line, the observer's estimate, starts at zero, reaches gravity within about 0.1 seconds, and catches up with each change within about 0.2 seconds."><figcaption><p>The observer is never told about gravity or the game piece. It finds each from how the arm moves, and the ADRC cancels it. Made with YAMS's ADRC on a simulated NEO 12:1 arm.</p></figcaption></figure>
+
 `b0` is how strongly a volt moves the mechanism. YAMS works it out from the motor, the gearing and the moment of inertia, so you rarely set it.
 
 ## Where it runs

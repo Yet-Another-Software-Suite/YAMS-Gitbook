@@ -27,6 +27,8 @@ YAMS gives the ADRC the profile's state **now**, at the start of the loop, and i
 
 Without a motion profile, both states are the setpoint standing still, so a plain step works as before.
 
+<figure><img src="../../.gitbook/assets/adrc-profile-feed.gif" alt="Animation of three 12:1 pivots following the same trapezoidal profile to 90 degrees, drawn side by side above a graph of their angles. Fed only the next position, the orange pivot lags well behind the dashed profile, by up to 28 degrees, and creeps up to 90 late. Fed the next position and speed, the red pivot runs ahead of the profile and swings past 90 to about 95 degrees before settling. Fed the profile now and next, as YAMS does, the green pivot stays on the dashed profile line the whole way and stops on 90."><figcaption><p>Three ways to feed the same profile. Only now and next follows it and stops on the goal. Made with YAMS's ADRC on a simulated pivot, with the back-EMF modeled in all three.</p></figcaption></figure>
+
 ## Modeling the back-EMF
 
 ### Why lumping it overshoots
@@ -42,6 +44,8 @@ A kV feedforward does not help. The observer has already lumped the back-EMF int
 A second order position loop's observer includes the back-EMF in its model. It works out how strong the back-EMF is from the same motor, gearing and moment of inertia that choose the loop's form, and the control law supplies the voltage to overcome it. The disturbance then only holds what the model misses, such as gravity and friction.
 
 `withBackEmfModel(false)` on the `ADRCConfig` turns it off. A first order position loop does not need it, since its input gain already includes the back-EMF.
+
+<figure><img src="../../.gitbook/assets/adrc-backemf.gif" alt="Animation of two 12:1 pivots following the same profile to 90 degrees, one with the back-EMF lumped into the disturbance and one with it modeled. Top right, near the goal, the orange lumped pivot runs past 90 to about 91.7 degrees and drifts back, while the green modeled pivot stops on 90 with the dashed profile. Bottom right, a dashed line shows the motor's back-EMF in volts, rising to about 1.9 volts as the pivot speeds up and falling back to zero as it stops. The orange lumped estimate follows it late: below it while the pivot speeds up, above it while the pivot slows down, which keeps pushing the pivot past the goal. The green modeled estimate stays at zero, since the model already accounts for the back-EMF."><figcaption><p>Lumped, the observer's estimate trails the back-EMF, and the pivot runs past the goal. Modeled, there is nothing left to estimate. Made with YAMS's ADRC on a simulated pivot.</p></figcaption></figure>
 
 ## What each change does
 
