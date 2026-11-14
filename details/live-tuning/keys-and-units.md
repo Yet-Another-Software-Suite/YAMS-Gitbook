@@ -292,6 +292,20 @@ A motor controller configured with an [LQR](../editor/lqr-controllers.md) publis
 | `closedloop/lqr/encoder/velocity`                                                   | RPM                                                | Encoder standard deviation. Flywheel only        |
 | `closedloop/lqr/maxVoltage`                                                         | Volts (V)                                          | Most voltage the LQR outputs                     |
 
+### ADRC keys
+
+A motor controller configured with an [ADRC](../editor/adrc-controllers.md) publishes its values at `HIGH`, in place of kP, kI and kD. The first three are also **tunable** under `NT:/Tuning`; the rest are read-only, under `NT:/Mechanisms`. The applied voltage is `motor/outputVoltage`.
+
+| NetworkTables key | Unit | Description | Tunable copy under `NT:/Tuning` |
+| --- | --- | --- | --- |
+| `closedloop/adrc/b0` | Mechanism rotations, or meters for an elevator, per s or s² per volt | How strongly a volt moves the mechanism | **Tunable** |
+| `closedloop/adrc/settlingTime` | Seconds (s) | How quickly it reaches a setpoint | **Tunable** |
+| `closedloop/adrc/bandwidthScale` | None | Scales both bandwidths | **Tunable** |
+| `closedloop/adrc/disturbance` | The loop's units per s or s², like `b0` | The total disturbance the observer estimates | No |
+| `closedloop/adrc/bandwidth` | Radians per second (rad/s) | The feedback's bandwidth | No |
+| `closedloop/adrc/observerBandwidth` | Radians per second (rad/s) | The observer's bandwidth, 4 × the bandwidth | No |
+| `closedloop/adrc/systemOrder` | None | The order it runs: 1 or 2 for a position loop, chosen at startup | No |
+
 ### Linear mechanism keys
 
 When a mechanism has a circumference (from `.withMechanismCircumference()`, or one of the `.withWheelDiameter()`, `.withWheelRadius()` or `.withDrumRadius()` helpers), the linear keys are published too:

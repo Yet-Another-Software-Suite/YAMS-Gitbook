@@ -25,13 +25,29 @@ Sets the PID gains.
 
 Write gains in volts per mechanism rotation, or volts per meter for a [distance based controller](closed-loop-control.md#withlinearclosedloopcontroller). YAMS converts them for each motor controller, so the same numbers behave the same on every vendor: see [Under the hood](closed-loop-control.md#under-the-hood) if you want the details.
 
-Passing an `LQRController` instead replaces the PID with an LQR: see [LQR controllers](../lqr-controllers.md).
+Passing an `LQRController` instead replaces the PID with an LQR: see [LQR controllers](../lqr-controllers.md). To use an ADRC, see [`withADRCController`](closed-loop-control.md#withadrccontroller).
 
-**Supported on every motor controller.** Every controller accepts PID gains. An [LQR controller](../lqr-controllers.md) always runs on the SystemCore, on every controller, and so does every loop of an A301, which has no closed loop gains of its own.
+**Supported on every motor controller.** Every controller accepts PID gains. An [LQR controller](../lqr-controllers.md) or an [ADRC](../adrc-controllers.md) always runs on the SystemCore, on every controller, and so does every loop of an A301, which has no closed loop gains of its own.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova            | A301                          |
 | ------- | -------- | ---------------- | ----------------------- | ----------------------------- |
 | ✅       | ✅        | ✅                | ✅ PID runs on the Nova | ✅ PID runs on the SystemCore |
+
+## `withADRCController`
+
+Replaces the slot's PID, LQR and feedforward with an ADRC, written by FRC Team 8331. You give it the kind of mechanism and a settling time; it works out the rest from the motor, the gearing and the moment of inertia. See [ADRC controllers](../adrc-controllers.md) for how it works, [ADRCConfig](../adrc-config.md) for every setting, and [How do I use ADRC instead of PID?](../../../how-to/how-do-i-use-adrc.md) to set one up.
+
+```java
+.withADRCController(new ADRCConfig()
+    .withSystemOrder(SystemOrder.ARM)
+    .withSettlingTime(Seconds.of(0.3)))
+```
+
+**Supported on every motor controller.** It always runs on the SystemCore, so `withClosedLoopControllerMaximumVoltage` and `withClosedLoopRampRate` apply to it on every controller.
+
+| TalonFX | TalonFXS | SPARK MAX / Flex | Thrifty Nova | A301 |
+| ------- | -------- | ---------------- | ------------ | ---- |
+| ✅       | ✅        | ✅                | ✅            | ✅    |
 
 ### Starting values
 
@@ -124,11 +140,11 @@ Caps the voltage the closed loop controller may ask for.
 
 | TalonFX | TalonFXS | SPARK MAX / Flex                                                                  | Thrifty Nova                                                                                                   | A301 |
 | ------- | -------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---- |
-| ✅       | ✅        | ⚠️ only with an exponential profile or an [LQR controller](../lqr-controllers.md) | ⚠️ only when the loop runs on the SystemCore, such as with an exponential profile, a velocity trapezoidal profile or an [LQR controller](../lqr-controllers.md) | ✅ |
+| ✅       | ✅        | ⚠️ only with an exponential profile, an [LQR controller](../lqr-controllers.md) or an [ADRC](../adrc-controllers.md) | ⚠️ only when the loop runs on the SystemCore, such as with an exponential profile, a velocity trapezoidal profile, an [LQR controller](../lqr-controllers.md) or an [ADRC](../adrc-controllers.md) | ✅ |
 
 ## Where the loop runs
 
-Some combinations run on the motor controller, at 1 kHz, and some on the SystemCore, every 20 ms by default. It matters for a few options, and YAMS raises an alert when the loop is on the SystemCore. `getClosedLoopControllerPeriod()` also tells you: 1 ms on the motor controller, the closed loop control period on the SystemCore. The figure does not show the A301: it has no closed loop of its own, so PID, both profiles and LQR all run on the SystemCore.
+Some combinations run on the motor controller, at 1 kHz, and some on the SystemCore, every 20 ms by default. It matters for a few options, and YAMS raises an alert when the loop is on the SystemCore. `getClosedLoopControllerPeriod()` also tells you: 1 ms on the motor controller, the closed loop control period on the SystemCore. The figure does not show the A301: it has no closed loop of its own, so PID, both profiles and LQR all run on the SystemCore. An ADRC runs on the SystemCore on every controller.
 
 A Thrifty Nova also runs the loop on the SystemCore when the Nova can't run it: an absolute encoder closing the loop over a range other than 0° to 360° without continuous wrapping, or continuous wrapping of an absolute encoder geared to the mechanism (see [`withContinuousWrapping`](#withcontinuouswrapping)).
 

@@ -91,6 +91,7 @@
   * [TunerX in simulation](details/live-tuning/tunerx-in-simulation.md)
 * [How do I use LQR instead of PID?](how-to/how-do-i-use-lqr.md)
   * [How do I measure my encoder's noise?](how-to/how-do-i-measure-my-encoders-noise.md)
+* [How do I use ADRC instead of PID?](how-to/how-do-i-use-adrc.md)
 
 ## Understanding
 
@@ -106,6 +107,9 @@
 * [Simulation-only PID + feedforward](details/editor/simulation-only-pid-+-feedforward.md)
 * [Exponential profiles](details/editor/exponential-profiles.md)
 * [LQR controllers](details/editor/lqr-controllers.md)
+* [ADRC controllers](details/editor/adrc-controllers.md)
+  * [ADRC and motion profiles](details/editor/adrc-motion-profiles.md)
+  * [Tracking differentiators](details/editor/adrc-tracking-differentiators.md)
 * [EasyCRT](details/easycrt.md)
 * [Battery simulation](understanding/battery-simulation.md)
 * [Telemetry](understanding/telemetry.md)
@@ -125,6 +129,7 @@
     * [Followers](details/editor/config/followers.md)
     * [Simulation](details/editor/config/simulation.md)
   * [LQRConfig](details/editor/lqr-config.md)
+  * [ADRCConfig](details/editor/adrc-config.md)
   * [Motor controller feature matrix](details/editor/feature-matrix.md)
 * [Controlling a mechanism](details/controlling-a-mechanism.md)
 * [Mechanism configs](details/mechanism-configs/README.md)
