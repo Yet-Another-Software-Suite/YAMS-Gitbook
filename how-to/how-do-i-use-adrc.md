@@ -128,7 +128,13 @@ An elevator also needs `withLinearClosedLoopController(true)` and its [drum or s
 {% step %}
 ### Limit the output
 
-`withClosedLoopControllerMaximumVoltage(...)` caps the voltage the ADRC can ask for, as it does for a PID. `withClosedLoopRampRate(...)` limits how fast the voltage changes; leave it off unless the mechanism needs it, since it slows the response and adds overshoot.
+`withClosedLoopControllerMaximumVoltage(...)` caps the voltage the ADRC can ask for, as it does for a PID. Always set it: the ADRC has no limit of its own, and a short settling time drives the output to the limit at the start of every move, so without one it applies whatever the battery has.
+
+* **12 V for normal use,** as in the examples. A move then comes out the same on a fresh battery and a tired one.
+* **About 6 V the first time on the robot,** so a wrong setting can't slam the mechanism. Raise it once the mechanism behaves.
+* **A lower limit needs a longer settling time.** The mechanism can't move as fast, and if the voltage sits at the limit for most of a move, a shorter settling time only adds overshoot.
+
+`withClosedLoopRampRate(...)` limits how fast the voltage changes; leave it off unless the mechanism needs it, since it slows the response and adds overshoot.
 
 **Check it:** in the graph below, `motor/outputVoltage` never goes past the limit.
 {% endstep %}

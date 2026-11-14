@@ -29,7 +29,7 @@ It has three parts:
 The ADRC always runs on the SystemCore, on every motor controller, every closed loop control period (20 ms by default). The motor controller only receives the voltage it asks for. So:
 
 * **The same settings behave the same on every vendor.** A TalonFX, a SPARK, a Thrifty Nova and an A301 all run the same ADRC.
-* **The motor config's output limits apply to it.** `withClosedLoopControllerMaximumVoltage(...)` caps its voltage, and `withClosedLoopRampRate(...)` ramps it, on every controller. The ADRC itself has no limits.
+* **The motor config's output limits apply to it.** `withClosedLoopControllerMaximumVoltage(...)` caps its voltage, and `withClosedLoopRampRate(...)` ramps it, on every controller. The ADRC itself has no limits, so always set the maximum voltage: 12 V for normal use, and about 6 V the first time on the robot. [How do I use ADRC instead of PID?](../../how-to/how-do-i-use-adrc.md#limit-the-output) explains why.
 * **A motion profile on the motor config shapes its setpoint**, as it does for a PID.
 
 ## The settings
