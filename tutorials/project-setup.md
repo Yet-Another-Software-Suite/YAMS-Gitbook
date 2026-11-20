@@ -11,6 +11,10 @@ Each tutorial page has a tab for **Java with Commands v2**, **Java with Commands
 
 <figure><img src="../.gitbook/assets/tutorial-flavors.png" alt="A table comparing the three ways to follow the tutorials. Java with Commands v2 uses the Command v2 Robot template and the YAMS Commands v2 vendordep; the mechanism lives in a subsystem class that extends SubsystemBase, buttons are bound in RobotContainer.java, and the scheduler calls periodic. Java with Commands v3 uses the Command v3 Robot template and the YAMS Commands v3 vendordep; the mechanism lives in a class that implements Mechanism, buttons are bound in ExampleTeleop.java, and you call periodic yourself from Robot.robotPeriodic. C++ uses the Command v2 Robot template for C++ and the YAMS Commands v2 vendordep; the mechanism lives in a subsystem header and source file, buttons are bound in RobotContainer.cpp, and the scheduler calls periodic."><figcaption><p>The YAMS calls are the same. The project around them is what changes.</p></figcaption></figure>
 
+{% hint style="info" %}
+Want to follow the tutorials beside your code? [Install the YASS Tutorials extension](yass-tutorials-extension.md) in WPILib VS Code.
+{% endhint %}
+
 {% hint style="success" %}
 Not sure which to pick? Use **Java, Commands v2**. It is what most teams use today, and most of the other pages in these docs show it first.
 {% endhint %}
