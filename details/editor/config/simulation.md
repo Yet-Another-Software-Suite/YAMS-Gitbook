@@ -43,7 +43,7 @@ How hard the simulated load is to spin up. An `Arm`, `Pivot` and `FlyWheel` simu
 .withWheelMomentOfInertia(Inches.of(4), Pounds.of(1))       // a wheel or roller: a solid disk of this diameter and mass
 ```
 
-Use exactly one; the last call wins. For a wheel, `withWheelMomentOfInertia` gives about a third of what the arm version gives for the same numbers, so don't use the arm version for wheels.
+Set it once, with one of these. Setting it a second time throws a `SmartMotorControllerConfigurationException`, because a simulation reads it once, when it is built, and would never use the second value. The arm or flywheel version of [`withExponentialProfile`](motion-profiles.md#withexponentialprofile), which takes a moment of inertia, sets it too, so don't set it again. A copy made with `clone()` can set its own once. While the moment of inertia is the default, each motor controller raises an alert in simulation saying so. For a wheel, `withWheelMomentOfInertia` gives about a third of what the arm version gives for the same numbers, so don't use the arm version for wheels.
 
 ## `withSimulationPeriod`
 

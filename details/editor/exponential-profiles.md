@@ -117,7 +117,7 @@ From there you adjust kV and kA directly, either [live](#refining-the-profile-li
 `SmartMotorControllerConfig` takes all of these directly:
 
 ```java
-.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.5))  // arm or flywheel
+.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.5))  // arm or flywheel; also sets the moment of inertia
 .withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(2), Kilograms.of(8), Inches.of(1)) // elevator
 .withExponentialProfile(Volts.of(10), RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(8))
 ```

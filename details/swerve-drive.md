@@ -365,7 +365,7 @@ The auto-align gains, and the drive and azimuth motor gains, can be tuned from a
 
 ## Telemetry verbosity
 
-Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish, from pose and gyro angle at `LOW` up to full desired/measured chassis speeds and module states at `HIGH`. Each level includes everything the level below it publishes.
+Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish. `LOW` publishes everything a dashboard's swerve drive widget needs: the pose, the gyro angle, the current and desired chassis speeds and module states, and the modules' maximum speed. `MID` adds the field-relative chassis speeds, and `HIGH` the tuning keys. Each level includes everything the level below it publishes. Whenever NetworkTables output is on, `.type` reads `SwerveDrive`, so a dashboard can recognize the drive's table.
 
 ```java
 config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
@@ -375,11 +375,12 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 | ------------------------------------------ | ----------------------------------- | :---: | :---: | :----: |
 | Pose                                       | `pose`                              |   ✓   |   ✓   |    ✓   |
 | Gyro angle                                 | `gyro`                              |   ✓   |   ✓   |    ✓   |
-| Current robot-relative ChassisVelocities   | `chassis/current`                   |       |   ✓   |    ✓   |
+| Current robot-relative ChassisVelocities   | `chassis/current`                   |   ✓   |   ✓   |    ✓   |
+| Desired robot-relative ChassisVelocities   | `chassis/desired`                   |   ✓   |   ✓   |    ✓   |
+| Current module states                      | `states/current`                    |   ✓   |   ✓   |    ✓   |
+| Desired module states                      | `states/desired`                    |   ✓   |   ✓   |    ✓   |
+| Maximum module speed (m/s)                 | `maxModuleVelocity`                 |   ✓   |   ✓   |    ✓   |
 | Field-relative ChassisVelocities           | `chassis/field`                     |       |   ✓   |    ✓   |
-| Current module states                      | `states/current`                    |       |   ✓   |    ✓   |
-| Desired robot-relative ChassisVelocities   | `chassis/desired`                   |       |       |    ✓   |
-| Desired module states                      | `states/desired`                    |       |       |    ✓   |
 | Translation P/I/D (tunable)                | `autoalign/translation/p,i,d`       |       |       |    ✓   |
 | Rotation P/I/D (tunable)                   | `autoalign/rotation/p,i,d`          |       |       |    ✓   |
 | Auto-align target X (tunable)              | `autoalign/setpoint/x`              |       |       |    ✓   |

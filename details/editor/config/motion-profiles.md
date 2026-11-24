@@ -55,7 +55,7 @@ An exponential profile follows what a DC motor can actually do: hard acceleratio
 <figure><img src="../../../.gitbook/assets/exponential-profile-compare.png" alt="A comparison of a trapezoidal profile, which accelerates at a constant rate, and an exponential profile, which accelerates hard at first and eases off as the motor speeds up"><figcaption><p>Trapezoidal and exponential profiles.</p></figcaption></figure>
 
 ```java
-.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.5)) // arm or flywheel
+.withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(1), KilogramSquareMeters.of(0.5)) // arm or flywheel; also sets the moment of inertia
 .withExponentialProfile(Volts.of(10), DCMotor.getKrakenX60(2), Kilograms.of(8), Inches.of(1)) // elevator
 .withExponentialProfile(Volts.of(10), RotationsPerSecond.of(2), RotationsPerSecondPerSecond.of(8))
 ```
