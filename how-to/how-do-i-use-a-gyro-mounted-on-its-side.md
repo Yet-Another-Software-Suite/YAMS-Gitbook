@@ -8,7 +8,7 @@ A swerve drive needs the robot's heading, which is rotation about the axis point
 
 ## Give the drive the gyro's full attitude
 
-`withGyro(...)` takes a `Supplier<Rotation3d>` (`WithGyro(std::function<Rotation3d()>)` in C++): the gyro's full 3D attitude, not just a yaw angle. Most gyros expose this directly, such as `pigeon::getRotation3d`.
+`withGyro(...)` takes a `Supplier<Rotation3d>` (`WithGyro(std::function<Rotation3d()>)` in C++): the gyro's full 3D attitude, not just a yaw angle. `withRotation(...)` (C++ `WithRotation`) is the same method under another name. Most gyros expose this directly, such as `pigeon::getRotation3d`.
 
 ## Pick the heading axis
 
@@ -83,7 +83,7 @@ This is the drive config from the [Swerve Drive tutorial](../tutorials/swerve-dr
 {% endtab %}
 {% endtabs %}
 
-YAMS rotates the gyro's attitude into the robot's frame before anything reads it. After that, the yaw of the result is the robot's heading, and its roll and pitch are the robot's tilt (which anti-tipping uses), whichever way the gyro is mounted. `withGyroInverted(...)` and `withGyroOffset(...)` apply to the resulting heading.
+YAMS rotates the gyro's attitude into the robot's frame before anything reads it. After that, the yaw of the result is the robot's heading, and its roll and pitch are the robot's tilt (which anti-tipping uses), whichever way the gyro is mounted. `withGyroInverted(...)` applies to the resulting heading.
 
 ## Read the heading
 
