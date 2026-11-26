@@ -231,3 +231,11 @@ Values you read under `NT:/Mechanisms` are in rotations and rotations per second
 
 * Watch your mechanism while you tune it: [Step 5: Tune it](../tutorials/arm/tune.md)
 * Review a match afterwards: [How do I view my DataLog in AdvantageScope?](../how-to/how-do-i-view-my-datalog-in-advantagescope.md)
+
+### Skid detection and tilt-scaled odometry fields
+
+At `TelemetryVerbosity.HIGH`, `SwerveDrive` also publishes three feature-gated fields (automatically disabled when the corresponding feature is not configured on `SwerveDriveConfig`):
+
+- `skidRatio` (`double`, ratio) - latest rigid-body wheel-skid ratio from `SkidDetector` (`>= 1.0`); published when `withSkidDetection(...)` is configured.
+- `isSkidding` (`boolean`) - `true` while `SkidDetector` flags wheel slip; published when `withSkidDetection(...)` is configured.
+- `tiltOdometryScale` (`double`, `[0.0, 1.0]`) - latest effective wheel-delta scale factor applied by `TiltOdometryScaler`; published when `withTiltScaledOdometry(...)` or `withSkidOdometryRejection(true)` is configured.
