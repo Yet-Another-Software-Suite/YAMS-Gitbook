@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 464" width="760" height="464" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
 <title id="t">The swerve drive's NetworkTables tree</title>
-<desc id="d">The NetworkTables tree for a swerve drive named swerve under NT Mechanisms: its .type, SwerveDrive, for dashboards, then pose, gyro, maxModuleVelocity, chassis/current, chassis/desired, states/current and states/desired at LOW verbosity, chassis/field at MID, and a modules table with one entry per module containing its absolute encoder, its state and its drive and azimuth motors.</desc>
+<desc id="d">The NetworkTables tree for a swerve drive named swerve under NT Mechanisms: its .type, SwerveDrive, for dashboards, then pose, rotation (the gyro, as a Rotation2d), maxModuleVelocity, chassis/current, chassis/desired, states/current and states/desired at LOW verbosity, chassis/field at MID, and a modules table with one entry per module containing its absolute encoder, its state and its drive and azimuth motors.</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#52606d"/></marker></defs>
 <rect width="760" height="464" fill="#f5f7fa"/>
 <rect x="16" y="16" width="728" height="432" rx="10" fill="#ffffff" stroke="#cbd2d9"/>
@@ -14,8 +14,8 @@
 <text x="714.0" y="152.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >Pose2d  ·  LOW</text>
 <text x="80.0" y="172.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">.type</text>
 <text x="714.0" y="172.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >&quot;SwerveDrive&quot;, for dashboards</text>
-<text x="80.0" y="192.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">gyro</text>
-<text x="714.0" y="192.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >LOW</text>
+<text x="80.0" y="192.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">rotation</text>
+<text x="714.0" y="192.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >Rotation2d from the gyro  ·  LOW</text>
 <text x="80.0" y="212.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">maxModuleVelocity</text>
 <text x="714.0" y="212.0" font-size="10" font-weight="400" text-anchor="end" fill="#52606d" >m/s  ·  LOW</text>
 <text x="80.0" y="232.0" font-size="11.5" font-weight="400" text-anchor="start" fill="#1f2933" font-family="Consolas, Menlo, monospace">chassis/current</text>
