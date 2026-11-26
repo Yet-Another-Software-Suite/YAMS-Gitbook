@@ -185,8 +185,8 @@ These set what the drive does and return at once. They are what the commands abo
 | `setRobotRelativeChassisSpeeds(ChassisVelocities)` | Drive with speeds measured against the robot. An overload adds a feedforward force per module, for path followers. |
 | `setSwerveModuleStates(SwerveModuleVelocity[])`    | Set every module directly, skipping the kinematics.                                                                |
 | `lockPose()`                                       | Turn the wheels into an X so the robot is hard to push.                                                            |
-| `resetOdometry(Pose2d)`                            | Tell the drive where it is, and set the gyro to that heading.                                                      |
-| `zeroGyro()`                                       | Make the direction the robot faces now the new zero heading.                                                       |
+| `resetOdometry(Pose2d)`                            | Tell the drive where it is. The gyro keeps its reading.                                                            |
+| `zeroOdometryHeading()`, or `zeroGyro()`           | Make the direction the robot faces now the new zero heading.                                                       |
 | `addVisionMeasurement(Pose2d, double)`             | Correct the pose estimate with a vision measurement.                                                               |
 
 ## Asking where it is
@@ -219,7 +219,7 @@ The `withOptimization(true)` seen in the config above is a per-module flag, not 
 
 `SwerveDriveConfig.withRotation(Supplier<Rotation3d>)`, or `withGyro`, which is the same method, gives `SwerveDrive` the gyro. The supplier returns the gyro's full attitude, such as `pigeon::getRotation3d` or `imu::getRotation3d`: its yaw is the robot's heading, and its roll and pitch are the robot's tilt. Odometry starts from the gyro's heading, and vision measurements can correct it.
 
-Internally, `SwerveDrive` always drives the modules with robot-relative speeds. `setFieldRelativeChassisSpeeds` rotates the requested speeds into the robot frame with `getRotation()`, the robot's rotation from odometry (the heading of `getPose()`), then hands them to the same code path robot-relative callers use. `getFieldRelativeSpeed()`, driving to a pose and `SwerveInputStream`'s heading control use the same rotation, so a vision correction to the pose's heading also corrects which way "forward" is. Without vision, it's the gyro's heading.
+Internally, `SwerveDrive` always drives the modules with robot-relative speeds. `setFieldRelativeChassisSpeeds` rotates the requested speeds into the robot frame with `getRotation()`, the robot's rotation from odometry (the heading of `getPose()`), then hands them to the same code path robot-relative callers use. `getFieldRelativeSpeed()`, driving to a pose and `SwerveInputStream`'s heading control use the same rotation, so a vision correction to the pose's heading also corrects which way "forward" is. Without vision, it's the gyro's heading. `resetOdometry(pose)` and `zeroOdometryHeading()` (or `zeroGyro()`) reset that rotation and leave the gyro alone: the pose estimator keeps the offset between the two.
 
 ```java
 drive.setFieldRelativeChassisSpeeds(new ChassisVelocities(1.0, 0, 0));
