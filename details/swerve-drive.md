@@ -216,7 +216,7 @@ The `withOptimization(true)` seen in the config above is a per-module flag, not 
 
 ## Gyro integration and field vs. robot relative speeds
 
-`SwerveDriveConfig.withGyro(Supplier<Rotation3d>)` is what lets `SwerveDrive` convert between field-relative and robot-relative `ChassisVelocities` (WPILib 2027's name for `ChassisSpeeds`). The supplier returns the gyro's full attitude, such as `pigeon::getRotation3d` or `imu::getRotation3d`: its yaw is the robot's heading, and its roll and pitch are the robot's tilt. Internally, `SwerveDrive` always drives the modules with robot-relative speeds; `setFieldRelativeChassisSpeeds` just rotates the requested speeds into the robot frame using the current heading before handing them to the same code path robot-relative callers use.
+`SwerveDriveConfig.withRotation(Supplier<Rotation3d>)`, or `withGyro`, which is the same method, is what lets `SwerveDrive` convert between field-relative and robot-relative `ChassisVelocities` (WPILib 2027's name for `ChassisSpeeds`). The supplier returns the gyro's full attitude, such as `pigeon::getRotation3d` or `imu::getRotation3d`: its yaw is the robot's heading, and its roll and pitch are the robot's tilt. Internally, `SwerveDrive` always drives the modules with robot-relative speeds; `setFieldRelativeChassisSpeeds` just rotates the requested speeds into the robot frame using the current heading before handing them to the same code path robot-relative callers use.
 
 ```java
 drive.setFieldRelativeChassisSpeeds(new ChassisVelocities(1.0, 0, 0));

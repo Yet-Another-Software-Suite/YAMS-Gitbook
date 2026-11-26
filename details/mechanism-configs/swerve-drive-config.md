@@ -32,7 +32,8 @@ drive.getConfig().withModuleStateOptimization(false);
 
 | Option                                        | What it does                                                                                                                                                                               |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `withGyro(Supplier<Rotation3d>)`              | Supplies the robot's attitude. Its yaw is the heading.                                                                                                                                     |
+| `withRotation(Supplier<Rotation3d>)`          | Supplies the robot's rotation from the gyro, as its attitude. Its yaw is the heading.                                                                                                      |
+| `withGyro(Supplier<Rotation3d>)`              | Same as `withRotation`.                                                                                                                                                                    |
 | `withGyroInverted(boolean)`                   | Flips the heading, for a gyro that reads clockwise as positive.                                                                                                                            |
 | `withGyroOffset(Angle)`                       | Adds a fixed angle to the heading.                                                                                                                                                         |
 | `withGyroHeadingAxis(GyroAxis)`               | Chooses which axis is the heading, for a gyro mounted on its side.                                                                                                                         |
