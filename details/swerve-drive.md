@@ -196,6 +196,7 @@ These set what the drive does and return at once. They are what the commands abo
 | `getPose()`                                                         | The estimated position and heading on the field.                                        |
 | `getRobotRelativeSpeed()`, `getFieldRelativeSpeed()`                | How the robot is moving now.                                                            |
 | `getModuleStates()`, `getModulePositions()`                         | Each wheel's speed and angle, and how far it has rolled.                                |
+| `getRotation()`                                                     | The robot's rotation from odometry, the heading of `getPose()`.                         |
 | `getGyroRotation3d()`                                               | The robot's attitude from the gyro.                                                     |
 | `getDistanceFromPose(Pose2d)`, `getAngleDifferenceFromPose(Pose2d)` | How far the robot is from a pose.                                                       |
 | `getField2d()`                                                      | The `Field2d` the drive publishes its pose to. Use this one instead of making your own. |
@@ -216,7 +217,9 @@ The `withOptimization(true)` seen in the config above is a per-module flag, not 
 
 ## Gyro integration and field vs. robot relative speeds
 
-`SwerveDriveConfig.withRotation(Supplier<Rotation3d>)`, or `withGyro`, which is the same method, is what lets `SwerveDrive` convert between field-relative and robot-relative `ChassisVelocities` (WPILib 2027's name for `ChassisSpeeds`). The supplier returns the gyro's full attitude, such as `pigeon::getRotation3d` or `imu::getRotation3d`: its yaw is the robot's heading, and its roll and pitch are the robot's tilt. Internally, `SwerveDrive` always drives the modules with robot-relative speeds; `setFieldRelativeChassisSpeeds` just rotates the requested speeds into the robot frame using the current heading before handing them to the same code path robot-relative callers use.
+`SwerveDriveConfig.withRotation(Supplier<Rotation3d>)`, or `withGyro`, which is the same method, gives `SwerveDrive` the gyro. The supplier returns the gyro's full attitude, such as `pigeon::getRotation3d` or `imu::getRotation3d`: its yaw is the robot's heading, and its roll and pitch are the robot's tilt. Odometry starts from the gyro's heading, and vision measurements can correct it.
+
+Internally, `SwerveDrive` always drives the modules with robot-relative speeds. `setFieldRelativeChassisSpeeds` rotates the requested speeds into the robot frame with `getRotation()`, the robot's rotation from odometry (the heading of `getPose()`), then hands them to the same code path robot-relative callers use. `getFieldRelativeSpeed()`, driving to a pose and `SwerveInputStream`'s heading control use the same rotation, so a vision correction to the pose's heading also corrects which way "forward" is. Without vision, it's the gyro's heading.
 
 ```java
 drive.setFieldRelativeChassisSpeeds(new ChassisVelocities(1.0, 0, 0));
@@ -365,7 +368,7 @@ The auto-align gains, and the drive and azimuth motor gains, can be tuned from a
 
 ## Telemetry verbosity
 
-Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish. `LOW` publishes everything a dashboard's swerve drive widget needs: the pose, the robot's rotation from the gyro, the current and desired chassis speeds and module states, and the modules' maximum speed. `MID` adds the field-relative chassis speeds, and `HIGH` the tuning keys. Each level includes everything the level below it publishes. Whenever NetworkTables output is on, `.type` reads `SwerveDrive`, so a dashboard can recognize the drive's table.
+Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish. `LOW` publishes everything a dashboard's swerve drive widget needs: the pose, the robot's rotation from odometry, the gyro's rotation, the current and desired chassis speeds and module states, and the modules' maximum speed. `MID` adds the field-relative chassis speeds, and `HIGH` the tuning keys. Each level includes everything the level below it publishes. Whenever NetworkTables output is on, `.type` reads `SwerveDrive`, so a dashboard can recognize the drive's table.
 
 ```java
 config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
@@ -374,7 +377,8 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 | Field                                      | NetworkTables key                   | `LOW` | `MID` | `HIGH` |
 | ------------------------------------------ | ----------------------------------- | :---: | :---: | :----: |
 | Pose                                       | `pose`                              |   ✓   |   ✓   |    ✓   |
-| Rotation from the gyro (`Rotation2d`)      | `rotation`                          |   ✓   |   ✓   |    ✓   |
+| Rotation from odometry (`Rotation2d`)      | `rotation`                          |   ✓   |   ✓   |    ✓   |
+| Gyro rotation (`Rotation2d`)               | `gyro`                              |   ✓   |   ✓   |    ✓   |
 | Current robot-relative ChassisVelocities   | `chassis/current`                   |   ✓   |   ✓   |    ✓   |
 | Desired robot-relative ChassisVelocities   | `chassis/desired`                   |   ✓   |   ✓   |    ✓   |
 | Current module states                      | `states/current`                    |   ✓   |   ✓   |    ✓   |
