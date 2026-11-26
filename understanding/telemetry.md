@@ -158,7 +158,7 @@ A DataLog uses storage on the SystemCore, and logging everything fills it quickl
 
 A swerve drive publishes poses, chassis velocities and module states. Those are not single numbers, so they are published as NT4 structs that AdvantageScope understands directly.
 
-<figure><img src="../.gitbook/assets/telemetry-swerve-tree.png" alt="The NetworkTables tree for a swerve drive named swerve: its .type, then pose, gyro, maxModuleVelocity, chassis/current, chassis/desired, states/current and states/desired at LOW verbosity, chassis/field at MID, and a modules table with one entry per module holding its absolute encoder, its state and its drive and azimuth motors"><figcaption><p>What a swerve drive publishes, and at which verbosity.</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/telemetry-swerve-tree.png" alt="The NetworkTables tree for a swerve drive named swerve: its .type, then pose, rotation (the gyro, as a Rotation2d), maxModuleVelocity, chassis/current, chassis/desired, states/current and states/desired at LOW verbosity, chassis/field at MID, and a modules table with one entry per module holding its absolute encoder, its state and its drive and azimuth motors"><figcaption><p>What a swerve drive publishes, and at which verbosity.</p></figcaption></figure>
 
 ### Setting it up
 
@@ -166,14 +166,14 @@ A swerve drive publishes poses, chassis velocities and module states. Those are 
 
 | Config                        | Passed to                                        | Notable fields                                                                       |
 | ----------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `SwerveDriveTelemetryConfig`  | `SwerveDriveConfig.withTelemetry(name, config)`  | `withPose()`, `withGyro()`, `withCurrentModuleStates()`, `withDesiredModuleStates()`, `withMaximumModuleVelocity()` |
+| `SwerveDriveTelemetryConfig`  | `SwerveDriveConfig.withTelemetry(name, config)`  | `withPose()`, `withRotation()`, `withCurrentModuleStates()`, `withDesiredModuleStates()`, `withMaximumModuleVelocity()` |
 | `SwerveModuleTelemetryConfig` | `SwerveModuleConfig.withTelemetry(name, config)` | `withAbsoluteEncoder()`, `withState()`                                               |
 
 ```java
 SwerveDriveTelemetryConfig driveTelemetryConfig = new SwerveDriveTelemetryConfig()
     .withTelemetryVerbosity(TelemetryVerbosity.HIGH)
     .withPose()
-    .withGyro()
+    .withRotation() // the gyro's Rotation2d; withGyro() does the same
     .withMaximumModuleVelocity()
     .withCurrentRobotRelativeChassisSpeeds()
     .withFieldRelativeChassisSpeeds()

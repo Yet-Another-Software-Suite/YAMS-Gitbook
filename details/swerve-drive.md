@@ -365,7 +365,7 @@ The auto-align gains, and the drive and azimuth motor gains, can be tuned from a
 
 ## Telemetry verbosity
 
-Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish. `LOW` publishes everything a dashboard's swerve drive widget needs: the pose, the gyro angle, the current and desired chassis speeds and module states, and the modules' maximum speed. `MID` adds the field-relative chassis speeds, and `HIGH` the tuning keys. Each level includes everything the level below it publishes. Whenever NetworkTables output is on, `.type` reads `SwerveDrive`, so a dashboard can recognize the drive's table.
+Like every other mechanism, `SwerveDriveConfig.withTelemetry(name, TelemetryVerbosity)` picks a preset bundle of fields to publish. `LOW` publishes everything a dashboard's swerve drive widget needs: the pose, the robot's rotation from the gyro, the current and desired chassis speeds and module states, and the modules' maximum speed. `MID` adds the field-relative chassis speeds, and `HIGH` the tuning keys. Each level includes everything the level below it publishes. Whenever NetworkTables output is on, `.type` reads `SwerveDrive`, so a dashboard can recognize the drive's table.
 
 ```java
 config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
@@ -374,7 +374,7 @@ config.withTelemetry("swerve", TelemetryVerbosity.HIGH);
 | Field                                      | NetworkTables key                   | `LOW` | `MID` | `HIGH` |
 | ------------------------------------------ | ----------------------------------- | :---: | :---: | :----: |
 | Pose                                       | `pose`                              |   ✓   |   ✓   |    ✓   |
-| Gyro angle                                 | `gyro`                              |   ✓   |   ✓   |    ✓   |
+| Rotation from the gyro (`Rotation2d`)      | `rotation`                          |   ✓   |   ✓   |    ✓   |
 | Current robot-relative ChassisVelocities   | `chassis/current`                   |   ✓   |   ✓   |    ✓   |
 | Desired robot-relative ChassisVelocities   | `chassis/desired`                   |   ✓   |   ✓   |    ✓   |
 | Current module states                      | `states/current`                    |   ✓   |   ✓   |    ✓   |
