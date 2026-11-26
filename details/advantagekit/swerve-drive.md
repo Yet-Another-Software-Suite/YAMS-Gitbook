@@ -158,10 +158,10 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveInputs.gyroRotation = gyroAngleSupplier.get();
   }
 
-  /** Drive with field relative speeds (e.g. from a SwerveInputStream) using the logged gyro angle. */
+  /** Drive with field relative speeds (e.g. from a SwerveInputStream) using the logged pose's heading. */
   public Command setFieldRelativeChassisSpeeds(Supplier<ChassisVelocities> fieldRelativeSpeeds) {
     return run(() -> setRobotRelativeChassisSpeedsSetpoint(
-        fieldRelativeSpeeds.get().toRobotRelative(getGyroAngle())))
+        fieldRelativeSpeeds.get().toRobotRelative(getPose().getRotation())))
         .withName("Set Field Relative Chassis Speeds Supplier");
   }
 
@@ -178,7 +178,7 @@ public class SwerveSubsystem extends SubsystemBase {
       drive.resetTranslationPID();
       drive.resetRotationPID();
     }, () -> drive.setRobotRelativeChassisSpeeds(
-        drive.driveToPoseSetpoint(pose, getPose(), getGyroAngle())))
+        drive.driveToPoseSetpoint(pose, getPose(), getPose().getRotation())))
         .withName("Drive to Pose");
   }
 
@@ -288,8 +288,9 @@ robot.drive.setDefaultCommand(robot.drive.driveInputStream());
 1. **Create an `@AutoLog` inputs class** with module states, positions, gyro, and pose
 2. **Call `updateTelemetry()` BEFORE `updateInputs()`**: the pose estimator and internal state update in `updateTelemetry()`
 3. **Feed the gyro from the logged yaw** (`withGyro(() -> new Rotation3d(getGyroAngle()))`) so odometry is deterministic in replay
-4. **Log desired states and speeds** using `Logger.recordOutput()` for replay debugging
-5. **Call `simIterate()` in `simulationPeriodic()`** for physics simulation
+4. **Turn field relative speeds into robot relative ones with the logged pose's heading** (`getPose().getRotation()`), the odometry heading YAMS drives with, so replay gives the same module states
+5. **Log desired states and speeds** using `Logger.recordOutput()` for replay debugging
+6. **Call `simIterate()` in `simulationPeriodic()`** for physics simulation
 
 {% hint style="warning" %}
 **Important: Replay Data Scope**
