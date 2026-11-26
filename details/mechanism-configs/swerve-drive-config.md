@@ -134,6 +134,60 @@ config.withCenterOfRotation(Meters.of(0.3), Meters.of(0.3)); // forward, left
 
 It can be changed while driving: see [Center of Rotation](../swerve-input-stream.md#center-of-rotation).
 
+## Skid detection and tilt-scaled odometry
+
+### `withSkidDetection`
+
+Detects wheel slip by comparing each module's isolated translational speed after subtracting the chassis rotational velocity from the gyro. Without slip, every module measures the same translational speed and `getSkidRatio()` is `1.0`.
+
+```java
+config.withSkidDetection(1.35)                            // default 0.10 m/s deadband
+      .withSkidDetection(1.35, MetersPerSecond.of(0.15)); // custom speed & spread deadband
+```
+
+By default, skid detection only reports `getSkidRatio()`, `isSkidding()`, and telemetry without altering odometry. It uses the gyro angular velocity from `withGyroVelocity(...)` (or differentiated from `withGyro(...)` when no velocity supplier is set). Both the fastest module speed and the speed spread (`max - min`) must exceed the deadband before a skid is flagged, preventing low-speed encoder noise from false-triggering.
+
+### `withSkidOdometryRejection`
+
+Drops incremental wheel-odometry deltas for the slipping module(s) while `withSkidDetection` flags a skid, letting healthy wheels continue advancing odometry. When there is no majority consensus (such as a 2-vs-2 split), all modules are suppressed for that tick.
+
+```java
+config.withSkidDetection(1.35)
+      .withSkidOdometryRejection(true);
+```
+
+Enabling `withSkidOdometryRejection(true)` without `withSkidDetection(...)` throws an `IllegalStateException` (`std::logic_error` in C++) when `SwerveDrive` is constructed.
+
+### `withTiltScaledOdometry`
+
+Scales incremental wheel-odometry distance deltas by the robot's yaw-invariant 3D tilt angle (`acos(cos(pitch) * cos(roll))`) so crossing field bumps or ramps does not inflate 2D pose estimates.
+
+```java
+// Default LINEAR_RAMP trust heuristic (1.0 <= 2 deg, ramping to 0.0 at 25 deg):
+config.withTiltScaledOdometry(Degrees.of(2), Degrees.of(25));
+
+// Geometric COSINE_PROJECTION (cos(tilt) above 2 deg, 0.0 at >= 25 deg):
+config.withTiltScaledOdometry(
+    Degrees.of(2), Degrees.of(25), TiltOdometryScaler.ScalingMode.COSINE_PROJECTION);
+```
+
+- `ScalingMode.LINEAR_RAMP` (default) is a trust heuristic that aggressively suppresses noisy wheel deltas on steep bumps where tire contact is unreliable.
+- `ScalingMode.COSINE_PROJECTION` projects wheel travel horizontally by `cos(tilt)` for a wheel rolling along a rigid slope without slip.
+
+It reads pitch and roll from the gyro, so it needs [`withGyro`](swerve-drive-config.md#the-gyro). Each `SwerveDrive` instance owns its own scaler state, so sharing a `SwerveDriveConfig` does not share wheel history.
+
+### `withVisionMaxTilt`
+
+Rejects 2D vision pose updates in `SwerveDrive.addVisionMeasurement(...)` whenever the robot's 3D tilt angle exceeds `maxTilt`.
+
+```java
+config.withVisionMaxTilt(Degrees.of(5));
+```
+
+{% hint style="info" %}
+`withVisionMaxTilt` checks the robot's **current** gyro tilt when `addVisionMeasurement` is called rather than interpolating historical tilt at the vision measurement's `timestamp`.
+{% endhint %}
+
 ## Start and telemetry
 
 ### `withStartingPose`
