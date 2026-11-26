@@ -14,7 +14,7 @@
 <rect x="266.0" y="84.0" width="224.0" height="92.0" rx="8" fill="#e4dcf7" stroke="#6b46c1" stroke-width="1.6" />
 <text x="278.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#6b46c1" >Gyro</text>
 <text x="278.0" y="126.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyro</text>
-<text x="278.0" y="141.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyroInverted, withGyroOffset</text>
+<text x="278.0" y="141.5" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyroInverted</text>
 <text x="278.0" y="157.0" font-size="9.4" font-weight="400" text-anchor="start" fill="#52606d" font-family="Consolas, Menlo, monospace">withGyroHeadingAxis, withGyroVelocity</text>
 <rect x="498.0" y="84.0" width="224.0" height="92.0" rx="8" fill="#fde2e2" stroke="#d64545" stroke-width="1.6" />
 <text x="510.0" y="106.0" font-size="13" font-weight="700" text-anchor="start" fill="#d64545" >Speed limits</text>

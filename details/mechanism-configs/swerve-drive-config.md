@@ -28,14 +28,13 @@ drive.getConfig().withModuleStateOptimization(false);
 
 ## The gyro
 
-<figure><img src="../../.gitbook/assets/mech-swerve-gyro.png" alt="Three panels showing a robot turned 30 degrees counter-clockwise. With withGyro alone the heading reads plus 30 degrees. With withGyroInverted the same turn reads minus 30 degrees. With withGyroOffset of 90 degrees the heading reads 90 degrees different."><figcaption><p>The gyro options change how the same turn is read.</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mech-swerve-gyro.png" alt="Three panels showing a robot turned 30 degrees counter-clockwise. With withGyro alone the heading reads plus 30 degrees. With withGyroInverted the same turn reads minus 30 degrees. After zeroOdometryHeading, the odometry heading that field relative driving uses reads 0 degrees while the gyro still reads plus 30 degrees."><figcaption><p>The gyro options change how the same turn is read.</p></figcaption></figure>
 
 | Option                                        | What it does                                                                                                                                                                               |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `withRotation(Supplier<Rotation3d>)`          | Supplies the robot's rotation from the gyro, as its attitude. Its yaw is the heading.                                                                                                      |
 | `withGyro(Supplier<Rotation3d>)`              | Same as `withRotation`.                                                                                                                                                                    |
 | `withGyroInverted(boolean)`                   | Flips the heading, for a gyro that reads clockwise as positive.                                                                                                                            |
-| `withGyroOffset(Angle)`                       | Adds a fixed angle to the heading.                                                                                                                                                         |
 | `withGyroHeadingAxis(GyroAxis)`               | Chooses which axis is the heading, for a gyro mounted on its side.                                                                                                                         |
 | `withGyroVelocity(Supplier<AngularVelocity>)` | Supplies the turn rate, used by [`withGyroAngularVelocityScaleFactor`](swerve-drive-config.md#withgyroangularvelocityscalefactor). Without it the turn rate is estimated from the heading. |
 

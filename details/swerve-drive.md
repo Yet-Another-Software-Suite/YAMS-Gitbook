@@ -225,7 +225,7 @@ Internally, `SwerveDrive` always drives the modules with robot-relative speeds. 
 drive.setFieldRelativeChassisSpeeds(new ChassisVelocities(1.0, 0, 0));
 ```
 
-[`withGyroOffset` and `withGyroInverted`](mechanism-configs/swerve-drive-config.md#the-gyro) correct the gyro's zero and sign without touching your drive code. Both apply to the heading (the yaw).
+[`withGyroInverted`](mechanism-configs/swerve-drive-config.md#the-gyro) corrects the gyro's sign without touching your drive code. It applies to the heading (the yaw). There is no gyro offset: the pose estimator keeps the offset between the gyro and the pose, so set where the robot faces with the starting pose, `resetOdometry(pose)` or `zeroOdometryHeading()`.
 
 ### Gyros mounted on their side
 
@@ -244,7 +244,7 @@ config.withGyro(pigeon::getRotation3d)
       .withGyroHeadingAxis(GyroAxis.ROLL);
 ```
 
-The gyro's attitude is rotated into the robot's frame first, then `withGyroInverted` and `withGyroOffset` are applied to the resulting heading.
+The gyro's attitude is rotated into the robot's frame first, then `withGyroInverted` is applied to the resulting heading.
 
 ### Reading the heading
 

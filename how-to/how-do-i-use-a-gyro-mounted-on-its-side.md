@@ -83,7 +83,7 @@ This is the drive config from the [Swerve Drive tutorial](../tutorials/swerve-dr
 {% endtab %}
 {% endtabs %}
 
-YAMS rotates the gyro's attitude into the robot's frame before anything reads it. After that, the yaw of the result is the robot's heading, and its roll and pitch are the robot's tilt (which anti-tipping uses), whichever way the gyro is mounted. `withGyroInverted(...)` and `withGyroOffset(...)` apply to the resulting heading.
+YAMS rotates the gyro's attitude into the robot's frame before anything reads it. After that, the yaw of the result is the robot's heading, and its roll and pitch are the robot's tilt (which anti-tipping uses), whichever way the gyro is mounted. `withGyroInverted(...)` applies to the resulting heading.
 
 ## Read the heading
 
