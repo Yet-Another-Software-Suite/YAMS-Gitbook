@@ -11,7 +11,7 @@ Import it from the package that matches your vendordep: `yams.commands2.swerve.S
 <figure><img src="../.gitbook/assets/swerve-input-stream-sticks.gif" alt="Animation of two controller sticks, the ChassisVelocities they produce, and a robot on a field. Left stick forward gives positive vx and the robot moves away from the driver station. Left stick left gives positive vy and the robot moves left. A diagonal push gives both. Right stick left gives a positive omega and the robot turns counter-clockwise"><figcaption><p>How each stick movement becomes a field relative velocity.</p></figcaption></figure>
 
 {% hint style="warning" %}
-The output is **field relative**, even with `withRobotRelative()`. Drive with it through `setFieldRelativeChassisSpeeds(...)`, not `SwerveDrive.drive(...)`, which expects robot-relative speeds. If you do want `drive(...)`, convert it first: `drive.drive(() -> input.get().toRobotRelative(drive.getGyroRotation3d().toRotation2d()))`.
+The output is **field relative**, even with `withRobotRelative()`. Drive with it through `setFieldRelativeChassisSpeeds(...)`, not `SwerveDrive.drive(...)`, which expects robot-relative speeds. If you do want `drive(...)`, convert it first: `drive.drive(() -> input.get().toRobotRelative(drive.getRotation()))`. `getRotation()` is the odometry heading that `setFieldRelativeChassisSpeeds` uses too.
 {% endhint %}
 
 This page covers building a stream and shaping the sticks. Two more pages cover the rest:
